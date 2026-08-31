@@ -1,0 +1,107 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "retry": "Retry",
+    "loading": "Loading…",
+    "close": "Close",
+    "comingSoon": "Coming soon"
+  },
+  "auth": {
+    "passwordMismatch": "Passwords don't match.",
+    "login": {
+      "title": "Sign in",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "forgotLink": "Forgot your password?",
+      "invalidCredentials": "Email or password is incorrect."
+    },
+    "forgot": {
+      "title": "Recover your password",
+      "description": "Enter your email and we'll send you a link to reset your password.",
+      "submit": "Send link",
+      "sentTitle": "Check your email",
+      "sentDescription": "If that email exists in the system, you'll receive a link to reset your password.",
+      "backToLogin": "Back to sign in"
+    },
+    "reset": {
+      "title": "Reset password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Reset password",
+      "success": "Your password was reset successfully. You can now sign in.",
+      "invalidLink": "This link is no longer valid. It may have expired or already been used.",
+      "requestNew": "Request a new link"
+    },
+    "changePassword": {
+      "title": "Change password",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Change password",
+      "success": "Your password was changed successfully.",
+      "required": "For your security, you must change your password before continuing.",
+      "samePassword": "The new password must be different from the current one."
+    },
+    "session": {
+      "expired": "Your session expired. Please sign in again.",
+      "revokedByReuse": "We detected unusual activity on your session and signed you out of every device for your security. Please sign in again.",
+      "logout": "Sign out",
+      "logoutAll": "Sign out of all sessions",
+      "logoutAllConfirm": "This will sign you out on every device where you're signed in. Continue?"
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "groups": {
+      "cases": "Cases",
+      "notification": "Notification",
+      "investigation": "Investigation",
+      "clinicalCatalogs": "Clinical catalogs",
+      "geography": "Geography and facilities",
+      "administration": "Administration"
+    },
+    "items": {
+      "esaviCase": "ESAVI cases",
+      "patient": "Patients",
+      "finalClassification": "Final classification",
+      "notification": "Notifications",
+      "notifier": "Notifiers",
+      "investigation": "Investigations",
+      "diagnosticTerm": "Diagnostic terms",
+      "whodrugVaccine": "WHODrug vaccines",
+      "diluent": "Diluents",
+      "geoLevelType": "Geographic levels",
+      "geoLocation": "Locations",
+      "healthFacility": "Health facilities",
+      "user": "Users",
+      "appRole": "Roles",
+      "catalogType": "Catalog types",
+      "catalogItem": "Catalog items",
+      "systemConfig": "System configuration"
+    }
+  },
+  "home": {
+    "greeting": "Hi, {{name}}",
+    "roleLabel": "Your role: {{role}}"
+  },
+  "settings": {
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "language": {
+      "es": "Spanish",
+      "en": "English",
+      "nl": "Dutch"
+    }
+  },
+  "errors": {
+    "network": "We couldn't reach the server. Check your connection.",
+    "unexpected": "Something went wrong. Please try again.",
+    "forbidden": "You don't have permission to do this.",
+    "notFound": "We couldn't find what you were looking for."
+  }
+}

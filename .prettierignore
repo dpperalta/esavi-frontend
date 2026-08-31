@@ -1,0 +1,14 @@
+node_modules
+dist
+package-lock.json
+
+# Documentación y skills: no son código del cliente
+*.md
+.claude/
+references/
+.qodo/
+
+# Espejo del backend (npm run contracts:sync): se deja con el formato exacto del origen,
+# para que el diff de un re-sync muestre solo cambios de contrato, nunca de estilo.
+# src/contracts/declared/ NO entra aquí — es código propio y sí se formatea.
+src/contracts/*.ts

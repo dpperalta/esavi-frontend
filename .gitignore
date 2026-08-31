@@ -1,5 +1,6 @@
 node_modules/
 dist/
+dist-ssr/
 .env
 .env.*
 !.env.example
@@ -8,3 +9,21 @@ dist/
 references/routes-table.md
 .playwright-screenshots/
 .qodo/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# tsc build info
+*.tsbuildinfo
