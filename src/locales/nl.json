@@ -10,7 +10,9 @@
       "unexpected": "Er is een onverwachte fout opgetreden. Probeer het opnieuw."
     },
     "actions": {
-      "create": "Aanmaken"
+      "create": "Aanmaken",
+      "save": "Opslaan",
+      "cancel": "Annuleren"
     },
     "table": {
       "empty": "Er zijn geen records om te tonen.",

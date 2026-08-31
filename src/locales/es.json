@@ -10,7 +10,9 @@
       "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo."
     },
     "actions": {
-      "create": "Crear"
+      "create": "Crear",
+      "save": "Guardar",
+      "cancel": "Cancelar"
     },
     "table": {
       "empty": "No hay registros para mostrar.",

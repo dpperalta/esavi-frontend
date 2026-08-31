@@ -10,7 +10,9 @@
       "unexpected": "Something went wrong. Please try again."
     },
     "actions": {
-      "create": "Create"
+      "create": "Create",
+      "save": "Save",
+      "cancel": "Cancel"
     },
     "table": {
       "empty": "There are no records to show.",
