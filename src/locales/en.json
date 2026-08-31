@@ -8,6 +8,7 @@
     "comingSoon": "Coming soon"
   },
   "auth": {
+    "passwordMismatch": "Passwords don't match.",
     "login": {
       "title": "Sign in",
       "email": "Email",

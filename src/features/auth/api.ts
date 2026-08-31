@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CurrentUser, LoginResponse } from '@/contracts/declared/auth';
 import { client, setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
-import type { LoginFormValues } from './schemas';
+import type { ForgotPasswordFormValues, LoginFormValues } from './schemas';
 
 // ESAVI-USER-007 — the only source of the user and their effective level (SPEC FE01 §1,
 // finding A). The login response isn't stored anywhere: it doesn't carry `level` per role.
@@ -49,4 +49,24 @@ export function useLogin() {
       void queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
     },
   });
+}
+
+// ESAVI-AUTH-006. Always answers 200, whether or not the email exists (SPEC FE01 §3.5) — the
+// client never distinguishes the two, so the mutation's shape doesn't leak that either.
+async function forgotPassword(payload: ForgotPasswordFormValues): Promise<void> {
+  await client.post('/auth/forgot-password', payload);
+}
+
+export function useForgotPassword() {
+  return useMutation({ mutationFn: forgotPassword });
+}
+
+// ESAVI-AUTH-007. confirmPassword never leaves the form — the backend only takes token and
+// newPassword (SPEC FE01 §3.5).
+async function resetPassword(payload: { token: string; newPassword: string }): Promise<void> {
+  await client.post('/auth/reset-password', payload);
+}
+
+export function useResetPassword() {
+  return useMutation({ mutationFn: resetPassword });
 }

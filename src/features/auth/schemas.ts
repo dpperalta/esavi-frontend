@@ -9,3 +9,24 @@ export const loginSchema = z.object({
 });
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
+
+// forgotPasswordValidator (backend): the email is the whole body, same format as login.
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().min(1).email(),
+});
+
+export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+
+// resetPasswordValidator (backend): newPassword min 8. confirmPassword is client-only — the
+// backend never sees it (SPEC FE01 §3.5).
+export const resetPasswordSchema = z
+  .object({
+    newPassword: z.string().trim().min(8),
+    confirmPassword: z.string().trim().min(1),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: 'passwordMismatch',
+    path: ['confirmPassword'],
+  });
+
+export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;

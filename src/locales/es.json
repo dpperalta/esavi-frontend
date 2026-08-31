@@ -8,6 +8,7 @@
     "comingSoon": "Próximamente"
   },
   "auth": {
+    "passwordMismatch": "Las contraseñas no coinciden.",
     "login": {
       "title": "Iniciar sesión",
       "email": "Correo electrónico",

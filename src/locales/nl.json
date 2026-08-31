@@ -8,6 +8,7 @@
     "comingSoon": "Binnenkort beschikbaar"
   },
   "auth": {
+    "passwordMismatch": "Wachtwoorden komen niet overeen.",
     "login": {
       "title": "Inloggen",
       "email": "E-mailadres",
