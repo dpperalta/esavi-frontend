@@ -27,6 +27,16 @@
       "pagination": "Paginering",
       "previous": "Vorige",
       "next": "Volgende"
+    },
+    "audit": {
+      "title": "Auditlogboek",
+      "empty": "Nog geen wijzigingen geregistreerd.",
+      "columns": {
+        "date": "Datum",
+        "user": "Gebruiker",
+        "method": "Methode",
+        "detail": "Detail"
+      }
     }
   },
   "auth": {

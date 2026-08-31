@@ -27,6 +27,16 @@
       "pagination": "Paginación",
       "previous": "Anterior",
       "next": "Siguiente"
+    },
+    "audit": {
+      "title": "Historial de auditoría",
+      "empty": "Todavía no hay cambios registrados.",
+      "columns": {
+        "date": "Fecha",
+        "user": "Usuario",
+        "method": "Método",
+        "detail": "Detalle"
+      }
     }
   },
   "auth": {

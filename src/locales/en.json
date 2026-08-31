@@ -27,6 +27,16 @@
       "pagination": "Pagination",
       "previous": "Previous",
       "next": "Next"
+    },
+    "audit": {
+      "title": "Audit trail",
+      "empty": "No changes recorded yet.",
+      "columns": {
+        "date": "Date",
+        "user": "User",
+        "method": "Method",
+        "detail": "Detail"
+      }
     }
   },
   "auth": {
