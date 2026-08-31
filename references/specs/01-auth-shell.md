@@ -1,6 +1,6 @@
 # SPEC FE01 — Shell de la aplicación y autenticación
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC F42 del backend (rotación del refresh token con detección de reutilización), SPEC F43 del backend (restablecimiento de contraseña por autoservicio)
 > **Fecha:** 2026-08-31
 > **Objetivo:** Levantar el cliente y cerrar el ciclo completo de la sesión —entrar, mantenerse, salir— sobre un layout con sidebar, temas y preferencias.
