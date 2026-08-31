@@ -172,8 +172,8 @@ export interface CurrentUser { … }
 
 | Dato | Capa | Clave / forma | Nota |
 |---|---|---|---|
-| Access token | `TokenStore` | `localStorage`, tras la interfaz de §11.1 | Fase 1; ningún módulo lo lee directo |
-| Refresh token | `TokenStore` | `localStorage`, tras la misma interfaz | Migrar a cookie es sustituir la implementación |
+| Access token | Variable de módulo en `client.ts` | Memoria, nunca `localStorage` | ARCHITECTURE.md §11.1: se pierde al recargar, se recupera con el primer refresh |
+| Refresh token | `TokenStore` | `localStorage`, tras la interfaz de §11.1 | Migrar a cookie es sustituir la implementación |
 | Usuario, roles, `level`, `requiresPasswordChange` | TanStack Query | `['user', 'me']` | `ESAVI-USER-007`. **Única fuente**; `staleTime: Infinity` |
 | «¿Hay sesión?» | Derivado | hay refresh token **y** `['user', 'me']` resolvió | No es estado propio: no se guarda un booleano |
 | Nivel efectivo | Derivado | `Math.max(...roles.map(r => r.level ?? ROLE_LEVELS[r.name] ?? 0))` | Espejo de `roleValidation.middleware.ts:16-22` |
@@ -392,7 +392,7 @@ Trece pasos. Cada uno deja el proyecto compilando y arrancable, y cada uno se pu
 - **Sí:** la cola de refresh como variable de módulo. La consulta un interceptor de axios, que corre fuera de React; un store la expondría a quien no debe tocarla sin dar ninguna garantía a cambio.
 - **No:** borrar los tokens ante un error de red. Cada corte de conexión expulsaría al usuario. Sólo un `401` cierra sesión.
 - **Sí:** `contracts/declared/` para las formas que el backend construye como literales. Concilia §3 —`contracts/` no se edita a mano— con §9 —un tipo inexistente se escribe ahí— sin que el script necesite una lista de exclusiones.
-- **Sí:** `localStorage` para los tokens. Es la fase 1 declarada en §11.1; la rotación con detección de reutilización de `SPEC F42` acota el riesgo, y el `TokenStore` tras interfaz hace que migrar a cookie sea sustituir una implementación.
+- **Sí:** `localStorage` para el refresh token, memoria para el access token. Es la fase 1 declarada en §11.1; la rotación con detección de reutilización de `SPEC F42` acota el riesgo del primero, y el `TokenStore` tras interfaz hace que migrar a cookie sea sustituir una implementación.
 
 ---
 
