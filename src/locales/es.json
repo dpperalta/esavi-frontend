@@ -8,6 +8,23 @@
     "comingSoon": "Próximamente",
     "errors": {
       "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    },
+    "actions": {
+      "create": "Crear"
+    },
+    "table": {
+      "empty": "No hay registros para mostrar.",
+      "emptyFiltered": "Ningún registro coincide con los filtros.",
+      "error": "No pudimos cargar los datos.",
+      "retry": "Reintentar",
+      "showInactive": "Mostrar inactivos",
+      "serverDecidesInactive": "Este listado ya incluye los registros dados de baja; el servidor decide cuáles mostrar según tu rol.",
+      "pageSize": "Filas por página",
+      "pageStatus": "Página {{page}} de {{pages}} · {{count}} registros",
+      "rowActions": "Acciones de la fila",
+      "pagination": "Paginación",
+      "previous": "Anterior",
+      "next": "Siguiente"
     }
   },
   "auth": {

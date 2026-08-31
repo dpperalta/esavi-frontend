@@ -8,6 +8,23 @@
     "comingSoon": "Coming soon",
     "errors": {
       "unexpected": "Something went wrong. Please try again."
+    },
+    "actions": {
+      "create": "Create"
+    },
+    "table": {
+      "empty": "There are no records to show.",
+      "emptyFiltered": "No record matches the filters.",
+      "error": "We couldn't load the data.",
+      "retry": "Retry",
+      "showInactive": "Show inactive",
+      "serverDecidesInactive": "This list already includes deactivated records; the server decides which ones to show based on your role.",
+      "pageSize": "Rows per page",
+      "pageStatus": "Page {{page}} of {{pages}} · {{count}} records",
+      "rowActions": "Row actions",
+      "pagination": "Pagination",
+      "previous": "Previous",
+      "next": "Next"
     }
   },
   "auth": {

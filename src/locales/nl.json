@@ -8,6 +8,23 @@
     "comingSoon": "Binnenkort beschikbaar",
     "errors": {
       "unexpected": "Er is een onverwachte fout opgetreden. Probeer het opnieuw."
+    },
+    "actions": {
+      "create": "Aanmaken"
+    },
+    "table": {
+      "empty": "Er zijn geen records om te tonen.",
+      "emptyFiltered": "Geen enkel record voldoet aan de filters.",
+      "error": "We konden de gegevens niet laden.",
+      "retry": "Opnieuw proberen",
+      "showInactive": "Inactieve tonen",
+      "serverDecidesInactive": "Deze lijst bevat al gedeactiveerde records; de server bepaalt welke worden getoond op basis van je rol.",
+      "pageSize": "Rijen per pagina",
+      "pageStatus": "Pagina {{page}} van {{pages}} · {{count}} records",
+      "rowActions": "Rijacties",
+      "pagination": "Paginering",
+      "previous": "Vorige",
+      "next": "Volgende"
     }
   },
   "auth": {
