@@ -1,0 +1,105 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "retry": "Reintentar",
+    "loading": "Cargando…",
+    "close": "Cerrar",
+    "comingSoon": "Próximamente"
+  },
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "submit": "Entrar",
+      "forgotLink": "¿Olvidaste tu contraseña?",
+      "invalidCredentials": "El correo o la contraseña no son correctos."
+    },
+    "forgot": {
+      "title": "Recuperar contraseña",
+      "description": "Escribe tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+      "submit": "Enviar enlace",
+      "sentTitle": "Revisa tu correo",
+      "sentDescription": "Si el correo existe en el sistema, recibirás un enlace para restablecer tu contraseña.",
+      "backToLogin": "Volver a iniciar sesión"
+    },
+    "reset": {
+      "title": "Restablecer contraseña",
+      "newPassword": "Contraseña nueva",
+      "confirmPassword": "Confirmar contraseña",
+      "submit": "Restablecer contraseña",
+      "success": "Tu contraseña se restableció correctamente. Ya puedes iniciar sesión.",
+      "invalidLink": "Este enlace ya no es válido. Puede haber caducado o haberse usado antes.",
+      "requestNew": "Solicitar un enlace nuevo"
+    },
+    "changePassword": {
+      "title": "Cambiar contraseña",
+      "current": "Contraseña actual",
+      "new": "Contraseña nueva",
+      "confirm": "Confirmar contraseña nueva",
+      "submit": "Cambiar contraseña",
+      "success": "Tu contraseña se cambió correctamente.",
+      "required": "Por seguridad, debes cambiar tu contraseña antes de continuar."
+    },
+    "session": {
+      "expired": "Tu sesión expiró. Inicia sesión de nuevo.",
+      "revokedByReuse": "Detectamos actividad inusual en tu sesión y cerramos todas tus sesiones activas por seguridad. Inicia sesión de nuevo.",
+      "logout": "Cerrar sesión",
+      "logoutAll": "Cerrar todas las sesiones",
+      "logoutAllConfirm": "Esto cerrará tu sesión en todos los dispositivos donde hayas iniciado sesión. ¿Continuar?"
+    }
+  },
+  "nav": {
+    "home": "Inicio",
+    "groups": {
+      "cases": "Casos",
+      "notification": "Notificación",
+      "investigation": "Investigación",
+      "clinicalCatalogs": "Catálogos clínicos",
+      "geography": "Geografía y unidades",
+      "administration": "Administración"
+    },
+    "items": {
+      "esaviCase": "Casos ESAVI",
+      "patient": "Pacientes",
+      "finalClassification": "Clasificación final",
+      "notification": "Notificaciones",
+      "notifier": "Notificadores",
+      "investigation": "Investigaciones",
+      "diagnosticTerm": "Términos diagnósticos",
+      "whodrugVaccine": "Vacunas WHODrug",
+      "diluent": "Diluyentes",
+      "geoLevelType": "Niveles geográficos",
+      "geoLocation": "Ubicaciones",
+      "healthFacility": "Unidades de salud",
+      "user": "Usuarios",
+      "appRole": "Roles",
+      "catalogType": "Tipos de catálogo",
+      "catalogItem": "Elementos de catálogo",
+      "systemConfig": "Configuración del sistema"
+    }
+  },
+  "home": {
+    "greeting": "Hola, {{name}}",
+    "roleLabel": "Tu rol: {{role}}"
+  },
+  "settings": {
+    "theme": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Del sistema"
+    },
+    "language": {
+      "es": "Español",
+      "en": "Inglés",
+      "nl": "Neerlandés"
+    }
+  },
+  "errors": {
+    "network": "No pudimos conectar con el servidor. Comprueba tu conexión.",
+    "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo.",
+    "forbidden": "No tienes permiso para hacer esto.",
+    "notFound": "No encontramos lo que buscabas."
+  }
+}

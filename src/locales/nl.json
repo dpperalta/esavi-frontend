@@ -1,0 +1,105 @@
+{
+  "common": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "retry": "Opnieuw proberen",
+    "loading": "Laden…",
+    "close": "Sluiten",
+    "comingSoon": "Binnenkort beschikbaar"
+  },
+  "auth": {
+    "login": {
+      "title": "Inloggen",
+      "email": "E-mailadres",
+      "password": "Wachtwoord",
+      "submit": "Inloggen",
+      "forgotLink": "Wachtwoord vergeten?",
+      "invalidCredentials": "E-mailadres of wachtwoord is onjuist."
+    },
+    "forgot": {
+      "title": "Wachtwoord herstellen",
+      "description": "Voer uw e-mailadres in en we sturen u een link om uw wachtwoord opnieuw in te stellen.",
+      "submit": "Link versturen",
+      "sentTitle": "Controleer uw e-mail",
+      "sentDescription": "Als dit e-mailadres bij ons bekend is, ontvangt u een link om uw wachtwoord opnieuw in te stellen.",
+      "backToLogin": "Terug naar inloggen"
+    },
+    "reset": {
+      "title": "Wachtwoord opnieuw instellen",
+      "newPassword": "Nieuw wachtwoord",
+      "confirmPassword": "Wachtwoord bevestigen",
+      "submit": "Wachtwoord opnieuw instellen",
+      "success": "Uw wachtwoord is opnieuw ingesteld. U kunt nu inloggen.",
+      "invalidLink": "Deze link is niet meer geldig. Mogelijk is deze verlopen of al gebruikt.",
+      "requestNew": "Nieuwe link aanvragen"
+    },
+    "changePassword": {
+      "title": "Wachtwoord wijzigen",
+      "current": "Huidig wachtwoord",
+      "new": "Nieuw wachtwoord",
+      "confirm": "Nieuw wachtwoord bevestigen",
+      "submit": "Wachtwoord wijzigen",
+      "success": "Uw wachtwoord is gewijzigd.",
+      "required": "Om veiligheidsredenen moet u uw wachtwoord wijzigen voordat u verdergaat."
+    },
+    "session": {
+      "expired": "Uw sessie is verlopen. Log opnieuw in.",
+      "revokedByReuse": "We hebben ongebruikelijke activiteit op uw sessie gedetecteerd en hebben u voor uw veiligheid op alle apparaten uitgelogd. Log opnieuw in.",
+      "logout": "Uitloggen",
+      "logoutAll": "Overal uitloggen",
+      "logoutAllConfirm": "Hiermee wordt u uitgelogd op alle apparaten waarop u bent ingelogd. Doorgaan?"
+    }
+  },
+  "nav": {
+    "home": "Start",
+    "groups": {
+      "cases": "Gevallen",
+      "notification": "Melding",
+      "investigation": "Onderzoek",
+      "clinicalCatalogs": "Klinische catalogi",
+      "geography": "Geografie en voorzieningen",
+      "administration": "Beheer"
+    },
+    "items": {
+      "esaviCase": "ESAVI-gevallen",
+      "patient": "Patiënten",
+      "finalClassification": "Eindclassificatie",
+      "notification": "Meldingen",
+      "notifier": "Melders",
+      "investigation": "Onderzoeken",
+      "diagnosticTerm": "Diagnostische termen",
+      "whodrugVaccine": "WHODrug-vaccins",
+      "diluent": "Verdunningsmiddelen",
+      "geoLevelType": "Geografische niveaus",
+      "geoLocation": "Locaties",
+      "healthFacility": "Gezondheidsinstellingen",
+      "user": "Gebruikers",
+      "appRole": "Rollen",
+      "catalogType": "Catalogustypen",
+      "catalogItem": "Catalogusitems",
+      "systemConfig": "Systeemconfiguratie"
+    }
+  },
+  "home": {
+    "greeting": "Hallo, {{name}}",
+    "roleLabel": "Uw rol: {{role}}"
+  },
+  "settings": {
+    "theme": {
+      "light": "Licht",
+      "dark": "Donker",
+      "system": "Systeem"
+    },
+    "language": {
+      "es": "Spaans",
+      "en": "Engels",
+      "nl": "Nederlands"
+    }
+  },
+  "errors": {
+    "network": "We konden geen verbinding maken met de server. Controleer uw internetverbinding.",
+    "unexpected": "Er is iets misgegaan. Probeer het opnieuw.",
+    "forbidden": "U heeft geen toestemming om dit te doen.",
+    "notFound": "We konden niet vinden wat u zocht."
+  }
+}
