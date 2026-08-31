@@ -179,7 +179,6 @@ export const NAVIGATION: NavItem[] = [
         icon: ListTree,
         path: '/catalog-types',
         minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
       {
         key: 'nav.items.catalogItem',

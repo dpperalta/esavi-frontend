@@ -1,9 +1,12 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { CatalogTypeListPage } from '@/features/catalogType/CatalogTypeListPage';
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
 import { HomePage } from '@/features/home/HomePage';
 import { RequireAuth } from '@/shared/components/RequireAuth';
+import { RequireRole } from '@/shared/components/RequireRole';
+import { ROLE_LEVELS } from '@/shared/config/roles';
 import { AppShell } from './layout/AppShell';
 import { NotFoundPage } from './NotFoundPage';
 
@@ -17,6 +20,9 @@ export function AppRouter() {
         <Route element={<RequireAuth />}>
           <Route element={<AppShell />}>
             <Route path="/" element={<HomePage />} />
+            <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
+              <Route path="/catalog-types" element={<CatalogTypeListPage />} />
+            </Route>
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />
