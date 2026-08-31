@@ -256,6 +256,23 @@ Toda entidad tiene `appDetails`, así que **toda pantalla de detalle lleva `<Aud
 
 La sección activa se deriva de la ruta. No hay estado aparte que la duplique.
 
+### 10.6 Skills de diseño antes de generar interfaz
+
+**Norma vinculante para el agente, no sólo para el código.** Antes de escribir o modificar cualquier componente visual —una pantalla, un formulario, un diálogo, el layout— se cargan estas skills:
+
+| Skill | Cuándo |
+|---|---|
+| `ui-ux-pro-max` | Al diseñar la pantalla: composición, tipografía, color, patrones de interacción. Antes de escribir JSX. |
+| `ui-styling` | Al implementar con shadcn/ui + Tailwind — el stack decidido de este repositorio (`ARCHITECTURE.md` §2). |
+| `web-design-guidelines` | Al cerrar el componente, como revisión contra las Web Interface Guidelines antes de darlo por terminado — se suma al checklist de §14. |
+
+Condicionalmente, según lo que la pantalla exija:
+
+- **`frontend-design`** — cuando hace falta una decisión estética no cubierta por los tokens ya establecidos (una pantalla nueva de alta visibilidad, no un CRUD más sobre `<ResourceTable>`).
+- **`dataviz`** — cualquier gráfico, panel o visualización de datos. El hito 5 (`ARCHITECTURE.md` §12, "Panel y analítica") lo necesitará.
+
+**Esto no sustituye a `references/CONVENTIONS.md` ni a `ARCHITECTURE.md`.** Las skills informan composición y accesibilidad genéricas; las convenciones de este repositorio —tokens semánticos, cero color literal, i18n obligatorio, las primitivas de §10.4 escritas una sola vez— mandan cuando hay conflicto, igual que dicta la jerarquía de normas de §1.
+
 ---
 
 ## 11. Autorización en el cliente
@@ -307,6 +324,7 @@ npm run check            # build && lint && i18n:check && test
 
 ## 14. Checklist antes de cerrar
 
+- [ ] Se cargaron `ui-ux-pro-max`, `ui-styling` y `web-design-guidelines` antes de generar la interfaz (§10.6).
 - [ ] Los **seis artefactos** están, y las claves i18n en **los tres** idiomas.
 - [ ] El `minLevel` del `NavItem` y el `level` del `<RequireRole>` coinciden con `API-ROUTES.md`.
 - [ ] El código `ESAVI-*` aparece citado donde se consume el endpoint.

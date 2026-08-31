@@ -3,9 +3,13 @@ import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { tokenStore } from './tokenStore';
 import { EsaviApiError, type ApiErrorEnvelope, type ApiSuccessEnvelope } from './types';
 
-// API-CONTRACT.md §1. No env var yet: the only target today is the local backend on 4500,
-// and CORS_ORIGINS already includes 5173 without touching anything (CLAUDE.md).
-const API_BASE_URL = 'http://localhost:4500/api';
+// API-CONTRACT.md §1. VITE_API_BASE_URL is required — see .env.example. CORS_ORIGINS on the
+// backend already includes 5173 without touching anything (CLAUDE.md).
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+if (!API_BASE_URL) {
+  throw new Error('VITE_API_BASE_URL is not set — copy .env.example to .env.development');
+}
 
 // The access token lives in memory, not in persistent storage (ARCHITECTURE.md §11.1 —
 // phase 1). It's lost on reload; refreshAccessToken() repopulates it on the first refresh.

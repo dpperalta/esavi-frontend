@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentUser, useLogout } from '@/features/auth/api';
 import { ChangePasswordDialog } from '@/features/auth/ChangePasswordDialog';
+import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/shared/components/ui/sidebar';
+import { getEffectiveRoleName } from '@/shared/config/roles';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import type { Language, Theme } from '@/shared/stores/preferences.types';
 
@@ -72,7 +74,16 @@ export function Topbar() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        {user && <span className="text-sm text-muted-foreground">{user.displayName}</span>}
+        {user &&
+          (() => {
+            const roleName = getEffectiveRoleName(user.roles);
+            return (
+              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                {user.displayName}
+                {roleName && <Badge>{roleName}</Badge>}
+              </span>
+            );
+          })()}
         <ChangePasswordDialog />
         <Button
           variant="ghost"
