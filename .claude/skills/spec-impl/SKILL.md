@@ -176,9 +176,10 @@ Reconoce los encabezados por su significado, no por su redacción exacta — el 
 
 Antes del primer paso, **lee `references/CONVENTIONS.md`**. Es la norma vinculante de este repositorio y manda sobre cualquier archivo existente que la contradiga. Si el spec y las convenciones se contradicen, no elijas por tu cuenta: detente y pregunta.
 
-Ten presentes, sin releerlas cada vez, las nueve reglas que más se rompen (están en `.claude/skills/esavi-frontend-conventions/SKILL.md`). Cuatro de ellas se incumplen sobre todo durante la implementación:
+Ten presentes, sin releerlas cada vez, las diez reglas que más se rompen (están en `.claude/skills/esavi-frontend-conventions/SKILL.md`). Cinco de ellas se incumplen sobre todo durante la implementación:
 
 - Un comentario en español en el código — ningún comando lo detecta, así que es la que más fácil se cuela paso tras paso.
+- Generar una pantalla sin haber cargado antes `ui-ux-pro-max`, `ui-styling` y `web-design-guidelines` (`CONVENTIONS.md` §10.6) — tampoco lo detecta ningún comando.
 - Un dato del servidor copiado a `useState` porque "hacía falta editarlo".
 - Un color o un texto literal metido "provisionalmente".
 - Un `minLevel` puesto a ojo en vez de copiado de `API-ROUTES.md`.
