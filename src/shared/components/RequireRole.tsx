@@ -6,9 +6,9 @@ interface RequireRoleProps {
   level: number | RoleName;
 }
 
-// Exige un nivel mínimo y presupone sesión (SPEC FE01 §3.1): se anida dentro de
-// <RequireAuth>, que ya resolvió ['user','me'] antes de que esto monte. Este spec no lo usa
-// en ninguna ruta todavía — el hito 2 lo necesita en sus seis entidades a la vez.
+// Requires a minimum level and assumes a session exists (SPEC FE01 §3.1): nested inside
+// <RequireAuth>, which already resolved ['user','me'] before this mounts. This spec doesn't
+// use it on any route yet — milestone 2 needs it across its six entities at once.
 export function RequireRole({ level }: RequireRoleProps) {
   const can = useCan(level);
 

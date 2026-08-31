@@ -3,12 +3,12 @@ import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { tokenStore } from './tokenStore';
 import { EsaviApiError, type ApiErrorEnvelope, type ApiSuccessEnvelope } from './types';
 
-// API-CONTRACT.md §1. Sin variable de entorno todavía: el único destino hoy es el backend
-// local en 4500, y CORS_ORIGINS ya incluye 5173 sin tocar nada (CLAUDE.md).
+// API-CONTRACT.md §1. No env var yet: the only target today is the local backend on 4500,
+// and CORS_ORIGINS already includes 5173 without touching anything (CLAUDE.md).
 const API_BASE_URL = 'http://localhost:4500/api';
 
-// El access token vive en memoria, no en almacenamiento persistente (ARCHITECTURE.md §11.1 —
-// fase 1). Se pierde al recargar; refreshAccessToken() lo repuebla con el primer refresh.
+// The access token lives in memory, not in persistent storage (ARCHITECTURE.md §11.1 —
+// phase 1). It's lost on reload; refreshAccessToken() repopulates it on the first refresh.
 let accessToken: string | null = null;
 
 export function setAccessToken(token: string | null) {
@@ -24,8 +24,8 @@ client.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  // API-CONTRACT.md §6: sin esto la interfaz queda en el idioma elegido y los mensajes del
-  // servidor llegan en español por defecto.
+  // API-CONTRACT.md §6: without this the UI stays in the chosen language while server
+  // messages arrive in Spanish, the default.
   config.params = {
     ...config.params,
     lang: usePreferencesStore.getState().language,
@@ -39,15 +39,15 @@ function toEsaviApiError(error: AxiosError<ApiErrorEnvelope>): EsaviApiError {
     const { message, code } = error.response.data;
     return new EsaviApiError(message, error.response.status, code);
   }
-  // Sin response: la petición no llegó al servidor (red caída, CORS, servidor apagado).
-  // No hay `code` del backend que conservar; NETWORK_ERROR es del cliente, no del contrato.
+  // No response: the request never reached the server (network down, CORS, server offline).
+  // There's no backend `code` to keep; NETWORK_ERROR is the client's own, not the contract's.
   return new EsaviApiError(error.message, 0, 'NETWORK_ERROR');
 }
 
-// CONVENTIONS.md §6.6: cualquier code terminado en _REFRESH_TOKEN_REUSED —AUTH_002 al refrescar,
-// AUTH_003 al hacer logout, ambos comparten el helper del backend (auth.service.ts:136,160)—
-// significa que la sesión está comprometida o duplicada. Se compara por sufijo, no por cadena
-// exacta: los dos códigos son válidos y ninguno se reintenta.
+// CONVENTIONS.md §6.6: any code ending in _REFRESH_TOKEN_REUSED —AUTH_002 while refreshing,
+// AUTH_003 while logging out, both share the backend's helper (auth.service.ts:136,160)—
+// means the session is compromised or duplicated. Compared by suffix, not by exact string:
+// both codes are valid and neither is retried.
 function isRefreshTokenReused(code: string): boolean {
   return code.endsWith('_REFRESH_TOKEN_REUSED');
 }
@@ -57,19 +57,34 @@ function clearSession() {
   tokenStore.clearRefreshToken();
 }
 
-// Un solo refresco en vuelo (CONVENTIONS.md §6.6, API-CONTRACT.md §3.2): dos peticiones que
-// reciben 401 a la vez comparten esta misma promesa en lugar de disparar dos POST /auth/refresh
-// — el segundo usaría un token ya consumido y revocaría todas las sesiones del usuario.
-// Se llama con axios "pelado", no con `client`: pasar por los interceptores de `client`
-// reintentaría este mismo POST si el refresh devuelve 401, y el refresh nunca se reintenta.
+// The five public auth endpoints (API-ROUTES.md's "sin fila" section, SPEC FE01 §3.2) never
+// carried a session to begin with — a 401 from them is a real answer (bad credentials, bad
+// reset token), not an expired access token. /auth/refresh isn't listed: it's never called
+// through `client` in the first place (see performRefresh above).
+const PUBLIC_AUTH_PATHS = [
+  '/auth/login',
+  '/auth/logout',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+];
+
+function isPublicAuthRequest(url: string | undefined): boolean {
+  return url !== undefined && PUBLIC_AUTH_PATHS.some((path) => url.endsWith(path));
+}
+
+// A single refresh in flight (CONVENTIONS.md §6.6, API-CONTRACT.md §3.2): two requests that
+// get a 401 at the same time share this one promise instead of firing two POST /auth/refresh
+// — the second would use an already-consumed token and revoke every session of the user.
+// Called with plain axios, not `client`: going through `client`'s interceptors would retry
+// this same POST if the refresh itself returns 401, and a refresh is never retried.
 let refreshPromise: Promise<string> | null = null;
 
 async function performRefresh(): Promise<string> {
   const refreshToken = tokenStore.getRefreshToken();
   if (!refreshToken) {
-    // No hay sesión que refrescar. Código propio del cliente: el backend nunca lo emite porque
-    // nunca llega a verlo.
-    throw new EsaviApiError('No hay refresh token', 401, 'AUTH_002_NO_REFRESH_TOKEN');
+    // No session to refresh. Client-only code: the backend never emits it because it never
+    // gets to see this request at all.
+    throw new EsaviApiError('No refresh token', 401, 'AUTH_002_NO_REFRESH_TOKEN');
   }
 
   try {
@@ -105,8 +120,8 @@ interface RetriableRequestConfig extends InternalAxiosRequestConfig {
 
 client.interceptors.response.use(
   (response) => {
-    // API-CONTRACT.md §2: el interceptor desenvuelve el envelope aquí, una sola vez.
-    // A partir de esta línea, response.data YA es el payload real — nadie más lo desenvuelve.
+    // API-CONTRACT.md §2: the interceptor unwraps the envelope here, once.
+    // From this line on, response.data IS the real payload — nobody else unwraps it.
     const envelope = response.data as ApiSuccessEnvelope<unknown>;
     response.data = envelope.data;
     return response;
@@ -121,11 +136,16 @@ client.interceptors.response.use(
       return Promise.reject(toEsaviApiError(error));
     }
 
-    if (status === 401 && originalRequest && !originalRequest._retriedAfterRefresh) {
+    if (
+      status === 401 &&
+      originalRequest &&
+      !isPublicAuthRequest(originalRequest.url) &&
+      !originalRequest._retriedAfterRefresh
+    ) {
       originalRequest._retriedAfterRefresh = true;
       try {
         await refreshAccessToken();
-        // El interceptor de petición vuelve a leer `accessToken` —ya actualizado— al reenviar.
+        // The request interceptor reads `accessToken` again —already updated— on resend.
         return client(originalRequest);
       } catch (refreshError) {
         return Promise.reject(refreshError);

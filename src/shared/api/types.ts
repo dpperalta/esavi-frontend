@@ -1,5 +1,5 @@
-// El envelope de API-CONTRACT.md §2 — client.ts es el único que lo ve. Todo lo demás recibe
-// `data` ya desenvuelto o un EsaviApiError.
+// The envelope from API-CONTRACT.md §2 — client.ts is the only module that sees it. Everything
+// else receives `data` already unwrapped, or an EsaviApiError.
 export interface ApiSuccessEnvelope<T> {
   ok: true;
   message: string;
@@ -13,8 +13,8 @@ export interface ApiErrorEnvelope {
   errors?: unknown;
 }
 
-// Conserva `code` y `status` (API-CONTRACT.md §2). `errors` nunca se muestra al usuario
-// (CONVENTIONS.md §6.2) y por eso no se guarda aquí: nada debería leerlo.
+// Keeps `code` and `status` (API-CONTRACT.md §2). `errors` is never shown to the user
+// (CONVENTIONS.md §6.2), so it isn't stored here either — nothing should read it.
 export class EsaviApiError extends Error {
   readonly code: string;
   readonly status: number;

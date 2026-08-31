@@ -23,9 +23,9 @@ beforeEach(() => {
   localStorage.clear();
 });
 
-// RequireRole presupone sesión y se anida dentro de RequireAuth (SPEC FE01 §3.1): para cuando
-// monta, ['user','me'] ya está resuelto en caché. Un RequireRole aislado, sin ese padre,
-// redirigiría en el primer render con la query todavía cargando — no es el uso real.
+// RequireRole assumes a session and nests inside RequireAuth (SPEC FE01 §3.1): by the time it
+// mounts, ['user','me'] is already resolved in cache. A standalone RequireRole, without that
+// parent, would redirect on the first render with the query still loading — not real usage.
 function renderWithRole(level: number | RoleName) {
   tokenStore.setRefreshToken('a-refresh-token');
   setAccessToken('a-token');

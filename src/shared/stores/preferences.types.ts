@@ -2,8 +2,8 @@ export type Theme = 'light' | 'dark' | 'system';
 export type Language = 'es' | 'en' | 'nl';
 export type Density = 'comfortable' | 'compact';
 
-// La forma exacta que tendría la columna JSONB de appUserPreference (ARCHITECTURE.md §7.2),
-// para que migrar a la tabla del servidor sea sustituir la implementación, no los consumidores.
+// The exact shape the appUserPreference JSONB column would have (ARCHITECTURE.md §7.2), so
+// migrating to the server table is swapping the implementation, not the consumers.
 export interface Preferences {
   theme: Theme;
   language: Language;
@@ -22,10 +22,10 @@ export const DEFAULT_PREFERENCES: Preferences = {
   tableColumns: {},
 };
 
-// ARCHITECTURE.md §7.3: la interfaz tras la que se esconde la persistencia, igual que
-// TokenStore (§11.1). Hoy la implementa localStorage (localPreferencesStore.ts); el día que
-// exista `GET/PATCH /api/users/me/preferences` se añade la implementación remota y
-// preferencesStore.ts —que hoy persiste con zustand/persist, ver §7.2— no cambia.
+// ARCHITECTURE.md §7.3: the interface persistence hides behind, same as TokenStore (§11.1).
+// Implemented with localStorage today (localPreferencesStore.ts); the day
+// `GET/PATCH /api/users/me/preferences` exists, the remote implementation gets added and
+// preferencesStore.ts —which persists with zustand/persist today, see §7.2— doesn't change.
 export interface PreferencesStore {
   read(): Promise<Preferences>;
   write(patch: Partial<Preferences>): Promise<void>;

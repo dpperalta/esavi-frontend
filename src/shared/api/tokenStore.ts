@@ -1,6 +1,6 @@
-// ARCHITECTURE.md §11.1 — el refresh token vive detrás de esta interfaz. Fase 1: localStorage.
-// Migrar a cookie httpOnly (fase 2) es sustituir tokenStore.ts; ningún otro módulo llama a
-// localStorage para esto (CONVENTIONS.md §6.6).
+// ARCHITECTURE.md §11.1 — the refresh token lives behind this interface. Phase 1: localStorage.
+// Migrating to an httpOnly cookie (phase 2) means replacing tokenStore.ts; no other module
+// calls localStorage for this (CONVENTIONS.md §6.6).
 export interface TokenStore {
   getRefreshToken(): string | null;
   setRefreshToken(token: string): void;

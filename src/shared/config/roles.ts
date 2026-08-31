@@ -1,5 +1,5 @@
-// Espejo de esavi-backend/src/constants/roles.constants.ts. Sólo respaldo: la autoridad real
-// es role.level, que ESAVI-USER-007 ya trae por rol (ARCHITECTURE.md §4.4, CONVENTIONS.md §11).
+// Mirror of esavi-backend/src/constants/roles.constants.ts. Fallback only: the real authority
+// is role.level, which ESAVI-USER-007 already brings per role (ARCHITECTURE.md §4.4, CONVENTIONS.md §11).
 export const ROLE_LEVELS = {
   SUPERADMIN: 100,
   ADMIN: 50,
@@ -14,9 +14,9 @@ interface RoleWithLevel {
   level?: number | null;
 }
 
-// Espejo exacto de validateUserRole en esavi-backend/src/middlewares/roleValidation.middleware.ts:16-22
-// — Math.max sobre level, con ROLE_LEVELS[NAME] como respaldo cuando level es nulo, y 0 cuando
-// tampoco el nombre está en la constante. Un usuario sin roles obtiene 0.
+// Exact mirror of validateUserRole in esavi-backend/src/middlewares/roleValidation.middleware.ts:16-22
+// — Math.max over level, with ROLE_LEVELS[NAME] as fallback when level is null, and 0 when the
+// name isn't in the constant either. A user with no roles gets 0.
 export function getEffectiveLevel(roles: RoleWithLevel[]): number {
   return Math.max(
     0,

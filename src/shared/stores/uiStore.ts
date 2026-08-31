@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
 interface UIState {
-  // Drawer del sidebar por debajo de md (ARCHITECTURE.md §5.3). Efímero: nunca persiste,
-  // a diferencia de preferences.sidebarCollapsed, que es la variante de escritorio.
+  // Sidebar drawer below md (ARCHITECTURE.md §5.3). Ephemeral: never persisted, unlike
+  // preferences.sidebarCollapsed, which is the desktop variant.
   sidebarOpen: boolean;
   openSidebar: () => void;
   closeSidebar: () => void;

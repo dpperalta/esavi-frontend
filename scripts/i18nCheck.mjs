@@ -1,5 +1,5 @@
-// Compara las claves de src/locales/{es,en,nl}.json. CONVENTIONS.md §9 exige paridad exacta:
-// una clave que falta en un idioma se muestra en crudo en la interfaz de ese idioma.
+// Compares the keys of src/locales/{es,en,nl}.json. CONVENTIONS.md §9 requires exact parity:
+// a key missing in a language shows up raw in that language's UI.
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';

@@ -2,8 +2,9 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useCurrentUser } from '@/features/auth/api';
 import { tokenStore } from '@/shared/api/tokenStore';
 
-// Exige sesión, sin mirar el rol (SPEC FE01 §3.1). "Hay sesión" es hay refresh token Y
-// ['user','me'] resolvió (§3.4) — sin refresh token no tiene sentido ni lanzar la query.
+// Requires a session, without looking at the role (SPEC FE01 §3.1). "There's a session" is
+// there's a refresh token AND ['user','me'] resolved (§3.4) — without a refresh token it makes
+// no sense to even fire the query.
 export function RequireAuth() {
   const location = useLocation();
   const hasRefreshToken = tokenStore.getRefreshToken() !== null;
@@ -14,7 +15,7 @@ export function RequireAuth() {
   }
 
   if (isLoading) {
-    // El estado de carga real del arranque del shell (§3.6) llega con providers.tsx (paso 9).
+    // The real loading state of the shell's startup (§3.6) arrives with providers.tsx (step 9).
     return null;
   }
 

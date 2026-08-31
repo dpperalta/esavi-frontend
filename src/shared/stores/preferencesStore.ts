@@ -17,9 +17,9 @@ interface PreferencesState extends Preferences {
   setTableColumns: (entity: string, columns: string[]) => void;
 }
 
-// Persistido con zustand/persist bajo 'esavi-preferences' (ARCHITECTURE.md §7.2). El script
-// anti-parpadeo de index.html lee esta misma clave con esta misma forma —{state, version}—
-// antes de que monte React; cambiar de storage engine aquí obliga a revisar ese script.
+// Persisted with zustand/persist under 'esavi-preferences' (ARCHITECTURE.md §7.2). The
+// anti-flicker script in index.html reads this same key with this same shape —{state,
+// version}— before React mounts; changing the storage engine here means revisiting that script.
 export const usePreferencesStore = create<PreferencesState>()(
   persist(
     (set) => ({

@@ -1,11 +1,10 @@
 import { DEFAULT_PREFERENCES, type Preferences, type PreferencesStore } from './preferences.types';
 
-// STORAGE_KEY es la misma clave que preferencesStore.ts persiste con zustand/persist — este
-// módulo lee esa clave, nunca escribe: zustand/persist es el único escritor de
-// 'esavi-preferences' (evita el conflicto de dos capas escribiendo el mismo dato, CONVENTIONS
-// §7). `write()` existe porque §7.3 lo declara como el enganche para cuando exista la
-// implementación remota; nada de esta rama lo llama todavía — es la misma situación que
-// TokenStore antes de que exista la cookie httpOnly de la fase 2.
+// STORAGE_KEY is the same key preferencesStore.ts persists with zustand/persist — this module
+// reads that key, never writes: zustand/persist is the only writer of 'esavi-preferences'
+// (avoids the two-layers-writing-the-same-data conflict, CONVENTIONS §7). `write()` exists
+// because §7.3 declares it as the hook for when the remote implementation exists; nothing on
+// this branch calls it yet — same situation as TokenStore before phase 2's httpOnly cookie.
 const STORAGE_KEY = 'esavi-preferences';
 
 function readStoredPreferences(): Preferences {

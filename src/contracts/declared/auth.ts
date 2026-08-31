@@ -1,9 +1,9 @@
-// NO es espejo: el backend construye estas dos respuestas como literales, sin ninguna
-// `interface` que `contracts:sync` pueda copiar (SPEC FE01 §3.3). Se reconcilian a mano si el
-// backend cambia; `contracts:sync` nunca escribe en esta carpeta.
+// NOT a mirror: the backend builds these two responses as literals, with no `interface` that
+// `contracts:sync` could copy (SPEC FE01 §3.3). Reconciled by hand if the backend changes;
+// `contracts:sync` never writes into this folder.
 import type { AppDetails } from '@/contracts/common';
 
-// POST /api/auth/login (ESAVI-AUTH-001) — origen: esavi-backend/src/services/auth.service.ts:110-121
+// POST /api/auth/login (ESAVI-AUTH-001) — origin: esavi-backend/src/services/auth.service.ts:110-121
 export interface LoginResponse {
   token: string;
   refreshToken: string;
@@ -12,15 +12,15 @@ export interface LoginResponse {
     userId: string;
     email: string;
     displayName: string;
-    // Sin `level`: la respuesta del login no autoriza nada (SPEC FE01 §1, hallazgo A).
-    // ['user', 'me'] / CurrentUser de abajo es la única fuente del nivel efectivo.
+    // No `level`: the login response authorizes nothing (SPEC FE01 §1, finding A).
+    // ['user', 'me'] / CurrentUser below is the only source of the effective level.
     roles: Array<{ roleId: string; name: string; code: string }>;
   };
 }
 
-// GET /api/users/me (ESAVI-USER-007) — origen: user.service.ts:54-59 (toUserResponse, sobre
-// AppUser.toJSON() menos passwordHash y sysDetails) + :26-31 (ROLES_INCLUDE, con level).
-// Modelo verificado en esavi-backend/src/models/appUser.model.ts.
+// GET /api/users/me (ESAVI-USER-007) — origin: user.service.ts:54-59 (toUserResponse, over
+// AppUser.toJSON() minus passwordHash and sysDetails) + :26-31 (ROLES_INCLUDE, with level).
+// Model verified against esavi-backend/src/models/appUser.model.ts.
 export interface CurrentUser {
   userId: string;
   username: string | null;

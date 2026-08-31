@@ -127,7 +127,7 @@ describe('client — sin respuesta del servidor', () => {
   });
 });
 
-// El test más importante del repositorio (CONVENTIONS.md §12): la cola de refresh.
+// The most important test in the repository (CONVENTIONS.md §12): the refresh queue.
 describe('client — cola de refresh', () => {
   it('dos peticiones con 401 simultáneas producen un solo POST /api/auth/refresh, y ambas se reintentan con el token nuevo', async () => {
     tokenStore.setRefreshToken('old-refresh-token');
@@ -247,6 +247,28 @@ describe('client — cola de refresh', () => {
     await expect(client.get('/protected')).rejects.toMatchObject({
       code: 'AUTH_002_NO_REFRESH_TOKEN',
     });
+    expect(refreshCallCount).toBe(0);
+  });
+
+  it('un 401 de /auth/login (credenciales malas) no dispara un refresh', async () => {
+    let refreshCallCount = 0;
+
+    server.use(
+      http.post('http://localhost:4500/api/auth/login', () =>
+        HttpResponse.json(
+          { ok: false, message: 'Credenciales inválidas', code: 'AUTH_001_INVALID_CREDENTIALS' },
+          { status: 401 },
+        ),
+      ),
+      http.post('http://localhost:4500/api/auth/refresh', () => {
+        refreshCallCount += 1;
+        return HttpResponse.json({ ok: true, message: 'ok', data: {} });
+      }),
+    );
+
+    await expect(
+      client.post('/auth/login', { email: 'a@a.com', password: 'wrong' }),
+    ).rejects.toMatchObject({ code: 'AUTH_001_INVALID_CREDENTIALS' });
     expect(refreshCallCount).toBe(0);
   });
 });
