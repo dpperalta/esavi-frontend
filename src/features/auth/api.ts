@@ -70,3 +70,53 @@ async function resetPassword(payload: { token: string; newPassword: string }): P
 export function useResetPassword() {
   return useMutation({ mutationFn: resetPassword });
 }
+
+// ESAVI-USER-006, differential. Invalidating ['user','me'] on success is what closes the
+// required dialog on its own (SPEC FE01 §3.4): requiresPasswordChange comes back false on the
+// refetch, and the dialog's `open` is derived from that field — no setOpen anywhere.
+async function changePassword(payload: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<void> {
+  await client.patch('/users/me/password', payload);
+}
+
+export function useChangePassword() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: changePassword,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+    },
+  });
+}
+
+// ESAVI-AUTH-003. Public — no access token required (API-ROUTES.md's "sin fila" section).
+// Local cleanup happens regardless of the network outcome: a device that can't reach the
+// server still has to end its own session. Must be called before clearing the refresh token,
+// or the request would go out with nothing to revoke.
+async function logout(): Promise<void> {
+  const refreshToken = tokenStore.getRefreshToken();
+  if (refreshToken) {
+    try {
+      await client.post('/auth/logout', { refreshToken });
+    } catch {
+      // Network down, already revoked, whatever — local cleanup proceeds either way.
+    }
+  }
+  setAccessToken(null);
+  tokenStore.clearRefreshToken();
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      // Nothing about the previous session can survive in memory (SPEC FE01 §3.4).
+      queryClient.clear();
+    },
+  });
+}

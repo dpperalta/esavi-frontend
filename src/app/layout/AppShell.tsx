@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { RequiredPasswordChangeDialog } from '@/features/auth/RequiredPasswordChangeDialog';
 import { SidebarInset, SidebarProvider } from '@/shared/components/ui/sidebar';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { useUIStore } from '@/shared/stores/uiStore';
@@ -38,6 +39,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </SidebarInset>
+      <RequiredPasswordChangeDialog />
     </SidebarProvider>
   );
 }

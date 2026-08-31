@@ -41,7 +41,8 @@
       "confirm": "Confirm new password",
       "submit": "Change password",
       "success": "Your password was changed successfully.",
-      "required": "For your security, you must change your password before continuing."
+      "required": "For your security, you must change your password before continuing.",
+      "samePassword": "The new password must be different from the current one."
     },
     "session": {
       "expired": "Your session expired. Please sign in again.",

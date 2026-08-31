@@ -41,7 +41,8 @@
       "confirm": "Confirmar contraseña nueva",
       "submit": "Cambiar contraseña",
       "success": "Tu contraseña se cambió correctamente.",
-      "required": "Por seguridad, debes cambiar tu contraseña antes de continuar."
+      "required": "Por seguridad, debes cambiar tu contraseña antes de continuar.",
+      "samePassword": "La contraseña nueva debe ser distinta de la actual."
     },
     "session": {
       "expired": "Tu sesión expiró. Inicia sesión de nuevo.",

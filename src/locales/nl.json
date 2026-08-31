@@ -41,7 +41,8 @@
       "confirm": "Nieuw wachtwoord bevestigen",
       "submit": "Wachtwoord wijzigen",
       "success": "Uw wachtwoord is gewijzigd.",
-      "required": "Om veiligheidsredenen moet u uw wachtwoord wijzigen voordat u verdergaat."
+      "required": "Om veiligheidsredenen moet u uw wachtwoord wijzigen voordat u verdergaat.",
+      "samePassword": "Het nieuwe wachtwoord moet afwijken van het huidige."
     },
     "session": {
       "expired": "Uw sessie is verlopen. Log opnieuw in.",

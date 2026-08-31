@@ -1,6 +1,8 @@
-import { Languages, Moon, Sun, SunMoon } from 'lucide-react';
+import { Languages, LogOut, Moon, Sun, SunMoon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCurrentUser } from '@/features/auth/api';
+import { useNavigate } from 'react-router-dom';
+import { useCurrentUser, useLogout } from '@/features/auth/api';
+import { ChangePasswordDialog } from '@/features/auth/ChangePasswordDialog';
 import { Button } from '@/shared/components/ui/button';
 import {
   DropdownMenu,
@@ -17,17 +19,26 @@ const LANGUAGE_OPTIONS: Language[] = ['es', 'en', 'nl'];
 
 const THEME_ICONS: Record<Theme, typeof Sun> = { light: Sun, dark: Moon, system: SunMoon };
 
-// The two preferences exposed in the interface (SPEC FE01 §2): theme and language. The change
-// password / logout menu lands here too, in step 13 — not yet.
+// The two preferences exposed in the interface (SPEC FE01 §2): theme and language, plus the
+// dismissible change-password dialog and logout — neither assigned to a numbered step, added
+// once the shell had no way to leave a session from the UI.
 export function Topbar() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const theme = usePreferencesStore((state) => state.theme);
   const setTheme = usePreferencesStore((state) => state.setTheme);
   const language = usePreferencesStore((state) => state.language);
   const setLanguage = usePreferencesStore((state) => state.setLanguage);
   const { data: user } = useCurrentUser();
+  const logout = useLogout();
 
   const ThemeIcon = THEME_ICONS[theme];
+
+  const handleLogout = () => {
+    logout.mutate(undefined, {
+      onSuccess: () => navigate('/login', { replace: true }),
+    });
+  };
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-2 border-b px-4">
@@ -62,6 +73,16 @@ export function Topbar() {
           </DropdownMenuContent>
         </DropdownMenu>
         {user && <span className="text-sm text-muted-foreground">{user.displayName}</span>}
+        <ChangePasswordDialog />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t('auth.session.logout')}
+          disabled={logout.isPending}
+          onClick={handleLogout}
+        >
+          <LogOut aria-hidden="true" />
+        </Button>
       </div>
     </header>
   );

@@ -30,3 +30,18 @@ export const resetPasswordSchema = z
   });
 
 export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+
+// changePasswordValidator (backend): newPassword min 8. currentPassword only non-empty — its
+// real check is the bcrypt compare on the server. confirmPassword is client-only.
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().trim().min(1),
+    newPassword: z.string().trim().min(8),
+    confirmPassword: z.string().trim().min(1),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    message: 'passwordMismatch',
+    path: ['confirmPassword'],
+  });
+
+export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
