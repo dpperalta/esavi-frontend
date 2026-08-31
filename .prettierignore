@@ -1,3 +1,9 @@
 node_modules
 dist
 package-lock.json
+
+# Documentación y skills: no son código del cliente
+*.md
+.claude/
+references/
+.qodo/

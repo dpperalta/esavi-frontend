@@ -5,7 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ESAVI</title>
-    <!-- El script anti-parpadeo de tema (ARCHITECTURE.md §6.4) se añade en el paso 2 -->
+    <script>
+      (function () {
+        try {
+          var stored = JSON.parse(localStorage.getItem('esavi-preferences') || '{}');
+          var theme = (stored.state && stored.state.theme) || 'system';
+          var dark =
+            theme === 'dark' ||
+            (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
