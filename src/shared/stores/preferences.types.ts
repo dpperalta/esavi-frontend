@@ -18,7 +18,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
   language: 'es',
   sidebarCollapsed: false,
   density: 'comfortable',
-  pageSize: 25,
+  // DEFAULT_LIMIT de esavi-backend/src/constants/pagination.constants.ts (SPEC FE02 §3.1).
+  pageSize: 10,
   tableColumns: {},
 };
 
