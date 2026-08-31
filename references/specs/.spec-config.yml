@@ -1,0 +1,9 @@
+# spec workflow configuration
+#
+# AutoCreateBranch — controla si /spec-impl crea la rama git automáticamente.
+#   true  (por defecto) → /spec-impl crea spec-NN-slug y cambia a ella sin preguntar
+#   false               → /spec-impl pide confirmación [s/N] antes de crear la rama
+#
+# Nota: si el repositorio no tiene ningún commit, /spec-impl se detiene y pide el
+# commit inicial antes de crear la rama, con independencia de este flag.
+AutoCreateBranch: true
