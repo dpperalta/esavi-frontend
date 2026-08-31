@@ -12,7 +12,21 @@
     "actions": {
       "create": "Create",
       "save": "Save",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "activate": "Reactivate",
+      "audit": "View audit trail"
+    },
+    "confirm": {
+      "deactivate": "Deactivate this record?",
+      "activate": "Reactivate this record?"
+    },
+    "toast": {
+      "created": "Created successfully.",
+      "updated": "Updated successfully.",
+      "deactivated": "Deactivated successfully.",
+      "activated": "Reactivated successfully."
     },
     "table": {
       "empty": "There are no records to show.",
@@ -112,6 +126,29 @@
       "catalogType": "Catalog types",
       "catalogItem": "Catalog items",
       "systemConfig": "System configuration"
+    }
+  },
+  "catalogType": {
+    "list": {
+      "title": "Catalog types",
+      "empty": "There are no catalog types yet."
+    },
+    "form": {
+      "createTitle": "New catalog type",
+      "editTitle": "Edit catalog type",
+      "codeHelp": "Leave it empty to generate it automatically from the name.",
+      "codeWarning": "Changing the code can affect other tables and the importer that reference it."
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Description",
+      "sortOrder": "Order",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
     }
   },
   "home": {

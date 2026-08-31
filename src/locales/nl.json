@@ -12,7 +12,21 @@
     "actions": {
       "create": "Aanmaken",
       "save": "Opslaan",
-      "cancel": "Annuleren"
+      "cancel": "Annuleren",
+      "edit": "Bewerken",
+      "deactivate": "Deactiveren",
+      "activate": "Heractiveren",
+      "audit": "Auditlogboek bekijken"
+    },
+    "confirm": {
+      "deactivate": "Dit record deactiveren?",
+      "activate": "Dit record heractiveren?"
+    },
+    "toast": {
+      "created": "Succesvol aangemaakt.",
+      "updated": "Succesvol bijgewerkt.",
+      "deactivated": "Succesvol gedeactiveerd.",
+      "activated": "Succesvol geheractiveerd."
     },
     "table": {
       "empty": "Er zijn geen records om te tonen.",
@@ -112,6 +126,29 @@
       "catalogType": "Catalogustypen",
       "catalogItem": "Catalogusitems",
       "systemConfig": "Systeemconfiguratie"
+    }
+  },
+  "catalogType": {
+    "list": {
+      "title": "Catalogustypen",
+      "empty": "Er zijn nog geen catalogustypen."
+    },
+    "form": {
+      "createTitle": "Nieuw catalogustype",
+      "editTitle": "Catalogustype bewerken",
+      "codeHelp": "Laat leeg om automatisch te genereren op basis van de naam.",
+      "codeWarning": "Het wijzigen van de code kan andere tabellen en de importeur die ernaar verwijzen beïnvloeden."
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Naam",
+      "description": "Omschrijving",
+      "sortOrder": "Volgorde",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Actief",
+      "inactive": "Inactief"
     }
   },
   "home": {

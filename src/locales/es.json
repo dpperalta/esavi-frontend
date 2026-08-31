@@ -12,7 +12,21 @@
     "actions": {
       "create": "Crear",
       "save": "Guardar",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "edit": "Editar",
+      "deactivate": "Dar de baja",
+      "activate": "Reactivar",
+      "audit": "Ver auditoría"
+    },
+    "confirm": {
+      "deactivate": "¿Dar de baja este registro?",
+      "activate": "¿Reactivar este registro?"
+    },
+    "toast": {
+      "created": "Se creó correctamente.",
+      "updated": "Se actualizó correctamente.",
+      "deactivated": "Se dio de baja correctamente.",
+      "activated": "Se reactivó correctamente."
     },
     "table": {
       "empty": "No hay registros para mostrar.",
@@ -112,6 +126,29 @@
       "catalogType": "Tipos de catálogo",
       "catalogItem": "Elementos de catálogo",
       "systemConfig": "Configuración del sistema"
+    }
+  },
+  "catalogType": {
+    "list": {
+      "title": "Tipos de catálogo",
+      "empty": "Todavía no hay tipos de catálogo."
+    },
+    "form": {
+      "createTitle": "Nuevo tipo de catálogo",
+      "editTitle": "Editar tipo de catálogo",
+      "codeHelp": "Si lo dejas vacío, se genera automáticamente a partir del nombre.",
+      "codeWarning": "Cambiar el código puede afectar a otras tablas y al importador que lo referencian."
+    },
+    "fields": {
+      "code": "Código",
+      "name": "Nombre",
+      "description": "Descripción",
+      "sortOrder": "Orden",
+      "isActive": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
     }
   },
   "home": {
