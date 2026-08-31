@@ -5,7 +5,10 @@
     "retry": "Reintentar",
     "loading": "Cargando…",
     "close": "Cerrar",
-    "comingSoon": "Próximamente"
+    "comingSoon": "Próximamente",
+    "errors": {
+      "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    }
   },
   "auth": {
     "passwordMismatch": "Las contraseñas no coinciden.",

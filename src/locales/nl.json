@@ -5,7 +5,10 @@
     "retry": "Opnieuw proberen",
     "loading": "Laden…",
     "close": "Sluiten",
-    "comingSoon": "Binnenkort beschikbaar"
+    "comingSoon": "Binnenkort beschikbaar",
+    "errors": {
+      "unexpected": "Er is een onverwachte fout opgetreden. Probeer het opnieuw."
+    }
   },
   "auth": {
     "passwordMismatch": "Wachtwoorden komen niet overeen.",
