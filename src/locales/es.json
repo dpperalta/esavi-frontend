@@ -260,6 +260,11 @@
       "GEOLOC_004_NOT_FOUND": "La ubicación no existe.",
       "GEOLOC_005A_ALREADY_INACTIVE": "La ubicación ya estaba inactiva.",
       "GEOLOC_005B_ALREADY_ACTIVE": "La ubicación ya estaba activa."
+    },
+    "picker": {
+      "levelLabel": "Nivel {{level}}",
+      "emptyLevel": "Este nivel no tiene ubicaciones hijas.",
+      "loadError": "No pudimos cargar los niveles geográficos."
     }
   },
   "home": {
