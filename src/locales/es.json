@@ -154,6 +154,52 @@
       "CATTYPE_001_CREATION_FAILED": "No se pudo crear el tipo de catálogo.",
       "CATTYPE_004_UPDATE_FAILED": "No se pudo actualizar el tipo de catálogo.",
       "CATTYPE_004_NOT_FOUND": "El tipo de catálogo no existe."
+    },
+    "select": {
+      "label": "Tipo de catálogo",
+      "placeholder": "Elige un tipo de catálogo",
+      "tooManyTypes": "Hay más de 100 tipos de catálogo; el listado puede estar incompleto."
+    },
+    "actions": {
+      "viewItems": "Ver ítems"
+    }
+  },
+  "catalogItem": {
+    "list": {
+      "title": "Elementos de catálogo",
+      "noTypeSelected": "Elige un tipo de catálogo para ver sus elementos.",
+      "unknownType": "El tipo de catálogo del enlace no existe. Elige uno de la lista.",
+      "empty": "Este tipo de catálogo todavía no tiene elementos."
+    },
+    "form": {
+      "createTitle": "Nuevo elemento de catálogo",
+      "editTitle": "Editar elemento de catálogo",
+      "codeHelp": "Si lo dejas vacío, se genera automáticamente a partir del nombre.",
+      "codeWarning": "Cambiar el código puede afectar a otras tablas que lo referencian.",
+      "valueLockedHelp": "El sistema usa este valor internamente y no se puede cambiar. El código y el nombre sí se pueden editar."
+    },
+    "fields": {
+      "code": "Código",
+      "name": "Nombre",
+      "value": "Valor",
+      "description": "Descripción",
+      "sortOrder": "Orden",
+      "isActive": "Estado"
+    },
+    "valueLocked": {
+      "badge": "Valor bloqueado por el sistema"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "errors": {
+      "CATITEM_001_CATTYPE_NOT_FOUND": "El tipo de catálogo no existe.",
+      "CATITEM_004_CATTYPE_NOT_FOUND": "El tipo de catálogo no existe.",
+      "CATITEM_004_NOT_FOUND": "El elemento de catálogo no existe.",
+      "CATITEM_005A_VALUE_LOCKED": "Este elemento está bloqueado por el sistema y no se puede dar de baja.",
+      "CATITEM_005A_ALREADY_INACTIVE": "El elemento ya estaba inactivo.",
+      "CATITEM_005B_ALREADY_ACTIVE": "El elemento ya estaba activo."
     }
   },
   "home": {

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
@@ -147,6 +147,7 @@ describe('CatalogTypeListPage — autorización', () => {
               onEdit={() => {}}
               onAudit={() => {}}
               onConfirm={() => {}}
+              onViewItems={() => {}}
             />
           </DropdownMenuContent>
         </DropdownMenu>
@@ -160,6 +161,9 @@ describe('CatalogTypeListPage — autorización', () => {
     expect(screen.queryByRole('menuitem', { name: 'Editar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Ver auditoría' })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Dar de baja' })).not.toBeInTheDocument();
+    // SPEC FE03 §6: "Ver ítems" isn't gated — it's offered to any level that reaches this
+    // screen, the same USER level the destination route requires.
+    expect(screen.getByRole('menuitem', { name: 'Ver ítems' })).toBeInTheDocument();
   });
 
   it('con nivel ADMIN, el menú de fila ofrece «Editar» y «Dar de baja», pero no «Ver auditoría»', async () => {
@@ -175,6 +179,7 @@ describe('CatalogTypeListPage — autorización', () => {
               onEdit={() => {}}
               onAudit={() => {}}
               onConfirm={() => {}}
+              onViewItems={() => {}}
             />
           </DropdownMenuContent>
         </DropdownMenu>
@@ -199,6 +204,7 @@ describe('CatalogTypeListPage — autorización', () => {
               onEdit={() => {}}
               onAudit={() => {}}
               onConfirm={() => {}}
+              onViewItems={() => {}}
             />
           </DropdownMenuContent>
         </DropdownMenu>
@@ -206,6 +212,35 @@ describe('CatalogTypeListPage — autorización', () => {
     );
 
     expect(await screen.findByRole('menuitem', { name: 'Ver auditoría' })).toBeInTheDocument();
+  });
+});
+
+describe('CatalogTypeListPage — atajo "Ver ítems"', () => {
+  it('lleva el catalogTypeId de la fila al callback', async () => {
+    const user = userEvent.setup();
+    signInAs('USER', 25);
+    const onViewItems = vi.fn();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DropdownMenu open onOpenChange={() => {}}>
+          <DropdownMenuContent>
+            <CatalogTypeRowActions
+              row={makeRow({ catalogTypeId: 'ct-42' })}
+              onEdit={() => {}}
+              onAudit={() => {}}
+              onConfirm={() => {}}
+              onViewItems={onViewItems}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </QueryClientProvider>,
+    );
+
+    await user.click(await screen.findByRole('menuitem', { name: 'Ver ítems' }));
+
+    expect(onViewItems).toHaveBeenCalledWith('ct-42');
   });
 });
 

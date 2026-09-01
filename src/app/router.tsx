@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { CatalogItemListPage } from '@/features/catalogItem/CatalogItemListPage';
 import { CatalogTypeListPage } from '@/features/catalogType/CatalogTypeListPage';
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/LoginPage';
@@ -22,6 +23,7 @@ export function AppRouter() {
             <Route path="/" element={<HomePage />} />
             <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
               <Route path="/catalog-types" element={<CatalogTypeListPage />} />
+              <Route path="/catalog-items" element={<CatalogItemListPage />} />
             </Route>
           </Route>
         </Route>
