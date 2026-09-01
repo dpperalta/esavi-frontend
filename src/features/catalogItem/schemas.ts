@@ -32,7 +32,11 @@ export function buildUpdateCatalogItemSchema(isValueLocked: boolean) {
   return z.object(isValueLocked ? rest : { ...rest, value }).partial();
 }
 
-export type CatalogItemUpdateFormValues = z.infer<ReturnType<typeof buildUpdateCatalogItemSchema>>;
+// Named independently of `buildUpdateCatalogItemSchema`'s return (a boolean parameter makes its
+// inferred type a union, awkward as a `ResourceForm` generic). `value` optional here covers both
+// branches structurally: the locked branch's parsed object simply omits the key, which still
+// satisfies an optional property.
+export type CatalogItemUpdateFormValues = Partial<CatalogItemFormValues>;
 
 // SPEC FE03 §3.5, hallazgo E: ceñido a los códigos que el backend emite de verdad.
 // `CATITEM_001_CATTYPE_NOT_FOUND`/`004_CATTYPE_NOT_FOUND` no están aquí porque el tipo no es un

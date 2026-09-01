@@ -164,6 +164,44 @@
       "viewItems": "View items"
     }
   },
+  "catalogItem": {
+    "list": {
+      "title": "Catalog items",
+      "noTypeSelected": "Choose a catalog type to see its items.",
+      "unknownType": "The catalog type in the link doesn't exist. Pick one from the list.",
+      "empty": "This catalog type doesn't have any items yet."
+    },
+    "form": {
+      "createTitle": "New catalog item",
+      "editTitle": "Edit catalog item",
+      "codeHelp": "Leave it empty to generate it automatically from the name.",
+      "codeWarning": "Changing the code can affect other tables that reference it.",
+      "valueLockedHelp": "The system uses this value internally and it can't be changed. Code and name can still be edited."
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "value": "Value",
+      "description": "Description",
+      "sortOrder": "Order",
+      "isActive": "Status"
+    },
+    "valueLocked": {
+      "badge": "Value locked by the system"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "errors": {
+      "CATITEM_001_CATTYPE_NOT_FOUND": "The catalog type doesn't exist.",
+      "CATITEM_004_CATTYPE_NOT_FOUND": "The catalog type doesn't exist.",
+      "CATITEM_004_NOT_FOUND": "The catalog item doesn't exist.",
+      "CATITEM_005A_VALUE_LOCKED": "This item is locked by the system and can't be deactivated.",
+      "CATITEM_005A_ALREADY_INACTIVE": "The item was already inactive.",
+      "CATITEM_005B_ALREADY_ACTIVE": "The item was already active."
+    }
+  },
   "home": {
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"

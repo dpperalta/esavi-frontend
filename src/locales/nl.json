@@ -164,6 +164,44 @@
       "viewItems": "Items bekijken"
     }
   },
+  "catalogItem": {
+    "list": {
+      "title": "Catalogusitems",
+      "noTypeSelected": "Kies een catalogustype om de items te zien.",
+      "unknownType": "Het catalogustype uit de link bestaat niet. Kies er een uit de lijst.",
+      "empty": "Dit catalogustype heeft nog geen items."
+    },
+    "form": {
+      "createTitle": "Nieuw catalogusitem",
+      "editTitle": "Catalogusitem bewerken",
+      "codeHelp": "Laat leeg om automatisch te genereren op basis van de naam.",
+      "codeWarning": "Het wijzigen van de code kan andere tabellen die ernaar verwijzen beïnvloeden.",
+      "valueLockedHelp": "Het systeem gebruikt deze waarde intern en kan niet worden gewijzigd. Code en naam kunnen wel worden bewerkt."
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Naam",
+      "value": "Waarde",
+      "description": "Omschrijving",
+      "sortOrder": "Volgorde",
+      "isActive": "Status"
+    },
+    "valueLocked": {
+      "badge": "Waarde vergrendeld door het systeem"
+    },
+    "status": {
+      "active": "Actief",
+      "inactive": "Inactief"
+    },
+    "errors": {
+      "CATITEM_001_CATTYPE_NOT_FOUND": "Het catalogustype bestaat niet.",
+      "CATITEM_004_CATTYPE_NOT_FOUND": "Het catalogustype bestaat niet.",
+      "CATITEM_004_NOT_FOUND": "Het catalogusitem bestaat niet.",
+      "CATITEM_005A_VALUE_LOCKED": "Dit item is vergrendeld door het systeem en kan niet worden gedeactiveerd.",
+      "CATITEM_005A_ALREADY_INACTIVE": "Het item was al inactief.",
+      "CATITEM_005B_ALREADY_ACTIVE": "Het item was al actief."
+    }
+  },
   "home": {
     "greeting": "Hallo, {{name}}",
     "roleLabel": "Uw rol: {{role}}"
