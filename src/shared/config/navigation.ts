@@ -185,7 +185,6 @@ export const NAVIGATION: NavItem[] = [
         icon: ListChecks,
         path: '/catalog-items',
         minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
       {
         key: 'nav.items.systemConfig',
