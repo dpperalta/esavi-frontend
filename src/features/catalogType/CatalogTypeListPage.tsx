@@ -209,6 +209,7 @@ export function CatalogTypeListPage() {
         canCreate={canCreate}
         onCreate={handleCreate}
         emptyKey="catalogType.list.empty"
+        isRowInactive={(row) => !row.isActive}
         rowActions={(row) => (
           <CatalogTypeRowActions
             row={row}

@@ -32,6 +32,7 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 import { useCan } from '@/shared/hooks/useCan';
+import { cn } from '@/shared/lib/utils';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
@@ -72,6 +73,11 @@ export interface ResourceTableProps<T> {
   // in memory). FE03 is the first to pass `true`.
   searchable?: boolean;
   sortable?: boolean;
+  // CONVENTIONS.md §10.1: an inactive row gets a `destructive` background tint on top of its
+  // status badge — the badge alone made an inactive row too easy to miss scanning a dense table.
+  // Optional because `T` is generic; a caller without an `isActive`-shaped field just never
+  // passes it.
+  isRowInactive?: (row: T) => boolean;
 }
 
 export function ResourceTable<T>({
@@ -93,6 +99,7 @@ export function ResourceTable<T>({
   emptyKey = 'common.table.empty',
   emptyFilteredKey = 'common.table.emptyFiltered',
   isFiltered = false,
+  isRowInactive,
 }: ResourceTableProps<T>) {
   const { t } = useTranslation();
   const pageSize = usePreferencesStore((state) => state.pageSize);
@@ -180,7 +187,10 @@ export function ResourceTable<T>({
                 </TableHeader>
                 <TableBody>
                   {rows.map((row) => (
-                    <TableRow key={String(row[idField])}>
+                    <TableRow
+                      key={String(row[idField])}
+                      className={cn(isRowInactive?.(row) && 'bg-destructive/5')}
+                    >
                       {columns.map((column) => (
                         <TableCell key={column.key} className={column.className}>
                           {column.render(row)}
@@ -216,6 +226,7 @@ export function ResourceTable<T>({
                   row={row}
                   columns={columns}
                   rowActions={rowActions}
+                  isInactive={isRowInactive?.(row)}
                 />
               ))}
             </div>
@@ -366,16 +377,17 @@ interface ResourceTableCardProps<T> {
   row: T;
   columns: ResourceTableColumn<T>[];
   rowActions?: (row: T) => ReactNode;
+  isInactive?: boolean;
 }
 
-function ResourceTableCard<T>({ row, columns, rowActions }: ResourceTableCardProps<T>) {
+function ResourceTableCard<T>({ row, columns, rowActions, isInactive }: ResourceTableCardProps<T>) {
   const { t } = useTranslation();
   const primary = columns.filter((column) => column.card === 'primary');
   const secondary = columns.filter((column) => column.card === 'secondary');
   const meta = columns.filter((column) => column.card === 'meta');
 
   return (
-    <Card>
+    <Card className={cn(isInactive && 'bg-destructive/5')}>
       <CardContent className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
           {primary.map((column) => (

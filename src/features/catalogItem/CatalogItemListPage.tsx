@@ -279,6 +279,7 @@ export function CatalogItemListPage() {
           canCreate={canCreate}
           onCreate={handleCreate}
           emptyKey="catalogItem.list.empty"
+          isRowInactive={(row) => !row.isActive}
           rowActions={(row) => (
             <CatalogItemRowActions
               row={row}

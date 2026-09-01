@@ -233,6 +233,8 @@ Los tokens semánticos no se limitan a `primary`/`destructive`: `--success` y `-
 
 Las cabeceras de `<ResourceTable>` llevan `bg-primary/8` — un tinte apenas perceptible que separa la fila de encabezado del cuerpo sin introducir un color nuevo. Se aplica igual en el estado de carga (`ResourceTableSkeleton`) para que no haya salto de color al terminar de cargar.
 
+**Toda fila inactiva lleva, además de su `<Badge variant="destructive">`, un tinte de fondo `bg-destructive/5` en la fila entera** — tabla de escritorio y tarjeta móvil por igual. Un badge de dos centímetros al final de la fila se pierde al escanear una tabla densa; el tinte de fondo hace que lo inactivo se note sin leer ninguna celda. Se activa pasando `isRowInactive={(row) => !row.isActive}` a `<ResourceTable>` — una prop de la primitiva (§10.4), nunca una clase condicional copiada en cada `<Entity>ListPage.tsx`. El texto de las celdas no cambia de color: sólo el fondo, para no competir con el badge ni perder contraste con el texto normal.
+
 ### 10.2 Responsividad
 
 Mobile-first, sin excepción:
@@ -347,6 +349,7 @@ npm run check            # build && lint && i18n:check && test
 - [ ] El `minLevel` del `NavItem` y el `level` del `<RequireRole>` coinciden con `API-ROUTES.md`.
 - [ ] El código `ESAVI-*` aparece citado donde se consume el endpoint.
 - [ ] Ningún color literal, ningún texto literal visible, ningún `any` en el límite con la API.
+- [ ] Si la entidad tiene `isActive`, `<ResourceTable>` recibe `isRowInactive` (§10.1): la fila inactiva lleva el tinte `bg-destructive/5` además del badge.
 - [ ] Ningún `response.data.data`, ningún `axios` importado fuera de `client.ts`, ningún `localStorage` de tokens fuera de `TokenStore`.
 - [ ] Los filtros van en `searchParams`; nada remoto copiado a `useState` o a un store.
 - [ ] Se probó por debajo de `md`: la tabla colapsa a tarjetas y el body no hace scroll horizontal.
