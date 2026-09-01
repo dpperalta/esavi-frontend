@@ -106,6 +106,89 @@ function renderPicker(props: {
   );
 }
 
+// Bug reportado por el usuario: "Limpiar filtros" pone `value` en `null` desde fuera del picker
+// (no a través de su propio `onChange`) — el picker debe reflejar ese reset, no quedarse pegado
+// mostrando la selección anterior.
+function renderPickerWithExternalReset() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  function Harness() {
+    const [value, setValue] = useState<string | null>(null);
+    return (
+      <>
+        <button type="button" onClick={() => setValue(null)}>
+          Limpiar filtros
+        </button>
+        <GeoLocationPicker value={value} onChange={setValue} />
+      </>
+    );
+  }
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <Harness />
+    </QueryClientProvider>,
+  );
+}
+
+describe('GeoLocationPicker — reset externo (bug reportado)', () => {
+  it('un value puesto a null desde fuera limpia la cascada, no solo el valor final', async () => {
+    const user = userEvent.setup();
+    mockLevelTypes();
+    server.use(
+      http.get('http://localhost:4500/api/geo-locations', ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get('geoLevelId') === 'lvl-country') {
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: { count: 1, rows: [makeLocation()] },
+          });
+        }
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderPickerWithExternalReset();
+
+    const trigger = await screen.findByRole('combobox');
+    await user.click(trigger);
+    await user.click(await screen.findByRole('option', { name: 'Ecuador' }));
+
+    await waitFor(() => expect(screen.getByRole('combobox')).toHaveTextContent('Ecuador'));
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+
+    await waitFor(() => expect(screen.getByRole('combobox')).not.toHaveTextContent('Ecuador'));
+  });
+
+  it('un value puesto a null desde fuera no afecta la selección propia del usuario (eco de onChange)', async () => {
+    const user = userEvent.setup();
+    mockLevelTypes();
+    server.use(
+      http.get('http://localhost:4500/api/geo-locations', ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get('geoLevelId') === 'lvl-country') {
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: { count: 1, rows: [makeLocation()] },
+          });
+        }
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderPicker({});
+
+    const trigger = await screen.findByRole('combobox');
+    await user.click(trigger);
+    await user.click(await screen.findByRole('option', { name: 'Ecuador' }));
+
+    // The picker's own onChange echoes `value` back in — must not be treated as an external
+    // reset, or the cascade would collapse right after the user picks something.
+    await waitFor(() => expect(screen.getByRole('combobox')).toHaveTextContent('Ecuador'));
+  });
+});
+
 describe('GeoLocationPicker — primer nivel (hallazgo D)', () => {
   it('pide el primer nivel filtrando por geoLevelId del nivel raíz, nunca con parentId vacío', async () => {
     mockLevelTypes();

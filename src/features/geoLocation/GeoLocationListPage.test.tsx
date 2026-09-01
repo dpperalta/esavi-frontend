@@ -198,6 +198,78 @@ describe('GeoLocationListPage — filtros en la URL', () => {
   });
 });
 
+describe('GeoLocationListPage — botón único «Limpiar filtros» en el extremo derecho', () => {
+  const GL_ECUADOR = '22222222-2222-4222-8222-222222222222';
+
+  it('sin filtros activos, está deshabilitado en vez de oculto', async () => {
+    signInAs('ADMIN', 50);
+    mockLevelTypes();
+    server.use(
+      http.get('http://localhost:4500/api/geo-locations', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [makeRow()] } }),
+      ),
+    );
+
+    renderPage();
+
+    await waitFor(() => expect(screen.getAllByText('Ecuador').length).toBeGreaterThan(0));
+    expect(screen.getByRole('button', { name: 'Limpiar filtros' })).toBeDisabled();
+  });
+
+  it('con un filtro activo se habilita aunque haya resultados, y limpiarlo deja page en 1', async () => {
+    const user = userEvent.setup();
+    signInAs('ADMIN', 50);
+    mockLevelTypes();
+    server.use(
+      http.get('http://localhost:4500/api/geo-locations', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [makeRow()] } }),
+      ),
+    );
+
+    const router = renderPage(`/geo-locations?geoLevelId=${LVL_COUNTRY}&page=2`);
+
+    await waitFor(() => expect(screen.getAllByText('Ecuador').length).toBeGreaterThan(0));
+
+    const clearButton = screen.getByRole('button', { name: 'Limpiar filtros' });
+    expect(clearButton).toBeEnabled();
+    await user.click(clearButton);
+
+    await waitFor(() => expect(router.state.location.search).toBe(''));
+    expect(screen.getByRole('button', { name: 'Limpiar filtros' })).toBeDisabled();
+  });
+
+  it('«Limpiar filtros» (vacío filtrado) también limpia la cascada del picker de padre, no solo el valor final', async () => {
+    const user = userEvent.setup();
+    signInAs('ADMIN', 50);
+    mockLevelTypes();
+    server.use(
+      http.get(`http://localhost:4500/api/geo-locations/${GL_ECUADOR}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: makeRow({ geoLocationId: GL_ECUADOR }) }),
+      ),
+      http.get('http://localhost:4500/api/geo-locations', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+
+    renderPage(`/geo-locations?geoLevelId=${LVL_COUNTRY}&parentId=${GL_ECUADOR}`);
+
+    // The parent picker mounts with a value already set, so it shows the read-only "Ecuador" +
+    // «Cambiar» view (SPEC FE04 §3.7) — this is the exact scenario the user hit.
+    expect(await screen.findByText('Ecuador')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cambiar' })).toBeInTheDocument();
+
+    // Two "Limpiar filtros" buttons coexist here: the toolbar one (top, always available) and
+    // <ResourceTable>'s own one on the empty-filtered panel (§3.8) — either does the same thing.
+    const clearButtons = await screen.findAllByRole('button', { name: 'Limpiar filtros' });
+    await user.click(clearButtons[0]);
+
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Cambiar' })).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByText('Ecuador')).not.toBeInTheDocument();
+  });
+});
+
 describe('GeoLocationListPage — vacío con filtros', () => {
   it('pinta emptyFiltered con botón de limpiar, no el vacío genérico', async () => {
     signInAs('ADMIN', 50);
@@ -211,6 +283,7 @@ describe('GeoLocationListPage — vacío con filtros', () => {
     renderPage(`/geo-locations?geoLevelId=${LVL_COUNTRY}`);
 
     expect(await screen.findByText('Ninguna ubicación coincide con los filtros.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Limpiar filtros' })).toBeInTheDocument();
+    // Toolbar button (always available while filtered) + <ResourceTable>'s own empty-panel one.
+    expect(screen.getAllByRole('button', { name: 'Limpiar filtros' })).toHaveLength(2);
   });
 });

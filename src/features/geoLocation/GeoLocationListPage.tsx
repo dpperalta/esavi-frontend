@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { XIcon } from 'lucide-react';
 import type { GeoLocation } from '@/contracts/declared/geoLocation';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
@@ -17,6 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import { DropdownMenuItem } from '@/shared/components/ui/dropdown-menu';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
@@ -297,6 +299,24 @@ export function GeoLocationListPage() {
             onChange={(event) => setSearchInput(event.target.value)}
           />
         </div>
+
+        {/* Single clear-all action, on the same row as the filters, pushed to the far right
+            (sm:ml-auto) — available even while there are results, not only from the
+            empty-filtered state inside <ResourceTable> (§3.8). Disabled rather than hidden
+            while no filter is active, so it's never a dead click. Kept as one button, not one
+            "X" per field, so a future clearable-<Select> primitive (SPEC FE04 follow-up, out of
+            this spec's scope) won't end up duplicating the affordance. */}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="sm:ml-auto"
+          disabled={!isFiltered}
+          onClick={handleClearFilters}
+        >
+          <XIcon aria-hidden="true" />
+          {t('common.table.clearFilters')}
+        </Button>
       </div>
 
       <ResourceTable<GeoLocation>

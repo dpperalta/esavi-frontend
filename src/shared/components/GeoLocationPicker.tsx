@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { geoLocationResource } from '@/features/geoLocation/api';
 import { geoLevelTypeResource } from '@/features/geoLevelType/api';
@@ -35,7 +35,10 @@ interface LevelProps {
 // discard whatever was chosen deeper — "clears, doesn't hide" (SPEC FE04 §3.7).
 function GeoLocationPickerLevel({ filters, excludeSubtreeOf, onFinalChange }: LevelProps) {
   const { t } = useTranslation();
-  const [selected, setSelected] = useState<string | undefined>(undefined);
+  // Controlled from the very first render — `undefined` here would make the underlying Radix
+  // <Select> start uncontrolled and then switch to controlled the moment something is picked,
+  // which React (rightfully) warns about.
+  const [selected, setSelected] = useState('');
   const list = geoLocationResource.useList({ pageSize: 100, filters });
   // Reused from cache (staleTime 30 min): whichever screen hosts the picker already has this
   // query resolved for its own level combo/column (SPEC FE04 §3.5).
@@ -128,6 +131,28 @@ export function GeoLocationPicker({ value, onChange, excludeSubtreeOf }: GeoLoca
   // value with a "Cambiar" button that opens the cascade empty, from the root level, whenever
   // a value already travels in on mount.
   const [editing, setEditing] = useState(value === null);
+  const [resetToken, setResetToken] = useState(0);
+  // Tracks the last value *this picker itself* emitted via `onChange`, so an incoming `value`
+  // that doesn't match it is recognized as an external reset (e.g. a page-level "clear filters"
+  // action) rather than the round-trip echo of the picker's own selection. Only an external
+  // reset discards the in-progress cascade and its `editing`/`selected` state — the round-trip
+  // echo must not, or picking a value would immediately collapse the cascade back to the
+  // read-only view.
+  const lastEmitted = useRef(value);
+  useEffect(() => {
+    if (value === lastEmitted.current) {
+      return;
+    }
+    lastEmitted.current = value;
+    setEditing(value === null);
+    setResetToken((token) => token + 1);
+  }, [value]);
+
+  function handleFinalChange(nextValue: string | null) {
+    lastEmitted.current = nextValue;
+    onChange(nextValue);
+  }
+
   const existing = geoLocationResource.useOne(value ?? '');
 
   if (!editing && value) {
@@ -164,9 +189,10 @@ export function GeoLocationPicker({ value, onChange, excludeSubtreeOf }: GeoLoca
 
   return (
     <GeoLocationPickerLevel
+      key={resetToken}
       filters={{ geoLevelId: rootLevelTypeId }}
       excludeSubtreeOf={excludeSubtreeOf}
-      onFinalChange={onChange}
+      onFinalChange={handleFinalChange}
     />
   );
 }
