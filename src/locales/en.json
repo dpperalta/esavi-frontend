@@ -229,6 +229,39 @@
       "GEOTYPE_005B_ALREADY_ACTIVE": "The geographic level was already active."
     }
   },
+  "geoLocation": {
+    "list": {
+      "title": "Locations",
+      "empty": "There are no locations yet.",
+      "emptyFiltered": "No location matches the filters."
+    },
+    "form": {
+      "createTitle": "New location",
+      "editTitle": "Edit location",
+      "changeParent": "Change"
+    },
+    "fields": {
+      "geoLevelTypeId": "Geographic level",
+      "parentGeoLocationId": "Parent location",
+      "name": "Name",
+      "externalCode": "External code",
+      "officialName": "Official name",
+      "shortName": "Short name",
+      "isoCode": "ISO code",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "errors": {
+      "GEOLOC_004_NOT_FOUND": "The location doesn't exist.",
+      "GEOLOC_005A_ALREADY_INACTIVE": "The location was already inactive.",
+      "GEOLOC_005B_ALREADY_ACTIVE": "The location was already active."
+    }
+  },
   "home": {
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"

@@ -1,0 +1,64 @@
+import { describe, expect, it } from 'vitest';
+import { createGeoLocationSchema, updateGeoLocationSchema } from './schemas';
+
+function validInput(overrides: Record<string, unknown> = {}) {
+  return {
+    geoLevelTypeId: '11111111-1111-4111-8111-111111111111',
+    name: 'Quito',
+    externalCode: 'UIO',
+    ...overrides,
+  };
+}
+
+describe('createGeoLocationSchema', () => {
+  it('rechaza externalCode vacío', () => {
+    const result = createGeoLocationSchema.safeParse(validInput({ externalCode: '' }));
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza name vacío', () => {
+    const result = createGeoLocationSchema.safeParse(validInput({ name: '' }));
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza latitude: 91', () => {
+    const result = createGeoLocationSchema.safeParse(validInput({ latitude: 91 }));
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza longitude: -181', () => {
+    const result = createGeoLocationSchema.safeParse(validInput({ longitude: -181 }));
+
+    expect(result.success).toBe(false);
+  });
+
+  it('acepta el mínimo válido, sin parentGeoLocationId (raíz)', () => {
+    const result = createGeoLocationSchema.safeParse(validInput());
+
+    expect(result.success).toBe(true);
+  });
+
+  it('acepta latitude y longitude en el límite (90/-180)', () => {
+    const result = createGeoLocationSchema.safeParse(
+      validInput({ latitude: 90, longitude: -180 }),
+    );
+
+    expect(result.success).toBe(true);
+  });
+
+  it('level y geoPolygon no son campos del schema', () => {
+    expect(createGeoLocationSchema.shape).not.toHaveProperty('level');
+    expect(createGeoLocationSchema.shape).not.toHaveProperty('geoPolygon');
+  });
+});
+
+describe('updateGeoLocationSchema', () => {
+  it('todos los campos son opcionales', () => {
+    const result = updateGeoLocationSchema.safeParse({});
+
+    expect(result.success).toBe(true);
+  });
+});
