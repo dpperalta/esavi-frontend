@@ -264,6 +264,14 @@
       "inactive": "Inactief"
     },
     "errors": {
+      "GEOLOC_001_GEOLEVELTYPE_NOT_FOUND": "Het geografisch niveau bestaat niet.",
+      "GEOLOC_004_GEOLEVELTYPE_NOT_FOUND": "Het geografisch niveau bestaat niet.",
+      "GEOLOC_001_PARENT_GEOLOCATION_NOT_FOUND": "De bovenliggende locatie bestaat niet.",
+      "GEOLOC_004_PARENT_GEOLOCATION_NOT_FOUND": "De bovenliggende locatie bestaat niet.",
+      "GEOLOC_001_NAME_EXISTS": "Er bestaat al een locatie met die naam onder dezelfde bovenliggende locatie.",
+      "GEOLOC_004_NAME_EXISTS": "Er bestaat al een locatie met die naam onder dezelfde bovenliggende locatie.",
+      "GEOLOC_001_EXTERNAL_CODE_EXISTS": "Er bestaat al een locatie met die externe code.",
+      "GEOLOC_004_EXTERNAL_CODE_EXISTS": "Er bestaat al een locatie met die externe code.",
       "GEOLOC_004_NOT_FOUND": "De locatie bestaat niet.",
       "GEOLOC_005A_ALREADY_INACTIVE": "De locatie was al inactief.",
       "GEOLOC_005B_ALREADY_ACTIVE": "De locatie was al actief."

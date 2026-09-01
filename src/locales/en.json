@@ -264,6 +264,14 @@
       "inactive": "Inactive"
     },
     "errors": {
+      "GEOLOC_001_GEOLEVELTYPE_NOT_FOUND": "The geographic level doesn't exist.",
+      "GEOLOC_004_GEOLEVELTYPE_NOT_FOUND": "The geographic level doesn't exist.",
+      "GEOLOC_001_PARENT_GEOLOCATION_NOT_FOUND": "The parent location doesn't exist.",
+      "GEOLOC_004_PARENT_GEOLOCATION_NOT_FOUND": "The parent location doesn't exist.",
+      "GEOLOC_001_NAME_EXISTS": "A location with that name already exists among its siblings.",
+      "GEOLOC_004_NAME_EXISTS": "A location with that name already exists among its siblings.",
+      "GEOLOC_001_EXTERNAL_CODE_EXISTS": "A location with that external code already exists.",
+      "GEOLOC_004_EXTERNAL_CODE_EXISTS": "A location with that external code already exists.",
       "GEOLOC_004_NOT_FOUND": "The location doesn't exist.",
       "GEOLOC_005A_ALREADY_INACTIVE": "The location was already inactive.",
       "GEOLOC_005B_ALREADY_ACTIVE": "The location was already active."
