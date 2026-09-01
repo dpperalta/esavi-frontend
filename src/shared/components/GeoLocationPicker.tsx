@@ -21,11 +21,19 @@ export interface GeoLocationPickerProps {
   // filters by id equality in whatever options each level actually loads — it doesn't resolve
   // the full subtree, which the backend has no recursive endpoint for.
   excludeSubtreeOf?: string;
+  // geoLevelTypeId of the entity the parent is being chosen for (the level selected elsewhere in
+  // the same form/filter row). The cascade stops one level short of it — offering a level-3
+  // parent for a level-3 entity would create a location that's its own sibling's child, not an
+  // ancestor (bug reportado por el usuario: el picker desplegaba el mismo nivel que se estaba
+  // creando).
+  maxLevelTypeId?: string;
 }
 
 interface LevelProps {
   filters: Record<string, string>;
   excludeSubtreeOf?: string;
+  maxSortOrder?: number;
+  isTopLevel: boolean;
   onFinalChange: (geoLocationId: string | null) => void;
 }
 
@@ -33,7 +41,13 @@ interface LevelProps {
 // backend can't filter `parentGeoLocationId IS NULL`), every level below uses `parentId`. A
 // `key={selected}` on the recursive child (below) makes picking a new value at this level
 // discard whatever was chosen deeper — "clears, doesn't hide" (SPEC FE04 §3.7).
-function GeoLocationPickerLevel({ filters, excludeSubtreeOf, onFinalChange }: LevelProps) {
+function GeoLocationPickerLevel({
+  filters,
+  excludeSubtreeOf,
+  maxSortOrder,
+  isTopLevel,
+  onFinalChange,
+}: LevelProps) {
   const { t } = useTranslation();
   // Controlled from the very first render — `undefined` here would make the underlying Radix
   // <Select> start uncontrolled and then switch to controlled the moment something is picked,
@@ -63,9 +77,25 @@ function GeoLocationPickerLevel({ filters, excludeSubtreeOf, onFinalChange }: Le
 
   const rows = (list.data?.rows ?? []).filter((row) => row.geoLocationId !== excludeSubtreeOf);
 
-  if (rows.length === 0) {
-    // "Vacío en un nivel": no <Select> is painted, the level above stays the final selection —
-    // announced for screen readers only, nothing visible (SPEC FE04 §3.7, §3.9).
+  const levelSortOrder = levelTypes.data?.rows.find(
+    (row) => row.geoLevelTypeId === rows[0]?.geoLevelTypeId,
+  )?.sortOrder;
+  // The level being created/filtered can't be its own parent's level, nor deeper — never render
+  // a level whose sortOrder reaches maxSortOrder.
+  const tooDeep = maxSortOrder !== undefined && levelSortOrder !== undefined && levelSortOrder >= maxSortOrder;
+
+  if (tooDeep && isTopLevel) {
+    // No level qualifies as a possible parent at all (e.g. creating a root-level entity) — say
+    // so visibly instead of leaving the field looking broken/empty.
+    return (
+      <p className="text-sm text-muted-foreground">{t('geoLocation.picker.noEligibleParent')}</p>
+    );
+  }
+
+  if (rows.length === 0 || tooDeep) {
+    // "Vacío en un nivel" or "demasiado profundo": no <Select> is painted, the level above stays
+    // the final selection — announced for screen readers only, nothing visible (SPEC FE04 §3.7,
+    // §3.9).
     return (
       <span role="status" className="sr-only">
         {t('geoLocation.picker.emptyLevel')}
@@ -105,6 +135,8 @@ function GeoLocationPickerLevel({ filters, excludeSubtreeOf, onFinalChange }: Le
           key={selected}
           filters={{ parentId: selected }}
           excludeSubtreeOf={excludeSubtreeOf}
+          maxSortOrder={maxSortOrder}
+          isTopLevel={false}
           onFinalChange={onFinalChange}
         />
       )}
@@ -114,7 +146,12 @@ function GeoLocationPickerLevel({ filters, excludeSubtreeOf, onFinalChange }: Le
 
 // Cascade of <Select>, one per level, over `geoLocation` (SPEC FE04 §3.7). No autodespliegue,
 // no preselection: the first level starts empty and doesn't resolve on its own.
-export function GeoLocationPicker({ value, onChange, excludeSubtreeOf }: GeoLocationPickerProps) {
+export function GeoLocationPicker({
+  value,
+  onChange,
+  excludeSubtreeOf,
+  maxLevelTypeId,
+}: GeoLocationPickerProps) {
   const { t } = useTranslation();
   // Root level = the geoLevelType of lowest sortOrder (hallazgo D) — a suggestion about seeded
   // data, not a schema guarantee (SPEC FE04 §7 riesgo).
@@ -126,6 +163,12 @@ export function GeoLocationPicker({ value, onChange, excludeSubtreeOf }: GeoLoca
     }
     return rows.reduce((min, row) => (row.sortOrder < min.sortOrder ? row : min)).geoLevelTypeId;
   }, [levelTypes.data]);
+  const maxSortOrder = useMemo(() => {
+    if (!maxLevelTypeId) {
+      return undefined;
+    }
+    return levelTypes.data?.rows.find((row) => row.geoLevelTypeId === maxLevelTypeId)?.sortOrder;
+  }, [levelTypes.data, maxLevelTypeId]);
 
   // No ancestor-chain preload on edit (SPEC FE04 §3.7, decisión confirmada): a flat read-only
   // value with a "Cambiar" button that opens the cascade empty, from the root level, whenever
@@ -192,6 +235,8 @@ export function GeoLocationPicker({ value, onChange, excludeSubtreeOf }: GeoLoca
       key={resetToken}
       filters={{ geoLevelId: rootLevelTypeId }}
       excludeSubtreeOf={excludeSubtreeOf}
+      maxSortOrder={maxSortOrder}
+      isTopLevel
       onFinalChange={handleFinalChange}
     />
   );

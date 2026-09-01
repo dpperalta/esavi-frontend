@@ -137,7 +137,16 @@ export function GeoLocationFormDialog({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('geoLocation.fields.geoLevelTypeId')}</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={(nextValue) => {
+                          field.onChange(nextValue);
+                          // Changing the level can invalidate a parent already chosen for the
+                          // previous level (it could now be too deep, or the same level as the
+                          // new selection) — reset it rather than leave an inconsistent pair.
+                          form.setValue('parentGeoLocationId', null);
+                        }}
+                      >
                         <FormControl>
                           <SelectTrigger className="w-full">
                             <SelectValue />
@@ -167,6 +176,9 @@ export function GeoLocationFormDialog({
                           onChange={field.onChange}
                           // Hallazgo E — excludes its own subtree only in edit mode.
                           excludeSubtreeOf={geoLocationId ?? undefined}
+                          // The parent's cascade stops one level short of the level chosen above
+                          // — never offer a same-level or deeper location as the parent.
+                          maxLevelTypeId={form.watch('geoLevelTypeId') || undefined}
                         />
                       </FormControl>
                       <FormMessage />

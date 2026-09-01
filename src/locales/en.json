@@ -279,7 +279,8 @@
     "picker": {
       "levelLabel": "Level {{level}}",
       "emptyLevel": "This level has no child locations.",
-      "loadError": "We couldn't load the geographic levels."
+      "loadError": "We couldn't load the geographic levels.",
+      "noEligibleParent": "This geographic level has no higher levels available as a parent."
     }
   },
   "home": {
@@ -302,6 +303,18 @@
     "network": "We couldn't reach the server. Check your connection.",
     "unexpected": "Something went wrong. Please try again.",
     "forbidden": "You don't have permission to do this.",
-    "notFound": "We couldn't find what you were looking for."
+    "notFound": "We couldn't find what you were looking for.",
+    "validation": {
+      "required": "This field is required.",
+      "invalidUuid": "Choose a valid option.",
+      "invalidEmail": "Enter a valid email address.",
+      "tooShort_one": "Must have at least {{count}} character.",
+      "tooShort_other": "Must have at least {{count}} characters.",
+      "tooLong_one": "Cannot have more than {{count}} character.",
+      "tooLong_other": "Cannot have more than {{count}} characters.",
+      "numberTooSmall": "The minimum value is {{count}}.",
+      "numberTooBig": "The maximum value is {{count}}.",
+      "invalid": "This value is invalid."
+    }
   }
 }

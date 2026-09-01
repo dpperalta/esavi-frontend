@@ -165,6 +165,9 @@ export function GeoLocationListPage() {
     } else {
       next.set('geoLevelId', value);
     }
+    // A parent chosen under the previous level filter can be too deep (or the same level) for
+    // the new one — same reasoning as the create/edit form.
+    next.delete('parentId');
     next.delete('page');
     setSearchParams(next);
   }
@@ -288,7 +291,13 @@ export function GeoLocationListPage() {
 
         <div className="flex flex-col gap-1.5 sm:w-64">
           <Label>{t('geoLocation.filters.parent')}</Label>
-          <GeoLocationPicker value={parentId} onChange={handleParentChange} />
+          <GeoLocationPicker
+            value={parentId}
+            onChange={handleParentChange}
+            // Consistent with the create/edit form: a "parent" filtered under a chosen level
+            // filter can only be a level above it.
+            maxLevelTypeId={geoLevelId ?? undefined}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5 sm:w-64">

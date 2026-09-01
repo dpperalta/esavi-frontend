@@ -279,7 +279,8 @@
     "picker": {
       "levelLabel": "Niveau {{level}}",
       "emptyLevel": "Dit niveau heeft geen onderliggende locaties.",
-      "loadError": "We konden de geografische niveaus niet laden."
+      "loadError": "We konden de geografische niveaus niet laden.",
+      "noEligibleParent": "Dit geografische niveau heeft geen hogere niveaus beschikbaar als bovenliggende locatie."
     }
   },
   "home": {
@@ -302,6 +303,18 @@
     "network": "We konden geen verbinding maken met de server. Controleer uw internetverbinding.",
     "unexpected": "Er is iets misgegaan. Probeer het opnieuw.",
     "forbidden": "U heeft geen toestemming om dit te doen.",
-    "notFound": "We konden niet vinden wat u zocht."
+    "notFound": "We konden niet vinden wat u zocht.",
+    "validation": {
+      "required": "Dit veld is verplicht.",
+      "invalidUuid": "Kies een geldige optie.",
+      "invalidEmail": "Voer een geldig e-mailadres in.",
+      "tooShort_one": "Moet ten minste {{count}} teken bevatten.",
+      "tooShort_other": "Moet ten minste {{count}} tekens bevatten.",
+      "tooLong_one": "Mag niet meer dan {{count}} teken bevatten.",
+      "tooLong_other": "Mag niet meer dan {{count}} tekens bevatten.",
+      "numberTooSmall": "De minimumwaarde is {{count}}.",
+      "numberTooBig": "De maximumwaarde is {{count}}.",
+      "invalid": "Deze waarde is ongeldig."
+    }
   }
 }
