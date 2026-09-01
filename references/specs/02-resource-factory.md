@@ -1,6 +1,6 @@
 # SPEC FE02 — Fábrica de recursos y primitivas de pantalla
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell y autenticación)
 > **Fecha:** 2026-08-31
 > **Objetivo:** Escribir una sola vez el CRUD que comparten las ~45 entidades del backend —`createResource`, `<ResourceTable>`, `<ResourceForm>`, `<AuditTrail>`— y validarlo construyendo `catalogType` de punta a punta.

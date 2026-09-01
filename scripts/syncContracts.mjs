@@ -18,6 +18,7 @@ const SYNC_MAP = [
   { source: 'user/user.types.ts', dest: 'user.ts' },
   { source: 'common/audit.types.ts', dest: 'common.ts' },
   { source: 'catalog/catalogType.types.ts', dest: 'catalogType.ts' },
+  { source: 'catalog/catalogItem.types.ts', dest: 'catalogItem.ts' },
 ];
 
 function buildHeader(sourceRelPath) {
