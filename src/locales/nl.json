@@ -202,6 +202,33 @@
       "CATITEM_005B_ALREADY_ACTIVE": "Het item was al actief."
     }
   },
+  "geoLevelType": {
+    "list": {
+      "title": "Geografische niveaus",
+      "empty": "Er zijn nog geen geografische niveaus."
+    },
+    "form": {
+      "createTitle": "Nieuw geografisch niveau",
+      "editTitle": "Geografisch niveau bewerken"
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Naam",
+      "sortOrder": "Volgorde",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Actief",
+      "inactive": "Inactief"
+    },
+    "errors": {
+      "GEOTYPE_001_CODE_EXISTS": "Er bestaat al een geografisch niveau met die code.",
+      "GEOTYPE_004_CODE_EXISTS": "Er bestaat al een geografisch niveau met die code.",
+      "GEOTYPE_004_NOT_FOUND": "Het geografisch niveau bestaat niet.",
+      "GEOTYPE_005A_ALREADY_INACTIVE": "Het geografisch niveau was al inactief.",
+      "GEOTYPE_005B_ALREADY_ACTIVE": "Het geografisch niveau was al actief."
+    }
+  },
   "home": {
     "greeting": "Hallo, {{name}}",
     "roleLabel": "Uw rol: {{role}}"

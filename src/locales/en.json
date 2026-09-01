@@ -202,6 +202,33 @@
       "CATITEM_005B_ALREADY_ACTIVE": "The item was already active."
     }
   },
+  "geoLevelType": {
+    "list": {
+      "title": "Geographic levels",
+      "empty": "There are no geographic levels yet."
+    },
+    "form": {
+      "createTitle": "New geographic level",
+      "editTitle": "Edit geographic level"
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "sortOrder": "Order",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "errors": {
+      "GEOTYPE_001_CODE_EXISTS": "A geographic level with that code already exists.",
+      "GEOTYPE_004_CODE_EXISTS": "A geographic level with that code already exists.",
+      "GEOTYPE_004_NOT_FOUND": "The geographic level doesn't exist.",
+      "GEOTYPE_005A_ALREADY_INACTIVE": "The geographic level was already inactive.",
+      "GEOTYPE_005B_ALREADY_ACTIVE": "The geographic level was already active."
+    }
+  },
   "home": {
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"
