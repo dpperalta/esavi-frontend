@@ -34,6 +34,8 @@
       "error": "We couldn't load the data.",
       "retry": "Retry",
       "showInactive": "Show inactive",
+      "clearFilters": "Clear filters",
+      "allOption": "All",
       "serverDecidesInactive": "This list already includes deactivated records; the server decides which ones to show based on your role.",
       "pageSize": "Rows per page",
       "pageStatus": "Page {{page}} of {{pages}} · {{count}} records",
@@ -239,6 +241,11 @@
       "createTitle": "New location",
       "editTitle": "Edit location",
       "changeParent": "Change"
+    },
+    "filters": {
+      "geoLevelType": "Geographic level",
+      "parent": "Parent location",
+      "search": "Search by name or code"
     },
     "fields": {
       "geoLevelTypeId": "Geographic level",

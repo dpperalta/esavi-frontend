@@ -34,6 +34,8 @@
       "error": "No pudimos cargar los datos.",
       "retry": "Reintentar",
       "showInactive": "Mostrar inactivos",
+      "clearFilters": "Limpiar filtros",
+      "allOption": "Todos",
       "serverDecidesInactive": "Este listado ya incluye los registros dados de baja; el servidor decide cuáles mostrar según tu rol.",
       "pageSize": "Filas por página",
       "pageStatus": "Página {{page}} de {{pages}} · {{count}} registros",
@@ -239,6 +241,11 @@
       "createTitle": "Nueva ubicación",
       "editTitle": "Editar ubicación",
       "changeParent": "Cambiar"
+    },
+    "filters": {
+      "geoLevelType": "Nivel geográfico",
+      "parent": "Ubicación padre",
+      "search": "Buscar por nombre o código"
     },
     "fields": {
       "geoLevelTypeId": "Nivel geográfico",

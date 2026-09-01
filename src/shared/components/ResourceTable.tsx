@@ -68,6 +68,9 @@ export interface ResourceTableProps<T> {
   emptyKey?: string;
   emptyFilteredKey?: string;
   isFiltered?: boolean;
+  // Shown as a "Limpiar filtros" button on the filtered-empty state (SPEC FE04 §3.8) — a generic
+  // capability, not specific to any one entity.
+  onClearFilters?: () => void;
   // Hallazgo E (SPEC FE02 §1): declared for the API contract every entity will share, but
   // inert until a backend listing supports it (CONVENTIONS.md §6.5 forbids sorting/filtering
   // in memory). FE03 is the first to pass `true`.
@@ -99,6 +102,7 @@ export function ResourceTable<T>({
   emptyKey = 'common.table.empty',
   emptyFilteredKey = 'common.table.emptyFiltered',
   isFiltered = false,
+  onClearFilters,
   isRowInactive,
 }: ResourceTableProps<T>) {
   const { t } = useTranslation();
@@ -164,6 +168,7 @@ export function ResourceTable<T>({
           <ResourceTableEmpty
             messageKey={isFiltered ? emptyFilteredKey : emptyKey}
             onCreate={canCreate ? onCreate : undefined}
+            onClearFilters={isFiltered ? onClearFilters : undefined}
           />
         )}
 
@@ -354,15 +359,21 @@ function ResourceTableError({ message, onRetry }: ResourceTableErrorProps) {
 interface ResourceTableEmptyProps {
   messageKey: string;
   onCreate?: () => void;
+  onClearFilters?: () => void;
 }
 
-function ResourceTableEmpty({ messageKey, onCreate }: ResourceTableEmptyProps) {
+function ResourceTableEmpty({ messageKey, onCreate, onClearFilters }: ResourceTableEmptyProps) {
   const { t } = useTranslation();
 
   return (
     <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center">
       <InboxIcon aria-hidden="true" className="size-8 text-muted-foreground" />
       <p className="text-sm text-muted-foreground">{t(messageKey)}</p>
+      {onClearFilters && (
+        <Button type="button" variant="outline" size="sm" onClick={onClearFilters}>
+          {t('common.table.clearFilters')}
+        </Button>
+      )}
       {onCreate && (
         <Button type="button" size="sm" onClick={onCreate}>
           <PlusIcon aria-hidden="true" />
