@@ -198,6 +198,7 @@ El backend rota el refresh token y **detecta la reutilización** (SPEC F42): pre
 
 - **React Hook Form + Zod, siempre.** Nada de formularios controlados a mano.
 - El schema Zod vive en `features/<entity>/schemas.ts` y se deriva de los validadores del backend, no de lo que parezca razonable. Si el backend acepta nulo, el schema acepta nulo.
+- **Los mensajes de validación de Zod pasan por i18n, igual que cualquier otro texto visible (§2).** No se escribe un `message` literal en `z.string().min(1, 'Este campo es obligatorio')` dentro de un schema. El mapa global `shared/config/zodErrorMap.ts` (`z.config({ customError })`, registrado una vez en `shared/config/i18n.ts`) traduce los issues nativos de Zod (`invalid_type`, `too_small`, `too_big`, `invalid_format`) contra las claves `errors.validation.*` de `src/locales/{es,en,nl}.json`, en los tres idiomas y sin tocar los 45 `schemas.ts`. Si un campo necesita un mensaje que no encaja en ese catálogo genérico (una regla de negocio, no un límite de tipo/longitud/formato), se cubre con `.refine()`/`.superRefine()` y una clave i18n propia de la entidad — nunca con un string literal en el schema.
 - **Los errores del backend se mapean al campo correspondiente**, no a un toast genérico. Un `409` de duplicado marca el campo duplicado.
 - **Las fechas se envían como `YYYY-MM-DD`.** Las columnas son `date`, no `timestamp`; date-fns formatea, y no se manda un ISO completo ni se convierte a UTC.
 - **La validación del cliente no reemplaza a la del servidor.** Sirve para no gastar un viaje, nada más.
