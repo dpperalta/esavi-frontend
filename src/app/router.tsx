@@ -4,6 +4,8 @@ import { CatalogTypeListPage } from '@/features/catalogType/CatalogTypeListPage'
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
+import { GeoLevelTypeListPage } from '@/features/geoLevelType/GeoLevelTypeListPage';
+import { GeoLocationListPage } from '@/features/geoLocation/GeoLocationListPage';
 import { HomePage } from '@/features/home/HomePage';
 import { RequireAuth } from '@/shared/components/RequireAuth';
 import { RequireRole } from '@/shared/components/RequireRole';
@@ -24,6 +26,8 @@ export function AppRouter() {
             <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
               <Route path="/catalog-types" element={<CatalogTypeListPage />} />
               <Route path="/catalog-items" element={<CatalogItemListPage />} />
+              <Route path="/geo-level-types" element={<GeoLevelTypeListPage />} />
+              <Route path="/geo-locations" element={<GeoLocationListPage />} />
             </Route>
           </Route>
         </Route>

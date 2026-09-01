@@ -1,6 +1,6 @@
 # SPEC FE04 — Geografía: `geoLevelType` + `geoLocation` + `<GeoLocationPicker>`
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE02 (fábrica de recursos y primitivas), SPEC FE03 (precedente de patrón `serverDecides` sin toggle, vía `catalogType`)
 > **Fecha:** 2026-09-01
 > **Objetivo:** Construir el CRUD de `geoLevelType` y `geoLocation` — la jerarquía territorial autorreferente que el resto del dominio (`healthFacility`, filtros de casos F48) cuelga — y estrenar `<GeoLocationPicker>`, la primitiva de cascada jerárquica que ARCHITECTURE.md §4.3 reserva desde el hito 1.
@@ -28,6 +28,8 @@ SPEC FE03 cerró `catalogItem` y dejó explícitamente fuera `geoLocation`, `geo
 
 **E — El backend no impide ciclos en `parentGeoLocationId`.** `updateGeoLocationService` valida que el padre exista y esté activo, pero nunca que no sea la propia fila o uno de sus descendientes. Se decidió que el cliente lo evite por construcción: al editar, `<GeoLocationPicker>` excluye el subárbol de la fila en edición (§3 más abajo).
 
+**F — `GET /api/geo-locations` ganó búsqueda de texto parcial.** `ESAVI-GEOLOC-002` acepta ahora `name` y `code` como query params opcionales, `ILIKE '%…%'` (`geoLocation.controller.ts`, `buildTextWhereConditions` en `geoLocation.service.ts`): `name` contra la columna `name`, `code` contra `externalCode` **o** `isoCode`. Los dos se combinan entre sí con `OR`, no con `AND` — un solo campo de búsqueda en la UI manda el mismo término como `name` y `code` a la vez (§3.3).
+
 ---
 
 ## 2. Alcance
@@ -35,7 +37,7 @@ SPEC FE03 cerró `catalogItem` y dejó explícitamente fuera `geoLocation`, `geo
 **Dentro:**
 
 - **`geoLevelType` de punta a punta**: los seis artefactos de `CONVENTIONS.md` §5, pantalla en `/geo-level-types`, CRUD plano calcado del patrón `catalogType` (`serverDecides`, sin toggle).
-- **`geoLocation` de punta a punta**: los seis artefactos, pantalla en `/geo-locations`, tabla plana con filtros de `geoLevelTypeId` y `parentGeoLocationId` en `searchParams` (hallazgo A).
+- **`geoLocation` de punta a punta**: los seis artefactos, pantalla en `/geo-locations`, tabla plana con filtros de `geoLevelTypeId`, `parentGeoLocationId` y búsqueda de texto (`name`/`code`) en `searchParams` (hallazgo A).
 - **Filtros genéricos en `createResource`**: `ListParams.filters?: Record<string, string>`, propagados por `useList` y `useListByParent` como query params adicionales junto a `limit`/`offset`. Pieza de `shared/`, no específica de geografía.
 - **`<GeoLocationPicker>`**, en `shared/components/`: cascada de `<Select>` nivel por nivel sobre `geoLocation`, primer nivel resuelto por `geoLevelTypeId` (hallazgo D), sin autodespliegue ni preselección. Dos consumidores dentro de este spec:
   - El campo `parentGeoLocationId` del formulario de `geoLocation` (con `excludeSubtreeOf` en edición, hallazgo E).
@@ -89,7 +91,7 @@ PATCH  /api/geo-level-types/activate/:id ESAVI-GEOLVL-005B  SUPERADMIN  reactiva
 
 # GEOLOC
 POST   /api/geo-locations                ESAVI-GEOLOC-001   ADMIN       crear
-GET    /api/geo-locations                ESAVI-GEOLOC-002   USER        listado (activos o todos, según rol; filtros geoLevelId/parentId)
+GET    /api/geo-locations                ESAVI-GEOLOC-002   USER        listado (activos o todos, según rol; filtros geoLevelId/parentId/name/code)
 GET    /api/geo-locations/:id            ESAVI-GEOLOC-003   USER        detalle (incluye geoLevelType, parent, children)
 PUT    /api/geo-locations/:id            ESAVI-GEOLOC-004   ADMIN       actualizar
 DELETE /api/geo-locations/:id            ESAVI-GEOLOC-005A  ADMIN       baja lógica
@@ -144,9 +146,12 @@ geoLocationResource.useList({
   filters: {
     ...(geoLevelId && { geoLevelId }),
     ...(parentId && { parentId }),
+    ...(q && { name: q, code: q }),
   },
 });
 ```
+
+**Búsqueda de texto (`name`/`code`, hallazgo F).** `GET /api/geo-locations` gana dos query params opcionales, `name` y `code`, con `ILIKE '%…%'` (`geoLocation.controller.ts`, `buildTextWhereConditions` en `geoLocation.service.ts`): `name` filtra contra la columna `name`; `code` filtra contra `externalCode` **o** `isoCode`. Los dos se combinan entre sí con `OR`, no con `AND` — mandar el mismo término como `name` y `code` a la vez, como hace el ejemplo de arriba, produce "nombre contiene X **o** código (externo o ISO) contiene X", un único campo de búsqueda con esa semántica, sin distinguir en la UI si el match vino del nombre o del código. `geoLevelId`/`parentId` siguen siendo filtros exactos, AND-eados por separado con ese OR de texto.
 
 ### 3.4 Tipos del contrato
 
@@ -205,9 +210,10 @@ El tipo de actualización es `Partial<CreateGeoLevelTypeInput>` y `Partial<Creat
 | Listado de `geoLevelType` | TanStack Query | `['geoLevelType', 'list', { limit, offset, includeInactive: false }]` | `serverDecides`: `includeInactive` siempre `false` en la queryKey — no hay toggle, la fábrica no lo expone |
 | Filtro `geoLevelTypeId` de `geoLocation` | URL | `searchParams.geoLevelId` | Se comparte por enlace |
 | Filtro `parentGeoLocationId` de `geoLocation` | URL | `searchParams.parentId` | Idem |
-| Página de `geoLocation` | URL | `searchParams.page` | Vuelve a 1 al cambiar cualquier filtro |
+| Búsqueda de texto de `geoLocation` | URL | `searchParams.q` | Un solo campo; se manda como `name` y `code` a la vez (§3.3, hallazgo F). Debounce antes de escribir en `searchParams`, mismo criterio que cualquier filtro de texto |
+| Página de `geoLocation` | URL | `searchParams.page` | Vuelve a 1 al cambiar cualquier filtro, incluida la búsqueda |
 | `pageSize` | Zustand | `preferences.pageSize` | Compartido con el resto de entidades |
-| Listado de `geoLocation` | TanStack Query | `['geoLocation', 'list', { limit, offset, includeInactive: false, filters: { geoLevelId, parentId } }]` | `staleTime` 30 min (catálogo, `CONVENTIONS.md` §7) |
+| Listado de `geoLocation` | TanStack Query | `['geoLocation', 'list', { limit, offset, includeInactive: false, filters: { geoLevelId, parentId, name, code } }]` | `staleTime` 30 min (catálogo, `CONVENTIONS.md` §7) |
 | Lista de tipos para el combo de filtro y el lookup de nombres | TanStack Query | `['geoLevelType', 'list', { limit: 100, offset: 0, includeInactive: false }]` | Misma entrada de caché que usa `GeoLevelTypeListPage` si `pageSize` coincidiera; en la práctica es una consulta distinta con `limit: 100`, igual que `CatalogTypeSelect` en FE03 |
 | Mapa `geoLevelTypeId → name` para la columna "Nivel" | Derivado, en el render | `useMemo` sobre la respuesta de arriba | No es estado nuevo: se deriva de una query ya en caché, nunca se copia a `useState` |
 | Cascada de `<GeoLocationPicker>` (nivel actual seleccionado por columna) | Componente | `useState` dentro del propio picker | Efímero: la selección final sale por `onChange(geoLocationId)`, el picker no persiste su estado interno |
@@ -218,8 +224,9 @@ El tipo de actualización es `Partial<CreateGeoLevelTypeInput>` y `Partial<Creat
 
 Puntos que se rompen si no se respetan:
 
-- **`geoLevelId` y `parentId` van en `searchParams`, no en un store ni en el estado del picker.** Es lo que hace que `/geo-locations?geoLevelId=<id>` sea compartible y sobreviva al refresco.
-- **Cambiar cualquier filtro resetea `page` a 1.**
+- **`geoLevelId`, `parentId` y `q` van en `searchParams`, no en un store ni en el estado del picker.** Es lo que hace que `/geo-locations?geoLevelId=<id>` sea compartible y sobreviva al refresco.
+- **Cambiar cualquier filtro, incluida la búsqueda, resetea `page` a 1.**
+- **`q` se traduce a `filters: { name: q, code: q }` en la llamada a `useList`, nunca a un único `filters.search`** que el backend no reconoce (§3.3, hallazgo F).
 - **El mapa de nombres de nivel no es una copia del servidor**: se recalcula en cada render desde la query de `geoLevelType` ya cacheada, con `useMemo`. Si esa query aún no resolvió, la columna muestra el id crudo mientras carga, nunca un placeholder que se quede pegado.
 - **Toda mutación invalida su propia clave raíz** (`['geoLevelType']` o `['geoLocation']`), como ya hace la fábrica — nunca claves enumeradas a mano.
 
@@ -302,7 +309,7 @@ interface GeoLocationPickerProps {
 
 - **`GeoLevelTypeListPage`**: tarjeta con `name` como `primary`, `code` como `secondary`, `sortOrder` como `meta`.
 - **`GeoLocationListPage`**: tarjeta con `name` como `primary`, el nombre de nivel resuelto vía el mapa de §3.5 como `secondary`, `externalCode` como `meta`.
-- Los dos combos de filtro (`geoLevelTypeId`, `<GeoLocationPicker>` de padre) colapsan a ancho completo por debajo de `md`, apilados antes de la tabla.
+- Los dos combos de filtro (`geoLevelTypeId`, `<GeoLocationPicker>` de padre) y el campo de búsqueda (`q`) colapsan a ancho completo por debajo de `md`, apilados antes de la tabla.
 - `<GeoLocationPicker>`: cada `<Select>` de nivel ocupa el ancho completo por debajo de `md`, apilados verticalmente (ya lo son en escritorio también — no hay versión horizontal).
 - Diálogo de formulario a ancho completo por debajo de `md`, barra de acciones fija abajo — resuelto por `<ResourceForm>`.
 - Auditoría en `<Sheet>` lateral en escritorio, inferior en móvil.
@@ -322,7 +329,7 @@ En `es`, `en` y `nl`:
 | `geoLevelType.status.active`, `inactive` | Distintivo |
 | `geoLevelType.errors.GEOTYPE_001_CODE_EXISTS` y las demás de §3.6 | Mensajes por `code` |
 | `geoLocation.list.title`, `empty`, `emptyFiltered` | Título/estados |
-| `geoLocation.filters.geoLevelType`, `parent` | Etiquetas de los combos de filtro |
+| `geoLocation.filters.geoLevelType`, `parent`, `search` | Etiquetas de los combos de filtro y del campo de búsqueda |
 | `geoLocation.form.createTitle`, `editTitle` | Diálogo |
 | `geoLocation.fields.geoLevelTypeId`, `parentGeoLocationId`, `name`, `externalCode`, `officialName`, `shortName`, `isoCode`, `latitude`, `longitude`, `isActive` | Etiquetas y cabeceras |
 | `geoLocation.form.changeParent` | Botón «Cambiar» sobre el padre de solo lectura |
@@ -359,8 +366,8 @@ Cada paso deja el proyecto compilando y arrancable, y puede committearse solo. P
 7. **Formulario y auditoría de `geoLocation`.** `GeoLocationFormDialog.tsx` sobre `<ResourceForm>` con los nueve campos de §3.6, `<GeoLocationPicker>` para `parentGeoLocationId` (con el botón «Cambiar» de §3.7 en edición) y `<Select>` sobre el combo de `geoLevelType` para `geoLevelTypeId`; `GeoLocationAuditSheet.tsx` sobre `<AuditTrail>`.
    *Verificación:* crear sin `parentGeoLocationId` no lo manda en el `POST`; un `409` con `GEOLOC_001_NAME_EXISTS` marca `name`; en edición, el picker con `excludeSubtreeOf` no ofrece la propia fila.
 
-8. **`GeoLocationListPage`.** Tabla plana con los dos filtros de §3.5 en `searchParams`, columna "Nivel" resuelta vía el mapa `geoLevelTypeId → name` de §3.5, tarjeta responsive de §3.9, reseteo de `page` al cambiar cualquier filtro.
-   *Verificación:* `?geoLevelId=<id>&page=2` sobrevive al refresco y se reproduce en otra pestaña; cambiar el filtro de padre deja `page` en 1; con la query de `geoLevelType` aún cargando, la columna "Nivel" muestra el id crudo sin reventar y luego resuelve el nombre.
+8. **`GeoLocationListPage`.** Tabla plana con los filtros de §3.5 en `searchParams` (`geoLevelId`, `parentId`, `q` con debounce), columna "Nivel" resuelta vía el mapa `geoLevelTypeId → name` de §3.5, tarjeta responsive de §3.9, reseteo de `page` al cambiar cualquier filtro.
+   *Verificación:* `?geoLevelId=<id>&q=<texto>&page=2` sobrevive al refresco y se reproduce en otra pestaña; cambiar el filtro de padre o el término de búsqueda deja `page` en 1; buscar por `q` pega a `geo-locations?name=<texto>&code=<texto>`; con la query de `geoLevelType` aún cargando, la columna "Nivel" muestra el id crudo sin reventar y luego resuelve el nombre.
 
 9. **Rutas y navegación.** `/geo-level-types` y `/geo-locations` en `app/router.tsx`, ambas bajo `<RequireRole level={ROLE_LEVELS.USER}>`; quitar `disabled: true` de `nav.items.geoLevelType` y `nav.items.geoLocation`.
    *Verificación:* ambos enlaces del sidebar navegan; con rol `ANALYTICS` ninguna de las dos entradas aparece y entrar por URL redirige sin pantalla en blanco.
@@ -375,8 +382,9 @@ Cada paso deja el proyecto compilando y arrancable, y puede committearse solo. P
 - [ ] Las doce rutas `ESAVI-GEOLVL-*`/`ESAVI-GEOLOC-*` de §3.2 se consumen desde `features/geoLevelType/api.ts` y `features/geoLocation/api.ts`, y ninguna otra.
 - [ ] `createResource().useList` con `filters` produce query params adicionales sin romper los consumidores existentes de `catalogType`/`catalogItem` (sus tests siguen en verde sin modificarlos).
 - [ ] Ninguna de las dos pantallas expone un toggle de "mostrar inactivos": `inactiveMode: 'serverDecides'` en ambas declaraciones.
-- [ ] `?geoLevelId=<id>&parentId=<id>&page=2` reproduce exactamente la misma vista de `GeoLocationListPage` tras un refresco y al abrirse en otra pestaña.
-- [ ] Cambiar el filtro de nivel o de padre deja `searchParams.page` en 1.
+- [ ] `?geoLevelId=<id>&parentId=<id>&q=<texto>&page=2` reproduce exactamente la misma vista de `GeoLocationListPage` tras un refresco y al abrirse en otra pestaña.
+- [ ] Cambiar el filtro de nivel, de padre o el término de búsqueda deja `searchParams.page` en 1.
+- [ ] Buscar por `q=<texto>` pega a `geo-locations?name=<texto>&code=<texto>` (más `geoLevelId`/`parentId` si están activos) — nunca a un único `search=<texto>` que el backend no reconoce.
 - [ ] `<GeoLocationPicker>` pide su primer nivel filtrando por el `geoLevelTypeId` de menor `sortOrder`, nunca con `parentId` vacío.
 - [ ] Con `excludeSubtreeOf` fijado en edición, la fila que se edita no aparece entre las opciones de `<GeoLocationPicker>` en el nivel donde vive.
 - [ ] Los seis artefactos de `CONVENTIONS.md` §5 existen para `geoLevelType` y para `geoLocation`.
@@ -416,6 +424,7 @@ Cada paso deja el proyecto compilando y arrancable, y puede committearse solo. P
 - **No:** ofrecer `level` como campo editable, aunque el backend lo acepte en el `POST`/`PUT`. El servicio lo calcula automáticamente a partir del padre; exponerlo invita a introducir una jerarquía inconsistente con la que el propio backend mantiene.
 - **No:** `geoPolygon` en el formulario. No hay componente de mapa en el repositorio y `ARCHITECTURE.md` ya lo deja para si algún día se necesita.
 - **Sí:** las dos entidades comparten el patrón `serverDecides` sin toggle, calcado de `catalogType` en FE02/FE03 en vez de inventar un tercer modo. El backend ya decide por rol (`canViewInactive`), y añadir un control de cliente que no cambia nada en la petición sería un control decorativo.
+- **Sí:** la búsqueda de `geoLocation` es un único campo de texto (`searchParams.q`) que se traduce a `filters: { name: q, code: q }`, no dos campos separados de nombre y código (hallazgo F). El backend ya combina `name`/`code` con `OR`, así que separar los campos en la UI sugeriría una precisión (AND entre nombre y código) que la API no ofrece; un solo campo es honesto con el comportamiento real y más simple de operar.
 
 ---
 

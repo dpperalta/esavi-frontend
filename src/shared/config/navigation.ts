@@ -138,14 +138,12 @@ export const NAVIGATION: NavItem[] = [
         icon: Layers,
         path: '/geo-level-types',
         minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
       {
         key: 'nav.items.geoLocation',
         icon: MapPin,
         path: '/geo-locations',
         minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
       {
         key: 'nav.items.healthFacility',

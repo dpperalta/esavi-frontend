@@ -34,6 +34,8 @@
       "error": "No pudimos cargar los datos.",
       "retry": "Reintentar",
       "showInactive": "Mostrar inactivos",
+      "clearFilters": "Limpiar filtros",
+      "allOption": "Todos",
       "serverDecidesInactive": "Este listado ya incluye los registros dados de baja; el servidor decide cuáles mostrar según tu rol.",
       "pageSize": "Filas por página",
       "pageStatus": "Página {{page}} de {{pages}} · {{count}} registros",
@@ -200,6 +202,84 @@
       "CATITEM_005A_VALUE_LOCKED": "Este elemento está bloqueado por el sistema y no se puede dar de baja.",
       "CATITEM_005A_ALREADY_INACTIVE": "El elemento ya estaba inactivo.",
       "CATITEM_005B_ALREADY_ACTIVE": "El elemento ya estaba activo."
+    }
+  },
+  "geoLevelType": {
+    "list": {
+      "title": "Niveles geográficos",
+      "empty": "Todavía no hay niveles geográficos."
+    },
+    "form": {
+      "createTitle": "Nuevo nivel geográfico",
+      "editTitle": "Editar nivel geográfico"
+    },
+    "fields": {
+      "code": "Código",
+      "name": "Nombre",
+      "sortOrder": "Orden",
+      "isActive": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "errors": {
+      "GEOTYPE_001_CODE_EXISTS": "Ya existe un nivel geográfico con ese código.",
+      "GEOTYPE_004_CODE_EXISTS": "Ya existe un nivel geográfico con ese código.",
+      "GEOTYPE_004_NOT_FOUND": "El nivel geográfico no existe.",
+      "GEOTYPE_005A_ALREADY_INACTIVE": "El nivel geográfico ya estaba inactivo.",
+      "GEOTYPE_005B_ALREADY_ACTIVE": "El nivel geográfico ya estaba activo."
+    }
+  },
+  "geoLocation": {
+    "list": {
+      "title": "Ubicaciones",
+      "empty": "Todavía no hay ubicaciones.",
+      "emptyFiltered": "Ninguna ubicación coincide con los filtros."
+    },
+    "form": {
+      "createTitle": "Nueva ubicación",
+      "editTitle": "Editar ubicación",
+      "changeParent": "Cambiar"
+    },
+    "filters": {
+      "geoLevelType": "Nivel geográfico",
+      "parent": "Ubicación padre",
+      "search": "Buscar por nombre o código"
+    },
+    "fields": {
+      "geoLevelTypeId": "Nivel geográfico",
+      "parentGeoLocationId": "Ubicación padre",
+      "name": "Nombre",
+      "externalCode": "Código externo",
+      "officialName": "Nombre oficial",
+      "shortName": "Nombre corto",
+      "isoCode": "Código ISO",
+      "latitude": "Latitud",
+      "longitude": "Longitud",
+      "isActive": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "errors": {
+      "GEOLOC_001_GEOLEVELTYPE_NOT_FOUND": "El nivel geográfico no existe.",
+      "GEOLOC_004_GEOLEVELTYPE_NOT_FOUND": "El nivel geográfico no existe.",
+      "GEOLOC_001_PARENT_GEOLOCATION_NOT_FOUND": "La ubicación padre no existe.",
+      "GEOLOC_004_PARENT_GEOLOCATION_NOT_FOUND": "La ubicación padre no existe.",
+      "GEOLOC_001_NAME_EXISTS": "Ya existe una ubicación con ese nombre entre las del mismo padre.",
+      "GEOLOC_004_NAME_EXISTS": "Ya existe una ubicación con ese nombre entre las del mismo padre.",
+      "GEOLOC_001_EXTERNAL_CODE_EXISTS": "Ya existe una ubicación con ese código externo.",
+      "GEOLOC_004_EXTERNAL_CODE_EXISTS": "Ya existe una ubicación con ese código externo.",
+      "GEOLOC_004_NOT_FOUND": "La ubicación no existe.",
+      "GEOLOC_005A_ALREADY_INACTIVE": "La ubicación ya estaba inactiva.",
+      "GEOLOC_005B_ALREADY_ACTIVE": "La ubicación ya estaba activa."
+    },
+    "picker": {
+      "levelLabel": "Nivel {{level}}",
+      "emptyLevel": "Este nivel no tiene ubicaciones hijas.",
+      "loadError": "No pudimos cargar los niveles geográficos."
     }
   },
   "home": {
