@@ -154,6 +154,14 @@
       "CATTYPE_001_CREATION_FAILED": "The catalog type could not be created.",
       "CATTYPE_004_UPDATE_FAILED": "The catalog type could not be updated.",
       "CATTYPE_004_NOT_FOUND": "The catalog type doesn't exist."
+    },
+    "select": {
+      "label": "Catalog type",
+      "placeholder": "Choose a catalog type",
+      "tooManyTypes": "There are more than 100 catalog types; the list may be incomplete."
+    },
+    "actions": {
+      "viewItems": "View items"
     }
   },
   "home": {

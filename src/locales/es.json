@@ -154,6 +154,14 @@
       "CATTYPE_001_CREATION_FAILED": "No se pudo crear el tipo de catálogo.",
       "CATTYPE_004_UPDATE_FAILED": "No se pudo actualizar el tipo de catálogo.",
       "CATTYPE_004_NOT_FOUND": "El tipo de catálogo no existe."
+    },
+    "select": {
+      "label": "Tipo de catálogo",
+      "placeholder": "Elige un tipo de catálogo",
+      "tooManyTypes": "Hay más de 100 tipos de catálogo; el listado puede estar incompleto."
+    },
+    "actions": {
+      "viewItems": "Ver ítems"
     }
   },
   "home": {

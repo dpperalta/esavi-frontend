@@ -154,6 +154,14 @@
       "CATTYPE_001_CREATION_FAILED": "Het catalogustype kon niet worden aangemaakt.",
       "CATTYPE_004_UPDATE_FAILED": "Het catalogustype kon niet worden bijgewerkt.",
       "CATTYPE_004_NOT_FOUND": "Het catalogustype bestaat niet."
+    },
+    "select": {
+      "label": "Catalogustype",
+      "placeholder": "Kies een catalogustype",
+      "tooManyTypes": "Er zijn meer dan 100 catalogustypen; de lijst kan onvolledig zijn."
+    },
+    "actions": {
+      "viewItems": "Items bekijken"
     }
   },
   "home": {
