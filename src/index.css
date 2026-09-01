@@ -35,6 +35,8 @@ body {
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -60,7 +62,10 @@ body {
 
 /* Primary/accent/sidebar-* use Tailwind v4's blue-700/blue-100 (light) and blue-400/blue-950/
    blue-300 (dark) oklch values (node_modules/tailwindcss/theme.css) — matches Mantis's default
-   Ant Design blue family. Everything else stays grayscale on purpose. */
+   Ant Design blue family. destructive/warning/success borrow red-600/amber-600/green-600 (light)
+   and red-400/amber-400/green-400 (dark) from the same palette, for the same reason: a toast or
+   badge reads as "error/warning/success" by hue, not by guessing a color that happens to work.
+   Everything else stays grayscale on purpose. */
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -77,6 +82,8 @@ body {
   --accent: oklch(93.2% 0.032 255.585);
   --accent-foreground: oklch(48.8% 0.243 264.376);
   --destructive: oklch(0.577 0.245 27.325);
+  --warning: oklch(66.6% 0.179 58.318);
+  --success: oklch(62.7% 0.194 149.214);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(48.8% 0.243 264.376);
@@ -112,6 +119,8 @@ body {
   --accent: oklch(28.2% 0.091 267.935);
   --accent-foreground: oklch(80.9% 0.105 251.813);
   --destructive: oklch(0.704 0.191 22.216);
+  --warning: oklch(82.8% 0.189 84.429);
+  --success: oklch(79.2% 0.209 151.711);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(70.7% 0.165 254.624);

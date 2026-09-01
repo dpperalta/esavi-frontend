@@ -164,7 +164,7 @@ export function ResourceTable<T>({
           <>
             <div className="hidden overflow-hidden rounded-xl border md:block">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-primary/8">
                   <TableRow>
                     {columns.map((column) => (
                       <TableHead key={column.key} className={column.className}>
@@ -287,7 +287,7 @@ function ResourceTableSkeleton<T>({ columns, pageSize }: ResourceTableSkeletonPr
     <>
       <div className="hidden overflow-hidden rounded-xl border md:block">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-primary/8">
             <TableRow>
               {columns.map((column) => (
                 <TableHead key={column.key}>{t(column.header)}</TableHead>

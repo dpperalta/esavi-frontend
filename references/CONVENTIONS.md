@@ -227,6 +227,12 @@ Un literal suelto rompe el tema oscuro exactamente en ese punto y nadie lo nota 
 
 El tema se aplica con `data-theme="light|dark"` en `<html>` — no con la clase `dark`. Tres estados: `light`, `dark` y `system`, con `system` por defecto y suscripción viva a `matchMedia`.
 
+Los tokens semánticos no se limitan a `primary`/`destructive`: `--success` y `--warning` existen en `src/index.css` (verde y ámbar, con su par claro/oscuro) para todo lo que exprese "correcto" o "atención" — un toast, un badge, un icono de estado. Antes de inventar un color nuevo, comprobar si ya hay un token que le sirve.
+
+**`color-mix()` con un extremo acromático (croma 0, p. ej. `--popover` en tema claro) va siempre `in oklab`, nunca `in oklch`.** Chromium produce un matiz inestable —comprobado en vivo: un 12% de verde mezclado con `oklch(1 0 0)` renderizó rosa, no verde pálido— porque el matiz en OKLCH es un componente polar indefinido en croma 0. `oklab` usa ejes cartesianos y no tiene ese caso límite. Los modificadores de opacidad de Tailwind (`bg-primary/8`) no lo sufren porque mezclan `in oklab` hacia `transparent`, no hacia un color acromático opaco — son el patrón seguro por defecto; sólo hay que vigilar un `color-mix()` escrito a mano (ver `sonner.tsx`).
+
+Las cabeceras de `<ResourceTable>` llevan `bg-primary/8` — un tinte apenas perceptible que separa la fila de encabezado del cuerpo sin introducir un color nuevo. Se aplica igual en el estado de carga (`ResourceTableSkeleton`) para que no haya salto de color al terminar de cargar.
+
 ### 10.2 Responsividad
 
 Mobile-first, sin excepción:
@@ -250,6 +256,10 @@ Mobile-first, sin excepción:
 
 Toda entidad tiene `appDetails`, así que **toda pantalla de detalle lleva `<AuditTrail>`**.
 
+**Ver la auditoría exige `SUPERADMIN`, sin excepción por entidad.** El historial de cambios —quién tocó qué, cuándo y con qué método— es información del sistema, no del negocio: ningún rol por debajo de `SUPERADMIN` la ve, ni siquiera `ADMIN`. La acción «Ver auditoría» del menú de fila y el acceso a `<AuditTrail>` se protegen con `useCan(ROLE_LEVELS.SUPERADMIN)` en las 45 entidades; no es una decisión que cada spec vuelva a tomar.
+
+**`<AuditTrail>` no confía en la forma de `appDetails`.** Algunas filas de seed traen `appDetails: {}` en vez de `[]` o `null` — un objeto verdadero pero no iterable, que `appDetails ?? []` no detecta. La primitiva usa `Array.isArray(appDetails) ? appDetails : []` y muestra el estado vacío ante cualquier dato corrupto, en vez de reventar el árbol de React entero sin `ErrorBoundary`.
+
 ### 10.5 El menú es dato
 
 `shared/config/navigation.ts` es un array de `NavItem` tipado, con `key` de i18n —nunca texto literal— y `minLevel`. De ahí salen a la vez el sidebar, el filtro por rol y la paleta de comandos. **Un enlace escrito a mano en el JSX del sidebar no existe para la paleta de comandos.**
@@ -272,6 +282,14 @@ Condicionalmente, según lo que la pantalla exija:
 - **`dataviz`** — cualquier gráfico, panel o visualización de datos. El hito 5 (`ARCHITECTURE.md` §12, "Panel y analítica") lo necesitará.
 
 **Esto no sustituye a `references/CONVENTIONS.md` ni a `ARCHITECTURE.md`.** Las skills informan composición y accesibilidad genéricas; las convenciones de este repositorio —tokens semánticos, cero color literal, i18n obligatorio, las primitivas de §10.4 escritas una sola vez— mandan cuando hay conflicto, igual que dicta la jerarquía de normas de §1.
+
+### 10.7 Un diálogo de formulario que no se desmonta resetea sus mutaciones al cerrar
+
+El patrón habitual de este repositorio es que la página dueña de la lista (`CatalogTypeListPage` y equivalentes) **nunca desmonta** el diálogo de formulario — sólo alterna su prop `open`. Eso significa que los hooks `useMutation()` de creación/edición viven en el componente del diálogo, no en el `<DialogContent>` de Radix, y sobreviven al cierre.
+
+`useMutation().error` no se limpia solo: persiste hasta el próximo `mutate()` o hasta un `.reset()` explícito. Si un intento falla (por ejemplo un `409` de código duplicado) y el usuario cancela y vuelve a abrir el diálogo para un intento nuevo, `<ResourceForm>` sí remonta (Radix desmonta los hijos de `<DialogContent>` al cerrar) con campos en blanco — pero su `useEffect` que aplica el error de mutación se dispara igual en cada montaje y reaplica el error **viejo** sobre el formulario **nuevo**.
+
+La solución es un `handleOpenChange` en el diálogo que llama a `create.reset()` y `update.reset()` cuando `open` pasa a `false`, cableado en el `onOpenChange` del `<Dialog>`, en el `onCancel` del formulario y en el `onSuccess` de ambas mutaciones (ver `CatalogTypeFormDialog.tsx`). Todo diálogo de formulario nuevo que siga el mismo patrón de "la lista nunca lo desmonta" necesita este mismo reset.
 
 ---
 

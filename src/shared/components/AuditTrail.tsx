@@ -23,7 +23,9 @@ export interface AuditTrailProps {
 export function AuditTrail({ appDetails }: AuditTrailProps) {
   const { t } = useTranslation();
   const language = usePreferencesStore((state) => state.language);
-  const entries = appDetails ?? [];
+  // Defends against more than `null`: some seeded rows carry `appDetails: {}` instead of `[]`
+  // at the DB level — a non-array truthy value that `?? []` alone wouldn't catch.
+  const entries = Array.isArray(appDetails) ? appDetails : [];
   const sorted = [...entries].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );

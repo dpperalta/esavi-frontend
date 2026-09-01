@@ -149,6 +149,11 @@
     "status": {
       "active": "Actief",
       "inactive": "Inactief"
+    },
+    "errors": {
+      "CATTYPE_001_CREATION_FAILED": "Het catalogustype kon niet worden aangemaakt.",
+      "CATTYPE_004_UPDATE_FAILED": "Het catalogustype kon niet worden bijgewerkt.",
+      "CATTYPE_004_NOT_FOUND": "Het catalogustype bestaat niet."
     }
   },
   "home": {

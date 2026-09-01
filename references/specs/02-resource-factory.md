@@ -248,9 +248,11 @@ El menú de fila se compone con `useCan()`, y cada acción **sólo aparece si el
 | Acción | Rol mínimo real | Visible cuando |
 |---|---|---|
 | Editar | ADMIN (`004`) | `useCan(ADMIN)` |
-| Ver auditoría | USER (`003`) | Siempre |
+| Ver auditoría | SUPERADMIN (política del cliente, no de la ruta — ver nota) | `useCan(SUPERADMIN)` |
 | Dar de baja | ADMIN (`005A`) | `useCan(ADMIN)` y la fila está activa |
 | Reactivar | SUPERADMIN (`005B`) | `useCan(SUPERADMIN)` y la fila está inactiva |
+
+**«Ver auditoría» es la única acción de esta tabla cuyo rol mínimo no sale de `API-ROUTES.md`.** `ESAVI-CATTYPE-003` (el `GET` que trae la fila, incluido `appDetails`) exige sólo `USER`; ocultar el menú a quien no es `SUPERADMIN` es una decisión de producto (`CONVENTIONS.md` §10.4: "ver la auditoría exige SUPERADMIN, sin excepción por entidad"), no una réplica de un rol de ruta. Riesgo derivado en §7.
 
 Baja y reactivación piden confirmación con `<AlertDialog>`.
 
@@ -395,6 +397,7 @@ Cada paso deja el proyecto compilando y arrancable, y puede committearse solo.
 | `idField` distinto por entidad (`catalogTypeId`, `healthFacilityId`, …) invita a un `id` por defecto que funcionaría en cero entidades | Es obligatorio en `ResourceConfig` y sin valor por defecto: olvidarlo no compila |
 | `'serverDecides'` sorprende a un SUPERADMIN, que ve filas dadas de baja sin control para quitarlas | La nota `common.table.serverDecidesInactive`, visible sólo con ese rol, explica por qué |
 | La primitiva se copia en vez de ampliarse cuando una entidad necesite una variante | `CONVENTIONS.md` §10.4 lo prohíbe explícitamente, y §8 de este spec deja constancia de que las cuatro pasan a ser de todos |
+| `ESAVI-CATTYPE-003` exige sólo `USER`, así que `appDetails` ya viaja al cliente para cualquier `USER` que abra el diálogo de edición o que la caché de Query conserve del listado — ocultar «Ver auditoría» a quien no es `SUPERADMIN` es UX (`CONVENTIONS.md` §11: "el backend sigue siendo la única autoridad"), no impide leer la respuesta cruda con las herramientas de desarrollador | Fuera de alcance de este spec: la restricción real exige que el backend excluya `appDetails` de `003` para roles por debajo de `SUPERADMIN`, o una ruta separada. Se anota aquí para que quien toque `esavi-backend` lo vea |
 
 ---
 

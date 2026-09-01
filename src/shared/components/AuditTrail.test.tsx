@@ -41,4 +41,14 @@ describe('AuditTrail', () => {
     expect(screen.getByText('Todavía no hay cambios registrados.')).toBeInTheDocument();
     expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
   });
+
+  it('con appDetails: {} (dato corrupto del seed) muestra el estado vacío sin reventar', () => {
+    // The DB contract says AppDetails[] | null, but some seeded rows carry `{}` at the JSONB
+    // level — a non-array truthy value `?? []` alone wouldn't catch. Cast to bypass the type
+    // for this specific real-world malformed-payload case.
+    render(<AuditTrail appDetails={{} as never} />);
+
+    expect(screen.getByText('Todavía no hay cambios registrados.')).toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).not.toBeInTheDocument();
+  });
 });

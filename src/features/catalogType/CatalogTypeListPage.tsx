@@ -39,6 +39,11 @@ interface RowActionsProps {
 export function CatalogTypeRowActions({ row, onEdit, onAudit, onConfirm }: RowActionsProps) {
   const { t } = useTranslation();
   const canEdit = useCan(ROLE_LEVELS.ADMIN);
+  // CONVENTIONS.md §10.4: the audit trail is system information, not business data — nobody
+  // below SUPERADMIN sees it, not even ADMIN. This is a client-side (UX) gate: `appDetails`
+  // still travels on ESAVI-CATTYPE-003 for any USER (SPEC FE02 §7 risk); the real restriction
+  // needs a backend change.
+  const canViewAudit = useCan(ROLE_LEVELS.SUPERADMIN);
   const canDeactivate = useCan(ROLE_LEVELS.ADMIN);
   const canActivate = useCan(ROLE_LEVELS.SUPERADMIN);
 
@@ -49,9 +54,11 @@ export function CatalogTypeRowActions({ row, onEdit, onAudit, onConfirm }: RowAc
           {t('common.actions.edit')}
         </DropdownMenuItem>
       )}
-      <DropdownMenuItem onClick={() => onAudit(row.catalogTypeId)}>
-        {t('common.actions.audit')}
-      </DropdownMenuItem>
+      {canViewAudit && (
+        <DropdownMenuItem onClick={() => onAudit(row.catalogTypeId)}>
+          {t('common.actions.audit')}
+        </DropdownMenuItem>
+      )}
       {canDeactivate && row.isActive && (
         <DropdownMenuItem
           variant="destructive"

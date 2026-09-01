@@ -49,6 +49,19 @@ export function CatalogTypeFormDialog({
   const update = catalogTypeResource.useUpdate();
   const mutation = isEditing ? update : create;
 
+  // `create`/`update` live on this component, which the list page keeps mounted at all times
+  // (only the Radix Dialog's `open` toggles) — so a failed mutation's `error` outlives the close.
+  // Without resetting it here, reopening the dialog for a brand-new attempt remounts
+  // <ResourceForm> (fresh, blank fields) but its mount effect still sees the *stale* error and
+  // re-marks the code field before the user has typed anything.
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      create.reset();
+      update.reset();
+    }
+    onOpenChange(nextOpen);
+  }
+
   function handleSubmit(values: CatalogTypeFormValues) {
     if (isEditing && catalogTypeId) {
       // The full object travels; the backend does the differential update and never `isActive`
@@ -58,7 +71,7 @@ export function CatalogTypeFormDialog({
         {
           onSuccess: () => {
             toast.success(t('common.toast.updated'));
-            onOpenChange(false);
+            handleOpenChange(false);
           },
         },
       );
@@ -67,7 +80,7 @@ export function CatalogTypeFormDialog({
     create.mutate(values, {
       onSuccess: () => {
         toast.success(t('common.toast.created'));
-        onOpenChange(false);
+        handleOpenChange(false);
       },
     });
   }
@@ -82,7 +95,7 @@ export function CatalogTypeFormDialog({
   const readyToRender = !isEditing || !!existing.data;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="flex max-h-[85dvh] flex-col overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
@@ -105,7 +118,7 @@ export function CatalogTypeFormDialog({
             errorFieldMap={catalogTypeErrorFieldMap}
             onUnmappedError={handleUnmappedError}
             isSubmitting={mutation.isPending}
-            onCancel={() => onOpenChange(false)}
+            onCancel={() => handleOpenChange(false)}
           >
             {(form) => (
               <>

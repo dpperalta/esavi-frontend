@@ -122,8 +122,20 @@ describe('CatalogTypeListPage — autorización', () => {
   // ResourceTable's click-to-open trigger: jsdom has no PointerEvent implementation, and
   // DropdownMenuTrigger opens on `onPointerDown`, not `onClick` — simulating that reliably in
   // jsdom isn't worth fighting for a menu whose gating logic is the actual thing under test.
-  it('con nivel USER, el menú de fila no ofrece «Editar» pero sí «Ver auditoría»', async () => {
-    signInAs('USER', 25);
+  it('con nivel USER, el menú de fila no ofrece ni «Editar» ni «Ver auditoría»', async () => {
+    let requestCount = 0;
+    setAccessToken('a-token');
+    tokenStore.setRefreshToken('a-refresh-token');
+    server.use(
+      http.get('http://localhost:4500/api/users/me', () => {
+        requestCount += 1;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { userId: '1', roles: [{ roleId: 'r1', name: 'USER', code: 'USER', level: 25 }] },
+        });
+      }),
+    );
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
     render(
@@ -141,12 +153,16 @@ describe('CatalogTypeListPage — autorización', () => {
       </QueryClientProvider>,
     );
 
-    expect(await screen.findByRole('menuitem', { name: 'Ver auditoría' })).toBeInTheDocument();
+    // Waits for the role query to actually settle — otherwise "not found" could just mean
+    // "still loading", not "USER really doesn't get this item".
+    await waitFor(() => expect(requestCount).toBe(1));
+
     expect(screen.queryByRole('menuitem', { name: 'Editar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Ver auditoría' })).not.toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Dar de baja' })).not.toBeInTheDocument();
   });
 
-  it('con nivel ADMIN, el menú de fila sí ofrece «Editar» y «Dar de baja»', async () => {
+  it('con nivel ADMIN, el menú de fila ofrece «Editar» y «Dar de baja», pero no «Ver auditoría»', async () => {
     signInAs('ADMIN', 50);
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
@@ -167,6 +183,29 @@ describe('CatalogTypeListPage — autorización', () => {
 
     expect(await screen.findByRole('menuitem', { name: 'Editar' })).toBeInTheDocument();
     expect(screen.getByRole('menuitem', { name: 'Dar de baja' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Ver auditoría' })).not.toBeInTheDocument();
+  });
+
+  it('con nivel SUPERADMIN, el menú de fila sí ofrece «Ver auditoría»', async () => {
+    signInAs('SUPERADMIN', 100);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DropdownMenu open onOpenChange={() => {}}>
+          <DropdownMenuContent>
+            <CatalogTypeRowActions
+              row={makeRow()}
+              onEdit={() => {}}
+              onAudit={() => {}}
+              onConfirm={() => {}}
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByRole('menuitem', { name: 'Ver auditoría' })).toBeInTheDocument();
   });
 });
 

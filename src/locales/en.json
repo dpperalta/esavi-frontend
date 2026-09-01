@@ -149,6 +149,11 @@
     "status": {
       "active": "Active",
       "inactive": "Inactive"
+    },
+    "errors": {
+      "CATTYPE_001_CREATION_FAILED": "The catalog type could not be created.",
+      "CATTYPE_004_UPDATE_FAILED": "The catalog type could not be updated.",
+      "CATTYPE_004_NOT_FOUND": "The catalog type doesn't exist."
     }
   },
   "home": {

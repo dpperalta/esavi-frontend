@@ -149,6 +149,11 @@
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
+    },
+    "errors": {
+      "CATTYPE_001_CREATION_FAILED": "No se pudo crear el tipo de catálogo.",
+      "CATTYPE_004_UPDATE_FAILED": "No se pudo actualizar el tipo de catálogo.",
+      "CATTYPE_004_NOT_FOUND": "El tipo de catálogo no existe."
     }
   },
   "home": {

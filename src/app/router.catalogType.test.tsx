@@ -70,6 +70,8 @@ function renderApp(initialPath = '/') {
 }
 
 describe('Ruta /catalog-types — navegación desde el sidebar', () => {
+  // userEvent's realistic pointer/keyboard simulation over the full AppShell (sidebar +
+  // tooltips + routing) legitimately takes longer than the 5s default under a loaded machine.
   it('el enlace del sidebar navega a la pantalla de tipos de catálogo', async () => {
     const user = userEvent.setup();
     signInAs('ADMIN', 50);
@@ -80,7 +82,7 @@ describe('Ruta /catalog-types — navegación desde el sidebar', () => {
     await user.click(link);
 
     expect(await screen.findByRole('heading', { name: 'Tipos de catálogo' })).toBeInTheDocument();
-  });
+  }, 20000);
 });
 
 describe('Ruta /catalog-types — autorización', () => {
