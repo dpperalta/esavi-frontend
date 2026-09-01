@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { CatalogType } from '@/contracts/declared/catalogType';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -31,12 +31,19 @@ interface RowActionsProps {
   onEdit: (id: string) => void;
   onAudit: (id: string) => void;
   onConfirm: (id: string, action: ConfirmAction) => void;
+  onViewItems: (id: string) => void;
 }
 
 // A distinct component, not a plain callback: it owns its own `useCan()` calls, so React sees
 // one hook-call count per rendered row instead of ResourceTable accumulating one per row in
 // its own render pass.
-export function CatalogTypeRowActions({ row, onEdit, onAudit, onConfirm }: RowActionsProps) {
+export function CatalogTypeRowActions({
+  row,
+  onEdit,
+  onAudit,
+  onConfirm,
+  onViewItems,
+}: RowActionsProps) {
   const { t } = useTranslation();
   const canEdit = useCan(ROLE_LEVELS.ADMIN);
   // CONVENTIONS.md §10.4: the audit trail is system information, not business data — nobody
@@ -49,6 +56,11 @@ export function CatalogTypeRowActions({ row, onEdit, onAudit, onConfirm }: RowAc
 
   return (
     <>
+      {/* SPEC FE03 §2, §6: visible to whoever reaches this screen — the destination route
+          demands the same USER level as this one, nothing extra to gate. */}
+      <DropdownMenuItem onClick={() => onViewItems(row.catalogTypeId)}>
+        {t('catalogType.actions.viewItems')}
+      </DropdownMenuItem>
       {canEdit && (
         <DropdownMenuItem onClick={() => onEdit(row.catalogTypeId)}>
           {t('common.actions.edit')}
@@ -78,6 +90,7 @@ export function CatalogTypeRowActions({ row, onEdit, onAudit, onConfirm }: RowAc
 
 export function CatalogTypeListPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Number(searchParams.get('page') ?? '1') || 1;
   const pageSize = usePreferencesStore((state) => state.pageSize);
@@ -116,6 +129,10 @@ export function CatalogTypeListPage() {
   function handleEdit(id: string) {
     setEditingId(id);
     setFormOpen(true);
+  }
+
+  function handleViewItems(id: string) {
+    navigate(`/catalog-items?typeId=${id}`);
   }
 
   function handleConfirm() {
@@ -167,7 +184,7 @@ export function CatalogTypeListPage() {
       key: 'isActive',
       header: 'catalogType.fields.isActive',
       render: (row) => (
-        <Badge variant={row.isActive ? 'default' : 'secondary'}>
+        <Badge variant={row.isActive ? 'default' : 'destructive'}>
           {t(row.isActive ? 'catalogType.status.active' : 'catalogType.status.inactive')}
         </Badge>
       ),
@@ -198,6 +215,7 @@ export function CatalogTypeListPage() {
             onEdit={handleEdit}
             onAudit={setAuditId}
             onConfirm={(id, action) => setConfirmTarget({ id, action })}
+            onViewItems={handleViewItems}
           />
         )}
       />

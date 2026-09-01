@@ -91,7 +91,10 @@ describe('buildUpdateCatalogItemSchema — fila no congelada', () => {
 
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.value).toBe('Nuevo valor');
+      // `buildUpdateCatalogItemSchema`'s return type is a union of both branches (its parameter
+      // is `boolean`, not a literal) — this branch is known safe at runtime by the `false` passed
+      // above, so `'value' in data` is how the test proves it without a schema-level cast.
+      expect('value' in result.data && result.data.value).toBe('Nuevo valor');
     }
   });
 });
