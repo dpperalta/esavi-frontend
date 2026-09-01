@@ -5,11 +5,14 @@ import { z } from 'zod';
 // `geoPolygon` are NOT form fields (SPEC FE04 §2, §3.6): the backend computes `level` from the
 // parent and there's no map component for `geoPolygon`.
 const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
+// `GeoLocationPicker` emits `null` for "no parent chosen", never `''` — turned into `undefined`
+// so an unset parent never travels in the `POST` body at all (JSON.stringify drops `undefined`
+// keys, but keeps an explicit `null`).
+const nullToUndefined = (value: unknown) => (value === null ? undefined : value);
 
 export const createGeoLocationSchema = z.object({
   geoLevelTypeId: z.string().uuid(),
-  // Empty = root (no parent). `GeoLocationPicker` emits `null`, never `''`.
-  parentGeoLocationId: z.string().uuid().nullable().optional(),
+  parentGeoLocationId: z.preprocess(nullToUndefined, z.string().uuid().optional()),
   name: z.string().trim().min(1).max(150),
   // Required by createGeoLocationValidator (`notEmpty`), even though CreateGeoLocationInput
   // declares it optional (SPEC FE04 §7 riesgo) — the schema follows the validator.

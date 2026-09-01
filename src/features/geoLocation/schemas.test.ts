@@ -49,6 +49,16 @@ describe('createGeoLocationSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  it('con parentGeoLocationId: null (raíz), no viaja en el objeto parseado', () => {
+    const result = createGeoLocationSchema.safeParse(validInput({ parentGeoLocationId: null }));
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.parentGeoLocationId).toBeUndefined();
+      expect(JSON.stringify(result.data)).not.toContain('parentGeoLocationId');
+    }
+  });
+
   it('level y geoPolygon no son campos del schema', () => {
     expect(createGeoLocationSchema.shape).not.toHaveProperty('level');
     expect(createGeoLocationSchema.shape).not.toHaveProperty('geoPolygon');
