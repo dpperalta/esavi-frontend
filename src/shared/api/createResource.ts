@@ -31,6 +31,7 @@ export interface ListParams {
   page?: number;
   pageSize: number;
   includeInactive?: boolean;
+  filters?: Record<string, string>;
 }
 
 function toOffsetLimit({ page, pageSize }: ListParams): { limit: number; offset: number } {
@@ -70,11 +71,14 @@ export function createResource<T, TCreateInput = Partial<T>, TUpdateInput = Part
     const includeInactive =
       config.inactiveMode === 'adminPath' && !!params.includeInactive && canViewAdminPath;
     const url = includeInactive ? (config.adminPath as string) : config.path;
+    const filters = params.filters;
 
     return useQuery({
-      queryKey: [config.key, 'list', { limit, offset, includeInactive }],
+      queryKey: [config.key, 'list', { limit, offset, includeInactive, filters }],
       queryFn: async () => {
-        const response = await client.get<PaginatedResponse<T>>(url, { params: { limit, offset } });
+        const response = await client.get<PaginatedResponse<T>>(url, {
+          params: { limit, offset, ...filters },
+        });
         return response.data;
       },
       staleTime: config.staleTime,
@@ -154,11 +158,19 @@ export function createResource<T, TCreateInput = Partial<T>, TUpdateInput = Part
     const segment =
       includeInactive && parent.adminSegment ? parent.adminSegment : parent.segment;
     const url = `${config.path}/${replaceParentId(segment, parentId)}`;
+    const filters = params.filters;
 
     return useQuery({
-      queryKey: [config.key, parent.operation, parentId, { limit, offset, includeInactive }],
+      queryKey: [
+        config.key,
+        parent.operation,
+        parentId,
+        { limit, offset, includeInactive, filters },
+      ],
       queryFn: async () => {
-        const response = await client.get<PaginatedResponse<T>>(url, { params: { limit, offset } });
+        const response = await client.get<PaginatedResponse<T>>(url, {
+          params: { limit, offset, ...filters },
+        });
         return response.data;
       },
       staleTime: config.staleTime,

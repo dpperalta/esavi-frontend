@@ -197,6 +197,49 @@ describe('createResource — invalidación tras mutar', () => {
   });
 });
 
+describe('createResource — filtros genéricos', () => {
+  const resource = createResource<Widget>({
+    key: 'widget',
+    path: '/widgets',
+    idField: 'widgetId',
+    inactiveMode: 'serverDecides',
+  });
+
+  it('con filters, pega a ?limit=10&offset=0&geoLevelId=x', async () => {
+    let receivedUrl: URL | null = null;
+    server.use(
+      http.get('http://localhost:4500/api/widgets', ({ request }) => {
+        receivedUrl = new URL(request.url);
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderHook(() => resource.useList({ page: 1, pageSize: 10, filters: { geoLevelId: 'x' } }), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(receivedUrl).not.toBeNull());
+    expect(receivedUrl!.searchParams.get('limit')).toBe('10');
+    expect(receivedUrl!.searchParams.get('offset')).toBe('0');
+    expect(receivedUrl!.searchParams.get('geoLevelId')).toBe('x');
+  });
+
+  it('sin filters, la URL no lleva esas claves', async () => {
+    let receivedUrl: URL | null = null;
+    server.use(
+      http.get('http://localhost:4500/api/widgets', ({ request }) => {
+        receivedUrl = new URL(request.url);
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderHook(() => resource.useList({ page: 1, pageSize: 10 }), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(receivedUrl).not.toBeNull());
+    expect(receivedUrl!.searchParams.get('geoLevelId')).toBeNull();
+  });
+});
+
 interface CatalogItem {
   catalogItemId: string;
   catalogTypeId: string;
