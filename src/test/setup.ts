@@ -23,3 +23,19 @@ if (!window.matchMedia) {
     dispatchEvent: () => false,
   })) as typeof window.matchMedia;
 }
+
+// jsdom doesn't implement pointer capture or scrollIntoView. Radix's DropdownMenu, Select and
+// AlertDialog call these during open/close — without the polyfill, userEvent.click() on their
+// triggers hangs instead of opening the menu.
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = () => {};
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {};
+}
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}

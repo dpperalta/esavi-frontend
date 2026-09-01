@@ -5,7 +5,53 @@
     "retry": "Reintentar",
     "loading": "Cargando…",
     "close": "Cerrar",
-    "comingSoon": "Próximamente"
+    "comingSoon": "Próximamente",
+    "errors": {
+      "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo."
+    },
+    "actions": {
+      "create": "Crear",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "edit": "Editar",
+      "deactivate": "Dar de baja",
+      "activate": "Reactivar",
+      "audit": "Ver auditoría"
+    },
+    "confirm": {
+      "deactivate": "¿Dar de baja este registro?",
+      "activate": "¿Reactivar este registro?"
+    },
+    "toast": {
+      "created": "Se creó correctamente.",
+      "updated": "Se actualizó correctamente.",
+      "deactivated": "Se dio de baja correctamente.",
+      "activated": "Se reactivó correctamente."
+    },
+    "table": {
+      "empty": "No hay registros para mostrar.",
+      "emptyFiltered": "Ningún registro coincide con los filtros.",
+      "error": "No pudimos cargar los datos.",
+      "retry": "Reintentar",
+      "showInactive": "Mostrar inactivos",
+      "serverDecidesInactive": "Este listado ya incluye los registros dados de baja; el servidor decide cuáles mostrar según tu rol.",
+      "pageSize": "Filas por página",
+      "pageStatus": "Página {{page}} de {{pages}} · {{count}} registros",
+      "rowActions": "Acciones de la fila",
+      "pagination": "Paginación",
+      "previous": "Anterior",
+      "next": "Siguiente"
+    },
+    "audit": {
+      "title": "Historial de auditoría",
+      "empty": "Todavía no hay cambios registrados.",
+      "columns": {
+        "date": "Fecha",
+        "user": "Usuario",
+        "method": "Método",
+        "detail": "Detalle"
+      }
+    }
   },
   "auth": {
     "passwordMismatch": "Las contraseñas no coinciden.",
@@ -80,6 +126,34 @@
       "catalogType": "Tipos de catálogo",
       "catalogItem": "Elementos de catálogo",
       "systemConfig": "Configuración del sistema"
+    }
+  },
+  "catalogType": {
+    "list": {
+      "title": "Tipos de catálogo",
+      "empty": "Todavía no hay tipos de catálogo."
+    },
+    "form": {
+      "createTitle": "Nuevo tipo de catálogo",
+      "editTitle": "Editar tipo de catálogo",
+      "codeHelp": "Si lo dejas vacío, se genera automáticamente a partir del nombre.",
+      "codeWarning": "Cambiar el código puede afectar a otras tablas y al importador que lo referencian."
+    },
+    "fields": {
+      "code": "Código",
+      "name": "Nombre",
+      "description": "Descripción",
+      "sortOrder": "Orden",
+      "isActive": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "errors": {
+      "CATTYPE_001_CREATION_FAILED": "No se pudo crear el tipo de catálogo.",
+      "CATTYPE_004_UPDATE_FAILED": "No se pudo actualizar el tipo de catálogo.",
+      "CATTYPE_004_NOT_FOUND": "El tipo de catálogo no existe."
     }
   },
   "home": {
