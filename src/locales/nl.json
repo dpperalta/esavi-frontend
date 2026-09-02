@@ -291,6 +291,35 @@
       "noEligibleParent": "Dit geografische niveau heeft geen hogere niveaus beschikbaar als bovenliggende locatie."
     }
   },
+  "healthFacility": {
+    "form": {
+      "createTitle": "Nieuwe gezondheidseenheid",
+      "editTitle": "Gezondheidseenheid bewerken"
+    },
+    "fields": {
+      "geoLocationId": "Locatie",
+      "name": "Naam",
+      "facilityTypeItemId": "Type eenheid",
+      "parentHealthFacilityId": "Bovenliggende eenheid",
+      "localCode": "Lokale code",
+      "officialName": "Officiële naam",
+      "shortName": "Korte naam",
+      "address": "Adres",
+      "latitude": "Breedtegraad",
+      "longitude": "Lengtegraad",
+      "phone": "Telefoon",
+      "email": "E-mail",
+      "isActive": "Status"
+    },
+    "parent": {
+      "placeholder": "Kies een bovenliggende eenheid",
+      "needsLocation": "Kies eerst een locatie"
+    },
+    "status": {
+      "active": "Actief",
+      "inactive": "Inactief"
+    }
+  },
   "home": {
     "greeting": "Hallo, {{name}}",
     "roleLabel": "Uw rol: {{role}}"

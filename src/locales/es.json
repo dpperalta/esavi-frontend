@@ -291,6 +291,35 @@
       "noEligibleParent": "Este nivel geográfico no tiene niveles superiores disponibles como padre."
     }
   },
+  "healthFacility": {
+    "form": {
+      "createTitle": "Nueva unidad de salud",
+      "editTitle": "Editar unidad de salud"
+    },
+    "fields": {
+      "geoLocationId": "Ubicación",
+      "name": "Nombre",
+      "facilityTypeItemId": "Tipo de unidad",
+      "parentHealthFacilityId": "Unidad padre",
+      "localCode": "Código local",
+      "officialName": "Nombre oficial",
+      "shortName": "Nombre corto",
+      "address": "Dirección",
+      "latitude": "Latitud",
+      "longitude": "Longitud",
+      "phone": "Teléfono",
+      "email": "Correo electrónico",
+      "isActive": "Estado"
+    },
+    "parent": {
+      "placeholder": "Elige una unidad padre",
+      "needsLocation": "Elige primero una ubicación"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    }
+  },
   "home": {
     "greeting": "Hola, {{name}}",
     "roleLabel": "Tu rol: {{role}}"

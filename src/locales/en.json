@@ -291,6 +291,35 @@
       "noEligibleParent": "This geographic level has no higher levels available as a parent."
     }
   },
+  "healthFacility": {
+    "form": {
+      "createTitle": "New health facility",
+      "editTitle": "Edit health facility"
+    },
+    "fields": {
+      "geoLocationId": "Location",
+      "name": "Name",
+      "facilityTypeItemId": "Facility type",
+      "parentHealthFacilityId": "Parent facility",
+      "localCode": "Local code",
+      "officialName": "Official name",
+      "shortName": "Short name",
+      "address": "Address",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "phone": "Phone",
+      "email": "Email",
+      "isActive": "Status"
+    },
+    "parent": {
+      "placeholder": "Choose a parent facility",
+      "needsLocation": "Choose a location first"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
   "home": {
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"
