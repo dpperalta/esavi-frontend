@@ -292,6 +292,22 @@
     }
   },
   "healthFacility": {
+    "list": {
+      "title": "Health facilities",
+      "noSelection": "Choose a location or type a search term to see health facilities.",
+      "emptyLocation": "This location doesn't have any health facilities yet.",
+      "emptySearch": "No health facility matches the search.",
+      "clearSearch": "Clear search"
+    },
+    "filters": {
+      "location": "Location",
+      "search": "Search by name or code",
+      "searchHint": "Type at least 2 characters."
+    },
+    "columns": {
+      "type": "Type",
+      "location": "Location"
+    },
     "form": {
       "createTitle": "New health facility",
       "editTitle": "Edit health facility"

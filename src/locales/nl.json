@@ -292,6 +292,22 @@
     }
   },
   "healthFacility": {
+    "list": {
+      "title": "Gezondheidseenheden",
+      "noSelection": "Kies een locatie of typ een zoekterm om gezondheidseenheden te zien.",
+      "emptyLocation": "Deze locatie heeft nog geen gezondheidseenheden.",
+      "emptySearch": "Geen enkele gezondheidseenheid komt overeen met de zoekopdracht.",
+      "clearSearch": "Zoekopdracht wissen"
+    },
+    "filters": {
+      "location": "Locatie",
+      "search": "Zoeken op naam of code",
+      "searchHint": "Typ minstens 2 tekens."
+    },
+    "columns": {
+      "type": "Type",
+      "location": "Locatie"
+    },
     "form": {
       "createTitle": "Nieuwe gezondheidseenheid",
       "editTitle": "Gezondheidseenheid bewerken"

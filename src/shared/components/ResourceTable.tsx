@@ -71,6 +71,10 @@ export interface ResourceTableProps<T> {
   // Shown as a "Limpiar filtros" button on the filtered-empty state (SPEC FE04 §3.8) — a generic
   // capability, not specific to any one entity.
   onClearFilters?: () => void;
+  // i18n key for that button's label — defaults to the generic "Limpiar filtros". SPEC FE06 §3.8
+  // needs its own wording ("Limpiar búsqueda") for the search-mode empty state, distinct from a
+  // filter-clearing action — a prop on the primitive rather than a copy (CONVENTIONS.md §10.4).
+  clearFiltersLabel?: string;
   // Hallazgo E (SPEC FE02 §1): declared for the API contract every entity will share, but
   // inert until a backend listing supports it (CONVENTIONS.md §6.5 forbids sorting/filtering
   // in memory). FE03 is the first to pass `true`.
@@ -103,6 +107,7 @@ export function ResourceTable<T>({
   emptyFilteredKey = 'common.table.emptyFiltered',
   isFiltered = false,
   onClearFilters,
+  clearFiltersLabel,
   isRowInactive,
 }: ResourceTableProps<T>) {
   const { t } = useTranslation();
@@ -169,6 +174,7 @@ export function ResourceTable<T>({
             messageKey={isFiltered ? emptyFilteredKey : emptyKey}
             onCreate={canCreate ? onCreate : undefined}
             onClearFilters={isFiltered ? onClearFilters : undefined}
+            clearFiltersLabel={clearFiltersLabel}
           />
         )}
 
@@ -367,9 +373,15 @@ interface ResourceTableEmptyProps {
   messageKey: string;
   onCreate?: () => void;
   onClearFilters?: () => void;
+  clearFiltersLabel?: string;
 }
 
-function ResourceTableEmpty({ messageKey, onCreate, onClearFilters }: ResourceTableEmptyProps) {
+function ResourceTableEmpty({
+  messageKey,
+  onCreate,
+  onClearFilters,
+  clearFiltersLabel = 'common.table.clearFilters',
+}: ResourceTableEmptyProps) {
   const { t } = useTranslation();
 
   return (
@@ -378,7 +390,7 @@ function ResourceTableEmpty({ messageKey, onCreate, onClearFilters }: ResourceTa
       <p className="text-sm text-muted-foreground">{t(messageKey)}</p>
       {onClearFilters && (
         <Button type="button" variant="outline" size="sm" onClick={onClearFilters}>
-          {t('common.table.clearFilters')}
+          {t(clearFiltersLabel)}
         </Button>
       )}
       {onCreate && (

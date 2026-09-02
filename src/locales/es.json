@@ -292,6 +292,22 @@
     }
   },
   "healthFacility": {
+    "list": {
+      "title": "Unidades de salud",
+      "noSelection": "Elige una ubicación o escribe un término de búsqueda para ver las unidades de salud.",
+      "emptyLocation": "Esta ubicación todavía no tiene unidades de salud.",
+      "emptySearch": "Ninguna unidad de salud coincide con la búsqueda.",
+      "clearSearch": "Limpiar búsqueda"
+    },
+    "filters": {
+      "location": "Ubicación",
+      "search": "Buscar por nombre o código",
+      "searchHint": "Escribe al menos 2 caracteres."
+    },
+    "columns": {
+      "type": "Tipo",
+      "location": "Ubicación"
+    },
     "form": {
       "createTitle": "Nueva unidad de salud",
       "editTitle": "Editar unidad de salud"
