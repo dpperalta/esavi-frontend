@@ -53,6 +53,9 @@
         "method": "Methode",
         "detail": "Detail"
       }
+    },
+    "select": {
+      "clear": "Selectie wissen"
     }
   },
   "auth": {

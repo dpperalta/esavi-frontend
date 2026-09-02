@@ -53,6 +53,9 @@
         "method": "Método",
         "detail": "Detalle"
       }
+    },
+    "select": {
+      "clear": "Limpiar selección"
     }
   },
   "auth": {

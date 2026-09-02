@@ -53,6 +53,9 @@
         "method": "Method",
         "detail": "Detail"
       }
+    },
+    "select": {
+      "clear": "Clear selection"
     }
   },
   "auth": {
