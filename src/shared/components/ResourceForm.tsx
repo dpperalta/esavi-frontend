@@ -68,11 +68,15 @@ export function ResourceForm<TFieldValues extends FieldValues>({
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="flex flex-col gap-4 pb-20 md:pb-0"
+        className="flex flex-col gap-4"
         noValidate
       >
         {children(form)}
-        <div className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-end gap-2 border-t bg-background p-4 md:static md:z-auto md:border-0 md:bg-transparent md:p-0">
+        {/* `sticky`, never `fixed`: inside a <DialogContent> (which is `-translate-*`) a fixed
+            box anchors to the dialog, not the viewport, and freezes over the last fields.
+            `bg-popover` because every consumer is a <Dialog>, whose surface is that token —
+            `--background` is a darker shade in the dark theme and would read as a band. */}
+        <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 border-t bg-popover py-3 md:static md:z-auto md:border-0 md:bg-transparent md:py-0">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
               {t(cancelLabel)}
