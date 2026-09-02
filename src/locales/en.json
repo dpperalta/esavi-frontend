@@ -334,6 +334,15 @@
     "status": {
       "active": "Active",
       "inactive": "Inactive"
+    },
+    "errors": {
+      "HFAC_003_NOT_FOUND": "The health facility doesn't exist.",
+      "HFAC_004_NOT_FOUND": "The health facility doesn't exist.",
+      "HFAC_005A_NOT_FOUND": "The health facility doesn't exist.",
+      "HFAC_005B_NOT_FOUND": "The health facility doesn't exist.",
+      "HFAC_005A_ALREADY_INACTIVE": "The health facility was already inactive.",
+      "HFAC_005B_ALREADY_ACTIVE": "The health facility was already active.",
+      "HFAC_005A_HAS_ACTIVE_CHILDREN": "Can't deactivate: it has active dependent facilities."
     }
   },
   "home": {

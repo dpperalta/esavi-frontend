@@ -334,6 +334,15 @@
     "status": {
       "active": "Actief",
       "inactive": "Inactief"
+    },
+    "errors": {
+      "HFAC_003_NOT_FOUND": "De gezondheidseenheid bestaat niet.",
+      "HFAC_004_NOT_FOUND": "De gezondheidseenheid bestaat niet.",
+      "HFAC_005A_NOT_FOUND": "De gezondheidseenheid bestaat niet.",
+      "HFAC_005B_NOT_FOUND": "De gezondheidseenheid bestaat niet.",
+      "HFAC_005A_ALREADY_INACTIVE": "De gezondheidseenheid was al inactief.",
+      "HFAC_005B_ALREADY_ACTIVE": "De gezondheidseenheid was al actief.",
+      "HFAC_005A_HAS_ACTIVE_CHILDREN": "Kan niet deactiveren: heeft actieve onderliggende eenheden."
     }
   },
   "home": {

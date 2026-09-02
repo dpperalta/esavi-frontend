@@ -334,6 +334,15 @@
     "status": {
       "active": "Activo",
       "inactive": "Inactivo"
+    },
+    "errors": {
+      "HFAC_003_NOT_FOUND": "La unidad de salud no existe.",
+      "HFAC_004_NOT_FOUND": "La unidad de salud no existe.",
+      "HFAC_005A_NOT_FOUND": "La unidad de salud no existe.",
+      "HFAC_005B_NOT_FOUND": "La unidad de salud no existe.",
+      "HFAC_005A_ALREADY_INACTIVE": "La unidad de salud ya estaba inactiva.",
+      "HFAC_005B_ALREADY_ACTIVE": "La unidad de salud ya estaba activa.",
+      "HFAC_005A_HAS_ACTIVE_CHILDREN": "No se puede dar de baja: tiene unidades dependientes activas."
     }
   },
   "home": {
