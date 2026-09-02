@@ -39,7 +39,6 @@ import { GeoLocationFormDialog } from './GeoLocationFormDialog';
 
 type ConfirmAction = 'deactivate' | 'activate';
 
-const ALL_LEVELS = '__all__';
 // Debounce before writing `q` into `searchParams` (SPEC FE04 §3.5) — same criterion as any text
 // filter, so a keystroke doesn't refetch and doesn't rewrite the URL on every character.
 const SEARCH_DEBOUNCE_MS = 400;
@@ -160,13 +159,17 @@ export function GeoLocationListPage() {
 
   function handleGeoLevelChange(value: string) {
     const next = new URLSearchParams(searchParams);
-    if (value === ALL_LEVELS) {
-      next.delete('geoLevelId');
-    } else {
-      next.set('geoLevelId', value);
-    }
+    next.set('geoLevelId', value);
     // A parent chosen under the previous level filter can be too deep (or the same level) for
     // the new one — same reasoning as the create/edit form.
+    next.delete('parentId');
+    next.delete('page');
+    setSearchParams(next);
+  }
+
+  function handleGeoLevelClear() {
+    const next = new URLSearchParams(searchParams);
+    next.delete('geoLevelId');
     next.delete('parentId');
     next.delete('page');
     setSearchParams(next);
@@ -274,12 +277,15 @@ export function GeoLocationListPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
         <div className="flex flex-col gap-1.5 sm:w-56">
           <Label htmlFor="geo-location-level-filter">{t('geoLocation.filters.geoLevelType')}</Label>
-          <Select value={geoLevelId ?? ALL_LEVELS} onValueChange={handleGeoLevelChange}>
-            <SelectTrigger id="geo-location-level-filter" className="w-full">
-              <SelectValue />
+          <Select value={geoLevelId ?? ''} onValueChange={handleGeoLevelChange}>
+            <SelectTrigger
+              id="geo-location-level-filter"
+              className="w-full"
+              onClear={handleGeoLevelClear}
+            >
+              <SelectValue placeholder={t('geoLocation.filters.geoLevelTypePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_LEVELS}>{t('common.table.allOption')}</SelectItem>
               {(levelTypes.data?.rows ?? []).map((row) => (
                 <SelectItem key={row.geoLevelTypeId} value={row.geoLevelTypeId}>
                   {row.name}

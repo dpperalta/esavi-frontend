@@ -164,6 +164,25 @@ describe('GeoLocationListPage — filtros en la URL', () => {
     await waitFor(() => expect(router.state.location.search).toBe(`?geoLevelId=${LVL_COUNTRY}`));
   });
 
+  it('la «×» del filtro de nivel borra geoLevelId y deja page en 1 (SPEC FE05)', async () => {
+    const user = userEvent.setup();
+    signInAs('ADMIN', 50);
+    mockLevelTypes();
+    server.use(
+      http.get('http://localhost:4500/api/geo-locations', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [makeRow()] } }),
+      ),
+    );
+
+    const router = renderPage(`/geo-locations?geoLevelId=${LVL_COUNTRY}&page=2`);
+
+    await waitFor(() => expect(screen.getAllByText('Ecuador').length).toBeGreaterThan(0));
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar selección' }));
+
+    await waitFor(() => expect(router.state.location.search).toBe(''));
+  });
+
   it('buscar por q pega a geo-locations?name=<texto>&code=<texto>', async () => {
     const user = userEvent.setup();
     signInAs('ADMIN', 50);
