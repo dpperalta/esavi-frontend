@@ -32,6 +32,16 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   GEOLOC_004_NOT_FOUND: 'geoLocation.errors.GEOLOC_004_NOT_FOUND',
   GEOLOC_005A_ALREADY_INACTIVE: 'geoLocation.errors.GEOLOC_005A_ALREADY_INACTIVE',
   GEOLOC_005B_ALREADY_ACTIVE: 'geoLocation.errors.GEOLOC_005B_ALREADY_ACTIVE',
+  // SPEC FE06 §3.7 — errorFieldMap only maps the FK/duplicate/cycle codes to a field; these go
+  // to the toast instead. HFAC_005A_HAS_ACTIVE_CHILDREN (hallazgo F) needs its own text: the
+  // deactivation failed because of dependent facilities, not a generic server error.
+  HFAC_003_NOT_FOUND: 'healthFacility.errors.HFAC_003_NOT_FOUND',
+  HFAC_004_NOT_FOUND: 'healthFacility.errors.HFAC_004_NOT_FOUND',
+  HFAC_005A_NOT_FOUND: 'healthFacility.errors.HFAC_005A_NOT_FOUND',
+  HFAC_005B_NOT_FOUND: 'healthFacility.errors.HFAC_005B_NOT_FOUND',
+  HFAC_005A_ALREADY_INACTIVE: 'healthFacility.errors.HFAC_005A_ALREADY_INACTIVE',
+  HFAC_005B_ALREADY_ACTIVE: 'healthFacility.errors.HFAC_005B_ALREADY_ACTIVE',
+  HFAC_005A_HAS_ACTIVE_CHILDREN: 'healthFacility.errors.HFAC_005A_HAS_ACTIVE_CHILDREN',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

@@ -1,6 +1,6 @@
 # SPEC FE03 — Catálogos: tipos e ítems (maestro-detalle)
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE02 (fábrica de recursos y primitivas)
 > **Fecha:** 2026-08-31
 > **Objetivo:** Construir la pantalla de `catalogItem` como maestro-detalle sobre `catalogType`, estrenando el modo `adminPath` de `createResource` sobre un listado por padre y respetando el candado de `value` que impuso SPEC F46.

@@ -204,6 +204,11 @@
       "CATITEM_005A_VALUE_LOCKED": "Este elemento está bloqueado por el sistema y no se puede dar de baja.",
       "CATITEM_005A_ALREADY_INACTIVE": "El elemento ya estaba inactivo.",
       "CATITEM_005B_ALREADY_ACTIVE": "El elemento ya estaba activo."
+    },
+    "select": {
+      "label": "Elemento de catálogo",
+      "placeholder": "Elige un elemento",
+      "unknownType": "El tipo de catálogo requerido no existe."
     }
   },
   "geoLevelType": {
@@ -284,6 +289,60 @@
       "emptyLevel": "Este nivel no tiene ubicaciones hijas.",
       "loadError": "No pudimos cargar los niveles geográficos.",
       "noEligibleParent": "Este nivel geográfico no tiene niveles superiores disponibles como padre."
+    }
+  },
+  "healthFacility": {
+    "list": {
+      "title": "Unidades de salud",
+      "noSelection": "Elige una ubicación o escribe un término de búsqueda para ver las unidades de salud.",
+      "emptyLocation": "Esta ubicación todavía no tiene unidades de salud.",
+      "emptySearch": "Ninguna unidad de salud coincide con la búsqueda.",
+      "clearSearch": "Limpiar búsqueda"
+    },
+    "filters": {
+      "location": "Ubicación",
+      "search": "Buscar por nombre o código",
+      "searchHint": "Escribe al menos 2 caracteres."
+    },
+    "columns": {
+      "type": "Tipo",
+      "location": "Ubicación"
+    },
+    "form": {
+      "createTitle": "Nueva unidad de salud",
+      "editTitle": "Editar unidad de salud"
+    },
+    "fields": {
+      "geoLocationId": "Ubicación",
+      "name": "Nombre",
+      "facilityTypeItemId": "Tipo de unidad",
+      "parentHealthFacilityId": "Unidad padre",
+      "localCode": "Código local",
+      "officialName": "Nombre oficial",
+      "shortName": "Nombre corto",
+      "address": "Dirección",
+      "latitude": "Latitud",
+      "longitude": "Longitud",
+      "phone": "Teléfono",
+      "email": "Correo electrónico",
+      "isActive": "Estado"
+    },
+    "parent": {
+      "placeholder": "Elige una unidad padre",
+      "needsLocation": "Elige primero una ubicación"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "errors": {
+      "HFAC_003_NOT_FOUND": "La unidad de salud no existe.",
+      "HFAC_004_NOT_FOUND": "La unidad de salud no existe.",
+      "HFAC_005A_NOT_FOUND": "La unidad de salud no existe.",
+      "HFAC_005B_NOT_FOUND": "La unidad de salud no existe.",
+      "HFAC_005A_ALREADY_INACTIVE": "La unidad de salud ya estaba inactiva.",
+      "HFAC_005B_ALREADY_ACTIVE": "La unidad de salud ya estaba activa.",
+      "HFAC_005A_HAS_ACTIVE_CHILDREN": "No se puede dar de baja: tiene unidades dependientes activas."
     }
   },
   "home": {

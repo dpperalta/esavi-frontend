@@ -6,6 +6,7 @@ import { LoginPage } from '@/features/auth/LoginPage';
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
 import { GeoLevelTypeListPage } from '@/features/geoLevelType/GeoLevelTypeListPage';
 import { GeoLocationListPage } from '@/features/geoLocation/GeoLocationListPage';
+import { HealthFacilityListPage } from '@/features/healthFacility/HealthFacilityListPage';
 import { HomePage } from '@/features/home/HomePage';
 import { RequireAuth } from '@/shared/components/RequireAuth';
 import { RequireRole } from '@/shared/components/RequireRole';
@@ -28,6 +29,7 @@ export function AppRouter() {
               <Route path="/catalog-items" element={<CatalogItemListPage />} />
               <Route path="/geo-level-types" element={<GeoLevelTypeListPage />} />
               <Route path="/geo-locations" element={<GeoLocationListPage />} />
+              <Route path="/health-facilities" element={<HealthFacilityListPage />} />
             </Route>
           </Route>
         </Route>

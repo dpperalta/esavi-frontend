@@ -204,6 +204,11 @@
       "CATITEM_005A_VALUE_LOCKED": "This item is locked by the system and can't be deactivated.",
       "CATITEM_005A_ALREADY_INACTIVE": "The item was already inactive.",
       "CATITEM_005B_ALREADY_ACTIVE": "The item was already active."
+    },
+    "select": {
+      "label": "Catalog item",
+      "placeholder": "Choose an item",
+      "unknownType": "The required catalog type doesn't exist."
     }
   },
   "geoLevelType": {
@@ -284,6 +289,60 @@
       "emptyLevel": "This level has no child locations.",
       "loadError": "We couldn't load the geographic levels.",
       "noEligibleParent": "This geographic level has no higher levels available as a parent."
+    }
+  },
+  "healthFacility": {
+    "list": {
+      "title": "Health facilities",
+      "noSelection": "Choose a location or type a search term to see health facilities.",
+      "emptyLocation": "This location doesn't have any health facilities yet.",
+      "emptySearch": "No health facility matches the search.",
+      "clearSearch": "Clear search"
+    },
+    "filters": {
+      "location": "Location",
+      "search": "Search by name or code",
+      "searchHint": "Type at least 2 characters."
+    },
+    "columns": {
+      "type": "Type",
+      "location": "Location"
+    },
+    "form": {
+      "createTitle": "New health facility",
+      "editTitle": "Edit health facility"
+    },
+    "fields": {
+      "geoLocationId": "Location",
+      "name": "Name",
+      "facilityTypeItemId": "Facility type",
+      "parentHealthFacilityId": "Parent facility",
+      "localCode": "Local code",
+      "officialName": "Official name",
+      "shortName": "Short name",
+      "address": "Address",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "phone": "Phone",
+      "email": "Email",
+      "isActive": "Status"
+    },
+    "parent": {
+      "placeholder": "Choose a parent facility",
+      "needsLocation": "Choose a location first"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "errors": {
+      "HFAC_003_NOT_FOUND": "The health facility doesn't exist.",
+      "HFAC_004_NOT_FOUND": "The health facility doesn't exist.",
+      "HFAC_005A_NOT_FOUND": "The health facility doesn't exist.",
+      "HFAC_005B_NOT_FOUND": "The health facility doesn't exist.",
+      "HFAC_005A_ALREADY_INACTIVE": "The health facility was already inactive.",
+      "HFAC_005B_ALREADY_ACTIVE": "The health facility was already active.",
+      "HFAC_005A_HAS_ACTIVE_CHILDREN": "Can't deactivate: it has active dependent facilities."
     }
   },
   "home": {

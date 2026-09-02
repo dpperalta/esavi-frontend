@@ -58,7 +58,9 @@ function SelectTrigger({
         disabled={disabled}
         className={cn(
           "flex w-fit items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent py-2 pr-2 pl-2.5 text-sm whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-8 data-[size=sm]:h-7 data-[size=sm]:rounded-[min(var(--radius-md),10px)] *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-          showClear && "pr-7 group-has-data-[placeholder]:pr-2",
+          // Room for both icons (SPEC FE05 §7): chevron + "×" + the gaps between them.
+          showClear &&
+            "pr-12 group-has-data-[placeholder]:pr-2 data-[size=sm]:pr-11 data-[size=sm]:group-has-data-[placeholder]:pr-2",
           className
         )}
         {...props}
@@ -79,7 +81,9 @@ function SelectTrigger({
             event.stopPropagation()
             onClear()
           }}
-          className="absolute top-1/2 right-6 flex -translate-y-1/2 items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 group-has-data-[placeholder]:hidden group-has-[[data-size=sm]]:right-5 max-md:-m-[14px] max-md:p-[14px]"
+          // The 44px touch target below `md` is an ::after overlay, not a negative margin:
+          // a negative margin on an absolutely positioned box moves it instead of growing it.
+          className="absolute top-1/2 right-6 flex -translate-y-1/2 items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground focus-visible:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 group-has-data-[placeholder]:hidden group-has-[[data-size=sm]]:right-5 max-md:after:absolute max-md:after:-inset-2.5 max-md:after:content-['']"
         >
           <XIcon aria-hidden="true" className="pointer-events-none size-4" />
         </button>

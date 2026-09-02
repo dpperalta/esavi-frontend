@@ -1,6 +1,6 @@
 # SPEC FE05 — Limpieza de selección en los combos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE02 (fábrica de recursos y `<ResourceTable>`), SPEC FE03 (`<CatalogTypeSelect>`), SPEC FE04 (`<GeoLocationPicker>` y el listado de geografía)
 > **Fecha:** 2026-09-01
 > **Objetivo:** Que todo combo de la aplicación pueda deshacer su selección con una «×» dentro del propio control, sin salir a buscar un botón externo.
