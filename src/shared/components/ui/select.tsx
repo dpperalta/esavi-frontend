@@ -48,7 +48,7 @@ function SelectTrigger({
   onClear?: () => void
 }) {
   const { t } = useTranslation()
-  const showClear = clearable && Boolean(onClear)
+  const showClear = clearable && Boolean(onClear) && !disabled
 
   return (
     <span className="group relative inline-flex">
@@ -71,7 +71,6 @@ function SelectTrigger({
       {showClear && (
         <button
           type="button"
-          disabled={disabled}
           aria-label={t("common.select.clear")}
           onPointerDown={(event) => {
             event.stopPropagation()
