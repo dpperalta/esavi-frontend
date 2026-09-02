@@ -1,6 +1,6 @@
 # SPEC FE04 — Geografía: `geoLevelType` + `geoLocation` + `<GeoLocationPicker>`
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE02 (fábrica de recursos y primitivas), SPEC FE03 (precedente de patrón `serverDecides` sin toggle, vía `catalogType`)
 > **Fecha:** 2026-09-01
 > **Objetivo:** Construir el CRUD de `geoLevelType` y `geoLocation` — la jerarquía territorial autorreferente que el resto del dominio (`healthFacility`, filtros de casos F48) cuelga — y estrenar `<GeoLocationPicker>`, la primitiva de cascada jerárquica que ARCHITECTURE.md §4.3 reserva desde el hito 1.

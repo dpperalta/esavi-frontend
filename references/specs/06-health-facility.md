@@ -1,6 +1,6 @@
 # SPEC FE06 — Unidades de salud (`healthFacility`)
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE02 (fábrica de recursos y primitivas), SPEC FE03 (`inactiveMode: 'adminPath'` + `parent`, precedente de pantalla sin listado plano), SPEC FE04 (`<GeoLocationPicker>` y el CRUD de `geoLocation`), SPEC FE05 (combos limpiables), SPEC F51 del backend (búsqueda por nombre o código)
 > **Fecha:** 2026-09-01
 > **Objetivo:** Construir el CRUD de `healthFacility` — la unidad de salud donde se reporta cada caso ESAVI — en una sola pantalla con dos modos, listado por ubicación y búsqueda por nombre o código, y estrenar `<CatalogSelect typeCode="…">`.
