@@ -148,6 +148,13 @@ export function CatalogItemListPage() {
     setSearchParams(next);
   }
 
+  function handleTypeClear() {
+    const next = new URLSearchParams(searchParams);
+    next.delete('typeId');
+    next.delete('page');
+    setSearchParams(next);
+  }
+
   function handleIncludeInactiveChange(value: boolean) {
     const next = new URLSearchParams(searchParams);
     if (value) {
@@ -253,7 +260,11 @@ export function CatalogItemListPage() {
       <h1 className="text-xl font-medium text-foreground">{t('catalogItem.list.title')}</h1>
 
       <div className="w-full sm:max-w-xs">
-        <CatalogTypeSelect value={typeId ?? undefined} onValueChange={handleTypeChange} />
+        <CatalogTypeSelect
+          value={typeId ?? ''}
+          onValueChange={handleTypeChange}
+          onClear={handleTypeClear}
+        />
       </div>
 
       {!typeId && <InvitationPanel messageKey="catalogItem.list.noTypeSelected" />}
