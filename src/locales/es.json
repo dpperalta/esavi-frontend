@@ -204,6 +204,11 @@
       "CATITEM_005A_VALUE_LOCKED": "Este elemento está bloqueado por el sistema y no se puede dar de baja.",
       "CATITEM_005A_ALREADY_INACTIVE": "El elemento ya estaba inactivo.",
       "CATITEM_005B_ALREADY_ACTIVE": "El elemento ya estaba activo."
+    },
+    "select": {
+      "label": "Elemento de catálogo",
+      "placeholder": "Elige un elemento",
+      "unknownType": "El tipo de catálogo requerido no existe."
     }
   },
   "geoLevelType": {

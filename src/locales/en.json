@@ -204,6 +204,11 @@
       "CATITEM_005A_VALUE_LOCKED": "This item is locked by the system and can't be deactivated.",
       "CATITEM_005A_ALREADY_INACTIVE": "The item was already inactive.",
       "CATITEM_005B_ALREADY_ACTIVE": "The item was already active."
+    },
+    "select": {
+      "label": "Catalog item",
+      "placeholder": "Choose an item",
+      "unknownType": "The required catalog type doesn't exist."
     }
   },
   "geoLevelType": {

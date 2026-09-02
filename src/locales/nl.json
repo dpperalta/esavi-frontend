@@ -204,6 +204,11 @@
       "CATITEM_005A_VALUE_LOCKED": "Dit item is vergrendeld door het systeem en kan niet worden gedeactiveerd.",
       "CATITEM_005A_ALREADY_INACTIVE": "Het item was al inactief.",
       "CATITEM_005B_ALREADY_ACTIVE": "Het item was al actief."
+    },
+    "select": {
+      "label": "Catalogusitem",
+      "placeholder": "Kies een item",
+      "unknownType": "Het vereiste catalogustype bestaat niet."
     }
   },
   "geoLevelType": {
