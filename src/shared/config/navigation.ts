@@ -150,7 +150,6 @@ export const NAVIGATION: NavItem[] = [
         icon: Building2,
         path: '/health-facilities',
         minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
     ],
   },
