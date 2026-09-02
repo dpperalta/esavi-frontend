@@ -38,8 +38,10 @@ function signInAs(roleName: string, level: number) {
 }
 
 function Harness() {
-  const [value, setValue] = useState<string | undefined>(undefined);
-  return <CatalogTypeSelect value={value} onValueChange={setValue} />;
+  const [value, setValue] = useState('');
+  return (
+    <CatalogTypeSelect value={value} onValueChange={setValue} onClear={() => setValue('')} />
+  );
 }
 
 function renderSelect() {
@@ -133,6 +135,48 @@ describe('CatalogTypeSelect', () => {
 
     const option = await screen.findByRole('option', { name: /Retirado/i });
     expect(option).toHaveTextContent('Inactivo');
+  });
+
+  it('la «×» limpia el tipo elegido (SPEC FE05)', async () => {
+    signInAs('USER', 25);
+    server.use(
+      http.get('http://localhost:4500/api/catalog-types', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 1,
+            rows: [
+              {
+                catalogTypeId: 'ct-1',
+                code: 'OUTCOME',
+                name: 'Desenlace',
+                description: null,
+                sortOrder: 1,
+                isActive: true,
+                deletedAt: null,
+                appDetails: [],
+              },
+            ],
+          },
+        }),
+      ),
+    );
+
+    const user = userEvent.setup();
+    renderSelect();
+
+    const trigger = await screen.findByRole('combobox');
+    await user.click(trigger);
+    await user.click(await screen.findByRole('option', { name: 'Desenlace' }));
+
+    await waitFor(() => expect(screen.getByRole('combobox')).toHaveTextContent('Desenlace'));
+
+    await user.click(screen.getByRole('button', { name: 'Limpiar selección' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('combobox')).not.toHaveTextContent('Desenlace'),
+    );
   });
 
   it('con nivel USER el combo no falla aunque el backend no devuelva inactivos', async () => {

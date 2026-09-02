@@ -35,7 +35,6 @@
       "retry": "Opnieuw proberen",
       "showInactive": "Inactieve tonen",
       "clearFilters": "Filters wissen",
-      "allOption": "Alle",
       "serverDecidesInactive": "Deze lijst bevat al gedeactiveerde records; de server bepaalt welke worden getoond op basis van je rol.",
       "pageSize": "Rijen per pagina",
       "pageStatus": "Pagina {{page}} van {{pages}} · {{count}} records",
@@ -53,6 +52,9 @@
         "method": "Methode",
         "detail": "Detail"
       }
+    },
+    "select": {
+      "clear": "Selectie wissen"
     }
   },
   "auth": {
@@ -244,6 +246,7 @@
     },
     "filters": {
       "geoLevelType": "Geografisch niveau",
+      "geoLevelTypePlaceholder": "Alle niveaus",
       "parent": "Bovenliggende locatie",
       "search": "Zoeken op naam of code"
     },

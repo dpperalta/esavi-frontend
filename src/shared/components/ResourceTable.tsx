@@ -246,7 +246,14 @@ export function ResourceTable<T>({
               {t('common.table.pageSize')}
             </Label>
             <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-              <SelectTrigger id="resource-table-page-size" size="sm" className="w-20">
+              {/* SPEC FE05 §3.3, excepción 1: an empty pageSize has no state <ResourceTable> knows
+                  how to paint, so the "×" doesn't apply here. */}
+              <SelectTrigger
+                id="resource-table-page-size"
+                size="sm"
+                className="w-20"
+                clearable={false}
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

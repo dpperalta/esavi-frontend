@@ -1,7 +1,7 @@
 # Inventario de rutas del backend
 
 > **Fuente:** `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES`
-> **Generado:** 2026-08-31 · **323 rutas** en **42 grupos**
+> **Generado:** 2026-09-01 · **324 rutas** en **42 grupos**
 > **Regenerar:** ver `README.md` de este directorio
 
 `ROUTE_RULES` es la matriz canónica de la §9 de `CONVENTIONS.md`, y el backend la
@@ -220,6 +220,7 @@ sesiones de una cuenta exige identidad probada.
 | `POST` | `/api/health-facilities` | ADMIN | `ESAVI-HFAC-001` |
 | `GET` | `/api/health-facilities/location/:id` | USER | `ESAVI-HFAC-002A` |
 | `GET` | `/api/health-facilities/admin/location/:id` | ADMIN | `ESAVI-HFAC-002B` |
+| `GET` | `/api/health-facilities/search` | USER | `ESAVI-HFAC-006` |
 | `GET` | `/api/health-facilities/:id` | USER | `ESAVI-HFAC-003` |
 | `PUT` | `/api/health-facilities/:id` | ADMIN | `ESAVI-HFAC-004` |
 | `DELETE` | `/api/health-facilities/:id` | ADMIN | `ESAVI-HFAC-005A` |

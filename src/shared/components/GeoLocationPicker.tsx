@@ -119,6 +119,10 @@ function GeoLocationPickerLevel({
         <SelectTrigger
           className="w-full"
           aria-label={t('geoLocation.picker.levelLabel', { level: levelName })}
+          onClear={() => {
+            setSelected('');
+            onFinalChange(null);
+          }}
         >
           <SelectValue />
         </SelectTrigger>

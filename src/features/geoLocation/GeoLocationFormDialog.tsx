@@ -148,7 +148,10 @@ export function GeoLocationFormDialog({
                         }}
                       >
                         <FormControl>
-                          <SelectTrigger className="w-full">
+                          {/* SPEC FE05 §3.3, excepción 2: geoLevelTypeId is z.string().uuid() in
+                              schemas.ts — required — so the "×" would only front-run a
+                              validation error the user can't resolve except by choosing again. */}
+                          <SelectTrigger className="w-full" clearable={false}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>

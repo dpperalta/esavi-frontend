@@ -35,7 +35,6 @@
       "retry": "Reintentar",
       "showInactive": "Mostrar inactivos",
       "clearFilters": "Limpiar filtros",
-      "allOption": "Todos",
       "serverDecidesInactive": "Este listado ya incluye los registros dados de baja; el servidor decide cuáles mostrar según tu rol.",
       "pageSize": "Filas por página",
       "pageStatus": "Página {{page}} de {{pages}} · {{count}} registros",
@@ -53,6 +52,9 @@
         "method": "Método",
         "detail": "Detalle"
       }
+    },
+    "select": {
+      "clear": "Limpiar selección"
     }
   },
   "auth": {
@@ -244,6 +246,7 @@
     },
     "filters": {
       "geoLevelType": "Nivel geográfico",
+      "geoLevelTypePlaceholder": "Todos los niveles",
       "parent": "Ubicación padre",
       "search": "Buscar por nombre o código"
     },

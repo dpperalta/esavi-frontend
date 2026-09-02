@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
@@ -289,6 +289,128 @@ describe('GeoLocationPicker — cascada', () => {
     await user.click(await screen.findByRole('option', { name: 'Ecuador' }));
 
     await waitFor(() => expect(screen.getAllByRole('combobox')).toHaveLength(1));
+  });
+});
+
+describe('GeoLocationPicker — «×» por nivel (SPEC FE05)', () => {
+  function mockThreeLevelCascade() {
+    server.use(
+      http.get('http://localhost:4500/api/geo-level-types', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 3,
+            rows: [
+              {
+                geoLevelTypeId: 'lvl-country',
+                code: 'COUNTRY',
+                name: 'País',
+                sortOrder: 1,
+                isActive: true,
+                deletedAt: null,
+                appDetails: [],
+              },
+              {
+                geoLevelTypeId: 'lvl-province',
+                code: 'PROVINCE',
+                name: 'Provincia',
+                sortOrder: 2,
+                isActive: true,
+                deletedAt: null,
+                appDetails: [],
+              },
+              {
+                geoLevelTypeId: 'lvl-canton',
+                code: 'CANTON',
+                name: 'Cantón',
+                sortOrder: 3,
+                isActive: true,
+                deletedAt: null,
+                appDetails: [],
+              },
+            ],
+          },
+        }),
+      ),
+      http.get('http://localhost:4500/api/geo-locations', ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get('geoLevelId') === 'lvl-country') {
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: { count: 1, rows: [makeLocation()] },
+          });
+        }
+        if (url.searchParams.get('parentId') === 'gl-1') {
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 1,
+              rows: [
+                makeLocation({
+                  geoLocationId: 'gl-2',
+                  geoLevelTypeId: 'lvl-province',
+                  parentGeoLocationId: 'gl-1',
+                  name: 'Pichincha',
+                  level: 2,
+                }),
+              ],
+            },
+          });
+        }
+        if (url.searchParams.get('parentId') === 'gl-2') {
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 1,
+              rows: [
+                makeLocation({
+                  geoLocationId: 'gl-3',
+                  geoLevelTypeId: 'lvl-canton',
+                  parentGeoLocationId: 'gl-2',
+                  name: 'Quito',
+                  level: 3,
+                }),
+              ],
+            },
+          });
+        }
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+  }
+
+  it('limpiar el nivel N descarta los niveles descendientes', async () => {
+    const user = userEvent.setup();
+    mockThreeLevelCascade();
+    const onChange = vi.fn();
+
+    renderPicker({ onChange });
+
+    const countryTrigger = await screen.findByRole('combobox');
+    await user.click(countryTrigger);
+    await user.click(await screen.findByRole('option', { name: 'Ecuador' }));
+
+    const provinceTrigger = await screen.findByRole('combobox', { name: /Provincia/i });
+    await user.click(provinceTrigger);
+    await user.click(await screen.findByRole('option', { name: 'Pichincha' }));
+
+    const cantonTrigger = await screen.findByRole('combobox', { name: /Cantón/i });
+    await user.click(cantonTrigger);
+    await user.click(await screen.findByRole('option', { name: 'Quito' }));
+
+    await waitFor(() => expect(screen.getAllByRole('combobox')).toHaveLength(3));
+    expect(onChange).toHaveBeenLastCalledWith('gl-3');
+
+    // Clear the province (level 2): the canton combo (level 3) it fed must go with it.
+    const clearButtons = screen.getAllByRole('button', { name: 'Limpiar selección' });
+    await user.click(clearButtons[1]);
+
+    await waitFor(() => expect(screen.getAllByRole('combobox')).toHaveLength(2));
+    expect(onChange).toHaveBeenLastCalledWith(null);
   });
 });
 
