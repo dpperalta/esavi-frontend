@@ -129,7 +129,8 @@
       "appRole": "Roles",
       "catalogType": "Tipos de catálogo",
       "catalogItem": "Elementos de catálogo",
-      "systemConfig": "Configuración del sistema"
+      "systemConfig": "Configuración del sistema",
+      "geoBulkImport": "Carga masiva de geografía"
     }
   },
   "catalogType": {
@@ -343,6 +344,91 @@
       "HFAC_005A_ALREADY_INACTIVE": "La unidad de salud ya estaba inactiva.",
       "HFAC_005B_ALREADY_ACTIVE": "La unidad de salud ya estaba activa.",
       "HFAC_005A_HAS_ACTIVE_CHILDREN": "No se puede dar de baja: tiene unidades dependientes activas."
+    }
+  },
+  "geoBulkImport": {
+    "title": "Carga masiva de geografía",
+    "description": "Descarga la plantilla, edítala en Excel y súbela para crear o actualizar la geografía y las unidades de salud.",
+    "template": {
+      "title": "Plantilla",
+      "description": "Genera el libro .xlsx con las hojas de geografía y unidades de salud, y los desplegables de nivel y tipo de unidad.",
+      "includeExisting": "Incluir lo ya cargado",
+      "includeExistingHint": "Desactivarlo descarga la plantilla vacía, solo con las cabeceras.",
+      "download": "Descargar plantilla"
+    },
+    "upload": {
+      "title": "Subir libro",
+      "description": "Sube el .xlsx editado para validarlo o para importarlo.",
+      "dropzone": "Arrastra aquí el archivo .xlsx, o",
+      "choose": "Elegir archivo",
+      "remove": "Quitar archivo",
+      "noFile": "Todavía no elegiste ningún archivo.",
+      "requiresSuperadmin": "Subir el archivo exige el rol Superadministrador. Pide a un Superadministrador que lo haga por ti.",
+      "validate": "Validar sin guardar",
+      "import": "Importar",
+      "confirmTitle": "¿Importar este archivo?",
+      "confirmBody": "Esto escribirá los cambios en la base de datos. Si solo quieres comprobar el archivo, usa «Validar sin guardar».",
+      "confirmAction": "Sí, importar",
+      "invalidExtension": "El archivo debe tener extensión .xlsx.",
+      "tooLarge": "El archivo no puede superar los 20 MB."
+    },
+    "report": {
+      "title": "Informe de la carga",
+      "dryRunNotice": "Simulación: no se guardó nada.",
+      "allUnchanged": "El archivo coincide con lo ya cargado: no hubo cambios que hacer.",
+      "sheetGeoLocation": "Geografía",
+      "sheetHealthFacility": "Unidades de salud",
+      "sheetMissing": "Esta hoja no venía en el libro.",
+      "counters": {
+        "read": "Leídas",
+        "inserted": "Insertadas",
+        "updated": "Actualizadas",
+        "unchanged": "Sin cambios",
+        "invalid": "Rechazadas",
+        "duplicated": "Duplicadas",
+        "inactiveMatched": "Sobre filas inactivas",
+        "sortOrderCoerced": "Orden corregido"
+      },
+      "warnInactiveMatched": "El archivo toca {{count}} fila(s) desactivada(s) y no se reactivan.",
+      "warnTreeMoves": "Algunas filas movían el árbol (padre, nivel o ubicación); esas filas no se tocaron.",
+      "infoOrphans": "{{count}} fila(s) se rechazaron en cascada por un rechazo en un nivel superior.",
+      "missingOptionalHeaders": "Columnas opcionales ausentes en el archivo: las filas existentes conservan su valor.",
+      "unknownHeaders": "Columnas del archivo que no se reconocen y se ignoraron.",
+      "errorsTitle": "Filas rechazadas",
+      "errorsTruncated": "{{shown}} de {{total}} errores",
+      "errorsEmpty": "No hubo filas rechazadas.",
+      "columnHint": " (columna {{column}})"
+    },
+    "reasons": {
+      "EMPTY_EXTERNAL_CODE": "El código externo está vacío.",
+      "EMPTY_NAME": "El nombre está vacío.",
+      "EMPTY_LEVEL": "El nivel está vacío.",
+      "INVALID_LEVEL": "El nivel no es válido.",
+      "MISSING_PARENT_CODE": "Falta el código del padre.",
+      "UNEXPECTED_PARENT_CODE": "Este nivel no debería tener código de padre.",
+      "DUPLICATE_IN_FILE": "El código está duplicado dentro del archivo.",
+      "VALUE_TOO_LONG": "El valor es demasiado largo",
+      "CYCLE": "Esta fila crearía un ciclo en el árbol.",
+      "GEO_LEVEL_NOT_FOUND": "El nivel geográfico no existe.",
+      "PARENT_NOT_FOUND": "El código de padre no existe.",
+      "PARENT_INACTIVE": "El padre está inactivo.",
+      "PARENT_LEVEL_MISMATCH": "El nivel del padre no es el esperado.",
+      "SIBLING_NAME_EXISTS": "Ya existe un nombre igual entre las filas del mismo padre.",
+      "PARENT_CHANGED": "El padre cambió respecto a lo ya cargado; la fila no se tocó.",
+      "LEVEL_CHANGED": "El nivel cambió respecto a lo ya cargado; la fila no se tocó.",
+      "ORPHAN": "Se rechazó en cascada por un rechazo en un nivel superior.",
+      "EMPTY_LOCAL_CODE": "El código local está vacío.",
+      "EMPTY_FACILITY_TYPE": "El tipo de unidad está vacío.",
+      "EMPTY_GEO_CODE": "El código de ubicación está vacío.",
+      "GEO_NOT_FOUND": "La ubicación no existe.",
+      "FACILITY_TYPE_NOT_FOUND": "El tipo de unidad no existe.",
+      "LOCATION_CHANGED": "La ubicación cambió respecto a lo ya cargado; la fila no se tocó."
+    },
+    "errors": {
+      "GEOLOC_006_FILE_INVALID": "El archivo no tiene el formato esperado.",
+      "GEOLOC_006_FILE_TOO_LARGE": "El archivo supera el tamaño máximo permitido.",
+      "GEOLOC_006_FILE_REQUIRED": "Elige un archivo para continuar.",
+      "levelTypesAction": "Configura los niveles geográficos"
     }
   },
   "home": {
