@@ -395,6 +395,9 @@
       "missingOptionalHeaders": "Columnas opcionales ausentes en el archivo: las filas existentes conservan su valor.",
       "unknownHeaders": "Columnas del archivo que no se reconocen y se ignoraron.",
       "errorsTitle": "Filas rechazadas",
+      "columnReason": "Motivo",
+      "columnSheet": "Hoja",
+      "columnRow": "Fila",
       "errorsTruncated": "{{shown}} de {{total}} errores",
       "errorsEmpty": "No hubo filas rechazadas.",
       "columnHint": " (columna {{column}})"

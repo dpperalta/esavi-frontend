@@ -395,6 +395,9 @@
       "missingOptionalHeaders": "Optionele kolommen ontbreken in het bestand: bestaande rijen behouden hun waarde.",
       "unknownHeaders": "Kolommen in het bestand die niet herkend worden en zijn genegeerd.",
       "errorsTitle": "Afgewezen rijen",
+      "columnReason": "Reden",
+      "columnSheet": "Blad",
+      "columnRow": "Rij",
       "errorsTruncated": "{{shown}} van {{total}} fouten",
       "errorsEmpty": "Er zijn geen rijen afgewezen.",
       "columnHint": " (kolom {{column}})"

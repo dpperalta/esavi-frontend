@@ -395,6 +395,9 @@
       "missingOptionalHeaders": "Optional columns missing from the file: existing rows keep their value.",
       "unknownHeaders": "Columns in the file that aren't recognized, and were ignored.",
       "errorsTitle": "Rejected rows",
+      "columnReason": "Reason",
+      "columnSheet": "Sheet",
+      "columnRow": "Row",
       "errorsTruncated": "{{shown}} of {{total}} errors",
       "errorsEmpty": "No rows were rejected.",
       "columnHint": " (column {{column}})"
