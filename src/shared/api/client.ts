@@ -61,11 +61,14 @@ async function toEsaviApiError(error: AxiosError<ApiErrorEnvelope>): Promise<Esa
     if (data instanceof Blob) {
       const parsed = await parseBlobError(data);
       if (parsed) {
-        return new EsaviApiError(parsed.message, status, parsed.code);
+        return new EsaviApiError(parsed.message, status, parsed.code ?? 'UNKNOWN_ERROR');
       }
       return new EsaviApiError(error.message, status, 'UNKNOWN_ERROR');
     }
-    return new EsaviApiError(data.message, status, data.code);
+    // `code` is absent in the 401/403 of tokenValidation and roleValidation, and `data` itself
+    // is absent on an empty body: without these fallbacks `code` reaches the interceptor as
+    // undefined and isRefreshTokenReused() throws before the refresh can even be attempted.
+    return new EsaviApiError(data?.message ?? error.message, status, data?.code ?? 'UNKNOWN_ERROR');
   }
   // No response: the request never reached the server (network down, CORS, server offline).
   // There's no backend `code` to keep; NETWORK_ERROR is the client's own, not the contract's.

@@ -214,6 +214,47 @@ describe('client — cola de refresh', () => {
     expect(tokenStore.getRefreshToken()).toBe('new-refresh-token');
   });
 
+  // Regression: the backend's `tokenValidation` answers 401 with no `code` — exactly the page
+  // reload case, where the in-memory access token is gone and no Authorization header goes out.
+  it('un 401 sin `code` en el cuerpo dispara el refresh y reintenta', async () => {
+    tokenStore.setRefreshToken('old-refresh-token');
+
+    let protectedCallCount = 0;
+
+    server.use(
+      http.get('http://localhost:4500/api/protected', ({ request }) => {
+        protectedCallCount += 1;
+        if (protectedCallCount === 1) {
+          return HttpResponse.json(
+            { ok: false, message: 'Falta la autenticación' },
+            { status: 401 },
+          );
+        }
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { auth: request.headers.get('authorization') },
+        });
+      }),
+      http.post('http://localhost:4500/api/auth/refresh', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            token: 'new-access-token',
+            refreshToken: 'new-refresh-token',
+            expiresAt: '2026-01-01T00:00:00Z',
+          },
+        }),
+      ),
+    );
+
+    const response = await client.get('/protected');
+
+    expect(response.data).toEqual({ auth: 'Bearer new-access-token' });
+    expect(tokenStore.getRefreshToken()).toBe('new-refresh-token');
+  });
+
   it('AUTH_002_REFRESH_TOKEN_REUSED (durante el refresh) no reintenta y limpia la sesión', async () => {
     tokenStore.setRefreshToken('stolen-refresh-token');
     setAccessToken('stale-access-token');

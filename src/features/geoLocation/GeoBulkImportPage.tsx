@@ -222,7 +222,22 @@ function UploadCard({ importGeoData }: UploadCardProps) {
               {t('geoBulkImport.upload.dropzone')}
             </span>
           )}
-          <Button type="button" variant="outline" size="sm" className="min-h-11" disabled={busy}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11"
+            disabled={busy}
+            onClick={(event) => {
+              // A <button> is itself an interactive control, so nesting it inside the <label>
+              // doesn't reliably forward the click to the associated <input> across browsers
+              // (unlike the drop handler above, which never goes through that mechanism at all).
+              // Triggering the input directly, and stopping the label's own default action so it
+              // can't double-open the dialog where forwarding does happen.
+              event.preventDefault();
+              inputRef.current?.click();
+            }}
+          >
             {t('geoBulkImport.upload.choose')}
           </Button>
           <input

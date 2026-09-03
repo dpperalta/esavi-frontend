@@ -22,19 +22,22 @@ describe('filterNavigationByLevel', () => {
     expect(countChildren(visible)).toBe(16);
     const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
     expect(allKeys).not.toContain('nav.items.user');
+    expect(allKeys).not.toContain('nav.items.geoBulkImport');
   });
 
-  it('con ADMIN aparecen los diecisiete hijos', () => {
+  it('con ADMIN aparecen los dieciocho hijos', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.ADMIN);
 
-    expect(countChildren(visible)).toBe(17);
+    expect(countChildren(visible)).toBe(18);
     const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
     expect(allKeys).toContain('nav.items.user');
+    // SPEC FE07 §3.1 — geoBulkImport's minLevel is ADMIN, the real minimum of ESAVI-GEOLOC-007.
+    expect(allKeys).toContain('nav.items.geoBulkImport');
   });
 
-  it('con SUPERADMIN también aparecen los diecisiete', () => {
+  it('con SUPERADMIN también aparecen los dieciocho', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.SUPERADMIN);
 
-    expect(countChildren(visible)).toBe(17);
+    expect(countChildren(visible)).toBe(18);
   });
 });
