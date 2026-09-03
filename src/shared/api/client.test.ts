@@ -68,6 +68,45 @@ describe('client — envelope', () => {
   });
 });
 
+// SPEC FE07 §1.C: `responseType: 'blob'` (la descarga de plantilla del `007`) es la única
+// excepción de `client.ts` a la desenvoltura del envelope y a la lectura JSON de errores.
+describe('client — respuestas blob', () => {
+  it('no desenvuelve una respuesta 2xx con responseType blob', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/geo-locations/import/template', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { pong: true } }),
+      ),
+    );
+
+    const response = await client.get('/geo-locations/import/template', { responseType: 'blob' });
+
+    expect(response.data).toBeInstanceOf(Blob);
+  });
+
+  it('un 409 con cuerpo Blob produce un EsaviApiError con su code y message reales', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/geo-locations/import/template', () =>
+        HttpResponse.json(
+          {
+            ok: false,
+            message: 'Faltan niveles geográficos',
+            code: 'GEOLOC_007_LEVEL_TYPES_MISSING',
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+
+    await expect(
+      client.get('/geo-locations/import/template', { responseType: 'blob' }),
+    ).rejects.toMatchObject({
+      code: 'GEOLOC_007_LEVEL_TYPES_MISSING',
+      status: 409,
+      message: 'Faltan niveles geográficos',
+    });
+  });
+});
+
 describe('client — cabeceras y parámetros', () => {
   it('añade ?lang= con el idioma activo de preferencesStore', async () => {
     usePreferencesStore.getState().setLanguage('nl');

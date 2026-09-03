@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -46,7 +46,7 @@ function renderTopbar() {
 
 describe('Topbar — logout', () => {
   it('revoca la sesión, limpia los tokens y navega a /login', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     let logoutRequestBody: unknown = null;
 
     server.use(
@@ -74,7 +74,7 @@ describe('Topbar — logout', () => {
   });
 
   it('limpia la sesión localmente aunque la petición falle', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
 
     server.use(
       http.get('http://localhost:4500/api/users/me', () =>

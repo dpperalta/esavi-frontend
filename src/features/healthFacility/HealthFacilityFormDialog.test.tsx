@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
@@ -168,7 +168,7 @@ describe('HealthFacilityFormDialog — combo de unidad padre (SPEC FE06 §3.7)',
   });
 
   it('elegir una ubicación recarga los candidatos a padre de esa ubicación', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockCatalogTypesEmpty();
     mockGeoLocationPicker();
     server.use(
@@ -196,7 +196,7 @@ describe('HealthFacilityFormDialog — combo de unidad padre (SPEC FE06 §3.7)',
 
 describe('HealthFacilityFormDialog — mapeo de errores (SPEC FE06 §3.7)', () => {
   it('un 409 con HFAC_001_LOCAL_CODE_EXISTS marca el campo código local', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockCatalogTypesEmpty();
     mockGeoLocationPicker();
     server.use(
@@ -229,7 +229,7 @@ describe('HealthFacilityFormDialog — mapeo de errores (SPEC FE06 §3.7)', () =
   });
 
   it('un 409 con HFAC_004_CIRCULAR_PARENT marca el campo unidad padre', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockCatalogTypesEmpty();
     mockGeoLocationPicker();
     server.use(
@@ -292,7 +292,7 @@ describe('HealthFacilityFormDialog — el error de una mutación no sobrevive al
   }
 
   it('un 409 no reaparece al cancelar y reabrir para crear otra unidad', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockCatalogTypesEmpty();
     mockGeoLocationPicker();
     server.use(

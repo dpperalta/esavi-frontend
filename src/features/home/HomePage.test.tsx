@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -64,7 +64,7 @@ describe('HomePage', () => {
   });
 
   it('muestra un estado de error con reintentar cuando la query falla', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     let callCount = 0;
     server.use(
       http.get('http://localhost:4500/api/users/me', () => {

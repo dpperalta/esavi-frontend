@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
@@ -145,7 +145,7 @@ describe('GeoLocationListPage — filtros en la URL', () => {
   });
 
   it('cambiar el filtro de nivel deja page en 1', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
     mockLevelTypes();
     server.use(
@@ -165,7 +165,7 @@ describe('GeoLocationListPage — filtros en la URL', () => {
   });
 
   it('la «×» del filtro de nivel borra geoLevelId y deja page en 1 (SPEC FE05)', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
     mockLevelTypes();
     server.use(
@@ -184,7 +184,7 @@ describe('GeoLocationListPage — filtros en la URL', () => {
   });
 
   it('buscar por q pega a geo-locations?name=<texto>&code=<texto>', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
     mockLevelTypes();
     const receivedParams: URLSearchParams[] = [];
@@ -236,7 +236,7 @@ describe('GeoLocationListPage — botón único «Limpiar filtros» en el extrem
   });
 
   it('con un filtro activo se habilita aunque haya resultados, y limpiarlo deja page en 1', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
     mockLevelTypes();
     server.use(
@@ -258,7 +258,7 @@ describe('GeoLocationListPage — botón único «Limpiar filtros» en el extrem
   });
 
   it('«Limpiar filtros» (vacío filtrado) también limpia la cascada del picker de padre, no solo el valor final', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
     mockLevelTypes();
     server.use(

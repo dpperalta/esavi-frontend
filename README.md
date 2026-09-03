@@ -15,7 +15,7 @@ Todo el diseño está decidido y documentado en **[`references/`](./references)*
 0. **[`references/CONVENTIONS.md`](./references/CONVENTIONS.md)** — la norma de código: nomenclatura, los seis artefactos por entidad, capas de estado, reglas de API y de UI, checklist de cierre. Se lee siempre.
 1. **[`references/ARCHITECTURE.md`](./references/ARCHITECTURE.md)** — stack, capas de estado, la capa de recurso genérica, sidebar, temas, preferencias, responsividad, seguridad de sesión y orden de construcción.
 2. **[`references/API-CONTRACT.md`](./references/API-CONTRACT.md)** — cómo se habla con el backend.
-3. **[`references/API-ROUTES.md`](./references/API-ROUTES.md)** — las 323 rutas disponibles.
+3. **[`references/API-ROUTES.md`](./references/API-ROUTES.md)** — las 333 rutas disponibles.
 4. **[`references/DOMAIN-MODEL.md`](./references/DOMAIN-MODEL.md)** — qué entidades existen y cómo se conectan.
 
 ---
@@ -30,7 +30,7 @@ esavi-app/
 └── esavi-frontend/    este repositorio
 ```
 
-El backend expone **323 rutas bajo `/api`** repartidas en 42 grupos de entidades, casi todas con el mismo contrato de siete artefactos. Esa uniformidad es lo que hace viable la capa de recurso genérica descrita en `ARCHITECTURE.md` §4: cada entidad debería costar una declaración, no una carpeta.
+El backend expone **333 rutas bajo `/api`** repartidas en 43 grupos de entidades, casi todas con el mismo contrato de siete artefactos. Esa uniformidad es lo que hace viable la capa de recurso genérica descrita en `ARCHITECTURE.md` §4: cada entidad debería costar una declaración, no una carpeta.
 
 ### Para desarrollar en local
 

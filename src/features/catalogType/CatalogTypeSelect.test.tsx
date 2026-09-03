@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
@@ -127,7 +127,7 @@ describe('CatalogTypeSelect', () => {
       ),
     );
 
-    const user = userEvent.setup();
+    const user = setupUser();
     renderSelect();
 
     const trigger = await screen.findByRole('combobox');
@@ -163,7 +163,7 @@ describe('CatalogTypeSelect', () => {
       ),
     );
 
-    const user = userEvent.setup();
+    const user = setupUser();
     renderSelect();
 
     const trigger = await screen.findByRole('combobox');

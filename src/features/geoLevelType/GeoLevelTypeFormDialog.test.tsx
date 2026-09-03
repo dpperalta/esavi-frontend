@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
@@ -50,7 +50,7 @@ function renderHarness() {
 
 describe('GeoLevelTypeFormDialog — mapeo de errores', () => {
   it('un 409 con GEOTYPE_001_CODE_EXISTS marca el campo código, no un toast genérico', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     server.use(
       http.post('http://localhost:4500/api/geo-level-types', () =>
         HttpResponse.json(
@@ -73,7 +73,7 @@ describe('GeoLevelTypeFormDialog — mapeo de errores', () => {
   });
 
   it('el error de una mutación no sobrevive al cierre', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     server.use(
       http.post('http://localhost:4500/api/geo-level-types', () =>
         HttpResponse.json(
@@ -108,7 +108,7 @@ describe('GeoLevelTypeFormDialog — mapeo de errores', () => {
 
 describe('GeoLevelTypeFormDialog — validación de sortOrder', () => {
   it('sortOrder: 0 falla la validación del cliente, sin llegar a mandar el POST', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     let postCount = 0;
     server.use(
       http.post('http://localhost:4500/api/geo-level-types', () => {

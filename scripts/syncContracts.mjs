@@ -21,6 +21,7 @@ const SYNC_MAP = [
   { source: 'catalog/catalogItem.types.ts', dest: 'catalogItem.ts' },
   { source: 'geography/geoLevelType.types.ts', dest: 'geoLevelType.ts' },
   { source: 'geography/geoLocation.types.ts', dest: 'geoLocation.ts' },
+  { source: 'geography/geoImport.types.ts', dest: 'geoImport.ts' },
   { source: 'healthFacility/healthFacility.types.ts', dest: 'healthFacility.ts' },
 ];
 

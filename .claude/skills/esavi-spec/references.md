@@ -24,7 +24,7 @@ Resumen de dónde vive cada dato, para no releer 40 KB de documentación en cada
 | Checklist antes de cerrar | §14 |
 | El porqué de cada decisión | `references/ARCHITECTURE.md` |
 | Envelope, auth, paginación, idioma, auditoría | `references/API-CONTRACT.md` |
-| **Las 323 rutas con rol mínimo y código de operación** | `references/API-ROUTES.md` |
+| **Las 333 rutas con rol mínimo y código de operación** | `references/API-ROUTES.md` |
 | Entidades y cómo se conectan | `references/DOMAIN-MODEL.md` |
 | Specs de este repositorio (`SPEC FE01`…) | `references/specs/NN-slug.md` |
 

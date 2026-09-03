@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
@@ -131,7 +131,7 @@ function renderPickerWithExternalReset() {
 
 describe('GeoLocationPicker — reset externo (bug reportado)', () => {
   it('un value puesto a null desde fuera limpia la cascada, no solo el valor final', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockLevelTypes();
     server.use(
       http.get('http://localhost:4500/api/geo-locations', ({ request }) => {
@@ -161,7 +161,7 @@ describe('GeoLocationPicker — reset externo (bug reportado)', () => {
   });
 
   it('un value puesto a null desde fuera no afecta la selección propia del usuario (eco de onChange)', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockLevelTypes();
     server.use(
       http.get('http://localhost:4500/api/geo-locations', ({ request }) => {
@@ -210,7 +210,7 @@ describe('GeoLocationPicker — primer nivel (hallazgo D)', () => {
 
 describe('GeoLocationPicker — cascada', () => {
   it('elegir una opción del primer nivel dispara la consulta del nivel siguiente con parentId', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockLevelTypes();
     server.use(
       http.get('http://localhost:4500/api/geo-locations', ({ request }) => {
@@ -240,7 +240,7 @@ describe('GeoLocationPicker — cascada', () => {
   });
 
   it('con excludeSubtreeOf fijado, esa fila no aparece entre las opciones del nivel donde vive', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockLevelTypes();
     server.use(
       http.get('http://localhost:4500/api/geo-locations', () =>
@@ -265,7 +265,7 @@ describe('GeoLocationPicker — cascada', () => {
   });
 
   it('un nivel sin hijos no pinta un <Select> vacío', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockLevelTypes();
     server.use(
       http.get('http://localhost:4500/api/geo-locations', ({ request }) => {
@@ -384,7 +384,7 @@ describe('GeoLocationPicker — «×» por nivel (SPEC FE05)', () => {
   }
 
   it('limpiar el nivel N descarta los niveles descendientes', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockThreeLevelCascade();
     const onChange = vi.fn();
 
@@ -431,7 +431,7 @@ describe('GeoLocationPicker — edición sin precarga de ancestros', () => {
   });
 
   it('pulsar «Cambiar» abre la cascada vacía desde el nivel raíz', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockLevelTypes();
     let rootRequested = false;
     server.use(

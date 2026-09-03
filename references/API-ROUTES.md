@@ -1,7 +1,7 @@
 # Inventario de rutas del backend
 
 > **Fuente:** `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES`
-> **Generado:** 2026-09-01 · **324 rutas** en **42 grupos**
+> **Generado:** 2026-09-02 · **333 rutas** en **43 grupos**
 > **Regenerar:** ver `README.md` de este directorio
 
 `ROUTE_RULES` es la matriz canónica de la §9 de `CONVENTIONS.md`, y el backend la
@@ -113,6 +113,7 @@ sesiones de una cuenta exige identidad probada.
 | `DELETE` | `/api/catalog-items/:id` | ADMIN | `ESAVI-CATITEM-005A` |
 | `PATCH` | `/api/catalog-items/activate/:id` | SUPERADMIN | `ESAVI-CATITEM-005B` |
 | `POST` | `/api/catalog-items/import` | SUPERADMIN | `ESAVI-CATITEM-006` |
+| `GET` | `/api/catalog-items/search` | USER | `ESAVI-CATITEM-007` |
 
 ### CATTYPE
 
@@ -197,6 +198,8 @@ sesiones de una cuenta exige identidad probada.
 |---|---|---|---|
 | `POST` | `/api/geo-locations` | ADMIN | `ESAVI-GEOLOC-001` |
 | `GET` | `/api/geo-locations` | USER | `ESAVI-GEOLOC-002` |
+| `POST` | `/api/geo-locations/import` | SUPERADMIN | `ESAVI-GEOLOC-006` |
+| `GET` | `/api/geo-locations/import/template` | ADMIN | `ESAVI-GEOLOC-007` |
 | `GET` | `/api/geo-locations/:id` | USER | `ESAVI-GEOLOC-003` |
 | `PUT` | `/api/geo-locations/:id` | ADMIN | `ESAVI-GEOLOC-004` |
 | `DELETE` | `/api/geo-locations/:id` | ADMIN | `ESAVI-GEOLOC-005A` |
@@ -376,6 +379,12 @@ sesiones de una cuenta exige identidad probada.
 | `GET` | `/api/investigation-vaccination-contexts/case/:id` | USER | `ESAVI-INVVACTX-006` |
 | `GET` | `/api/investigation-vaccination-contexts/:id` | USER | `ESAVI-INVVACTX-003` |
 | `PUT` | `/api/investigation-vaccination-contexts/:id` | USER | `ESAVI-INVVACTX-004` |
+
+### MEDDRA
+
+| Método | Ruta | Rol mínimo | Código |
+|---|---|---|---|
+| `GET` | `/api/meddra/search` | USER | `ESAVI-MEDDRA-006` |
 
 ### NOTIFCN
 
@@ -588,3 +597,8 @@ sesiones de una cuenta exige identidad probada.
 | `DELETE` | `/api/whodrug-vaccines/:id` | ADMIN | `ESAVI-WHODRUG-005A` |
 | `PATCH` | `/api/whodrug-vaccines/activate/:id` | SUPERADMIN | `ESAVI-WHODRUG-005B` |
 | `POST` | `/api/whodrug-vaccines/import` | SUPERADMIN | `ESAVI-WHODRUG-007` |
+| `GET` | `/api/whodrug-vaccines/abbreviations` | USER | `ESAVI-WHODRUG-006A` |
+| `GET` | `/api/whodrug-vaccines/drug-names` | USER | `ESAVI-WHODRUG-006B` |
+| `GET` | `/api/whodrug-vaccines/ma-holders` | USER | `ESAVI-WHODRUG-006C` |
+| `GET` | `/api/whodrug-vaccines/forms` | USER | `ESAVI-WHODRUG-006D` |
+| `GET` | `/api/whodrug-vaccines/strengths` | USER | `ESAVI-WHODRUG-006E` |

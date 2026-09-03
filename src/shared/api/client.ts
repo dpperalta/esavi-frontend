@@ -38,10 +38,34 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-function toEsaviApiError(error: AxiosError<ApiErrorEnvelope>): EsaviApiError {
+// SPEC FE07 §1.C: with `responseType: 'blob'` (the `007` template download), a non-2xx
+// response also arrives as a Blob — reading `.data.code` on it would produce a codeless
+// EsaviApiError right when the three 409s of `geoLevelType` carry the only actionable detail.
+async function parseBlobError(blob: Blob): Promise<ApiErrorEnvelope | null> {
+  try {
+    const text = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(blob);
+    });
+    return JSON.parse(text) as ApiErrorEnvelope;
+  } catch {
+    return null;
+  }
+}
+
+async function toEsaviApiError(error: AxiosError<ApiErrorEnvelope>): Promise<EsaviApiError> {
   if (error.response) {
-    const { message, code } = error.response.data;
-    return new EsaviApiError(message, error.response.status, code);
+    const { status, data } = error.response;
+    if (data instanceof Blob) {
+      const parsed = await parseBlobError(data);
+      if (parsed) {
+        return new EsaviApiError(parsed.message, status, parsed.code);
+      }
+      return new EsaviApiError(error.message, status, 'UNKNOWN_ERROR');
+    }
+    return new EsaviApiError(data.message, status, data.code);
   }
   // No response: the request never reached the server (network down, CORS, server offline).
   // There's no backend `code` to keep; NETWORK_ERROR is the client's own, not the contract's.
@@ -101,7 +125,7 @@ async function performRefresh(): Promise<string> {
     tokenStore.setRefreshToken(newRefreshToken);
     return token;
   } catch (error) {
-    const apiError = toEsaviApiError(error as AxiosError<ApiErrorEnvelope>);
+    const apiError = await toEsaviApiError(error as AxiosError<ApiErrorEnvelope>);
     if (isRefreshTokenReused(apiError.code) || apiError.status === 401) {
       clearSession();
     }
@@ -124,6 +148,11 @@ interface RetriableRequestConfig extends InternalAxiosRequestConfig {
 
 client.interceptors.response.use(
   (response) => {
+    // SPEC FE07 §1.C: a blob download (the `007` template) has no envelope to unwrap —
+    // `response.data` is already the file the caller asked for.
+    if (response.config.responseType === 'blob') {
+      return response;
+    }
     // API-CONTRACT.md §2: the interceptor unwraps the envelope here, once.
     // From this line on, response.data IS the real payload — nobody else unwraps it.
     const envelope = response.data as ApiSuccessEnvelope<unknown>;
@@ -132,12 +161,12 @@ client.interceptors.response.use(
   },
   async (error: AxiosError<ApiErrorEnvelope>) => {
     const status = error.response?.status;
-    const code = error.response?.data.code;
     const originalRequest = error.config as RetriableRequestConfig | undefined;
+    const apiError = await toEsaviApiError(error);
 
-    if (status === 401 && code && isRefreshTokenReused(code)) {
+    if (status === 401 && isRefreshTokenReused(apiError.code)) {
       clearSession();
-      return Promise.reject(toEsaviApiError(error));
+      return Promise.reject(apiError);
     }
 
     if (
@@ -156,6 +185,6 @@ client.interceptors.response.use(
       }
     }
 
-    return Promise.reject(toEsaviApiError(error));
+    return Promise.reject(apiError);
   },
 );
