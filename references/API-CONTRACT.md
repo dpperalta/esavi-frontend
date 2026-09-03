@@ -1,7 +1,7 @@
 # Contrato de la API
 
-> **Fuentes:** `esavi-backend/src/app.ts`, `src/middlewares/`, `src/services/auth.service.ts`, `src/helpers/`, `references/CONVENTIONS.md`, `.env.example`
-> **Fecha:** 2026-08-31
+> **Fuentes:** `esavi-backend/src/app.ts`, `src/middlewares/`, `src/services/auth.service.ts`, `src/helpers/`, `src/validators/`, `references/CONVENTIONS.md`, `references/functional/specs/50` a `55`, `.env.example`
+> **Fecha:** 2026-09-03
 
 Todo lo que el cliente necesita saber sobre la forma de las peticiones y las respuestas. Es la referencia del `client.ts` y de `createResource.ts`.
 
@@ -51,6 +51,23 @@ El interceptor de respuesta de axios desenvuelve `data` y convierte el error en 
 ### Forma del `code`
 
 `<ENTIDAD>_<OPERACIÓN>_<MOTIVO>` — por ejemplo `HFAC_001_CREATION_FAILED`, `CASE_002A_GET_FAILED`, `AUTH_001_INVALID_CREDENTIALS`. Es estable y sirve para decidir el mensaje del toast sin parsear texto.
+
+**Hay una segunda forma, sin número de operación.** Los errores que nacen antes de saber a qué operación pertenece la petición —los de los middlewares transversales— llevan sólo `<ÁMBITO>_<MOTIVO>`: `INTERNAL_SERVER_ERROR` es el precedente, y desde 2026-09-03 también los seis de autenticación y autorización.
+
+### Códigos transversales de autenticación y autorización
+
+`tokenValidation` y `validateUserRole` rechazan con `next(new AppError(...))`, así que sus respuestas llevan `code` como cualquier otra (backend `CONVENTIONS.md` §10, DEUDA-032). Son los seis códigos que el cliente ve **antes** de que la petición llegue a su controlador:
+
+| `code` | Status | Qué significa | Qué hace el cliente |
+|---|---|---|---|
+| `AUTH_TOKEN_MISSING` | `401` | No hay cabecera `Authorization`, o no empieza por `Bearer ` | Refrescar y reintentar; es el caso normal tras recargar la página |
+| `AUTH_TOKEN_EXPIRED` | `401` | El token es legítimo pero caducó | Refrescar y reintentar |
+| `AUTH_TOKEN_INVALID` | `401` | La firma no verifica o el token está malformado | Refrescar; si el refresh también falla, al login |
+| `AUTH_USER_NOT_FOUND` | `401` | El token verifica pero el `userId` no es de un usuario activo | Al login. Refrescar no lo arregla |
+| `AUTH_TOKEN_VALIDATION_FAILED` | `500` | Fallo inesperado dentro del middleware | Error, no cierre de sesión |
+| `AUTH_ROLE_FORBIDDEN` | `403` | Nivel de rol insuficiente | No hay nada que reintentar: es la única forma de saber que un `403` es de rol y no de otra cosa |
+
+**El cliente no puede asumir que `code` viaje siempre.** Hasta el 2026-09-03 estos seis `401`/`403` se construían a mano y salían **sin `code`**; `toEsaviApiError` sustituye `'UNKNOWN_ERROR'` cuando falta, y esa red se mantiene: sin ella, la guarda `code.endsWith(...)` de la cola de refresh reventaba con un `TypeError` antes de intentar el refresco, y toda recarga de página terminaba en el login. Lo mismo vale para un cuerpo vacío o no-JSON: `message` y `code` se leen con `?.` y respaldo.
 
 ---
 
@@ -127,6 +144,10 @@ Los listados aceptan `limit` y `offset` como query params, ambos opcionales.
 GET /api/esavi-cases?limit=25&offset=50
 ```
 
+`limit` es un entero **entre 1 y 100** — un `pageSize` mayor es `400`, no una página grande — y `offset` un entero no negativo. El valor por defecto sale de `systemConfig` (`ESAVI_APP_DEFAULT_LIMIT`, legible con `ESAVI-SYSCONF-006`), no de una constante del cliente.
+
+La respuesta de todo listado es `{ count, rows }`: `count` es el total de filas que cumplen el filtro, **no** las devueltas en la página.
+
 **El par `002A` / `002B`** es la constante del repositorio:
 
 | Operación | Ruta típica | Devuelve |
@@ -155,6 +176,34 @@ Reglas que el formulario de filtros debe respetar, porque el validador devuelve 
 - **Un caso sin `eventDate` nunca aparece al filtrar por `eventDate`**, en ninguna de sus tres formas. Es semántica de SQL y es la correcta. Igual para `reportFillingDate`. `reportDate` es `NOT NULL`.
 
 `geoLocationId` es siempre jerárquico: no existe un modo de igualdad estricta, porque `healthFacility.geoLocationId` apunta casi siempre a la unidad más fina y un filtro estricto por provincia devolvería cero filas.
+
+### Búsqueda por nombre y código (SPEC F50, F51, F52)
+
+**`name` y `code` son la forma canónica del filtro de texto**, separados y combinados entre sí con `OR`; frente a cualquier otro filtro, con `AND`. Son coincidencia parcial insensible a mayúsculas (`ILIKE %valor%`) y **sensible a tildes**: «Peñas» no se encuentra escribiendo «Penas».
+
+Doce entidades los aceptan hoy en su listado, sin ruta nueva:
+
+| Entidad | Dónde | Columnas |
+|---|---|---|
+| `catalogType`, `geoLevelType`, `appRole`, `diagnosticTerm`, `diluentCatalog`, `systemConfig` | `002A`/`002B` | `name`; `code` |
+| `geoLocation` | `002` | `name`; `code` |
+| `vaccineWhodrug` | `002A`/`002B` | `drugName`; `drugCode` |
+| `esaviCase` | `002A`/`002B` | **`code` únicamente** (`caseCode`). Un `?name=` que llegue se ignora en silencio |
+| `catalogItem` | `007` — `GET /api/catalog-items/search` | `name`; `code`, con `catalogTypeId` opcional |
+| `healthFacility` | `006` — `GET /api/health-facilities/search` | `name`; `code`, con `geoLocationId` opcional |
+| `patient` | `006` por identificador, `007` `search-by-name` | ver abajo |
+
+Reglas que el cliente debe respetar:
+
+- **Mínimo dos caracteres** en todo parámetro nuevo (`400` por debajo). Las excepciones son `geoLocation`, cuyo `name`/`code` se publicaron sin mínimo y no se endurecieron, y el `term` de MedDRA, que exige **tres**. Un autocompletado no debe llamar antes del mínimo.
+- **`%` y `_` son literales.** El backend los escapa (`escapeLike`); no son comodines y no hay que ofrecerlos como tales. Importa en los códigos administrativos, que los llevan.
+- **`search` es un alias congelado.** Sobrevive en `diagnosticTerm`, `diluentCatalog`, `vaccineWhodrug` y `systemConfig` con el significado «coincide en nombre **o** en código». **No se usa en código nuevo** y no se añadirá a ninguna superficie nueva: el componente de autocompletado se escribe una sola vez contra `name`/`code`.
+- **`GET /api/catalog-items/search` sin `name` ni `code` es `400`** (`CATITEM_007_SEARCH_CRITERIA_REQUIRED`). `catalogTypeId` por sí solo no es criterio de búsqueda — para eso está el `002A` por tipo.
+- La búsqueda de pacientes por nombre (`ESAVI-PATIENT-007`, `?name=`) no es `ILIKE`: va contra un índice de tokens cifrados con **coincidencia conjuntiva** (SPEC F45/F47). Los nombres están cifrados y la búsqueda parcial no existe sobre ellos.
+
+### `sysDetails` no viaja (casi nunca)
+
+`catalogItem`, `catalogType`, `geoLevelType` y `geoLocation` dejaron de exponer la columna interna `sysDetails` en sus `002A`, `002B` y `003` (SPEC F52). **Excepción viva:** los `002A`/`002B` de `healthFacility` todavía la devuelven; su `003` y su `006` no. Es una asimetría conocida del backend, no un dato que el cliente deba usar: `sysDetails` no se lee nunca desde el frontend — la auditoría visible es `appDetails`.
 
 ---
 
@@ -236,7 +285,51 @@ Conviene conocerlos porque cambian la forma de la pantalla:
 |---|---|
 | `GET /api/case-workflows/case/:id` (`CASEFLOW-006`) | Devuelve el estado del expediente **y `exists` + `id` por cada satélite**. Es lo que permite retomar un caso: dice si cada etapa se crea con `POST` o se actualiza con `PUT /:id` |
 | `PATCH …/complete-stage`, `…/close`, `…/reopen`, `…/request-validation`, `…/resolve-validation` | Transiciones del flujo del expediente (`007` a `011`) |
-| `POST /api/catalog-items/import` | Importación masiva desde `.xlsx` (SUPERADMIN) |
-| `POST /api/diagnostic-terms/import`, `POST /api/whodrug-vaccines/import` | Lo mismo para sus catálogos |
+| `POST /api/catalog-items/import` (`CATITEM-006`) | Importación masiva desde `.xlsx` (SUPERADMIN) |
+| `POST /api/diagnostic-terms/import` (`DIAGTERM-007`), `POST /api/whodrug-vaccines/import` (`WHODRUG-007`) | Lo mismo para sus catálogos |
+| `POST /api/geo-locations/import` (`GEOLOC-006`, SUPERADMIN) · `GET /api/geo-locations/import/template` (`GEOLOC-007`, ADMIN) | Carga masiva de geografía **y establecimientos** en un solo libro, y la plantilla que la alimenta (SPEC F53) |
+| `GET /api/whodrug-vaccines/{abbreviations,drug-names,ma-holders,forms,strengths}` (`WHODRUG-006A`…`006E`) | Los cinco niveles del árbol WHODrug (SPEC F54) |
+| `GET /api/meddra/search` (`MEDDRA-006`) | Proxy de sólo lectura contra el API oficial de MedDRA (SPEC F55) |
+| `GET /api/system-configs/code/:code` (`SYSCONF-006`) · `POST /api/system-configs/sync` (`SYSCONF-008`, SUPERADMIN) | Leer una configuración por `(code, scope)` y sembrar las que falten |
 
-Las importaciones usan `multipart/form-data` y `exceljs` en el backend; el cliente sube el archivo tal cual.
+Las importaciones usan `multipart/form-data` y `exceljs` en el backend; el cliente sube el archivo tal cual y recibe un informe con contadores y filas rechazadas. Todas admiten `dryRun`.
+
+### 11.1 La única respuesta que no lleva envelope
+
+`GET /api/geo-locations/import/template` (`GEOLOC-007`) responde un **binario `.xlsx` con `Content-Disposition`**, no `{ ok, message, data }`. Es una excepción declarada del contrato (backend `CONVENTIONS.md` §10). Sus **errores sí** salen por `errorHandler` con el sobre habitual, y ahí está la trampa: con `responseType: 'blob'` un `409` también llega como `Blob`, así que hay que leerlo y parsearlo antes de construir el `EsaviApiError` — sin eso el `code` se pierde justo donde está el detalle accionable.
+
+### 11.2 El árbol WHODrug (`006A` a `006E`)
+
+Cinco lecturas encadenadas: `abbreviation → drugName → maHolders → formTranslations → strength`. Cada nivel **exige el valor de su padre inmediato** y admite los ancestros superiores como acotación opcional; todos aceptan `country`, `language` y `search` (mínimo 2). **Sin paginación**: cada nivel devuelve su lista completa.
+
+```ts
+{ count: number;   // opciones distintas de este nivel
+  total: number;   // filas del diccionario bajo el subconjunto
+  options: Array<{
+    value: string | null;         // null es una opción navegable de pleno derecho
+    matchCount: number;           // cuántas filas cuelgan de ESTA opción
+    vaccineWhodrugId: string | null;  // resuelto cuando matchCount === 1
+  }>;
+}
+```
+
+Las dos consecuencias para la interfaz: **el selector deja de desplegar niveles en cuanto `matchCount === 1`** —ahí ya está la vacuna, con su `vaccineWhodrugId`—, y una opción con `value: null` se reenvía al nivel siguiente como el centinela literal `__NULL__`, no como cadena vacía ni omitiendo el parámetro.
+
+### 11.3 MedDRA (`MEDDRA-006`)
+
+`GET /api/meddra/search?term=<texto>`, rol `USER`, **`term` de 3 a 200 caracteres** y único parámetro: versión, idioma y niveles del diccionario salen de `systemConfig` y no se abren al cliente. Devuelve `{ count, rows }` con filas de exactamente tres claves —`code`, `name`, `termGroup` (`LLT|PT|HLT|HLGT|SOC`)— que es ya la forma que consumen `esaviCode` y `esaviName` de `notificationEvent`.
+
+Sin coincidencias es **`200` con `{ count: 0, rows: [] }`**, nunca `404`. El backend cachea 5 minutos por término e idioma, y la ruta lleva limitador propio (60 peticiones por IP cada 15 minutos): **un autocompletado sin debounce lo agota**.
+
+Es un servicio externo de pago y sus fallos no son los del resto de la API — hay que distinguirlos en la interfaz, porque ninguno es culpa de lo que el usuario escribió:
+
+| `code` | Status | Qué mostrar |
+|---|---|---|
+| `MEDDRA_006_DISABLED` | `503` | La búsqueda MedDRA está apagada en esta instalación — ocultar el campo, no ofrecer reintento |
+| `MEDDRA_006_NOT_CONFIGURED` | `503` | Falta configurar credenciales; es tarea de un SUPERADMIN |
+| `MEDDRA_006_INVALID_SEARCH_CONFIG` | `503` | Configuración inválida (ningún nivel activo) |
+| `MEDDRA_006_AUTH_FAILED` | `502` | El API externo rechazó las credenciales |
+| `MEDDRA_006_TIMEOUT` | `504` | El API externo no respondió en 10 s — reintentar sí tiene sentido |
+| `MEDDRA_006_SEARCH_FAILED` | `500` | Fallo genérico |
+
+El endpoint **no escribe nada**. Persistir el término elegido es otra llamada: `ESAVI-DIAGTERM-006` o los campos `esaviCode`/`esaviName` de `ESAVI-NOTIFEVT-001`.

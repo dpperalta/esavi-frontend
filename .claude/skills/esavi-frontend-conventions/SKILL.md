@@ -38,18 +38,19 @@ Una entidad **no** genera un cliente HTTP propio, ni hooks de CRUD escritos a ma
 
 ## Lo que más se rompe
 
-Diez reglas concentran casi todo el riesgo. Revísalas siempre — **las dos primeras son las que más se pasan por alto porque no rompen ningún test ni ningún build**:
+Once reglas concentran casi todo el riesgo. Revísalas siempre — **las dos primeras son las que más se pasan por alto porque no rompen ningún test ni ningún build**:
 
 1. **Todo comentario en el código va en inglés, sin excepción.** `CONVENTIONS.md` §2 lo dice desde el principio, y aun así es la regla que más fácil se olvida escribiendo rápido: nada avisa cuando se rompe, `npm run check` no la detecta, y el desliz se repite archivo tras archivo si nadie lo revisa a mano. Antes de cerrar cualquier paso, `grep -rnP '(?<![:/])//\s*[a-záéíóúñ]' src/` es la comprobación rápida — un comentario en español empieza casi siempre con minúscula acentuada o una palabra española tras `//`.
 2. **Ninguna pantalla se genera sin haber cargado antes `ui-ux-pro-max`, `ui-styling` y `web-design-guidelines`** (arriba). Igual que la regla anterior, nada lo detecta automáticamente — sólo la disciplina de cargarlas antes de escribir.
 3. **Cada dato vive en una sola capa.** Filtros, paginación y orden en `searchParams`. Todo lo remoto en TanStack Query — **casos y pacientes nunca en un store ni copiados a un `useState`**. Zustand solo para `preferences`, `ui` y `drafts`.
 4. **Ningún color literal y ningún texto literal visible.** Solo tokens semánticos (`bg-background`, no `bg-slate-800`) y solo claves i18n, incluidos placeholders y `aria-label`. Ambos fallos sobreviven hasta producción sin que nadie los vea.
-5. **Nada de `axios` fuera de `shared/api/client.ts`, y nunca `response.data.data`.** El interceptor desenvuelve el envelope y lanza `EsaviApiError`. El toast se decide por `code`, nunca parseando `message`; `errors` no se muestra jamás al usuario.
+5. **Nada de `axios` fuera de `shared/api/client.ts`, y nunca `response.data.data`.** El interceptor desenvuelve el envelope y lanza `EsaviApiError`. El toast se decide por `code`, nunca parseando `message`; `errors` no se muestra jamás al usuario. **Y ninguna comparación de `code` asume que el valor exista**: los errores de los middlewares transversales llegan como `AUTH_TOKEN_EXPIRED` o `AUTH_ROLE_FORBIDDEN`, sin número de operación, y hasta el 2026-09-03 llegaban sin `code`; `client.ts` respalda con `'UNKNOWN_ERROR'`.
 6. **Un solo refresh en vuelo.** El backend rota el refresh token y detecta la reutilización: dos refrescos concurrentes revocan **todas** las sesiones del usuario. La cola vive en `client.ts`, se guarda siempre el token nuevo, y ante `AUTH_002_REFRESH_TOKEN_REUSED` se va al login sin reintentar. El acceso al token pasa por `TokenStore`.
 7. **El progreso del wizard vive en la base, en filas reales.** `draftsStore` es solo un búfer contra el cierre de la pestaña y se borra cuando responde el `PUT`. Para saber si toca `POST` o `PUT /:id` se llama a `ESAVI-CASEFLOW-006`, que devuelve `exists` + `id` por satélite en una petición — no se deduce del estado local.
 8. **Se envía el objeto completo en el `PUT`.** El backend hace el update diferencial y compara contra el valor real de la fila. No calcules el diff en el cliente.
 9. **El `minLevel` del `NavItem` y el `level` del `<RequireRole>` salen de `API-ROUTES.md`**, no de la intuición. Inventarlos produce menús que llevan a `403` o pantallas escondidas a quien sí puede verlas. Y recuerda: replicar roles es **experiencia de usuario, no seguridad** — el `403` se maneja igual aunque «no debería pasar».
 10. **Cita el código `ESAVI-*`** en el código del cliente que consume el endpoint. Es lo que permite cruzar un error del cliente con los logs del backend sin adivinar.
+11. **Todo autocompletado busca con `name` y `code`, nunca con `search`** (`CONVENTIONS.md` §6.7). Mínimo dos caracteres —tres en MedDRA— comprobados **antes** de pedir, debounce siempre, `%` y `_` literales y ninguna tolerancia a tildes. `search` sobrevive como alias congelado en cuatro entidades y no se usa en código nuevo.
 
 ## Nomenclatura, en corto
 

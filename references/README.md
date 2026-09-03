@@ -36,6 +36,8 @@ Luego se sustituye la sección «Rutas por entidad» de `API-ROUTES.md` por el c
 
 El script lee `ROUTE_RULES` del test de roles del backend, que es la matriz canónica de la §9 de `CONVENTIONS.md`: **una ruta que no está ahí no está protegida por la suite**, así que también sirve como aviso de endpoints sin cubrir.
 
+Y por eso mismo no basta con regenerar: el script sólo ve lo que el test declara. Para saber si el backend añadió una ruta **sin** darla de alta en `ROUTE_RULES` —que es el caso que dejaría un endpoint fuera de este inventario y sin cobertura— hay que cruzar la matriz contra los routers reales de `esavi-backend/src/routes/`. Cruce del 2026-09-03: las 333 filas cubren todo lo registrado salvo las cinco rutas abiertas de autenticación, `GET /api/health` y `POST /api/seed/admin`, las siete documentadas en la cabecera de `API-ROUTES.md`.
+
 ## Documentos del backend que conviene tener a mano
 
 No se copian aquí porque viven y cambian en su repositorio:

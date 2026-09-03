@@ -98,6 +98,7 @@
       "expired": "Tu sesión expiró. Inicia sesión de nuevo.",
       "revokedByReuse": "Detectamos actividad inusual en tu sesión y cerramos todas tus sesiones activas por seguridad. Inicia sesión de nuevo.",
       "logout": "Cerrar sesión",
+      "logoutConfirm": "¿Seguro que quieres cerrar sesión?",
       "logoutAll": "Cerrar todas las sesiones",
       "logoutAllConfirm": "Esto cerrará tu sesión en todos los dispositivos donde hayas iniciado sesión. ¿Continuar?"
     }

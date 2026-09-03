@@ -1,6 +1,6 @@
 # SPEC FE07 — Carga masiva de geografía y establecimientos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell y autenticación), SPEC FE02 (fábrica de recursos y primitivas), SPEC FE04 (`geoLocation` y `geoLevelType`), SPEC FE06 (`healthFacility`), **SPEC F53 del backend** (importación masiva de geografía y establecimientos desde un `.xlsx`)
 > **Fecha:** 2026-09-02
 > **Objetivo:** Una pantalla que descarga la plantilla `.xlsx` de geografía y establecimientos, la sube al importador y muestra el informe de resultado.

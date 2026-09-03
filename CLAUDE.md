@@ -67,13 +67,17 @@ Descartados con motivo: Redux Toolkit, Next.js, Material UI.
 
 **Ningún color literal en los componentes** (§6.1). Sólo tokens CSS semánticos; un `bg-slate-800` suelto rompe el tema oscuro y no se detecta hasta producción. El tema se aplica con `data-theme="light|dark"` en `<html>`, con tres estados (`light`/`dark`/`system`) y el script anti-parpadeo de §6.4 en `index.html`.
 
-**Con ~45 entidades de contrato idéntico, no se escribe 45 veces el mismo CRUD** (§4). Cada entidad nueva es una declaración de `createResource(...)`, no una carpeta de archivos. Lo mismo con las primitivas: `<ResourceTable>`, `<ResourceForm>`, `<CatalogSelect>`, `<GeoLocationPicker>`, `<AuditTrail>` se escriben una vez.
+**Con ~45 entidades de contrato idéntico, no se escribe 45 veces el mismo CRUD** (§4). Cada entidad nueva es una declaración de `createResource(...)`, no una carpeta de archivos. Lo mismo con las primitivas: `<ResourceTable>`, `<ResourceForm>`, `<CatalogSelect>`, `<GeoLocationPicker>`, `<AuditTrail>` y `<EntitySearchSelect>` se escriben una vez. Sólo el árbol WHODrug (`WHODRUG-006A`…`E`) y MedDRA (`MEDDRA-006`) llevan componente propio, porque su contrato no es el de un listado filtrado.
 
 **Replicar `ROLE_LEVELS` en el cliente es experiencia de usuario, no seguridad.** `useCan()` y `<RequireRole>` ocultan lo que el usuario no puede hacer; el backend sigue siendo la única autoridad.
 
 ## Contrato del backend
 
-**Envelope.** Éxito `{ ok, message, data }`; error `{ ok, message, code, errors }`. El interceptor de respuesta desenvuelve `data` y lanza un `EsaviApiError` que conserva `code` y `status` — ningún componente escribe `response.data.data`. `errors` es material de depuración y **no se muestra al usuario**. El `code` (`HFAC_001_CREATION_FAILED`) es estable y decide el mensaje del toast sin parsear texto.
+**Envelope.** Éxito `{ ok, message, data }`; error `{ ok, message, code, errors }`. El interceptor de respuesta desenvuelve `data` y lanza un `EsaviApiError` que conserva `code` y `status` — ningún componente escribe `response.data.data`. `errors` es material de depuración y **no se muestra al usuario**. El `code` (`HFAC_001_CREATION_FAILED`) es estable y decide el mensaje del toast sin parsear texto. Todo listado devuelve `{ count, rows }`, con `limit` entre 1 y 100.
+
+**`code` puede faltar, y no puede romper nada.** Los errores de los middlewares transversales son de la forma `AUTH_TOKEN_EXPIRED` / `AUTH_ROLE_FORBIDDEN`, sin número de operación (`API-CONTRACT.md` §2), y hasta el 2026-09-03 salían sin `code` del todo. `client.ts` respalda con `'UNKNOWN_ERROR'`: ninguna comparación de `code` asume que el valor exista — la que lo asumía tiraba un `TypeError` dentro del interceptor y mandaba al login en cada recarga.
+
+**Búsqueda: `name` y `code`, nunca `search`.** Doce entidades aceptan filtro de texto con esa forma canónica (SPEC F52); `search` es un alias congelado en cuatro. Mínimo dos caracteres —tres en MedDRA—, debounce obligatorio, `%` y `_` literales, y sin tolerancia a tildes.
 
 **Refresh: cola obligatoria.** El refresh token viaja en el body. Hay rotación con detección de reutilización (SPEC F42): dos refrescos concurrentes con el mismo token **revocan todas las sesiones del usuario**. Un solo refresh en vuelo, guardar siempre el token nuevo, y ante `AUTH_002_REFRESH_TOKEN_REUSED` ir al login sin reintentar.
 
