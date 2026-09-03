@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createGeoLocationSchema, updateGeoLocationSchema } from './schemas';
+import { createGeoLocationSchema, geoImportFileSchema, updateGeoLocationSchema } from './schemas';
 
 function validInput(overrides: Record<string, unknown> = {}) {
   return {
@@ -68,6 +68,38 @@ describe('createGeoLocationSchema', () => {
 describe('updateGeoLocationSchema', () => {
   it('todos los campos son opcionales', () => {
     const result = updateGeoLocationSchema.safeParse({});
+
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('geoImportFileSchema (SPEC FE07 §3.5)', () => {
+  it('rechaza un .pdf con la clave de extensión', () => {
+    const file = new File(['x'], 'plan.pdf', { type: 'application/pdf' });
+
+    const result = geoImportFileSchema.safeParse(file);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('invalidExtension');
+    }
+  });
+
+  it('rechaza un .xlsx de 21 MB con la clave de tamaño', () => {
+    const file = new File([new Uint8Array(21 * 1024 * 1024)], 'geo.xlsx');
+
+    const result = geoImportFileSchema.safeParse(file);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toBe('tooLarge');
+    }
+  });
+
+  it('acepta un .xlsx de 19 MB', () => {
+    const file = new File([new Uint8Array(19 * 1024 * 1024)], 'geo.xlsx');
+
+    const result = geoImportFileSchema.safeParse(file);
 
     expect(result.success).toBe(true);
   });
