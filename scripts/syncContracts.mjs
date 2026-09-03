@@ -23,6 +23,8 @@ const SYNC_MAP = [
   { source: 'geography/geoLocation.types.ts', dest: 'geoLocation.ts' },
   { source: 'geography/geoImport.types.ts', dest: 'geoImport.ts' },
   { source: 'healthFacility/healthFacility.types.ts', dest: 'healthFacility.ts' },
+  { source: 'caseWorkflow/caseWorkflow.types.ts', dest: 'caseWorkflow.ts' },
+  { source: 'esaviCase/esaviCase.types.ts', dest: 'esaviCase.ts' },
 ];
 
 function buildHeader(sourceRelPath) {
