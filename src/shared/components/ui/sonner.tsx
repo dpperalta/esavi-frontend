@@ -18,6 +18,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme}
       className="toaster group"
+      // Top right, not sonner's default bottom right: a toast at the bottom competes with the
+      // dialog footer and the table's pagination, which is exactly where the click that fired it
+      // came from. The 4rem offset clears the h-12 topbar so a toast never sits on top of the
+      // theme, language and user controls (AppShell's Topbar) — it lands just below them, in
+      // both the desktop and the mobile layout.
+      position="top-right"
+      offset="4rem"
+      mobileOffset="4rem"
       // Without this, sonner never applies the --success-*/--warning-*/--info-*/--error-*
       // variables below — every toast falls back to --normal-*, which is why they all looked
       // the same regardless of type.

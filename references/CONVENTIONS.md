@@ -128,6 +128,8 @@ El interceptor convierte `{ ok: false, … }` en un `EsaviApiError` que conserva
 - **El toast se decide por `code`**, nunca parseando `message`. El `code` (`HFAC_001_CREATION_FAILED`) es estable; el texto está traducido y cambia.
 - **`errors` no se muestra jamás al usuario.** Es material de depuración y en producción vale `'Internal server error'`.
 - `message` viene ya traducido por el backend en el idioma de `?lang=`. No se vuelve a traducir ni se concatena con texto propio.
+- **`code` se lee como si pudiera faltar.** No todo error de la API nace en un controlador: `client.ts` sustituye `'UNKNOWN_ERROR'` cuando el cuerpo no trae `code`, y `data` se lee con `?.` por si no hay cuerpo. Es una red barata contra un fallo caro: mientras esa guarda no existió, un `401` sin `code` hacía reventar `code.endsWith(...)` en la cola de refresh **antes** de intentar el refresco, y cada recarga de página acababa en el login. Ninguna comparación de `code` puede asumir que el valor exista.
+- **Hay `code`s sin número de operación.** Los seis transversales de autenticación y autorización (`AUTH_TOKEN_EXPIRED`, `AUTH_ROLE_FORBIDDEN`, …, tabulados en `API-CONTRACT.md` §2) nacen en los middlewares, antes de que se sepa a qué operación pertenece la petición. Un `403` sólo se distingue como «rol insuficiente» por `AUTH_ROLE_FORBIDDEN`; no se deduce del status.
 
 ### 6.3 Claves de caché
 
@@ -169,6 +171,16 @@ El backend rota el refresh token y **detecta la reutilización** (SPEC F42): pre
 2. Se guarda **siempre** el token nuevo de la respuesta; el anterior ya no vale.
 3. Ante `AUTH_002_REFRESH_TOKEN_REUSED` se va al login. **No se reintenta.**
 4. El acceso al token pasa por la interfaz `TokenStore`. Ningún módulo llama a `localStorage` para tokens.
+
+### 6.7 Búsqueda y autocompletado: `name` y `code`, nunca `search`
+
+Doce entidades aceptan filtro de texto (`API-CONTRACT.md` §5). **La forma canónica es `name` y `code` por separado**, y es la única que se escribe en código nuevo:
+
+- **`search` está congelado.** Sobrevive en cuatro entidades por compatibilidad; usarlo ata el componente a esas cuatro y obliga a saber, entidad por entidad, cómo se llama el parámetro. Ese era justamente el problema que el SPEC F52 cerró. La regla habla de **listados de entidad**: los cinco niveles del árbol WHODrug (`WHODRUG-006A`…`006E`) filtran con `?search=` sobre la columna de su propio nivel y no tienen otra forma — no son un listado, y su componente es propio.
+- **No se llama por debajo del mínimo.** Dos caracteres —tres en MedDRA—; por debajo el backend responde `400` y la llamada era gasto puro. El mínimo se comprueba antes de pedir, no se descubre por el error.
+- **Debounce siempre.** `GET /api/meddra/search` va contra un API externo de pago con limitador de 60 peticiones por IP cada 15 minutos: un autocompletado que llame en cada tecla lo agota y deja al usuario con `429`.
+- **`%` y `_` son literales**, ya escapados por el backend. No se documentan como comodines ni se ofrecen en la interfaz.
+- **La búsqueda no ignora tildes.** Es `ILIKE`, insensible a la caja y sensible a la tilde; si el campo lo necesita, el aviso va en la interfaz, no en un `.replace()` que quite acentos y devuelva cero filas.
 
 ---
 
@@ -293,6 +305,14 @@ El patrón habitual de este repositorio es que la página dueña de la lista (`C
 `useMutation().error` no se limpia solo: persiste hasta el próximo `mutate()` o hasta un `.reset()` explícito. Si un intento falla (por ejemplo un `409` de código duplicado) y el usuario cancela y vuelve a abrir el diálogo para un intento nuevo, `<ResourceForm>` sí remonta (Radix desmonta los hijos de `<DialogContent>` al cerrar) con campos en blanco — pero su `useEffect` que aplica el error de mutación se dispara igual en cada montaje y reaplica el error **viejo** sobre el formulario **nuevo**.
 
 La solución es un `handleOpenChange` en el diálogo que llama a `create.reset()` y `update.reset()` cuando `open` pasa a `false`, cableado en el `onOpenChange` del `<Dialog>`, en el `onCancel` del formulario y en el `onSuccess` de ambas mutaciones (ver `CatalogTypeFormDialog.tsx`). Todo diálogo de formulario nuevo que siga el mismo patrón de "la lista nunca lo desmonta" necesita este mismo reset.
+
+### 10.8 Los toasts van arriba a la derecha, bajo el topbar
+
+`<Toaster position="top-right" offset="4rem">` en `shared/components/ui/sonner.tsx`. Hasta el 2026-09-03 estuvo en `bottom-right`, que no era una decisión: es el valor por defecto de sonner y llegó con el componente del registro de shadcn.
+
+Abajo a la derecha es justo donde están el pie del diálogo y la paginación de `<ResourceTable>` — el toast aparece encima del control que acaba de pulsarse. Arriba a la derecha, el conflicto es el otro: el `<Topbar>` (`h-12`) lleva ahí tema, idioma, usuario y rol. Por eso el desplazamiento de `4rem`, en escritorio y en móvil: deja el toast **por debajo** de la cabecera, sin taparla y sin taparse.
+
+Se configura una sola vez en el `<Toaster>`. Ninguna llamada a `toast()` pasa `position` por su cuenta: un aviso que aparece en un sitio distinto según quién lo dispare es peor que uno mal colocado.
 
 ---
 

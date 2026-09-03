@@ -2,6 +2,7 @@
 
 > **Fuente:** `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES`
 > **Generado:** 2026-09-02 · **333 rutas** en **43 grupos**
+> **Verificado:** 2026-09-03 — regenerado sin cambios, y cruzado además contra los routers reales de `src/routes/`: las 333 filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
 > **Regenerar:** ver `README.md` de este directorio
 
 `ROUTE_RULES` es la matriz canónica de la §9 de `CONVENTIONS.md`, y el backend la
@@ -24,7 +25,7 @@ esta tabla en el cliente es lo que permite `useCan()` y `<RequireRole>`.
 
 ## Rutas sin fila en esta tabla
 
-Cuatro endpoints de autenticación no aparecen porque **no exigen rol alguno**, y es
+Cinco endpoints de autenticación no aparecen porque **no exigen rol alguno**, y es
 deliberado:
 
 | Ruta | Por qué es abierta |
@@ -37,6 +38,13 @@ deliberado:
 
 `POST /api/auth/logout-all` **sí** exige `tokenValidation`, porque revocar todas las
 sesiones de una cuenta exige identidad probada.
+
+Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las anteriores:
+
+| Ruta | Por qué |
+|---|---|
+| `GET /api/health` | Sonda de vida del servicio. Sin token y sin envelope de negocio |
+| `POST /api/seed/admin` | **Sólo existe fuera de producción**: el router de semillas no se monta cuando `NODE_ENV=production`. Ninguna pantalla lo llama |
 
 ## Convenciones de las operaciones
 

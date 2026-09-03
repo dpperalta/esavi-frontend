@@ -98,6 +98,7 @@
       "expired": "Uw sessie is verlopen. Log opnieuw in.",
       "revokedByReuse": "We hebben ongebruikelijke activiteit op uw sessie gedetecteerd en hebben u voor uw veiligheid op alle apparaten uitgelogd. Log opnieuw in.",
       "logout": "Uitloggen",
+      "logoutConfirm": "Weet u zeker dat u wilt uitloggen?",
       "logoutAll": "Overal uitloggen",
       "logoutAllConfirm": "Hiermee wordt u uitgelogd op alle apparaten waarop u bent ingelogd. Doorgaan?"
     }

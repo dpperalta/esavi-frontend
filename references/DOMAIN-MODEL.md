@@ -1,7 +1,7 @@
 # Modelo de dominio
 
 > **Fuentes:** `esavi-backend/src/models/associations/*.ts` (relaciones), `esaviapp.sql` (DDL y semillas)
-> **Fecha:** 2026-08-31
+> **Fecha:** 2026-09-03 · **47 tablas**, verificadas contra el DDL
 
 El mapa de lo que existe y de cómo se conecta. Sirve para decidir qué pantalla necesita qué, y en qué orden se pueden llenar los formularios.
 
@@ -137,11 +137,15 @@ El componente `<CatalogSelect typeCode="sex">` resuelve contra `GET /api/catalog
 
 | Tabla | Qué es | Import masivo |
 |---|---|---|
-| `diagnosticTerm` | Términos diagnósticos (MedDRA-like) | Sí, `.xlsx` |
+| `diagnosticTerm` | Términos diagnósticos (MedDRA-like) | Sí, `.asc` |
 | `vaccineWhodrug` | Vacunas del diccionario WHODrug | Sí, `.xlsx` |
 | `diluentCatalog` | Diluyentes | No |
 
 Rutas con nombre deliberadamente distinto al de la tabla: `/api/whodrug-vaccines` y `/api/diluents`.
+
+**`vaccineWhodrug` es plana en el esquema y jerárquica en los datos.** Ninguna columna declara la jerarquía, pero cinco la dibujan: `abbreviation → drugName → maHolders → formTranslations → strength`. El SPEC F54 la expone como cinco endpoints de navegación (`WHODRUG-006A`…`006E`), y con eso el selector de vacuna del formulario de notificación **no lista el diccionario entero**: baja por facetas y para en cuanto queda una sola fila, que es la que la notificación referencia por `vaccineWhodrugId`. Las cinco columnas son nulables, y un `null` es una opción navegable más — ninguna fila queda inalcanzable. La forma de la respuesta está en `API-CONTRACT.md` §11.2.
+
+**MedDRA no es una tabla de este sistema.** `GET /api/meddra/search` (SPEC F55) es un proxy de sólo lectura contra el diccionario oficial, licenciado y de pago: no escribe nada y no cruza sus resultados contra `diagnosticTerm`. Sirve para **codificar un evento cuyo término no se importó**; lo que se elige se persiste por la vía que ya existía —`ESAVI-DIAGTERM-006`, o los campos `esaviCode`/`esaviName` de `notificationEvent`—, y por eso sus filas vienen ya con la forma `code` + `name` de esas columnas.
 
 ---
 
@@ -159,6 +163,10 @@ geoLevelType ──> geoLocation ──> healthFacility
 **El filtro `geoLocationId` del listado de casos es jerárquico** (SPEC F48): resuelve el subárbol completo con un `WITH RECURSIVE`, porque `healthFacility.geoLocationId` apunta casi siempre a la unidad más fina y una igualdad estricta contra una provincia devolvería cero filas.
 
 `<GeoLocationPicker>` debe recorrer esa jerarquía en cascada, nivel por nivel.
+
+**La identidad externa de una fila geográfica es `geoLocation.externalCode`**, protegida desde el SPEC F53 por el índice único parcial `UQ_geoLocation_externalCode` (único cuando no es nulo, así que una fila sin código externo sigue siendo válida). Es la clave por la que la importación masiva decide entre insertar y actualizar, y por la que las filas del fichero se resuelven a su padre; en `healthFacility` ese papel lo hace `localCode`. Consecuencia para la interfaz: **`externalCode` no es un campo decorativo del formulario** — editarlo a mano rompe la correspondencia con la siguiente carga.
+
+El importador (`ESAVI-GEOLOC-006`) **nunca reparenta ni cambia de nivel**: una fila cuyo padre o nivel difiere de lo cargado se rechaza con `PARENT_CHANGED` o `LEVEL_CHANGED`, y sus descendientes con `ORPHAN`. Mover una unidad sigue siendo trabajo del `004`, una a una — un reparentado arrastra el subárbol entero y con él el alcance geográfico de los usuarios (SPEC F49). Tampoco reactiva: una fila desactivada sigue inactiva aunque el fichero la traiga.
 
 ---
 
@@ -195,6 +203,8 @@ Cada escritura deja una fila en `systemConfigHistory` con `previousValue`, `newV
 
 ## 9. Estado de implementación
 
-**45+ tablas en el DDL, 47 con las que añadieron F43 (`appPasswordReset`) y F44 (`caseWorkflow`).** Prácticamente todas tienen ya sus siete artefactos y su ruta: el inventario real de lo consumible es `API-ROUTES.md`, con **333 rutas en 43 grupos**.
+**47 tablas en el DDL** —`CREATE TABLE` contados sobre `esaviapp.sql` el 2026-09-03—, incluidas las que añadieron F43 (`appPasswordReset`) y F44 (`caseWorkflow`). Prácticamente todas tienen ya sus siete artefactos y su ruta: el inventario real de lo consumible es `API-ROUTES.md`, con **333 rutas en 43 grupos**.
+
+Los specs del backend del F50 al F55 **no añadieron ninguna tabla**: son búsqueda, navegación, importación y un proxy externo sobre el modelo que ya existía. El único cambio de DDL desde entonces es el índice `UQ_geoLocation_externalCode` de §6.
 
 El esquema **no** lo crea Sequelize: no hay `sequelize.sync()`. `esaviapp.sql` es el DDL autoritativo y no existe sistema de migraciones.

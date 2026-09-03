@@ -1,8 +1,18 @@
 import { Languages, LogOut, Moon, Sun, SunMoon } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentUser, useLogout } from '@/features/auth/api';
 import { ChangePasswordDialog } from '@/features/auth/ChangePasswordDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import {
@@ -33,10 +43,12 @@ export function Topbar() {
   const setLanguage = usePreferencesStore((state) => state.setLanguage);
   const { data: user } = useCurrentUser();
   const logout = useLogout();
+  const [confirmLogout, setConfirmLogout] = useState(false);
 
   const ThemeIcon = THEME_ICONS[theme];
 
   const handleLogout = () => {
+    setConfirmLogout(false);
     logout.mutate(undefined, {
       onSuccess: () => navigate('/login', { replace: true }),
     });
@@ -90,11 +102,23 @@ export function Topbar() {
           size="icon-sm"
           aria-label={t('auth.session.logout')}
           disabled={logout.isPending}
-          onClick={handleLogout}
+          onClick={() => setConfirmLogout(true)}
         >
           <LogOut aria-hidden="true" />
         </Button>
       </div>
+
+      <AlertDialog open={confirmLogout} onOpenChange={setConfirmLogout}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('auth.session.logoutConfirm')}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>{t('auth.session.logout')}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 }

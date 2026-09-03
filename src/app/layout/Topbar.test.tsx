@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
@@ -67,10 +67,44 @@ describe('Topbar — logout', () => {
     await waitFor(() => expect(screen.getByText('Alguien')).toBeInTheDocument());
 
     await user.click(screen.getByRole('button', { name: 'auth.session.logout' }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'auth.session.logout' }));
 
     await waitFor(() => expect(screen.getByText('Login page')).toBeInTheDocument());
     expect(logoutRequestBody).toEqual({ refreshToken: 'a-refresh-token' });
     expect(tokenStore.getRefreshToken()).toBeNull();
+  });
+
+  it('no cierra la sesión si se cancela la confirmación', async () => {
+    const user = setupUser();
+    let logoutCalled = false;
+
+    server.use(
+      http.get('http://localhost:4500/api/users/me', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { userId: '1', displayName: 'Alguien', roles: [] },
+        }),
+      ),
+      http.post('http://localhost:4500/api/auth/logout', () => {
+        logoutCalled = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: {} });
+      }),
+    );
+
+    renderTopbar();
+    await waitFor(() => expect(screen.getByText('Alguien')).toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: 'auth.session.logout' }));
+    await waitFor(() => expect(screen.getByText('auth.session.logoutConfirm')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'common.actions.cancel' }));
+
+    await waitFor(() =>
+      expect(screen.queryByText('auth.session.logoutConfirm')).not.toBeInTheDocument(),
+    );
+    expect(logoutCalled).toBe(false);
+    expect(tokenStore.getRefreshToken()).toBe('a-refresh-token');
   });
 
   it('limpia la sesión localmente aunque la petición falle', async () => {
@@ -91,6 +125,8 @@ describe('Topbar — logout', () => {
     await waitFor(() => expect(screen.getByText('Alguien')).toBeInTheDocument());
 
     await user.click(screen.getByRole('button', { name: 'auth.session.logout' }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'auth.session.logout' }));
 
     await waitFor(() => expect(screen.getByText('Login page')).toBeInTheDocument());
     expect(tokenStore.getRefreshToken()).toBeNull();

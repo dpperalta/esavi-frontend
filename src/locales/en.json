@@ -98,6 +98,7 @@
       "expired": "Your session expired. Please sign in again.",
       "revokedByReuse": "We detected unusual activity on your session and signed you out of every device for your security. Please sign in again.",
       "logout": "Sign out",
+      "logoutConfirm": "Are you sure you want to sign out?",
       "logoutAll": "Sign out of all sessions",
       "logoutAllConfirm": "This will sign you out on every device where you're signed in. Continue?"
     }

@@ -1,11 +1,13 @@
 # Plan de arquitectura — ESAVI Frontend
 
-> **Estado:** Propuesta
-> **Fecha:** 2026-08-30
+> **Estado:** Vigente — en ejecución (hitos 1 y 2 en curso)
+> **Fecha:** 2026-08-30 · **revisado contra el backend el 2026-09-03**
 > **Ubicación destino:** `esavi-app/esavi-frontend`
 > **Backend de referencia:** `esavi-app/esavi-backend` (Express 5 + TypeScript + Sequelize + PostgreSQL)
 
-Este documento recoge las decisiones de arquitectura del cliente web de ESAVI, tomadas contra el estado real del backend a la fecha: 44 routers montados bajo `/api`, ~45 entidades con el mismo contrato de siete artefactos, envelope `{ ok, message, data }`, JWT con refresh en el body, i18n en `es`/`en`/`nl`, roles por nivel numérico y listados duales (`002A` público / `002B` admin con inactivos).
+Este documento recoge las decisiones de arquitectura del cliente web de ESAVI, tomadas contra el estado real del backend a la fecha: 45 routers montados bajo `/api` —44 en producción, más el de semillas que sólo se monta fuera de ella—, ~45 entidades con el mismo contrato de siete artefactos, envelope `{ ok, message, data }`, JWT con refresh en el body, i18n en `es`/`en`/`nl`, roles por nivel numérico y listados duales (`002A` público / `002B` admin con inactivos).
+
+**Revisión del 2026-09-03.** Los specs F50 a F55 del backend no cambiaron ninguna de estas decisiones: no hay tablas nuevas ni entidades nuevas, sólo superficie de lectura sobre el modelo que ya existía —búsqueda por `name`/`code`, el árbol WHODrug, el proxy de MedDRA y la importación masiva de geografía—. Lo que sí añaden son **dos primitivas** (§4.3) y una regla de autocompletado (`CONVENTIONS.md` §6.7).
 
 ---
 
@@ -156,6 +158,12 @@ esaviCase.useActivate()     // PATCH /activate/:id
 - **`<CatalogSelect typeCode="...">`** — combo que resuelve `catalogItem` por `catalogType`. Aparece en decenas de campos del modelo.
 - **`<GeoLocationPicker>`** — cascada jerárquica sobre `geoLocation`. Ya la exige el filtro `geoLocationId` de F48.
 - **`<AuditTrail>`** — lector del `appDetails` de cualquier fila. Todas las tablas lo llevan.
+- **`<EntitySearchSelect>`** — autocompletado remoto contra `?name=` y `?code=`, con debounce y mínimo de caracteres. **Una sola vez, no uno por entidad:** desde el SPEC F52 las doce entidades buscables hablan el mismo parámetro, y ésa es justo la razón por la que existe la primitiva (`CONVENTIONS.md` §6.7). `<CatalogSelect>` deja de ser el único camino a `catalogItem` — para resolver «Hospital» sin saber a qué `catalogType` pertenece está `ESAVI-CATITEM-007`.
+
+Dos selectores que **no** son casos de `<EntitySearchSelect>` y llevan su propio componente, porque su contrato no es el de un listado filtrado:
+
+- **`<WhodrugTreePicker>`** — las cinco facetas de `WHODRUG-006A`…`006E`. Quien llena una notificación sabe que fue una BCG, no cómo se llama la presentación exacta; se baja por niveles y **el componente para en cuanto `matchCount === 1`**, que es cuando el `vaccineWhodrugId` ya viene resuelto en la propia opción. El centinela `__NULL__` reenvía la opción sin valor al nivel siguiente (`API-CONTRACT.md` §11.2).
+- **`<MeddraSearchField>`** — `MEDDRA-006`. Es un API externo de pago detrás de un limitador: debounce obligatorio, mínimo de tres caracteres, y sus `503`/`502`/`504` se muestran como estado del servicio, no como «no hay resultados». Lo que el usuario elige se persiste con otra llamada; el proxy no escribe nada.
 
 ### 4.4 Autorización espejo
 
