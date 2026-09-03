@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import {
@@ -54,7 +54,7 @@ describe('SelectTrigger — clearable', () => {
 
   it('pulsar la "×" llama a onClear y no abre el desplegable', async () => {
     const onClear = vi.fn();
-    const user = userEvent.setup();
+    const user = setupUser();
     renderSelect({ value: 'a', onClear });
 
     await user.click(screen.getByRole('button', { name: 'Limpiar selección' }));

@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -38,14 +38,14 @@ describe('ChangePasswordDialog', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-    const user = userEvent.setup();
+    const user = setupUser();
     await user.click(screen.getByRole('button', { name: 'auth.changePassword.title' }));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
   it('se cierra al presionar Escape (es descartable)', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderDialog();
 
     await user.click(screen.getByRole('button', { name: 'auth.changePassword.title' }));
@@ -57,7 +57,7 @@ describe('ChangePasswordDialog', () => {
   });
 
   it('se cierra tras un cambio exitoso', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     server.use(
       http.patch('http://localhost:4500/api/users/me/password', () =>
         HttpResponse.json({ ok: true, message: 'ok', data: {} }),

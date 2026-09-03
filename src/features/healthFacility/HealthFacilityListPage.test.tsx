@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
@@ -215,7 +215,7 @@ describe('HealthFacilityListPage — modo ubicación y URL persistente', () => {
 
 describe('HealthFacilityListPage — toggle de inactivos (hallazgo C)', () => {
   it('con rol ADMIN, escribir dos caracteres oculta el toggle y cambia la petición a /search', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
     mockCatalogTypesEmpty();
     mockGeoLocationPicker();
@@ -259,7 +259,7 @@ describe('HealthFacilityListPage — toggle de inactivos (hallazgo C)', () => {
 
 describe('HealthFacilityListPage — borrar el término vuelve al listado por ubicación', () => {
   it('limpiar q en modo búsqueda vuelve a pedir /location/:id', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
     mockCatalogTypesEmpty();
     mockGeoLocationPicker();

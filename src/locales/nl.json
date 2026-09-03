@@ -129,7 +129,8 @@
       "appRole": "Rollen",
       "catalogType": "Catalogustypen",
       "catalogItem": "Catalogusitems",
-      "systemConfig": "Systeemconfiguratie"
+      "systemConfig": "Systeemconfiguratie",
+      "geoBulkImport": "Massale import geografie"
     }
   },
   "catalogType": {
@@ -343,6 +344,94 @@
       "HFAC_005A_ALREADY_INACTIVE": "De gezondheidseenheid was al inactief.",
       "HFAC_005B_ALREADY_ACTIVE": "De gezondheidseenheid was al actief.",
       "HFAC_005A_HAS_ACTIVE_CHILDREN": "Kan niet deactiveren: heeft actieve onderliggende eenheden."
+    }
+  },
+  "geoBulkImport": {
+    "title": "Massale import geografie",
+    "description": "Download de sjabloon, bewerk deze in Excel en upload om geografie en gezondheidseenheden aan te maken of bij te werken.",
+    "template": {
+      "title": "Sjabloon",
+      "description": "Genereer het .xlsx-werkboek met de bladen voor geografie en gezondheidseenheden, en de keuzelijsten voor niveau en type eenheid.",
+      "includeExisting": "Reeds geladen gegevens meenemen",
+      "includeExistingHint": "Uitschakelen downloadt de lege sjabloon, met alleen de kopregels.",
+      "download": "Sjabloon downloaden"
+    },
+    "upload": {
+      "title": "Werkboek uploaden",
+      "description": "Upload het bewerkte .xlsx-bestand om het te valideren of te importeren.",
+      "dropzone": "Sleep hier het .xlsx-bestand naartoe, of",
+      "choose": "Bestand kiezen",
+      "remove": "Bestand verwijderen",
+      "noFile": "U heeft nog geen bestand gekozen.",
+      "requiresSuperadmin": "Het uploaden van het bestand vereist de rol Superbeheerder. Vraag een Superbeheerder om dit voor u te doen.",
+      "validate": "Valideren zonder op te slaan",
+      "import": "Importeren",
+      "confirmTitle": "Dit bestand importeren?",
+      "confirmBody": "Dit schrijft de wijzigingen naar de database. Wilt u alleen het bestand controleren, gebruik dan \"Valideren zonder op te slaan\".",
+      "confirmAction": "Ja, importeren",
+      "invalidExtension": "Het bestand moet de extensie .xlsx hebben.",
+      "tooLarge": "Het bestand mag niet groter zijn dan 20 MB."
+    },
+    "report": {
+      "title": "Importrapport",
+      "dryRunNotice": "Simulatie: er is niets opgeslagen.",
+      "allUnchanged": "Het bestand komt overeen met wat al geladen is: er was niets te wijzigen.",
+      "sheetGeoLocation": "Geografie",
+      "sheetHealthFacility": "Gezondheidseenheden",
+      "sheetMissing": "Dit blad zat niet in het werkboek.",
+      "counters": {
+        "read": "Gelezen",
+        "inserted": "Toegevoegd",
+        "updated": "Bijgewerkt",
+        "unchanged": "Ongewijzigd",
+        "invalid": "Afgewezen",
+        "duplicated": "Dubbel",
+        "inactiveMatched": "Op inactieve rijen",
+        "sortOrderCoerced": "Volgorde gecorrigeerd"
+      },
+      "warnInactiveMatched": "Het bestand raakt {{count}} gedeactiveerde rij(en) en deze worden niet heractiveerd.",
+      "warnTreeMoves": "Sommige rijen verplaatsten de boomstructuur (bovenliggende locatie, niveau of locatie); die rijen zijn niet aangepast.",
+      "infoOrphans": "{{count}} rij(en) zijn in cascade afgewezen door een afwijzing op een hoger niveau.",
+      "missingOptionalHeaders": "Optionele kolommen ontbreken in het bestand: bestaande rijen behouden hun waarde.",
+      "unknownHeaders": "Kolommen in het bestand die niet herkend worden en zijn genegeerd.",
+      "errorsTitle": "Afgewezen rijen",
+      "columnReason": "Reden",
+      "columnSheet": "Blad",
+      "columnRow": "Rij",
+      "errorsTruncated": "{{shown}} van {{total}} fouten",
+      "errorsEmpty": "Er zijn geen rijen afgewezen.",
+      "columnHint": " (kolom {{column}})"
+    },
+    "reasons": {
+      "EMPTY_EXTERNAL_CODE": "De externe code is leeg.",
+      "EMPTY_NAME": "De naam is leeg.",
+      "EMPTY_LEVEL": "Het niveau is leeg.",
+      "INVALID_LEVEL": "Het niveau is ongeldig.",
+      "MISSING_PARENT_CODE": "De code van de bovenliggende locatie ontbreekt.",
+      "UNEXPECTED_PARENT_CODE": "Dit niveau zou geen code voor een bovenliggende locatie mogen hebben.",
+      "DUPLICATE_IN_FILE": "De code komt dubbel voor in het bestand.",
+      "VALUE_TOO_LONG": "De waarde is te lang",
+      "CYCLE": "Deze rij zou een cyclus in de boomstructuur veroorzaken.",
+      "GEO_LEVEL_NOT_FOUND": "Het geografisch niveau bestaat niet.",
+      "PARENT_NOT_FOUND": "De code van de bovenliggende locatie bestaat niet.",
+      "PARENT_INACTIVE": "De bovenliggende locatie is inactief.",
+      "PARENT_LEVEL_MISMATCH": "Het niveau van de bovenliggende locatie is niet het verwachte niveau.",
+      "SIBLING_NAME_EXISTS": "Er bestaat al een gelijke naam onder rijen met dezelfde bovenliggende locatie.",
+      "PARENT_CHANGED": "De bovenliggende locatie is gewijzigd ten opzichte van wat al geladen is; de rij is niet aangepast.",
+      "LEVEL_CHANGED": "Het niveau is gewijzigd ten opzichte van wat al geladen is; de rij is niet aangepast.",
+      "ORPHAN": "In cascade afgewezen door een afwijzing op een hoger niveau.",
+      "EMPTY_LOCAL_CODE": "De lokale code is leeg.",
+      "EMPTY_FACILITY_TYPE": "Het type eenheid is leeg.",
+      "EMPTY_GEO_CODE": "De locatiecode is leeg.",
+      "GEO_NOT_FOUND": "De locatie bestaat niet.",
+      "FACILITY_TYPE_NOT_FOUND": "Het type eenheid bestaat niet.",
+      "LOCATION_CHANGED": "De locatie is gewijzigd ten opzichte van wat al geladen is; de rij is niet aangepast."
+    },
+    "errors": {
+      "GEOLOC_006_FILE_INVALID": "Het bestand heeft niet het verwachte formaat.",
+      "GEOLOC_006_FILE_TOO_LARGE": "Het bestand overschrijdt de maximaal toegestane grootte.",
+      "GEOLOC_006_FILE_REQUIRED": "Kies een bestand om door te gaan.",
+      "levelTypesAction": "Geografische niveaus configureren"
     }
   },
   "home": {

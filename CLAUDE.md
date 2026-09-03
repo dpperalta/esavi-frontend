@@ -29,7 +29,7 @@ Antes de escribir código, lee lo que corresponda de `references/`. Son decision
 - **`CONVENTIONS.md`** — la norma de código. Se lee siempre.
 - **`ARCHITECTURE.md`** — stack, tres capas de estado, capa de recurso genérica, sidebar, temas, preferencias, responsividad, seguridad de sesión y orden de construcción.
 - **`API-CONTRACT.md`** — envelope, auth, paginación, idioma, auditoría. Es la referencia de `client.ts` y `createResource.ts`.
-- **`API-ROUTES.md`** — las 323 rutas con su rol mínimo y su código de operación. **Generado, no se edita a mano** (ver `references/README.md`).
+- **`API-ROUTES.md`** — las 333 rutas con su rol mínimo y su código de operación. **Generado, no se edita a mano** (ver `references/README.md`).
 - **`DOMAIN-MODEL.md`** — entidades y relaciones; decide el orden de los pasos del wizard.
 
 Documentos del backend que mandan sobre cualquier duda: `esavi-backend/references/CONVENTIONS.md` (la norma), `esavi-backend/references/functional/specs/NN-slug.md` (el spec de cada entidad) y `esavi-backend/esaviapp.sql` (el DDL autoritativo).

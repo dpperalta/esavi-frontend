@@ -195,6 +195,6 @@ Cada escritura deja una fila en `systemConfigHistory` con `previousValue`, `newV
 
 ## 9. Estado de implementación
 
-**45+ tablas en el DDL, 47 con las que añadieron F43 (`appPasswordReset`) y F44 (`caseWorkflow`).** Prácticamente todas tienen ya sus siete artefactos y su ruta: el inventario real de lo consumible es `API-ROUTES.md`, con **323 rutas en 42 grupos**.
+**45+ tablas en el DDL, 47 con las que añadieron F43 (`appPasswordReset`) y F44 (`caseWorkflow`).** Prácticamente todas tienen ya sus siete artefactos y su ruta: el inventario real de lo consumible es `API-ROUTES.md`, con **333 rutas en 43 grupos**.
 
 El esquema **no** lo crea Sequelize: no hay `sequelize.sync()`. `esaviapp.sql` es el DDL autoritativo y no existe sistema de migraciones.

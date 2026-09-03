@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
@@ -69,7 +69,7 @@ function renderPage(initialPath = '/catalog-types') {
 
 describe('CatalogTypeListPage — crear', () => {
   it('crear un tipo lo hace aparecer en la tabla sin recargar', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
 
     const rows: CatalogType[] = [makeRow()];
@@ -217,7 +217,7 @@ describe('CatalogTypeListPage — autorización', () => {
 
 describe('CatalogTypeListPage — atajo "Ver ítems"', () => {
   it('lleva el catalogTypeId de la fila al callback', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('USER', 25);
     const onViewItems = vi.fn();
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -246,7 +246,7 @@ describe('CatalogTypeListPage — atajo "Ver ítems"', () => {
 
 describe('CatalogTypeListPage — paginación en la URL', () => {
   it('page=2 en la URL sobrevive al refresco y el enlace reproduce la misma vista', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
 
     const receivedOffsets: (string | null)[] = [];

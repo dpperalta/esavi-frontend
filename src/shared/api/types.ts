@@ -9,7 +9,10 @@ export interface ApiSuccessEnvelope<T> {
 export interface ApiErrorEnvelope {
   ok: false;
   message: string;
-  code: string;
+  // Optional on purpose: the backend's own middlewares (tokenValidation, roleValidation) answer
+  // 401/403 without a `code`. client.ts substitutes UNKNOWN_ERROR so EsaviApiError.code is
+  // always a string for its consumers.
+  code?: string;
   errors?: unknown;
 }
 

@@ -5,7 +5,7 @@ import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { HealthFacilityListPage } from '@/features/healthFacility/HealthFacilityListPage';
+import { GeoBulkImportPage } from '@/features/geoLocation/GeoBulkImportPage';
 import { HomePage } from '@/features/home/HomePage';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
@@ -42,19 +42,10 @@ function signInAs(roleName: string, level: number) {
         },
       }),
     ),
-    http.get('http://localhost:4500/api/geo-level-types', () =>
-      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
-    ),
-    http.get('http://localhost:4500/api/geo-locations', () =>
-      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
-    ),
-    http.get('http://localhost:4500/api/catalog-types', () =>
-      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
-    ),
   );
 }
 
-// Mirrors the real nesting of app/router.tsx: AppShell → RequireRole(USER) → /health-facilities.
+// Mirrors the real nesting of app/router.tsx: AppShell → RequireRole(ADMIN) → /geo-locations/import.
 function renderApp(initialPath = '/') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -64,8 +55,8 @@ function renderApp(initialPath = '/') {
           <Routes>
             <Route element={<AppShell />}>
               <Route path="/" element={<HomePage />} />
-              <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
-                <Route path="/health-facilities" element={<HealthFacilityListPage />} />
+              <Route element={<RequireRole level={ROLE_LEVELS.ADMIN} />}>
+                <Route path="/geo-locations/import" element={<GeoBulkImportPage />} />
               </Route>
             </Route>
           </Routes>
@@ -75,38 +66,52 @@ function renderApp(initialPath = '/') {
   );
 }
 
-describe('Ruta /health-facilities — navegación desde el sidebar', () => {
-  it('el enlace del sidebar navega a la pantalla de unidades de salud', async () => {
+describe('Ruta /geo-locations/import — navegación desde el sidebar', () => {
+  it('el enlace del sidebar navega a la pantalla de carga masiva', async () => {
     const user = setupUser();
     signInAs('ADMIN', 50);
 
     renderApp('/');
 
-    const link = await screen.findByRole('link', { name: 'Unidades de salud' });
+    const link = await screen.findByRole('link', { name: 'Carga masiva de geografía' });
     await user.click(link);
 
     expect(
-      await screen.findByRole('heading', { name: 'Unidades de salud' }),
+      await screen.findByRole('heading', { name: 'Carga masiva de geografía' }),
     ).toBeInTheDocument();
   });
 });
 
-describe('Ruta /health-facilities — autorización', () => {
-  it('con rol ANALYTICS la entrada del menú no aparece', async () => {
-    signInAs('ANALYTICS', 10);
+describe('Ruta /geo-locations/import — autorización', () => {
+  it('con rol USER la entrada del menú no aparece', async () => {
+    signInAs('USER', 25);
 
     renderApp('/');
 
     await waitFor(() => expect(screen.getByText('Inicio')).toBeInTheDocument());
-    expect(screen.queryByRole('link', { name: 'Unidades de salud' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Carga masiva de geografía' }),
+    ).not.toBeInTheDocument();
   });
 
-  it('con rol ANALYTICS, entrar por URL redirige a / sin pantalla en blanco', async () => {
-    signInAs('ANALYTICS', 10);
+  it('con rol USER, entrar por URL redirige a / sin pantalla en blanco', async () => {
+    signInAs('USER', 25);
 
-    renderApp('/health-facilities');
+    renderApp('/geo-locations/import');
 
     await waitFor(() => expect(screen.getByText(/Hola,/)).toBeInTheDocument());
-    expect(screen.queryByRole('heading', { name: 'Unidades de salud' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Carga masiva de geografía' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('con rol ADMIN, entrar por URL muestra la pantalla', async () => {
+    signInAs('ADMIN', 50);
+
+    renderApp('/geo-locations/import');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Carga masiva de geografía' }),
+    ).toBeInTheDocument();
   });
 });

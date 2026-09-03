@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -34,7 +34,7 @@ function renderPage(initialPath: string) {
 
 describe('ResetPasswordPage', () => {
   it('shows the invalid-link state without ?token=, with a way to /forgot-password', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderPage('/reset-password');
 
     expect(screen.getByText('auth.reset.invalidLink')).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('ResetPasswordPage', () => {
   });
 
   it('resets the password with a valid token and shows the success state', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     let requestBody: unknown = null;
     server.use(
       http.post('http://localhost:4500/api/auth/reset-password', async ({ request }) => {
@@ -64,7 +64,7 @@ describe('ResetPasswordPage', () => {
   });
 
   it('shows a mismatch error under confirmPassword when the two passwords differ', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     renderPage('/reset-password?token=a-valid-token');
 
     await user.type(screen.getByLabelText('auth.reset.newPassword'), 'a-new-password');
@@ -81,7 +81,7 @@ describe('ResetPasswordPage', () => {
     'AUTH_007_RESET_TOKEN_INVALIDATED',
     'AUTH_007_RESET_TOKEN_EXPIRED',
   ])('switches to the invalid-link state when the backend rejects with %s', async (code) => {
-    const user = userEvent.setup();
+    const user = setupUser();
     server.use(
       http.post('http://localhost:4500/api/auth/reset-password', () =>
         HttpResponse.json({ ok: false, message: 'Enlace inválido', code }, { status: 401 }),

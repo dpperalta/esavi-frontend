@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -33,7 +33,7 @@ function renderPage() {
 
 describe('ForgotPasswordPage', () => {
   it('shows the same success screen for an email that exists', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     server.use(
       http.post('http://localhost:4500/api/auth/forgot-password', () =>
         HttpResponse.json({ ok: true, message: 'ok', data: {} }),
@@ -48,7 +48,7 @@ describe('ForgotPasswordPage', () => {
   });
 
   it('shows the same success screen for an email that does not exist', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     server.use(
       http.post('http://localhost:4500/api/auth/forgot-password', () =>
         HttpResponse.json({ ok: true, message: 'ok', data: {} }),

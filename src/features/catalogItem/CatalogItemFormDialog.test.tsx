@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { useState } from 'react';
@@ -83,7 +83,7 @@ function renderHarness(catalogItemId: string | null = null) {
 
 describe('CatalogItemFormDialog — crear', () => {
   it('un 409 con CATITEM_001_CODE_EXISTS marca el campo code y no abre un toast', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     server.use(
       http.post('http://localhost:4500/api/catalog-items', () =>
         HttpResponse.json(
@@ -112,7 +112,7 @@ describe('CatalogItemFormDialog — crear', () => {
 
 describe('CatalogItemFormDialog — editar, fila congelada (isValueLocked)', () => {
   it('el input de value está deshabilitado, el texto de ayuda es visible, y el PUT no lleva value', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     let putBody: unknown = null;
     server.use(
       http.get('http://localhost:4500/api/catalog-items/ci-1', () =>
@@ -147,7 +147,7 @@ describe('CatalogItemFormDialog — editar, fila congelada (isValueLocked)', () 
 
 describe('CatalogItemFormDialog — editar, fila no congelada', () => {
   it('el mismo PUT sí envía value', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     let putBody: unknown = null;
     server.use(
       http.get('http://localhost:4500/api/catalog-items/ci-1', () =>

@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -87,7 +87,7 @@ function renderDialog(geoLocationId: string | null = null) {
 
 describe('GeoLocationFormDialog — crear', () => {
   it('sin parentGeoLocationId, el POST no lo manda', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockLevelTypes();
     let receivedBody: Record<string, unknown> | null = null;
     server.use(
@@ -115,7 +115,7 @@ describe('GeoLocationFormDialog — crear', () => {
 
 describe('GeoLocationFormDialog — mapeo de errores', () => {
   it('un 409 con GEOLOC_001_NAME_EXISTS marca el campo nombre', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     mockLevelTypes();
     server.use(
       http.get('http://localhost:4500/api/geo-locations', () =>
@@ -175,7 +175,7 @@ describe('GeoLocationFormDialog — edición de una ubicación raíz (sin nivel 
 
 describe('GeoLocationFormDialog — el padre no puede ser del mismo nivel o más profundo', () => {
   it('al editar una Provincia, el picker de padre solo ofrece País, nunca Provincia', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     server.use(
       http.get('http://localhost:4500/api/geo-level-types', () =>
         HttpResponse.json({

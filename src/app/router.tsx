@@ -5,6 +5,7 @@ import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
 import { GeoLevelTypeListPage } from '@/features/geoLevelType/GeoLevelTypeListPage';
+import { GeoBulkImportPage } from '@/features/geoLocation/GeoBulkImportPage';
 import { GeoLocationListPage } from '@/features/geoLocation/GeoLocationListPage';
 import { HealthFacilityListPage } from '@/features/healthFacility/HealthFacilityListPage';
 import { HomePage } from '@/features/home/HomePage';
@@ -24,6 +25,11 @@ export function AppRouter() {
         <Route element={<RequireAuth />}>
           <Route element={<AppShell />}>
             <Route path="/" element={<HomePage />} />
+            {/* SPEC FE07 §4 paso 8: /geo-locations/import declared before /geo-locations — the
+                generic route — so a future param route under /geo-locations never shadows it. */}
+            <Route element={<RequireRole level={ROLE_LEVELS.ADMIN} />}>
+              <Route path="/geo-locations/import" element={<GeoBulkImportPage />} />
+            </Route>
             <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
               <Route path="/catalog-types" element={<CatalogTypeListPage />} />
               <Route path="/catalog-items" element={<CatalogItemListPage />} />

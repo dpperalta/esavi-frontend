@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -90,7 +90,7 @@ describe('ResourceTable — carga', () => {
 
 describe('ResourceTable — error', () => {
   it('muestra el mensaje resuelto por code y reintenta al hacer click', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     const onRetry = vi.fn();
     const error = new EsaviApiError('El servidor no respondió', 500, 'WIDGET_002_LIST_FAILED');
 

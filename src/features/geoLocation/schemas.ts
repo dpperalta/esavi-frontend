@@ -45,3 +45,16 @@ export const geoLocationErrorFieldMap: Partial<Record<string, keyof GeoLocationF
   GEOLOC_001_EXTERNAL_CODE_EXISTS: 'externalCode',
   GEOLOC_004_EXTERNAL_CODE_EXISTS: 'externalCode',
 };
+
+const MAX_GEO_IMPORT_FILE_SIZE_BYTES = 20 * 1024 * 1024;
+
+// SPEC FE07 §3.5 — declared exception to CONVENTIONS.md §8: a File and a boolean aren't form
+// fields, so there's no React Hook Form here, but the rule the section actually cares about
+// (validation lives in a schema) still holds. Run with `safeParse` at file-pick time, both from
+// the button and from the drop, never at submit. `issue.message` is a bare key fragment, the same
+// pattern as `auth.passwordMismatch` (schemas.ts) — the component composes
+// `geoBulkImport.upload.${message}` itself.
+export const geoImportFileSchema = z
+  .instanceof(File)
+  .refine((file) => file.name.toLowerCase().endsWith('.xlsx'), { message: 'invalidExtension' })
+  .refine((file) => file.size <= MAX_GEO_IMPORT_FILE_SIZE_BYTES, { message: 'tooLarge' });

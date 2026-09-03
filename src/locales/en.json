@@ -129,7 +129,8 @@
       "appRole": "Roles",
       "catalogType": "Catalog types",
       "catalogItem": "Catalog items",
-      "systemConfig": "System configuration"
+      "systemConfig": "System configuration",
+      "geoBulkImport": "Geography bulk import"
     }
   },
   "catalogType": {
@@ -343,6 +344,94 @@
       "HFAC_005A_ALREADY_INACTIVE": "The health facility was already inactive.",
       "HFAC_005B_ALREADY_ACTIVE": "The health facility was already active.",
       "HFAC_005A_HAS_ACTIVE_CHILDREN": "Can't deactivate: it has active dependent facilities."
+    }
+  },
+  "geoBulkImport": {
+    "title": "Geography bulk import",
+    "description": "Download the template, edit it in Excel, and upload it to create or update geography and health facilities.",
+    "template": {
+      "title": "Template",
+      "description": "Generate the .xlsx workbook with the geography and health facility sheets, and the level and facility type dropdowns.",
+      "includeExisting": "Include what's already loaded",
+      "includeExistingHint": "Turning it off downloads the empty template, with only the headers.",
+      "download": "Download template"
+    },
+    "upload": {
+      "title": "Upload workbook",
+      "description": "Upload the edited .xlsx to validate it or to import it.",
+      "dropzone": "Drop the .xlsx file here, or",
+      "choose": "Choose file",
+      "remove": "Remove file",
+      "noFile": "You haven't chosen a file yet.",
+      "requiresSuperadmin": "Uploading the file requires the Superadmin role. Ask a Superadmin to do it for you.",
+      "validate": "Validate without saving",
+      "import": "Import",
+      "confirmTitle": "Import this file?",
+      "confirmBody": "This will write the changes to the database. If you only want to check the file, use \"Validate without saving\".",
+      "confirmAction": "Yes, import",
+      "invalidExtension": "The file must have a .xlsx extension.",
+      "tooLarge": "The file can't be larger than 20 MB."
+    },
+    "report": {
+      "title": "Import report",
+      "dryRunNotice": "Simulation: nothing was saved.",
+      "allUnchanged": "The file matches what's already loaded: there was nothing to change.",
+      "sheetGeoLocation": "Geography",
+      "sheetHealthFacility": "Health facilities",
+      "sheetMissing": "This sheet wasn't in the workbook.",
+      "counters": {
+        "read": "Read",
+        "inserted": "Inserted",
+        "updated": "Updated",
+        "unchanged": "Unchanged",
+        "invalid": "Rejected",
+        "duplicated": "Duplicated",
+        "inactiveMatched": "Matched inactive rows",
+        "sortOrderCoerced": "Order coerced"
+      },
+      "warnInactiveMatched": "The file touches {{count}} deactivated row(s), and they aren't reactivated.",
+      "warnTreeMoves": "Some rows moved the tree (parent, level, or location); those rows weren't touched.",
+      "infoOrphans": "{{count}} row(s) were rejected in cascade because of a rejection at a higher level.",
+      "missingOptionalHeaders": "Optional columns missing from the file: existing rows keep their value.",
+      "unknownHeaders": "Columns in the file that aren't recognized, and were ignored.",
+      "errorsTitle": "Rejected rows",
+      "columnReason": "Reason",
+      "columnSheet": "Sheet",
+      "columnRow": "Row",
+      "errorsTruncated": "{{shown}} of {{total}} errors",
+      "errorsEmpty": "No rows were rejected.",
+      "columnHint": " (column {{column}})"
+    },
+    "reasons": {
+      "EMPTY_EXTERNAL_CODE": "The external code is empty.",
+      "EMPTY_NAME": "The name is empty.",
+      "EMPTY_LEVEL": "The level is empty.",
+      "INVALID_LEVEL": "The level isn't valid.",
+      "MISSING_PARENT_CODE": "The parent code is missing.",
+      "UNEXPECTED_PARENT_CODE": "This level shouldn't have a parent code.",
+      "DUPLICATE_IN_FILE": "The code is duplicated within the file.",
+      "VALUE_TOO_LONG": "The value is too long",
+      "CYCLE": "This row would create a cycle in the tree.",
+      "GEO_LEVEL_NOT_FOUND": "The geographic level doesn't exist.",
+      "PARENT_NOT_FOUND": "The parent code doesn't exist.",
+      "PARENT_INACTIVE": "The parent is inactive.",
+      "PARENT_LEVEL_MISMATCH": "The parent's level isn't the expected one.",
+      "SIBLING_NAME_EXISTS": "A name already exists among the rows with the same parent.",
+      "PARENT_CHANGED": "The parent changed compared to what's already loaded; the row wasn't touched.",
+      "LEVEL_CHANGED": "The level changed compared to what's already loaded; the row wasn't touched.",
+      "ORPHAN": "Rejected in cascade because of a rejection at a higher level.",
+      "EMPTY_LOCAL_CODE": "The local code is empty.",
+      "EMPTY_FACILITY_TYPE": "The facility type is empty.",
+      "EMPTY_GEO_CODE": "The location code is empty.",
+      "GEO_NOT_FOUND": "The location doesn't exist.",
+      "FACILITY_TYPE_NOT_FOUND": "The facility type doesn't exist.",
+      "LOCATION_CHANGED": "The location changed compared to what's already loaded; the row wasn't touched."
+    },
+    "errors": {
+      "GEOLOC_006_FILE_INVALID": "The file doesn't have the expected format.",
+      "GEOLOC_006_FILE_TOO_LARGE": "The file exceeds the maximum allowed size.",
+      "GEOLOC_006_FILE_REQUIRED": "Choose a file to continue.",
+      "levelTypesAction": "Configure the geographic levels"
     }
   },
   "home": {

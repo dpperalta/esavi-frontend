@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -71,7 +71,7 @@ function renderApp(initialPath = '/') {
 
 describe('Ruta /geo-level-types — navegación desde el sidebar', () => {
   it('el enlace del sidebar navega a la pantalla de niveles geográficos', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     signInAs('ADMIN', 50);
 
     renderApp('/');
@@ -82,7 +82,7 @@ describe('Ruta /geo-level-types — navegación desde el sidebar', () => {
     expect(
       await screen.findByRole('heading', { name: 'Niveles geográficos' }),
     ).toBeInTheDocument();
-  }, 20000);
+  });
 });
 
 describe('Ruta /geo-level-types — autorización', () => {

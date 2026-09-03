@@ -7,7 +7,7 @@ Todo lo que hay que tener claro antes de escribir una línea del frontend. Cinco
 | **[CONVENTIONS.md](./CONVENTIONS.md)** | Cómo se escribe el código: nomenclatura, artefactos, capas, checklist | **Siempre**, antes de tocar `src/` |
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Qué construimos y con qué decisiones ya tomadas | Antes de empezar, y cada vez que aparezca una duda de diseño |
 | **[API-CONTRACT.md](./API-CONTRACT.md)** | Cómo se habla con el backend: envelope, auth, paginación, idioma, auditoría | Al escribir `client.ts` y `createResource.ts` |
-| **[API-ROUTES.md](./API-ROUTES.md)** | Las 323 rutas con su rol mínimo y su código de operación | Al construir cada pantalla |
+| **[API-ROUTES.md](./API-ROUTES.md)** | Las 333 rutas con su rol mínimo y su código de operación | Al construir cada pantalla |
 | **[DOMAIN-MODEL.md](./DOMAIN-MODEL.md)** | Qué entidades existen y cómo se conectan | Al diseñar formularios y decidir el orden de los pasos |
 
 ## Origen de los datos
@@ -28,7 +28,7 @@ Ninguno de estos documentos es una interpretación libre: todos salen de fuentes
 
 ```bash
 cd ../esavi-backend
-node ../esavi-frontend/references/scripts/extract-routes.js \
+node ../esavi-frontend/references/scripts/extract-routes.cjs \
      ../esavi-frontend/references/routes-table.md
 ```
 

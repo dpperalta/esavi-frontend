@@ -42,6 +42,12 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   HFAC_005A_ALREADY_INACTIVE: 'healthFacility.errors.HFAC_005A_ALREADY_INACTIVE',
   HFAC_005B_ALREADY_ACTIVE: 'healthFacility.errors.HFAC_005B_ALREADY_ACTIVE',
   HFAC_005A_HAS_ACTIVE_CHILDREN: 'healthFacility.errors.HFAC_005A_HAS_ACTIVE_CHILDREN',
+  // SPEC FE07 §3.2 — the three `006` codes the screen can't prevent client-side (a required
+  // file, an invalid workbook, or one over 20MB) go to the toast. The six `409`s of geoLevelType
+  // are deliberately absent: their `message` carries the interpolated detail and is shown as-is.
+  GEOLOC_006_FILE_REQUIRED: 'geoBulkImport.errors.GEOLOC_006_FILE_REQUIRED',
+  GEOLOC_006_FILE_INVALID: 'geoBulkImport.errors.GEOLOC_006_FILE_INVALID',
+  GEOLOC_006_FILE_TOO_LARGE: 'geoBulkImport.errors.GEOLOC_006_FILE_TOO_LARGE',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

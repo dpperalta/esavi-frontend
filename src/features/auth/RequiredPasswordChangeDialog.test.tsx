@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -72,7 +72,7 @@ describe('RequiredPasswordChangeDialog', () => {
   });
 
   it("se cierra sola cuando el PATCH invalida ['user','me'] y éste vuelve con requiresPasswordChange en false — sin ningún setOpen", async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     let requiresPasswordChange = true;
     let patchBody: unknown = null;
 
@@ -105,7 +105,7 @@ describe('RequiredPasswordChangeDialog', () => {
   });
 
   it('USER_006_SAME_PASSWORD muestra el error bajo newPassword', async () => {
-    const user = userEvent.setup();
+    const user = setupUser();
     server.use(
       http.get('http://localhost:4500/api/users/me', () =>
         HttpResponse.json({

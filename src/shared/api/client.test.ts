@@ -68,6 +68,45 @@ describe('client — envelope', () => {
   });
 });
 
+// SPEC FE07 §1.C: `responseType: 'blob'` (la descarga de plantilla del `007`) es la única
+// excepción de `client.ts` a la desenvoltura del envelope y a la lectura JSON de errores.
+describe('client — respuestas blob', () => {
+  it('no desenvuelve una respuesta 2xx con responseType blob', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/geo-locations/import/template', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { pong: true } }),
+      ),
+    );
+
+    const response = await client.get('/geo-locations/import/template', { responseType: 'blob' });
+
+    expect(response.data).toBeInstanceOf(Blob);
+  });
+
+  it('un 409 con cuerpo Blob produce un EsaviApiError con su code y message reales', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/geo-locations/import/template', () =>
+        HttpResponse.json(
+          {
+            ok: false,
+            message: 'Faltan niveles geográficos',
+            code: 'GEOLOC_007_LEVEL_TYPES_MISSING',
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+
+    await expect(
+      client.get('/geo-locations/import/template', { responseType: 'blob' }),
+    ).rejects.toMatchObject({
+      code: 'GEOLOC_007_LEVEL_TYPES_MISSING',
+      status: 409,
+      message: 'Faltan niveles geográficos',
+    });
+  });
+});
+
 describe('client — cabeceras y parámetros', () => {
   it('añade ?lang= con el idioma activo de preferencesStore', async () => {
     usePreferencesStore.getState().setLanguage('nl');
@@ -172,6 +211,47 @@ describe('client — cola de refresh', () => {
     expect(refreshRequestBody).toEqual({ refreshToken: 'old-refresh-token' });
     expect(first.data).toEqual({ auth: 'Bearer new-access-token' });
     expect(second.data).toEqual({ auth: 'Bearer new-access-token' });
+    expect(tokenStore.getRefreshToken()).toBe('new-refresh-token');
+  });
+
+  // Regression: the backend's `tokenValidation` answers 401 with no `code` — exactly the page
+  // reload case, where the in-memory access token is gone and no Authorization header goes out.
+  it('un 401 sin `code` en el cuerpo dispara el refresh y reintenta', async () => {
+    tokenStore.setRefreshToken('old-refresh-token');
+
+    let protectedCallCount = 0;
+
+    server.use(
+      http.get('http://localhost:4500/api/protected', ({ request }) => {
+        protectedCallCount += 1;
+        if (protectedCallCount === 1) {
+          return HttpResponse.json(
+            { ok: false, message: 'Falta la autenticación' },
+            { status: 401 },
+          );
+        }
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { auth: request.headers.get('authorization') },
+        });
+      }),
+      http.post('http://localhost:4500/api/auth/refresh', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            token: 'new-access-token',
+            refreshToken: 'new-refresh-token',
+            expiresAt: '2026-01-01T00:00:00Z',
+          },
+        }),
+      ),
+    );
+
+    const response = await client.get('/protected');
+
+    expect(response.data).toEqual({ auth: 'Bearer new-access-token' });
     expect(tokenStore.getRefreshToken()).toBe('new-refresh-token');
   });
 
