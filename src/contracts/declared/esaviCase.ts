@@ -34,3 +34,27 @@ export interface EsaviCaseDetail {
     name: string;
   };
 }
+
+// GET /api/esavi-cases (ESAVI-CASE-002A) / GET /api/esavi-cases/admin (ESAVI-CASE-002B) — origin:
+// esavi-backend/src/services/esaviCase.service.ts, LIST_ATTRIBUTES + toEsaviCaseListRow. Shape
+// declared verbatim by SPEC F48 §3.9. NOT a Partial<EsaviCaseDetail>: `healthFacility.geoLocation`
+// does not exist on the detail row, and `patient` here has no `documentNumber`.
+export interface EsaviCaseListRow {
+  caseId: string;
+  caseCode: string;
+  reportDate: string | null;
+  eventDate: string | null;
+  isActive: boolean;
+  patient: {
+    patientId: string;
+    names: string;
+    lastNames: string;
+    healthSystemCode: string | null;
+  };
+  healthFacility: {
+    healthFacilityId: string;
+    localCode: string;
+    name: string;
+    geoLocation: { geoLocationId: string; name: string } | null;
+  };
+}
