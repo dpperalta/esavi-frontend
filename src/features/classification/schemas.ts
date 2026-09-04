@@ -100,3 +100,11 @@ function _assertSchemaMatchesContract(
   return value;
 }
 void _assertSchemaMatchesContract;
+
+// SPEC FE11 §3.5. Sólo alcanzable en modo editable (con ambas fechas presentes el formulario ni
+// pinta `ageUnitItemId`, §3.5) — el `op` viaja como `001` o `004` según venga de `POST` o `PUT`,
+// pero el campo destino es el mismo en los dos casos.
+export const classificationErrorFieldMap: Partial<Record<string, keyof ClassificationFormValues>> = {
+  CLASSIF_001_AGEUNIT_NOT_FOUND: 'ageUnitItemId',
+  CLASSIF_004_AGEUNIT_NOT_FOUND: 'ageUnitItemId',
+};

@@ -28,7 +28,11 @@ const caseDetail = {
   caseId: 'case-1',
   caseCode: 'ESAVI-2026-000001',
   reportDate: null,
-  eventDate: null,
+  // Non-null on purpose: with `patientDetail.birthDate` below, `ClassificationStep`'s age mode
+  // resolves to read-only and never mounts `<CatalogSelect typeCode="ageUnit">` — otherwise its
+  // unmocked catalog requests would fail `onUnhandledRequest: 'error'` in every test that reaches
+  // `/wizard/classification` for real (SPEC FE11 §3.5, §7).
+  eventDate: '2026-01-15',
   countryIsoCode: null,
   reportFillingDate: null,
   notificationOrganization: null,
@@ -52,6 +56,68 @@ function mockCase() {
   server.use(
     http.get('http://localhost:4500/api/esavi-cases/case-1', () =>
       HttpResponse.json({ ok: true, message: 'ok', data: caseDetail }),
+    ),
+  );
+}
+
+// Reutilizado por los tests que aterrizan de verdad en `/wizard/classification` — la mayoría no
+// necesitan más que esto para dejar `ClassificationStep` fuera del camino del skeleton (SPEC FE11
+// §4 paso 5, `readyToResolveAge`).
+const patientDetail = {
+  patientId: 'patient-1',
+  names: 'Ana',
+  lastNames: 'Perez',
+  documentNumber: '0102030405',
+  passportNumber: null,
+  birthDate: '1990-05-20',
+  healthSystemCode: null,
+  email: null,
+  phoneNumber: null,
+  isActive: true,
+  createdAt: '2026-09-01T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+  sex: null,
+  residence: null,
+};
+
+function mockPatient() {
+  server.use(
+    http.get('http://localhost:4500/api/patients/patient-1', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: patientDetail }),
+    ),
+  );
+}
+
+const classificationDetail = {
+  classificationId: 'classification-1',
+  age: 35,
+  firstConsultationDate: null,
+  isSeriousEvent: false,
+  causedDeath: null,
+  causedDisability: null,
+  causedCongenitalAnomaly: null,
+  causedFetalDeath: null,
+  causedLifeThreatening: null,
+  causedHospitalization: null,
+  causedAbortion: null,
+  causedOtherCondition: null,
+  otherSeriousConditionDescription: null,
+  notes: null,
+  isActive: true,
+  createdAt: '2026-09-01T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+  case: { caseId: 'case-1', caseCode: 'ESAVI-2026-000001', reportDate: null, eventDate: '2026-01-15' },
+  ageUnit: { catalogItemId: 'ageunit-1', code: 'YEARS', name: 'Años', value: null },
+};
+
+function mockClassification() {
+  server.use(
+    http.get('http://localhost:4500/api/classifications/case/case-1', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: classificationDetail }),
     ),
   );
 }
@@ -115,6 +181,7 @@ function renderPage(initialPath: string) {
 describe('CaseWizardPage — reanudación y bloqueo de paso', () => {
   it('navegar a un :step bloqueado a mano redirige al último paso desbloqueado', async () => {
     mockCase();
+    mockPatient();
     mockWorkflow('OPEN', {
       classification: { exists: false, endedAt: null },
       notification: { exists: false, endedAt: null },
@@ -125,9 +192,10 @@ describe('CaseWizardPage — reanudación y bloqueo de paso', () => {
     const { container } = renderPage('/esavi-cases/case-1/wizard/investigation');
 
     // investigation depends on notification.exists === true, still false — bounces to
-    // classification, the only step unlocked with nothing started yet.
+    // classification, the only step unlocked with nothing started yet. `classification` no es
+    // ya un placeholder (SPEC FE11) — se confirma con el propio formulario, no con el slug crudo.
     await waitFor(() => expect(container.querySelector('a[aria-current="step"]')).toBeNull());
-    await waitFor(() => expect(screen.getByText('classification')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByRole('radiogroup').length).toBeGreaterThan(0));
   });
 
   it('/wizard sin :step reanuda en el paso que corresponde según stages', async () => {
@@ -198,6 +266,8 @@ describe('CaseWizardPage — reentrada de patient y case-opening (SPEC FE10 §13
 describe('CaseWizardPage — CLOSED', () => {
   it('con CLOSED se renderiza el banner de sólo lectura y se ocultan Guardar y Completar etapa', async () => {
     mockCase();
+    mockPatient();
+    mockClassification();
     mockWorkflow('CLOSED', {
       classification: { exists: true, endedAt: '2026-09-01' },
       notification: { exists: true, endedAt: '2026-09-02' },

@@ -12,6 +12,7 @@ import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
 import { CaseWizardHeader } from './CaseWizardHeader';
 import { CaseWizardStepper } from './CaseWizardStepper';
+import { ClassificationStep } from './ClassificationStep';
 import {
   CaseWorkflowErrorScreen,
   hasDedicatedCaseWorkflowErrorScreen,
@@ -127,7 +128,8 @@ export function CaseWizardPage() {
               pinta para ellos. */}
           {step === 'patient' && <PatientStep patientId={caseDetail.data.patient.patientId} />}
           {step === 'case-opening' && <CaseOpeningStep />}
-          {step !== 'patient' && step !== 'case-opening' && (
+          {step === 'classification' && <ClassificationStep caseId={id} />}
+          {step !== 'patient' && step !== 'case-opening' && step !== 'classification' && (
             <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
               {step}
             </div>

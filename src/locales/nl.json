@@ -717,6 +717,42 @@
       "NOTIFIER_001_CASE_NOT_FOUND": "Het geval is gedeactiveerd. Laad de pagina opnieuw voordat je verdergaat."
     }
   },
+  "classification": {
+    "gate": {
+      "label": "Is dit een ernstige gebeurtenis?",
+      "yes": "Ja",
+      "no": "Nee",
+      "confirmClearTitle": "Wijzigen naar \"Nee\"?",
+      "confirmClearBody": "Hiermee worden de antwoorden op de acht ernstcriteria die je al hebt gemarkeerd gewist. Dit kan niet ongedaan worden gemaakt."
+    },
+    "criteria": {
+      "causedDeath": "Veroorzaakte het overlijden?",
+      "causedDisability": "Veroorzaakte het een beperking?",
+      "causedCongenitalAnomaly": "Veroorzaakte het een aangeboren afwijking?",
+      "causedFetalDeath": "Veroorzaakte het foetale sterfte?",
+      "causedLifeThreatening": "Was het levensbedreigend?",
+      "causedHospitalization": "Vereiste het ziekenhuisopname?",
+      "causedAbortion": "Veroorzaakte het een abortus?",
+      "causedOtherCondition": "Veroorzaakte het een andere belangrijke medische aandoening?",
+      "atLeastOneRequired": "Markeer minstens één criterium met \"Ja\" als de gebeurtenis ernstig is."
+    },
+    "otherCondition": {
+      "description": "Beschrijf de andere belangrijke medische aandoening",
+      "descriptionRequired": "Beschrijf de aandoening voordat je opslaat."
+    },
+    "age": {
+      "calculatedNote": "Automatisch berekend op basis van de geboortedatum van de patiënt en de datum van de gebeurtenis.",
+      "label": "Leeftijd",
+      "unitLabel": "Eenheid"
+    },
+    "firstConsultationDate": {
+      "label": "Datum van eerste consult"
+    },
+    "error": {
+      "caseClosed": "Het dossier is gesloten. Dit scherm is nu alleen-lezen.",
+      "generic": "We konden de classificatie niet opslaan. Probeer het opnieuw."
+    }
+  },
   "home": {
     "greeting": "Hallo, {{name}}",
     "roleLabel": "Uw rol: {{role}}"

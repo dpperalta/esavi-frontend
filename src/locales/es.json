@@ -717,6 +717,42 @@
       "NOTIFIER_001_CASE_NOT_FOUND": "El caso se desactivó. Recarga la página antes de seguir."
     }
   },
+  "classification": {
+    "gate": {
+      "label": "¿Es un evento grave?",
+      "yes": "Sí",
+      "no": "No",
+      "confirmClearTitle": "¿Cambiar a «No»?",
+      "confirmClearBody": "Se borrarán las respuestas de los ocho criterios de gravedad que ya marcaste. Esta acción no se puede deshacer."
+    },
+    "criteria": {
+      "causedDeath": "¿Causó la muerte?",
+      "causedDisability": "¿Causó discapacidad?",
+      "causedCongenitalAnomaly": "¿Causó una anomalía congénita?",
+      "causedFetalDeath": "¿Causó muerte fetal?",
+      "causedLifeThreatening": "¿Puso en riesgo la vida?",
+      "causedHospitalization": "¿Requirió hospitalización?",
+      "causedAbortion": "¿Causó un aborto?",
+      "causedOtherCondition": "¿Causó otra condición médica importante?",
+      "atLeastOneRequired": "Marca al menos un criterio en «Sí» si el evento es grave."
+    },
+    "otherCondition": {
+      "description": "Describe la otra condición médica importante",
+      "descriptionRequired": "Describe la condición médica antes de guardar."
+    },
+    "age": {
+      "calculatedNote": "Calculada automáticamente a partir de la fecha de nacimiento del paciente y la fecha del evento.",
+      "label": "Edad",
+      "unitLabel": "Unidad"
+    },
+    "firstConsultationDate": {
+      "label": "Fecha de la primera consulta"
+    },
+    "error": {
+      "caseClosed": "El caso se cerró. Esta pantalla pasó a modo de sólo lectura.",
+      "generic": "No pudimos guardar la clasificación. Intenta de nuevo."
+    }
+  },
   "home": {
     "greeting": "Hola, {{name}}",
     "roleLabel": "Tu rol: {{role}}"

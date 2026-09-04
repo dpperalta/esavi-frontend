@@ -6,9 +6,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { CreateClassificationInput } from '@/contracts/classification';
 import type { ClassificationDetail } from '@/contracts/declared/classification';
+import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { classificationResource, useClassificationByCase } from '@/features/classification/api';
 import {
+  SERIOUS_CRITERION_FIELDS,
+  classificationErrorFieldMap,
   classificationSchema,
   hasAnySeriousCriterion,
   type ClassificationFormValues,
@@ -16,6 +19,16 @@ import {
 import { patientResource } from '@/features/patient/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
 import { CatalogSelect } from '@/shared/components/CatalogSelect';
 import { DateField } from '@/shared/components/DateField';
 import { Input } from '@/shared/components/ui/input';
@@ -190,6 +203,10 @@ function ClassificationFormBody({
     classification?.classificationId ?? null,
   );
 
+  // El `AlertDialog` de la compuerta Sí→No (SPEC FE11 §3.5, decisión §6): efímero, no forma parte
+  // del contrato de estado de §3.4.
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+
   const defaultValues: ClassificationFormValues = {
     isSeriousEvent: classification?.isSeriousEvent ?? undefined,
     causedDeath: classification?.causedDeath ?? null,
@@ -235,11 +252,31 @@ function ClassificationFormBody({
         await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
         form.reset(values);
       } catch (err) {
-        if (err instanceof EsaviApiError) {
+        if (!(err instanceof EsaviApiError)) {
+          throw err;
+        }
+        // `CASEFLOW_012_CASE_CLOSED` conmuta el armazón a sólo lectura sin esperar el próximo
+        // `006` de workflow (SPEC FE11 §3.5): parcheando la caché directamente, `CaseWizardPage`
+        // lo ve en el siguiente render porque lee la misma clave.
+        if (err.code === 'CASEFLOW_012_CASE_CLOSED') {
+          queryClient.setQueryData<CaseWorkflowDetail>(['caseWorkflow', 'byCase', caseId], (old) =>
+            old ? { ...old, status: { ...old.status, code: 'CLOSED' } } : old,
+          );
           toast.error(getErrorMessage(err));
           return;
         }
-        throw err;
+        const field = classificationErrorFieldMap[err.code];
+        if (field) {
+          form.setError(field, { type: 'server', message: err.message });
+          return;
+        }
+        // `CLASSIF_001_CASE_ALREADY_CLASSIFIED` y `CLASSIF_004_NOT_FOUND` son la carrera entre dos
+        // pestañas (SPEC FE11 §3.5): el refresco es lo que saca a esta de su estado obsoleto.
+        if (err.code === 'CLASSIF_001_CASE_ALREADY_CLASSIFIED' || err.code === 'CLASSIF_004_NOT_FOUND') {
+          await queryClient.invalidateQueries({ queryKey: ['classification'] });
+          await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
+        }
+        toast.error(getErrorMessage(err));
       }
     },
     [caseId, canCalculateAge, classificationId, create, form, queryClient, t, update],
@@ -271,6 +308,17 @@ function ClassificationFormBody({
     form.formState.errors as Record<string, { message?: string } | undefined>
   ).criteria;
 
+  // Limpia los ocho criterios y la descripción de "otra condición" a `null`, y sólo entonces pasa
+  // la compuerta a «No» (SPEC FE11 §3.5). Cancelar no llama a esto — no toca nada.
+  function confirmClearCriteria() {
+    for (const fieldName of SERIOUS_CRITERION_FIELDS) {
+      form.setValue(fieldName, null, { shouldDirty: true });
+    }
+    form.setValue('otherSeriousConditionDescription', null, { shouldDirty: true });
+    form.setValue('isSeriousEvent', false, { shouldDirty: true, shouldValidate: true });
+    setConfirmClearOpen(false);
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
@@ -283,7 +331,16 @@ function ClassificationFormBody({
               <RadioGroup
                 aria-label={t('classification.gate.label')}
                 value={field.value === true ? 'true' : field.value === false ? 'false' : undefined}
-                onValueChange={(next) => field.onChange(next === 'true')}
+                onValueChange={(next) => {
+                  const nextValue = next === 'true';
+                  // Sí → No con algún criterio ya marcado exige confirmar antes de limpiar
+                  // (SPEC FE11 §3.5) — cualquier otra transición cambia directo.
+                  if (!nextValue && field.value === true && hasAnySeriousCriterion(watchedValues)) {
+                    setConfirmClearOpen(true);
+                    return;
+                  }
+                  field.onChange(nextValue);
+                }}
                 className="flex w-auto gap-4"
               >
                 <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
@@ -368,6 +425,28 @@ function ClassificationFormBody({
           </div>
         )}
       />
+
+      <AlertDialog
+        open={confirmClearOpen}
+        onOpenChange={(open) => {
+          if (!open) setConfirmClearOpen(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('classification.gate.confirmClearTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('classification.gate.confirmClearBody')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClearCriteria}>
+              {t('classification.gate.no')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

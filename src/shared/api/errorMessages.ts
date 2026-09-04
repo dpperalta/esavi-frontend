@@ -78,6 +78,22 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   // SPEC FE10 §3.5 — sólo alcanzable si el caso se desactivó entre las dos escrituras de
   // ESAVI-CASE-001 y ESAVI-NOTIFIER-001 (§3.2).
   NOTIFIER_001_CASE_NOT_FOUND: 'notifier.errors.NOTIFIER_001_CASE_NOT_FOUND',
+  // SPEC FE11 §3.5 — ninguno de estos siete debería alcanzarse en el uso normal (el `caseId` sale
+  // del wizard, la matriz de coherencia ya bloqueó el envío en el cliente, `AGEUNIT_CATALOG_MISSING`
+  // es una precondición de despliegue): un solo texto genérico basta, no uno por código.
+  // `CLASSIF_00X_AGEUNIT_NOT_FOUND` no está aquí — va al campo `ageUnitItemId` vía
+  // `classificationErrorFieldMap` (features/classification/schemas.ts), nunca al toast.
+  CLASSIF_001_CASE_NOT_FOUND: 'classification.error.generic',
+  CLASSIF_001_CASE_ALREADY_CLASSIFIED: 'classification.error.generic',
+  CLASSIF_001_AGEUNIT_CATALOG_MISSING: 'classification.error.generic',
+  CLASSIF_004_AGEUNIT_CATALOG_MISSING: 'classification.error.generic',
+  CLASSIF_001_INVALID_AGE_RANGE: 'classification.error.generic',
+  CLASSIF_004_INVALID_AGE_RANGE: 'classification.error.generic',
+  CLASSIF_004_NOT_FOUND: 'classification.error.generic',
+  CLASSIF_004_SEVERITY_INCOHERENT: 'classification.error.generic',
+  // El único con comportamiento propio además del texto: `ClassificationStep` fuerza el modo
+  // `CLOSED` del armazón al capturarlo, sin esperar el próximo `006` de workflow (SPEC FE11 §3.5).
+  CASEFLOW_012_CASE_CLOSED: 'classification.error.caseClosed',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {
