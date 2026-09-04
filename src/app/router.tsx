@@ -4,6 +4,8 @@ import { CatalogTypeListPage } from '@/features/catalogType/CatalogTypeListPage'
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
+import { CaseWizardPage } from '@/features/esaviCase/CaseWizardPage';
+import { NewCasePage } from '@/features/esaviCase/NewCasePage';
 import { GeoLevelTypeListPage } from '@/features/geoLevelType/GeoLevelTypeListPage';
 import { GeoBulkImportPage } from '@/features/geoLocation/GeoBulkImportPage';
 import { GeoLocationListPage } from '@/features/geoLocation/GeoLocationListPage';
@@ -36,6 +38,12 @@ export function AppRouter() {
               <Route path="/geo-level-types" element={<GeoLevelTypeListPage />} />
               <Route path="/geo-locations" element={<GeoLocationListPage />} />
               <Route path="/health-facilities" element={<HealthFacilityListPage />} />
+              {/* SPEC FE08 §3.1: USER is the real minimum of ESAVI-CASE-001 and of the six
+                  caseWorkflow operations the wizard touches (API-ROUTES.md). `:step?` is optional
+                  so /esavi-cases/:id/wizard alone resolves to the same page — CaseWizardPage
+                  itself redirects to the resume step when `:step` is missing (SPEC FE08 §4). */}
+              <Route path="/esavi-cases/new" element={<NewCasePage />} />
+              <Route path="/esavi-cases/:id/wizard/:step?" element={<CaseWizardPage />} />
             </Route>
           </Route>
         </Route>
