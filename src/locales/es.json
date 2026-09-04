@@ -445,6 +445,10 @@
     },
     "readOnly": {
       "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo."
+    },
+    "newCase": {
+      "title": "Nuevo expediente ESAVI",
+      "testCreateButton": "Prueba: simular creación de caso"
     }
   },
   "home": {

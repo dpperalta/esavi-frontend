@@ -445,6 +445,10 @@
     },
     "readOnly": {
       "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again."
+    },
+    "newCase": {
+      "title": "New ESAVI case",
+      "testCreateButton": "Test: simulate case creation"
     }
   },
   "home": {

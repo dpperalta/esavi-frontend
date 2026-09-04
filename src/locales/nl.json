@@ -445,6 +445,10 @@
     },
     "readOnly": {
       "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken."
+    },
+    "newCase": {
+      "title": "Nieuw ESAVI-geval",
+      "testCreateButton": "Test: gevalcreatie simuleren"
     }
   },
   "home": {
