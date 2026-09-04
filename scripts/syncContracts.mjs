@@ -27,6 +27,7 @@ const SYNC_MAP = [
   { source: 'esaviCase/esaviCase.types.ts', dest: 'esaviCase.ts' },
   { source: 'patient/patient.types.ts', dest: 'patient.ts' },
   { source: 'notifier/notifier.types.ts', dest: 'notifier.ts' },
+  { source: 'classification/classification.types.ts', dest: 'classification.ts' },
 ];
 
 function buildHeader(sourceRelPath) {

@@ -717,6 +717,42 @@
       "NOTIFIER_001_CASE_NOT_FOUND": "The case was deactivated. Reload the page before continuing."
     }
   },
+  "classification": {
+    "gate": {
+      "label": "Is this a serious event?",
+      "yes": "Yes",
+      "no": "No",
+      "confirmClearTitle": "Switch to \"No\"?",
+      "confirmClearBody": "This clears the answers to the eight severity criteria you already marked. This cannot be undone."
+    },
+    "criteria": {
+      "causedDeath": "Did it cause death?",
+      "causedDisability": "Did it cause disability?",
+      "causedCongenitalAnomaly": "Did it cause a congenital anomaly?",
+      "causedFetalDeath": "Did it cause fetal death?",
+      "causedLifeThreatening": "Was it life-threatening?",
+      "causedHospitalization": "Did it require hospitalization?",
+      "causedAbortion": "Did it cause an abortion?",
+      "causedOtherCondition": "Did it cause another significant medical condition?",
+      "atLeastOneRequired": "Mark at least one criterion as \"Yes\" if the event is serious."
+    },
+    "otherCondition": {
+      "description": "Describe the other significant medical condition",
+      "descriptionRequired": "Describe the condition before saving."
+    },
+    "age": {
+      "calculatedNote": "Calculated automatically from the patient's birth date and the event date.",
+      "label": "Age",
+      "unitLabel": "Unit"
+    },
+    "firstConsultationDate": {
+      "label": "First consultation date"
+    },
+    "error": {
+      "caseClosed": "The case was closed. This screen switched to read-only mode.",
+      "generic": "We couldn't save the classification. Try again."
+    }
+  },
   "home": {
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"

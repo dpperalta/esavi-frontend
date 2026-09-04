@@ -1,0 +1,507 @@
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
+import { useTranslation, type TFunction } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import type { CreateClassificationInput } from '@/contracts/classification';
+import type { ClassificationDetail } from '@/contracts/declared/classification';
+import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
+import { useCaseWorkflow } from '@/features/caseWorkflow/api';
+import { classificationResource, useClassificationByCase } from '@/features/classification/api';
+import {
+  SERIOUS_CRITERION_FIELDS,
+  classificationErrorFieldMap,
+  classificationSchema,
+  hasAnySeriousCriterion,
+  type ClassificationFormValues,
+} from '@/features/classification/schemas';
+import { patientResource } from '@/features/patient/api';
+import { getErrorMessage } from '@/shared/api/errorMessages';
+import { EsaviApiError } from '@/shared/api/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
+import { CatalogSelect } from '@/shared/components/CatalogSelect';
+import { DateField } from '@/shared/components/DateField';
+import { Input } from '@/shared/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
+import { Skeleton } from '@/shared/components/ui/skeleton';
+import { Textarea } from '@/shared/components/ui/textarea';
+import { esaviCaseResource } from './api';
+import { useCaseWizard } from './CaseWizardContext';
+import { SeverityCriteriaGroup } from './SeverityCriteriaGroup';
+
+export interface ClassificationAgeFieldProps {
+  // Ambas en `false` hasta que las dos queries de las que depende el modo (`esaviCase`, `patient`)
+  // resuelven — nunca se calcula aquí adentro, para no arriesgar una segunda implementación de la
+  // misma regla (SPEC FE11 §7, riesgo del parpadeo).
+  readyToResolve: boolean;
+  canCalculate: boolean;
+  resolvedAge: number | null;
+  resolvedAgeUnitName: string | null;
+  age: number | null;
+  onAgeChange: (value: number | null) => void;
+  ageUnitItemId: string | null;
+  onAgeUnitItemIdChange: (value: string | null) => void;
+  disabled?: boolean;
+}
+
+// El campo edad (SPEC FE11 §3.5, decisión §6): texto de sólo lectura con el valor resuelto por el
+// backend cuando `patient.birthDate` y `esaviCase.eventDate` existen los dos; `<Input
+// type="number">` + `<CatalogSelect typeCode="ageUnit" emit="id">` en caso contrario. El modo lo
+// decide quien monta este componente (`readyToResolve`/`canCalculate`) a partir de dos queries ya
+// cacheadas — nunca un `useState` ni un cálculo propio aquí.
+export function ClassificationAgeField({
+  readyToResolve,
+  canCalculate,
+  resolvedAge,
+  resolvedAgeUnitName,
+  age,
+  onAgeChange,
+  ageUnitItemId,
+  onAgeUnitItemIdChange,
+  disabled,
+}: ClassificationAgeFieldProps) {
+  const { t } = useTranslation();
+  const noteId = useId();
+
+  // Mientras las dos queries no resolvieron, el skeleton — nunca el modo editable como valor por
+  // defecto (SPEC FE11 §3.6, §7): mostrar `<Input>` primero y ocultarlo después es peor que
+  // esperar.
+  if (!readyToResolve) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-9 w-full max-w-xs" />
+      </div>
+    );
+  }
+
+  if (canCalculate) {
+    return (
+      <div className="flex flex-col gap-1.5">
+        <p aria-describedby={noteId} className="text-sm text-foreground">
+          {resolvedAge !== null ? `${resolvedAge} ${resolvedAgeUnitName ?? ''}`.trim() : '—'}
+        </p>
+        {/* Asociado con `aria-describedby`, no sólo colocado al lado (SPEC FE11 §3.7). */}
+        <p id={noteId} className="text-sm text-muted-foreground">
+          {t('classification.age.calculatedNote')}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-foreground">{t('classification.age.label')}</span>
+        <Input
+          type="number"
+          min={0}
+          max={32767}
+          value={age ?? ''}
+          onChange={(event) =>
+            onAgeChange(event.target.value === '' ? null : Number(event.target.value))
+          }
+          disabled={disabled}
+          aria-label={t('classification.age.label')}
+          className="w-full max-w-32"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-foreground">
+          {t('classification.age.unitLabel')}
+        </span>
+        <CatalogSelect
+          typeCode="ageUnit"
+          emit="id"
+          value={ageUnitItemId}
+          onChange={onAgeUnitItemIdChange}
+          ariaLabel={t('classification.age.unitLabel')}
+          disabled={disabled}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ClassificationStepSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      <Skeleton className="h-6 w-48" />
+      <Skeleton className="h-9 w-full max-w-sm" />
+      <Skeleton className="h-40 w-full" />
+      <Skeleton className="h-9 w-full max-w-sm" />
+    </div>
+  );
+}
+
+// `age`/`ageUnitItemId` no viajan en el cuerpo cuando el modo es de sólo lectura (SPEC FE11 §3.5):
+// el backend los ignora igual, pero no tiene sentido enviar un valor que el formulario ni pintó.
+function buildClassificationPayload(
+  values: ClassificationFormValues,
+  canCalculateAge: boolean,
+): Partial<CreateClassificationInput> {
+  const { age, ageUnitItemId, ...rest } = values;
+  return canCalculateAge ? rest : { ...rest, age, ageUnitItemId };
+}
+
+// Réplica en lenguaje de usuario de la misma matriz de coherencia de `classificationSchema`
+// (SPEC FE11 §3.5): lo que `CaseWizardActionBar` pinta como "campos pendientes" antes de que el
+// usuario intente guardar.
+function computePendingFields(values: ClassificationFormValues, t: TFunction): string[] {
+  const pending: string[] = [];
+  if (values.isSeriousEvent === undefined || values.isSeriousEvent === null) {
+    pending.push(t('classification.gate.label'));
+  } else if (values.isSeriousEvent === true && !hasAnySeriousCriterion(values)) {
+    pending.push(t('classification.criteria.atLeastOneRequired'));
+  }
+  if (
+    values.causedOtherCondition === true &&
+    !String(values.otherSeriousConditionDescription ?? '').trim()
+  ) {
+    pending.push(t('classification.otherCondition.description'));
+  }
+  return pending;
+}
+
+interface ClassificationFormBodyProps {
+  caseId: string;
+  classification: ClassificationDetail | null;
+  readyToResolveAge: boolean;
+  canCalculateAge: boolean;
+}
+
+// El formulario en sí (SPEC FE11 §3.1, §3.4): sólo se monta una vez que `ClassificationStep`
+// resolvió workflow + caso + paciente + (si aplica) la clasificación existente, así que
+// `defaultValues` nace correcto en el primer render y no hace falta un `reset()` reactivo — mismo
+// patrón que el `readyToRender` de `CaseOpeningStep`.
+function ClassificationFormBody({
+  caseId,
+  classification,
+  readyToResolveAge,
+  canCalculateAge,
+}: ClassificationFormBodyProps) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { registerStep, unregisterStep } = useCaseWizard();
+  const create = classificationResource.useCreate();
+  const update = classificationResource.useUpdate();
+
+  // Semilla desde la fila existente (reentrada); se sustituye por el id que devuelve el primer
+  // `POST` exitoso de esta misma sesión, sin esperar a que `stages.classification.exists` se
+  // actualice desde fuera (SPEC FE11 §3.4).
+  const [classificationId, setClassificationId] = useState<string | null>(
+    classification?.classificationId ?? null,
+  );
+
+  // El `AlertDialog` de la compuerta Sí→No (SPEC FE11 §3.5, decisión §6): efímero, no forma parte
+  // del contrato de estado de §3.4.
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+
+  const defaultValues: ClassificationFormValues = {
+    isSeriousEvent: classification?.isSeriousEvent ?? undefined,
+    causedDeath: classification?.causedDeath ?? null,
+    causedDisability: classification?.causedDisability ?? null,
+    causedCongenitalAnomaly: classification?.causedCongenitalAnomaly ?? null,
+    causedFetalDeath: classification?.causedFetalDeath ?? null,
+    causedLifeThreatening: classification?.causedLifeThreatening ?? null,
+    causedHospitalization: classification?.causedHospitalization ?? null,
+    causedAbortion: classification?.causedAbortion ?? null,
+    causedOtherCondition: classification?.causedOtherCondition ?? null,
+    otherSeriousConditionDescription: classification?.otherSeriousConditionDescription ?? null,
+    age: classification?.age ?? null,
+    ageUnitItemId: classification?.ageUnit?.catalogItemId ?? null,
+    firstConsultationDate: classification?.firstConsultationDate ?? null,
+  };
+
+  const form = useForm<ClassificationFormValues>({
+    resolver: zodResolver(classificationSchema) as Resolver<ClassificationFormValues>,
+    defaultValues,
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
+  });
+
+  const watchedValues = useWatch({ control: form.control }) as ClassificationFormValues;
+
+  const handleValidSubmit = useCallback(
+    async (values: ClassificationFormValues) => {
+      const payload = buildClassificationPayload(values, canCalculateAge);
+      try {
+        if (classificationId) {
+          await update.mutateAsync({ id: classificationId, data: payload });
+          toast.success(t('common.toast.updated'));
+        } else {
+          const created = await create.mutateAsync({
+            ...payload,
+            caseId,
+          } as CreateClassificationInput);
+          setClassificationId(created.classificationId);
+          toast.success(t('common.toast.created'));
+        }
+        // El `POST`/`PUT` avanza `CLASSIFICATION` en el workflow (SPEC FE11 §1C, §3.2) — sin
+        // invalidar esto, el stepper seguiría mostrando el paso como no iniciado (SPEC FE11 §3.4).
+        await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
+        form.reset(values);
+      } catch (err) {
+        if (!(err instanceof EsaviApiError)) {
+          throw err;
+        }
+        // `CASEFLOW_012_CASE_CLOSED` conmuta el armazón a sólo lectura sin esperar el próximo
+        // `006` de workflow (SPEC FE11 §3.5): parcheando la caché directamente, `CaseWizardPage`
+        // lo ve en el siguiente render porque lee la misma clave.
+        if (err.code === 'CASEFLOW_012_CASE_CLOSED') {
+          queryClient.setQueryData<CaseWorkflowDetail>(['caseWorkflow', 'byCase', caseId], (old) =>
+            old ? { ...old, status: { ...old.status, code: 'CLOSED' } } : old,
+          );
+          toast.error(getErrorMessage(err));
+          return;
+        }
+        const field = classificationErrorFieldMap[err.code];
+        if (field) {
+          form.setError(field, { type: 'server', message: err.message });
+          return;
+        }
+        // `CLASSIF_001_CASE_ALREADY_CLASSIFIED` y `CLASSIF_004_NOT_FOUND` son la carrera entre dos
+        // pestañas (SPEC FE11 §3.5): el refresco es lo que saca a esta de su estado obsoleto.
+        if (err.code === 'CLASSIF_001_CASE_ALREADY_CLASSIFIED' || err.code === 'CLASSIF_004_NOT_FOUND') {
+          await queryClient.invalidateQueries({ queryKey: ['classification'] });
+          await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
+        }
+        toast.error(getErrorMessage(err));
+      }
+    },
+    [caseId, canCalculateAge, classificationId, create, form, queryClient, t, update],
+  );
+
+  const performSave = useCallback(
+    () => form.handleSubmit(handleValidSubmit)(),
+    [form, handleValidSubmit],
+  );
+
+  const pendingFields = computePendingFields(watchedValues, t);
+
+  // Leídos por referencia dentro del handle, nunca capturados por valor: `registerStep` sólo
+  // vuelve a llamarse cuando `isDirty` cambia (una primitiva, casi siempre una sola vez por
+  // sesión), no en cada tecla — depender de `pendingFields`/`performSave` directamente en el
+  // array de dependencias reabre al `CaseWizardProvider` en cada cambio, que a su vez vuelve a
+  // renderizar este mismo componente y produce un bucle sin fin (visto en vivo: la suite se
+  // colgaba con CPU al 100% y cero salida, SPEC FE11 §9).
+  const performSaveRef = useRef(performSave);
+  performSaveRef.current = performSave;
+  const pendingFieldsRef = useRef(pendingFields);
+  pendingFieldsRef.current = pendingFields;
+
+  // `activeStep` es un objeto plano en el contexto (SPEC FE08 §3.5): un handle nuevo cuando
+  // `isDirty` cambia es lo que hace que `CaseWizardActionBar` vuelva a leer `isDirty` al vuelo,
+  // sin que el propio botón "Guardar" dependa de él. `pendingFields` se lee siempre en vivo desde
+  // la ref, así que no necesita disparar un nuevo registro para estar al día.
+  useEffect(() => {
+    registerStep({
+      save: () => performSaveRef.current(),
+      isDirty: form.formState.isDirty,
+      getPendingFields: () => pendingFieldsRef.current,
+    });
+    return () => unregisterStep();
+  }, [registerStep, unregisterStep, form.formState.isDirty]);
+
+  const criteriaError = (
+    form.formState.errors as Record<string, { message?: string } | undefined>
+  ).criteria;
+
+  // Limpia los ocho criterios y la descripción de "otra condición" a `null`, y sólo entonces pasa
+  // la compuerta a «No» (SPEC FE11 §3.5). Cancelar no llama a esto — no toca nada.
+  function confirmClearCriteria() {
+    for (const fieldName of SERIOUS_CRITERION_FIELDS) {
+      form.setValue(fieldName, null, { shouldDirty: true });
+    }
+    form.setValue('otherSeriousConditionDescription', null, { shouldDirty: true });
+    form.setValue('isSeriousEvent', false, { shouldDirty: true, shouldValidate: true });
+    setConfirmClearOpen(false);
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-foreground">{t('classification.gate.label')}</span>
+        <Controller
+          control={form.control}
+          name="isSeriousEvent"
+          render={({ field, fieldState }) => (
+            <>
+              <RadioGroup
+                aria-label={t('classification.gate.label')}
+                // Cadena vacía, no `undefined`, cuando no hay respuesta: Radix trata un
+                // `RadioGroup` sin `value` inicial como no controlado, y pasar a marcar «Sí»/«No»
+                // más tarde produce el warning de React de "uncontrolled to controlled". `''` no
+                // calza con ningún `RadioGroupItem`, así que sigue mostrándose sin marcar, pero
+                // el componente es controlado desde el primer render.
+                value={field.value === true ? 'true' : field.value === false ? 'false' : ''}
+                onValueChange={(next) => {
+                  const nextValue = next === 'true';
+                  // Sí → No con algún criterio ya marcado exige confirmar antes de limpiar
+                  // (SPEC FE11 §3.5) — cualquier otra transición cambia directo.
+                  if (!nextValue && field.value === true && hasAnySeriousCriterion(watchedValues)) {
+                    setConfirmClearOpen(true);
+                    return;
+                  }
+                  field.onChange(nextValue);
+                }}
+                className="flex w-auto gap-4"
+              >
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                  <RadioGroupItem value="true" />
+                  {t('classification.gate.yes')}
+                </label>
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                  <RadioGroupItem value="false" />
+                  {t('classification.gate.no')}
+                </label>
+              </RadioGroup>
+              {fieldState.error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {fieldState.error.message}
+                </p>
+              )}
+            </>
+          )}
+        />
+      </div>
+
+      {watchedValues.isSeriousEvent === true && (
+        <SeverityCriteriaGroup control={form.control} hasGroupError={!!criteriaError} />
+      )}
+
+      {watchedValues.causedOtherCondition === true && (
+        <Controller
+          control={form.control}
+          name="otherSeriousConditionDescription"
+          render={({ field, fieldState }) => (
+            <div aria-live="polite" className="flex flex-col gap-1.5">
+              <label
+                htmlFor="classification-otherDescription"
+                className="text-sm font-medium text-foreground"
+              >
+                {t('classification.otherCondition.description')}
+              </label>
+              <Textarea
+                id="classification-otherDescription"
+                value={field.value ?? ''}
+                onChange={(event) => field.onChange(event.target.value)}
+              />
+              {fieldState.error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {fieldState.error.message === 'otherConditionDescriptionRequired'
+                    ? t('classification.otherCondition.descriptionRequired')
+                    : fieldState.error.message}
+                </p>
+              )}
+            </div>
+          )}
+        />
+      )}
+
+      <ClassificationAgeField
+        readyToResolve={readyToResolveAge}
+        canCalculate={canCalculateAge}
+        resolvedAge={classification?.age ?? null}
+        resolvedAgeUnitName={classification?.ageUnit?.name ?? null}
+        age={watchedValues.age ?? null}
+        onAgeChange={(value) => form.setValue('age', value, { shouldDirty: true, shouldValidate: true })}
+        ageUnitItemId={watchedValues.ageUnitItemId ?? null}
+        onAgeUnitItemIdChange={(value) =>
+          form.setValue('ageUnitItemId', value, { shouldDirty: true, shouldValidate: true })
+        }
+      />
+
+      <Controller
+        control={form.control}
+        name="firstConsultationDate"
+        render={({ field }) => (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-foreground">
+              {t('classification.firstConsultationDate.label')}
+            </span>
+            <DateField
+              value={field.value ?? null}
+              onChange={field.onChange}
+              ariaLabel={t('classification.firstConsultationDate.label')}
+              allowFuture={false}
+            />
+          </div>
+        )}
+      />
+
+      <AlertDialog
+        open={confirmClearOpen}
+        onOpenChange={(open) => {
+          if (!open) setConfirmClearOpen(false);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('classification.gate.confirmClearTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('classification.gate.confirmClearBody')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClearCriteria}>
+              {t('classification.gate.no')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+export interface ClassificationStepProps {
+  caseId: string;
+}
+
+// Paso 3 del wizard (SPEC FE11): la clasificación inicial de gravedad. Reemplaza el placeholder
+// `<div>` del slug `classification` en el `<Outlet>` de `CaseWizardPage` (FE08, paso 9).
+export function ClassificationStep({ caseId }: ClassificationStepProps) {
+  const workflow = useCaseWorkflow(caseId);
+  const esaviCase = esaviCaseResource.useOne(caseId);
+  const patientId = esaviCase.data?.patient.patientId;
+  const patient = patientResource.useOne(patientId ?? '');
+
+  const stageExists = workflow.data?.stages.classification.exists === true;
+  // `006` sólo se llama en reentrada (SPEC FE11 §3.2, decisión §6): evita un `404
+  // CLASSIF_006_NOT_FOUND` que nunca debería leerse como error.
+  const classification = useClassificationByCase(caseId, stageExists);
+
+  const readyToResolveAge = !!esaviCase.data && (!!patient.data || patient.isError);
+  const canCalculateAge =
+    readyToResolveAge && !!patient.data?.birthDate && !!esaviCase.data?.eventDate;
+
+  const readyToRenderForm =
+    !!workflow.data &&
+    !!esaviCase.data &&
+    (!stageExists || !!classification.data) &&
+    readyToResolveAge;
+
+  if (!readyToRenderForm) {
+    return <ClassificationStepSkeleton />;
+  }
+
+  return (
+    <ClassificationFormBody
+      caseId={caseId}
+      classification={classification.data ?? null}
+      readyToResolveAge={readyToResolveAge}
+      canCalculateAge={canCalculateAge}
+    />
+  );
+}
