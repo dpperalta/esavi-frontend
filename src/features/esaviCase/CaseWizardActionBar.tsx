@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,6 +14,8 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { Button } from '@/shared/components/ui/button';
 import { useCaseWorkflow, useCompleteStage } from '@/features/caseWorkflow/api';
+import { getErrorMessage } from '@/shared/api/errorMessages';
+import { EsaviApiError } from '@/shared/api/types';
 import { useCaseWizard } from './CaseWizardContext';
 import {
   CASE_WIZARD_STEPS,
@@ -44,9 +47,11 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
   const { status, stages } = workflow.data;
   const isClosed = status.code === 'CLOSED';
   const activeStepDefinition = CASE_WIZARD_STEPS.find((step) => step.slug === activeSlug);
-  const stageExists = activeStepDefinition?.stage
-    ? stages[stageWorkflowKey(activeStepDefinition.stage)].exists
-    : false;
+  const activeStageEntry = activeStepDefinition?.stage
+    ? stages[stageWorkflowKey(activeStepDefinition.stage)]
+    : null;
+  const stageExists = activeStageEntry?.exists ?? false;
+  const stageCompleted = activeStageEntry?.endedAt !== null && activeStageEntry?.endedAt !== undefined;
 
   const currentIndex = CASE_WIZARD_STEPS.findIndex((step) => step.slug === activeSlug);
   const nextStep = CASE_WIZARD_STEPS[currentIndex + 1] ?? null;
@@ -68,7 +73,16 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
 
   function handleCompleteStage() {
     if (!activeStepDefinition?.stage) return;
-    completeStage.mutate({ stage: activeStepDefinition.stage });
+    completeStage.mutate(
+      { stage: activeStepDefinition.stage },
+      {
+        onSuccess: () => toast.success(t('caseWizard.actions.stageCompleted')),
+        onError: (err) => {
+          if (!(err instanceof EsaviApiError)) throw err;
+          toast.error(getErrorMessage(err));
+        },
+      },
+    );
   }
 
   function handleNext() {
@@ -117,7 +131,7 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
             <Button
               variant="secondary"
               onClick={handleCompleteStage}
-              disabled={!stageExists || completeStage.isPending}
+              disabled={!stageExists || stageCompleted || completeStage.isPending}
             >
               {t('caseWizard.actions.completeStage')}
             </Button>

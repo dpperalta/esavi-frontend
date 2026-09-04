@@ -616,6 +616,7 @@
     "actions": {
       "save": "Guardar",
       "completeStage": "Completar etapa",
+      "stageCompleted": "Etapa completada.",
       "next": "Siguiente",
       "unsavedChangesTitle": "Hay cambios sin guardar",
       "unsavedChangesBody": "Si continúas sin guardar, perderás lo que escribiste en este paso.",
