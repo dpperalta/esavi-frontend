@@ -535,6 +535,23 @@
         "openCase": "Dossier openen",
         "viewPatientCases": "Gevallen van deze patiënt bekijken"
       }
+    },
+    "detail": {
+      "backToList": "Terug naar de lijst",
+      "openCase": "Dossier openen",
+      "viewCaseReadOnly": "Dossier bekijken (alleen-lezen)",
+      "workflowStatus": "Status van het dossier",
+      "patient": "Patiënt",
+      "healthFacility": "Gezondheidsvoorziening",
+      "dates": "Data",
+      "reportDate": "Rapportagedatum",
+      "eventDate": "Gebeurtenisdatum",
+      "reportFillingDate": "Datum indiening rapport",
+      "notFound": {
+        "title": "Dit geval bestaat niet of valt buiten jouw bereik.",
+        "description": "Als je er toegang toe nodig hebt, vraag een beheerder om je geografische dekking te controleren.",
+        "backToList": "Terug naar de lijst"
+      }
     }
   },
   "caseWizard": {

@@ -535,6 +535,23 @@
         "openCase": "Open case file",
         "viewPatientCases": "View this patient's cases"
       }
+    },
+    "detail": {
+      "backToList": "Back to the list",
+      "openCase": "Open case file",
+      "viewCaseReadOnly": "View case file (read-only)",
+      "workflowStatus": "Case file status",
+      "patient": "Patient",
+      "healthFacility": "Health facility",
+      "dates": "Dates",
+      "reportDate": "Report date",
+      "eventDate": "Event date",
+      "reportFillingDate": "Report filling date",
+      "notFound": {
+        "title": "This case does not exist or is out of your reach.",
+        "description": "If you need access to it, ask an administrator to review your geographic coverage.",
+        "backToList": "Back to the list"
+      }
     }
   },
   "caseWizard": {

@@ -535,6 +535,23 @@
         "openCase": "Abrir expediente",
         "viewPatientCases": "Ver casos de este paciente"
       }
+    },
+    "detail": {
+      "backToList": "Volver al listado",
+      "openCase": "Abrir expediente",
+      "viewCaseReadOnly": "Ver expediente (sólo lectura)",
+      "workflowStatus": "Estado del expediente",
+      "patient": "Paciente",
+      "healthFacility": "Unidad de salud",
+      "dates": "Fechas",
+      "reportDate": "Fecha de reporte",
+      "eventDate": "Fecha de evento",
+      "reportFillingDate": "Fecha de llenado del reporte",
+      "notFound": {
+        "title": "Este caso no existe o está fuera de tu alcance.",
+        "description": "Si necesitas acceder a él, pide a un administrador que revise tu cobertura geográfica.",
+        "backToList": "Volver al listado"
+      }
     }
   },
   "caseWizard": {
