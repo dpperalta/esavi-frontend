@@ -448,6 +448,51 @@
       "CASEFLOW_007_CASE_CLOSED": "Dit dossier is gesloten."
     }
   },
+  "esaviCase": {
+    "filters": {
+      "code": {
+        "label": "Gevalcode",
+        "placeholder": "Zoeken op gevalcode…"
+      },
+      "patient": {
+        "prefix": "Patiënt",
+        "clearAria": "Patiëntfilter verwijderen"
+      },
+      "healthFacility": {
+        "label": "Gezondheidsvoorziening",
+        "placeholder": "Gezondheidsvoorziening zoeken…",
+        "change": "Wijzigen"
+      },
+      "geoLocation": {
+        "label": "Geografische locatie"
+      },
+      "dateMode": {
+        "exact": "Exact",
+        "range": "Bereik"
+      },
+      "reportDate": {
+        "groupLabel": "Modus filter rapportagedatum",
+        "exactLabel": "Rapportagedatum",
+        "fromLabel": "Rapportagedatum vanaf",
+        "toLabel": "Rapportagedatum tot"
+      },
+      "eventDate": {
+        "groupLabel": "Modus filter gebeurtenisdatum",
+        "exactLabel": "Gebeurtenisdatum",
+        "fromLabel": "Gebeurtenisdatum vanaf",
+        "toLabel": "Gebeurtenisdatum tot"
+      },
+      "reportFillingDate": {
+        "groupLabel": "Modus filter datum indiening rapport",
+        "exactLabel": "Datum indiening rapport",
+        "fromLabel": "Datum indiening rapport vanaf",
+        "toLabel": "Datum indiening rapport tot"
+      },
+      "errors": {
+        "rangeInvalid": "De begindatum kan niet later zijn dan de einddatum."
+      }
+    }
+  },
   "caseWizard": {
     "groups": {
       "notification": "Melding",

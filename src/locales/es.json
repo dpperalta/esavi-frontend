@@ -448,6 +448,51 @@
       "CASEFLOW_007_CASE_CLOSED": "Este expediente está cerrado."
     }
   },
+  "esaviCase": {
+    "filters": {
+      "code": {
+        "label": "Código del caso",
+        "placeholder": "Buscar por código de caso…"
+      },
+      "patient": {
+        "prefix": "Paciente",
+        "clearAria": "Quitar el filtro de paciente"
+      },
+      "healthFacility": {
+        "label": "Unidad de salud",
+        "placeholder": "Buscar unidad de salud…",
+        "change": "Cambiar"
+      },
+      "geoLocation": {
+        "label": "Ubicación geográfica"
+      },
+      "dateMode": {
+        "exact": "Exacta",
+        "range": "Rango"
+      },
+      "reportDate": {
+        "groupLabel": "Modo del filtro de fecha de reporte",
+        "exactLabel": "Fecha de reporte",
+        "fromLabel": "Fecha de reporte desde",
+        "toLabel": "Fecha de reporte hasta"
+      },
+      "eventDate": {
+        "groupLabel": "Modo del filtro de fecha de evento",
+        "exactLabel": "Fecha de evento",
+        "fromLabel": "Fecha de evento desde",
+        "toLabel": "Fecha de evento hasta"
+      },
+      "reportFillingDate": {
+        "groupLabel": "Modo del filtro de fecha de llenado del reporte",
+        "exactLabel": "Fecha de llenado del reporte",
+        "fromLabel": "Fecha de llenado del reporte desde",
+        "toLabel": "Fecha de llenado del reporte hasta"
+      },
+      "errors": {
+        "rangeInvalid": "La fecha inicial no puede ser posterior a la fecha final."
+      }
+    }
+  },
   "caseWizard": {
     "groups": {
       "notification": "Notificación",

@@ -448,6 +448,51 @@
       "CASEFLOW_007_CASE_CLOSED": "This case file is closed."
     }
   },
+  "esaviCase": {
+    "filters": {
+      "code": {
+        "label": "Case code",
+        "placeholder": "Search by case code…"
+      },
+      "patient": {
+        "prefix": "Patient",
+        "clearAria": "Remove the patient filter"
+      },
+      "healthFacility": {
+        "label": "Health facility",
+        "placeholder": "Search health facility…",
+        "change": "Change"
+      },
+      "geoLocation": {
+        "label": "Geographic location"
+      },
+      "dateMode": {
+        "exact": "Exact",
+        "range": "Range"
+      },
+      "reportDate": {
+        "groupLabel": "Report date filter mode",
+        "exactLabel": "Report date",
+        "fromLabel": "Report date from",
+        "toLabel": "Report date to"
+      },
+      "eventDate": {
+        "groupLabel": "Event date filter mode",
+        "exactLabel": "Event date",
+        "fromLabel": "Event date from",
+        "toLabel": "Event date to"
+      },
+      "reportFillingDate": {
+        "groupLabel": "Report filling date filter mode",
+        "exactLabel": "Report filling date",
+        "fromLabel": "Report filling date from",
+        "toLabel": "Report filling date to"
+      },
+      "errors": {
+        "rangeInvalid": "The start date cannot be later than the end date."
+      }
+    }
+  },
   "caseWizard": {
     "groups": {
       "notification": "Notification",
