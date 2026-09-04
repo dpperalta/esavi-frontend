@@ -15,8 +15,11 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 
 export interface CatalogSelectProps {
   typeCode: string;
+  // The item's `code` (e.g. `IN_INVESTIGATION`), not its `catalogItemId`: every consumer of this
+  // primitive reaches it from a URL filter, and a URL holds a stable, human-legible code —
+  // never an opaque UUID a stale seed could regenerate on reseed.
   value: string | null;
-  onChange: (catalogItemId: string | null) => void;
+  onChange: (code: string | null) => void;
   ariaLabel: string;
   disabled?: boolean;
 }
@@ -82,7 +85,7 @@ export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled }
       </SelectTrigger>
       <SelectContent>
         {rows.map((row) => (
-          <SelectItem key={row.catalogItemId} value={row.catalogItemId}>
+          <SelectItem key={row.catalogItemId} value={row.code}>
             {row.name}
           </SelectItem>
         ))}

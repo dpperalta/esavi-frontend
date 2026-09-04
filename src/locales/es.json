@@ -445,7 +445,25 @@
       "CASEFLOW_006_NOT_FOUND": "El caso no tiene expediente de flujo.",
       "CASEFLOW_007_STAGE_NOT_STARTED": "Esta etapa aún no se ha iniciado.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Esta etapa ya se completó.",
-      "CASEFLOW_007_CASE_CLOSED": "Este expediente está cerrado."
+      "CASEFLOW_007_CASE_CLOSED": "Este expediente está cerrado.",
+      "CASEFLOW_002_STATUS_NOT_FOUND": "Ese estado no existe en el catálogo. Se limpió el filtro."
+    },
+    "list": {
+      "columns": {
+        "caseCode": "Código",
+        "status": "Estado",
+        "openedAt": "Abierto el",
+        "progress": "Progreso"
+      },
+      "caseCodeMissing": "Sin código",
+      "progressValue": "{{done}}/{{total}} etapas",
+      "filters": {
+        "status": "Estado del expediente",
+        "openedFrom": "Abiertos desde",
+        "openedTo": "Abiertos antes de"
+      },
+      "empty": "No hay expedientes que mostrar.",
+      "emptyFiltered": "Ningún expediente coincide con los filtros."
     }
   },
   "esaviCase": {

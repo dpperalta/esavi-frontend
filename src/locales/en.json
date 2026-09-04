@@ -445,7 +445,25 @@
       "CASEFLOW_006_NOT_FOUND": "The case has no workflow record.",
       "CASEFLOW_007_STAGE_NOT_STARTED": "This stage hasn't started yet.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "This stage is already complete.",
-      "CASEFLOW_007_CASE_CLOSED": "This case file is closed."
+      "CASEFLOW_007_CASE_CLOSED": "This case file is closed.",
+      "CASEFLOW_002_STATUS_NOT_FOUND": "That status does not exist in the catalog. The filter was cleared."
+    },
+    "list": {
+      "columns": {
+        "caseCode": "Code",
+        "status": "Status",
+        "openedAt": "Opened on",
+        "progress": "Progress"
+      },
+      "caseCodeMissing": "No code",
+      "progressValue": "{{done}}/{{total}} stages",
+      "filters": {
+        "status": "Case file status",
+        "openedFrom": "Opened from",
+        "openedTo": "Opened before"
+      },
+      "empty": "There are no case files to show.",
+      "emptyFiltered": "No case file matches the filters."
     }
   },
   "esaviCase": {

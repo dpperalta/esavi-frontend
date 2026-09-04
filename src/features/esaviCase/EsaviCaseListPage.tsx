@@ -8,6 +8,7 @@ import type { EsaviCaseListRow } from '@/contracts/declared/esaviCase';
 import { esaviCaseResource } from '@/features/esaviCase/api';
 import { esaviCaseFiltersSchema } from '@/features/esaviCase/schemas';
 import { countActiveEsaviCaseFilters, ESAVI_CASE_FILTER_PARAM_KEYS, EsaviCaseFilters } from '@/features/esaviCase/EsaviCaseFilters';
+import { CaseWorkflowInbox } from '@/features/esaviCase/CaseWorkflowInbox';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { ResourceTable, type ResourceTableColumn } from '@/shared/components/ResourceTable';
@@ -269,7 +270,7 @@ export function EsaviCaseListPage() {
         </TabsContent>
 
         <TabsContent value="workflow">
-          <p className="text-sm text-muted-foreground">{t('common.comingSoon')}</p>
+          <CaseWorkflowInbox />
         </TabsContent>
       </Tabs>
 

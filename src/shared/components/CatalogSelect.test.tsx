@@ -139,4 +139,18 @@ describe('CatalogSelect', () => {
     const select = await screen.findByRole('combobox');
     expect(select).toBeDisabled();
   });
+
+  it('emite el code del item elegido, no su catalogItemId', async () => {
+    mockCatalogTypes();
+    mockCatalogItems();
+    const onChange = vi.fn();
+    const user = setupUser();
+
+    renderSelect({ onChange });
+
+    await user.click(await screen.findByRole('combobox'));
+    await user.click(await screen.findByRole('option', { name: 'Cerrado' }));
+
+    expect(onChange).toHaveBeenCalledWith('CLOSED');
+  });
 });

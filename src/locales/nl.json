@@ -445,7 +445,25 @@
       "CASEFLOW_006_NOT_FOUND": "Het geval heeft geen workflowdossier.",
       "CASEFLOW_007_STAGE_NOT_STARTED": "Deze fase is nog niet gestart.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Deze fase is al voltooid.",
-      "CASEFLOW_007_CASE_CLOSED": "Dit dossier is gesloten."
+      "CASEFLOW_007_CASE_CLOSED": "Dit dossier is gesloten.",
+      "CASEFLOW_002_STATUS_NOT_FOUND": "Die status bestaat niet in de catalogus. Het filter is gewist."
+    },
+    "list": {
+      "columns": {
+        "caseCode": "Code",
+        "status": "Status",
+        "openedAt": "Geopend op",
+        "progress": "Voortgang"
+      },
+      "caseCodeMissing": "Geen code",
+      "progressValue": "{{done}}/{{total}} fasen",
+      "filters": {
+        "status": "Status van het dossier",
+        "openedFrom": "Geopend vanaf",
+        "openedTo": "Geopend voor"
+      },
+      "empty": "Er zijn geen dossiers om te tonen.",
+      "emptyFiltered": "Geen dossier komt overeen met de filters."
     }
   },
   "esaviCase": {
