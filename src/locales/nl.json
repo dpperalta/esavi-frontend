@@ -114,7 +114,8 @@
       "administration": "Beheer"
     },
     "items": {
-      "esaviCase": "ESAVI-gevallen",
+      "caseRegister": "Registreren",
+      "caseBrowse": "Bekijken/bewerken",
       "patient": "Patiënten",
       "finalClassification": "Eindclassificatie",
       "notification": "Meldingen",
@@ -433,6 +434,64 @@
       "GEOLOC_006_FILE_TOO_LARGE": "Het bestand overschrijdt de maximaal toegestane grootte.",
       "GEOLOC_006_FILE_REQUIRED": "Kies een bestand om door te gaan.",
       "levelTypesAction": "Geografische niveaus configureren"
+    }
+  },
+  "caseWorkflow": {
+    "errors": {
+      "CASEFLOW_006_CASE_NOT_FOUND": "Het geval bestaat niet.",
+      "CASEFLOW_006_NOT_FOUND": "Het geval heeft geen workflowdossier.",
+      "CASEFLOW_007_STAGE_NOT_STARTED": "Deze fase is nog niet gestart.",
+      "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Deze fase is al voltooid.",
+      "CASEFLOW_007_CASE_CLOSED": "Dit dossier is gesloten."
+    }
+  },
+  "caseWizard": {
+    "groups": {
+      "notification": "Melding",
+      "investigation": "Onderzoek",
+      "closure": "Afsluiting"
+    },
+    "steps": {
+      "patient": "Patiënt",
+      "caseOpening": "Opening van het geval",
+      "classification": "Eerste classificatie",
+      "notification": "Meldingsformulier",
+      "investigation": "Onderzoek",
+      "finalClassification": "Eindclassificatie"
+    },
+    "stepStatus": {
+      "notStarted": "Niet gestart",
+      "inProgress": "Bezig",
+      "completed": "Voltooid"
+    },
+    "stepLocked": {
+      "aria": "Vergrendeld tot {{stage}} is voltooid"
+    },
+    "actions": {
+      "save": "Opslaan",
+      "completeStage": "Fase voltooien",
+      "next": "Volgende",
+      "unsavedChangesTitle": "Er zijn niet-opgeslagen wijzigingen",
+      "unsavedChangesBody": "Als je doorgaat zonder op te slaan, verlies je wat je in deze stap hebt ingevoerd.",
+      "pendingFieldsTitle": "Deze velden ontbreken nog om de fase te voltooien"
+    },
+    "header": {
+      "status": "Status",
+      "openedAt": "Geopend"
+    },
+    "error": {
+      "caseNotFound": "Dit geval bestaat niet",
+      "backToList": "Terug naar de lijst",
+      "workflowMissing": "Dit geval heeft geen workflowdossier",
+      "workflowMissingDescription": "Geval {{caseCode}} heeft geen bijbehorend workflowdossier. Waarschuw een beheerder om dit te controleren.",
+      "generic": "We konden het dossier niet laden"
+    },
+    "readOnly": {
+      "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken."
+    },
+    "newCase": {
+      "title": "Nieuw ESAVI-geval",
+      "testCreateButton": "Test: gevalcreatie simuleren"
     }
   },
   "home": {

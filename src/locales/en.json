@@ -114,7 +114,8 @@
       "administration": "Administration"
     },
     "items": {
-      "esaviCase": "ESAVI cases",
+      "caseRegister": "Register",
+      "caseBrowse": "View/edit",
       "patient": "Patients",
       "finalClassification": "Final classification",
       "notification": "Notifications",
@@ -433,6 +434,64 @@
       "GEOLOC_006_FILE_TOO_LARGE": "The file exceeds the maximum allowed size.",
       "GEOLOC_006_FILE_REQUIRED": "Choose a file to continue.",
       "levelTypesAction": "Configure the geographic levels"
+    }
+  },
+  "caseWorkflow": {
+    "errors": {
+      "CASEFLOW_006_CASE_NOT_FOUND": "The case does not exist.",
+      "CASEFLOW_006_NOT_FOUND": "The case has no workflow record.",
+      "CASEFLOW_007_STAGE_NOT_STARTED": "This stage hasn't started yet.",
+      "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "This stage is already complete.",
+      "CASEFLOW_007_CASE_CLOSED": "This case file is closed."
+    }
+  },
+  "caseWizard": {
+    "groups": {
+      "notification": "Notification",
+      "investigation": "Investigation",
+      "closure": "Closure"
+    },
+    "steps": {
+      "patient": "Patient",
+      "caseOpening": "Case opening",
+      "classification": "Initial classification",
+      "notification": "Notification form",
+      "investigation": "Investigation",
+      "finalClassification": "Final classification"
+    },
+    "stepStatus": {
+      "notStarted": "Not started",
+      "inProgress": "In progress",
+      "completed": "Completed"
+    },
+    "stepLocked": {
+      "aria": "Locked until {{stage}} is complete"
+    },
+    "actions": {
+      "save": "Save",
+      "completeStage": "Complete stage",
+      "next": "Next",
+      "unsavedChangesTitle": "You have unsaved changes",
+      "unsavedChangesBody": "If you continue without saving, you'll lose what you typed in this step.",
+      "pendingFieldsTitle": "These fields are still needed to complete the stage"
+    },
+    "header": {
+      "status": "Status",
+      "openedAt": "Opened"
+    },
+    "error": {
+      "caseNotFound": "This case does not exist",
+      "backToList": "Back to the list",
+      "workflowMissing": "This case has no workflow record",
+      "workflowMissingDescription": "Case {{caseCode}} has no associated workflow record. Notify an administrator to review it.",
+      "generic": "We couldn't load the case file"
+    },
+    "readOnly": {
+      "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again."
+    },
+    "newCase": {
+      "title": "New ESAVI case",
+      "testCreateButton": "Test: simulate case creation"
     }
   },
   "home": {

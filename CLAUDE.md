@@ -31,6 +31,7 @@ Antes de escribir código, lee lo que corresponda de `references/`. Son decision
 - **`API-CONTRACT.md`** — envelope, auth, paginación, idioma, auditoría. Es la referencia de `client.ts` y `createResource.ts`.
 - **`API-ROUTES.md`** — las 333 rutas con su rol mínimo y su código de operación. **Generado, no se edita a mano** (ver `references/README.md`).
 - **`DOMAIN-MODEL.md`** — entidades y relaciones; decide el orden de los pasos del wizard.
+- **`CASE-PROCESS.md`** — las reglas del recorrido del caso, columna por columna, contrastadas contra el validador y el servicio del backend. **Es la fuente de los specs `FE08`–`FE14`** y ninguno de ellos repite lo que dice: lo citan. Cerrado hasta el paso 5; falta §5.6.
 
 Documentos del backend que mandan sobre cualquier duda: `esavi-backend/references/CONVENTIONS.md` (la norma), `esavi-backend/references/functional/specs/NN-slug.md` (el spec de cada entidad) y `esavi-backend/esaviapp.sql` (el DDL autoritativo).
 
@@ -67,7 +68,7 @@ Descartados con motivo: Redux Toolkit, Next.js, Material UI.
 
 **Ningún color literal en los componentes** (§6.1). Sólo tokens CSS semánticos; un `bg-slate-800` suelto rompe el tema oscuro y no se detecta hasta producción. El tema se aplica con `data-theme="light|dark"` en `<html>`, con tres estados (`light`/`dark`/`system`) y el script anti-parpadeo de §6.4 en `index.html`.
 
-**Con ~45 entidades de contrato idéntico, no se escribe 45 veces el mismo CRUD** (§4). Cada entidad nueva es una declaración de `createResource(...)`, no una carpeta de archivos. Lo mismo con las primitivas: `<ResourceTable>`, `<ResourceForm>`, `<CatalogSelect>`, `<GeoLocationPicker>`, `<AuditTrail>` y `<EntitySearchSelect>` se escriben una vez. Sólo el árbol WHODrug (`WHODRUG-006A`…`E`) y MedDRA (`MEDDRA-006`) llevan componente propio, porque su contrato no es el de un listado filtrado.
+**Con ~45 entidades de contrato idéntico, no se escribe 45 veces el mismo CRUD** (§4). Cada entidad nueva es una declaración de `createResource(...)`, no una carpeta de archivos. Lo mismo con las primitivas: **la lista canónica está en `ARCHITECTURE.md` §4.3** y hoy son trece — las seis de siempre (`<ResourceTable>`, `<ResourceForm>`, `<CatalogSelect>`, `<GeoLocationPicker>`, `<AuditTrail>`, `<EntitySearchSelect>`), los dos selectores con contrato propio (`<WhodrugTreePicker>` y `<MeddraSearchField>`, que no son listados filtrados) y las siete que salieron de recorrer el proceso del caso (`<AnswerOptionField>`, `<SatelliteList>`, `<DateField>`, `<TimeField>`, `<NumberField>`, `<SearchableSelect>`, `<MapPointPicker>`). **Ninguna se escribe dos veces, y ninguna es de una sola pantalla:** la que menos se repite aparece diez veces.
 
 **Replicar `ROLE_LEVELS` en el cliente es experiencia de usuario, no seguridad.** `useCan()` y `<RequireRole>` ocultan lo que el usuario no puede hacer; el backend sigue siendo la única autoridad.
 

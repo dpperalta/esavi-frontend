@@ -27,3 +27,5 @@ npm-debug.log*
 
 # tsc build info
 *.tsbuildinfo
+
+references/external

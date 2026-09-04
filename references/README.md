@@ -1,6 +1,6 @@
 # references/
 
-Todo lo que hay que tener claro antes de escribir una línea del frontend. Cinco documentos, cada uno con un propósito distinto.
+Todo lo que hay que tener claro antes de escribir una línea del frontend. Seis documentos, cada uno con un propósito distinto.
 
 | Documento | Qué responde | Cuándo se lee |
 |---|---|---|
@@ -9,6 +9,7 @@ Todo lo que hay que tener claro antes de escribir una línea del frontend. Cinco
 | **[API-CONTRACT.md](./API-CONTRACT.md)** | Cómo se habla con el backend: envelope, auth, paginación, idioma, auditoría | Al escribir `client.ts` y `createResource.ts` |
 | **[API-ROUTES.md](./API-ROUTES.md)** | Las 333 rutas con su rol mínimo y su código de operación | Al construir cada pantalla |
 | **[DOMAIN-MODEL.md](./DOMAIN-MODEL.md)** | Qué entidades existen y cómo se conectan | Al diseñar formularios y decidir el orden de los pasos |
+| **[CASE-PROCESS.md](./CASE-PROCESS.md)** | Las reglas del recorrido del caso: seis pasos, cuatro fases, qué habilita y qué bloquea cada acción | Al redactar e implementar cualquier spec del wizard (`FE08`–`FE14`) |
 
 ## Origen de los datos
 
@@ -20,6 +21,7 @@ Ninguno de estos documentos es una interpretación libre: todos salen de fuentes
 | `API-ROUTES.md` | `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES` |
 | `API-CONTRACT.md` | `src/app.ts`, `src/middlewares/`, `src/services/auth.service.ts`, `references/CONVENTIONS.md`, `.env.example` |
 | `DOMAIN-MODEL.md` | `src/models/associations/*.ts`, `esaviapp.sql` |
+| `CASE-PROCESS.md` | `esaviapp.sql`, `src/services/*.service.ts`, `src/validators/*.validator.ts`, `references/functional/specs/`, y `references/external/` para los componentes de WHODrug y MedDRA |
 | `ARCHITECTURE.md` | Decisiones de diseño de este proyecto, contrastadas contra el backend |
 
 ## Regenerar el inventario de rutas
@@ -45,3 +47,11 @@ No se copian aquí porque viven y cambian en su repositorio:
 - `esavi-backend/references/CONVENTIONS.md` — la norma vinculante. Nomenclatura, siete artefactos por endpoint, códigos `ESAVI-*`, matriz de roles, contrato de respuesta.
 - `esavi-backend/references/functional/specs/NN-slug.md` — el spec de cada entidad. Cuando una pantalla no cuadre con lo que devuelve la API, la respuesta está en el spec de esa entidad, no en el código.
 - `esavi-backend/esaviapp.sql` — el DDL autoritativo, con las semillas de los catálogos.
+
+## `references/external/` — los plugins DHIS2 de referencia
+
+Copias locales de los plugins de **WHODrug** y **MedDRA** que hoy están en producción sobre DHIS2. Son la referencia de comportamiento de `<WhodrugTreePicker>` y `<MeddraSearchField>`: qué orden llevan los niveles del árbol, cuándo se colapsa uno, el debounce y el mínimo de caracteres del buscador, qué se muestra en la lista de resultados.
+
+**Está en `.gitignore` y no se versiona.** Son código de terceros y pesan; se copian a mano cuando hacen falta. Por eso `CASE-PROCESS.md` §5.4b **describe** el comportamiento en vez de remitir a los ficheros: sus reglas se implementan sin tener la carpeta, y las citas a `WhoDrugCascade.js` o `useMedDRASearch.js` son para quien sí la tenga.
+
+Lo que se replica es el comportamiento, no la arquitectura: los plugins hablan con un backend externo por una *route* de DHIS2 y escriben en `dataElements`; aquí el origen es `ESAVI-WHODRUG-006A`…`E` y `ESAVI-MEDDRA-006`, y el destino una fila de `notificationVaccine` o `notificationEvent`.

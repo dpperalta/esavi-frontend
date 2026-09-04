@@ -4,6 +4,7 @@ import {
   BellRing,
   Building2,
   ClipboardList,
+  FilePlus2,
   FileSpreadsheet,
   FileText,
   Home,
@@ -47,8 +48,17 @@ export const NAVIGATION: NavItem[] = [
     key: 'nav.groups.cases',
     icon: ClipboardList,
     children: [
+      // SPEC FE08 §3.1: replaces the single disabled `nav.items.esaviCase` with two live
+      // entries. `caseRegister` is USER's real minimum on ESAVI-CASE-001 (API-ROUTES.md);
+      // `caseBrowse` stays disabled until FE09 builds the listing behind it.
       {
-        key: 'nav.items.esaviCase',
+        key: 'nav.items.caseRegister',
+        icon: FilePlus2,
+        path: '/esavi-cases/new',
+        minLevel: ROLE_LEVELS.USER,
+      },
+      {
+        key: 'nav.items.caseBrowse',
         icon: FileText,
         path: '/esavi-cases',
         minLevel: ROLE_LEVELS.USER,

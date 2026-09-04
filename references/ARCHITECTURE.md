@@ -38,11 +38,12 @@ Un monorepo con workspaces daría una cosa valiosa —tipos compartidos sin fric
 | Rutas | React Router v7 | Rutas anidadas por entidad y guards por rol |
 | UI | Tailwind v4 + shadcn/ui (Radix) | Componentes copiados al repo: se modifican, no se pelean |
 | Tablas | TanStack Table | Todos los listados son paginados en servidor; headless encaja |
-| Formularios | React Hook Form + Zod | `investigation` y sus 14 satélites son formularios grandes y anidados |
+| Formularios | React Hook Form + Zod | `investigation` y sus **12 satélites** son formularios grandes y anidados, con dos niveles de anidamiento (`CASE-PROCESS.md` §5.5.0) |
 | HTTP | axios con interceptores | Hace falta cola de refresh ante 401 |
 | i18n | react-i18next | Reutiliza las claves de `src/data/i18n/{es,en,nl}.json` |
 | Fechas | date-fns | El backend recorta a `YYYY-MM-DD`; nada de zonas horarias sorpresa |
 | Comandos | cmdk | Navegar 45 entidades escribiendo, no clicando |
+| Mapas | Leaflet + teselas OSM | **Un solo campo lo pide** (`CASE-PROCESS.md` §5.5.5): el domicilio del paciente en `investigationCommunity`. Sin clave de API y sin coste; la URL de teselas va en `VITE_MAP_TILE_URL` para que un despliegue en red cerrada apunte a su propio servidor. La atribución de OSM es visible y obligatoria |
 | Tests | Vitest + Testing Library + MSW | MSW permite simular el envelope exacto del backend |
 
 **Descartado:** Redux Toolkit (boilerplate sin contrapartida frente a Zustand + Query), Next.js (SSR innecesario), Material UI (personalizarlo hasta que deje de parecer Material cuesta más que partir de shadcn).
@@ -85,7 +86,7 @@ El slice `drafts` guarda únicamente lo tecleado en el paso actual, entre el úl
 
 ## 3.4 El progreso del wizard se guarda en la base, no como borrador
 
-**Decidido: filas reales, no una tabla de borradores.** Notificación + investigación + 14 satélites es un formulario que nadie completa de una sentada, y el progreso tiene que sobrevivir entre sesiones y dispositivos. Hay dos formas de conseguirlo y solo una es correcta aquí.
+**Decidido: filas reales, no una tabla de borradores.** Notificación e investigación suman **18 satélites** —6 y 12—, un formulario que nadie completa de una sentada y cuyo progreso tiene que sobrevivir entre sesiones y dispositivos. Hay dos formas de conseguirlo y solo una es correcta aquí.
 
 ### Lo que se descarta
 
@@ -164,6 +165,18 @@ Dos selectores que **no** son casos de `<EntitySearchSelect>` y llevan su propio
 
 - **`<WhodrugTreePicker>`** — las cinco facetas de `WHODRUG-006A`…`006E`. Quien llena una notificación sabe que fue una BCG, no cómo se llama la presentación exacta; se baja por niveles y **el componente para en cuanto `matchCount === 1`**, que es cuando el `vaccineWhodrugId` ya viene resuelto en la propia opción. El centinela `__NULL__` reenvía la opción sin valor al nivel siguiente (`API-CONTRACT.md` §11.2).
 - **`<MeddraSearchField>`** — `MEDDRA-006`. Es un API externo de pago detrás de un limitador: debounce obligatorio, mínimo de tres caracteres, y sus `503`/`502`/`504` se muestran como estado del servicio, no como «no hay resultados». Lo que el usuario elige se persiste con otra llamada; el proxy no escribe nada.
+
+**Las siete que salieron de recorrer el proceso del caso** (`CASE-PROCESS.md` §5, cerrado hasta el paso 5). Ninguna es específica de una pantalla: todas se repiten entre diez y cuarenta veces.
+
+- **`<AnswerOptionField>`** — el ENUM `answerOption` con **dos** variantes, `unknown` y `full`. Cuarenta columnas del expediente, y `noAnswer` **no se implementa**: se recorrieron las cuarenta sin un solo caso (`CASE-PROCESS.md` §7.1). Al leer renderiza cualquier valor que encuentre, incluido el que no ofrece.
+- **`<SatelliteList>`** — lista con «Añadir» y alta/edición en modal. Es el patrón canónico de los satélites `N`, no un componente por tabla: catorce listas entre los pasos 4 y 5.
+- **`<DateField>`** — recorte a `YYYY-MM-DD`, «no futura» y órdenes cruzados. **La regla se pasa por parámetro**: hay una fecha del expediente sin ninguna restricción temporal (`investigationAutopsy.scheduledAutopsyDate`) y aplicarle «no futura» por inercia rompe su caso normal.
+- **`<TimeField>`** — `HH:MM`, sin obligar a inventar los segundos. El backend los rellena y compara ya normalizados.
+- **`<NumberField>` con rango** — el techo de `smallint` (32767) en nueve contadores y ±90/±180 en las coordenadas. **El techo no sale de ningún `CHECK`**, es del tipo de la columna, y sin replicarlo un 40000 vuelve como `500`.
+- **`<SearchableSelect>`** — desplegable con filtro de texto sobre `cmdk`. Lo usan los cinco niveles del árbol WHODrug, y sirve para cualquier `<CatalogSelect>` con catálogo largo.
+- **`<MapPointPicker>`** — Leaflet sobre `VITE_MAP_TILE_URL` (§2), con la atribución de OSM visible. **Un solo consumidor**: el domicilio del paciente en `investigationCommunity`. El resto de las coordenadas del expediente son campos numéricos.
+
+> **La lista es cerrada porque el recorrido lo fue.** Salió de contrastar unas 320 columnas contra su validador y su servicio, no de imaginar qué haría falta. Las que faltan las traerá el paso 6, y son pocas.
 
 ### 4.4 Autorización espejo
 

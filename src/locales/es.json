@@ -114,7 +114,8 @@
       "administration": "Administración"
     },
     "items": {
-      "esaviCase": "Casos ESAVI",
+      "caseRegister": "Registrar",
+      "caseBrowse": "Ver/editar",
       "patient": "Pacientes",
       "finalClassification": "Clasificación final",
       "notification": "Notificaciones",
@@ -433,6 +434,64 @@
       "GEOLOC_006_FILE_TOO_LARGE": "El archivo supera el tamaño máximo permitido.",
       "GEOLOC_006_FILE_REQUIRED": "Elige un archivo para continuar.",
       "levelTypesAction": "Configura los niveles geográficos"
+    }
+  },
+  "caseWorkflow": {
+    "errors": {
+      "CASEFLOW_006_CASE_NOT_FOUND": "El caso no existe.",
+      "CASEFLOW_006_NOT_FOUND": "El caso no tiene expediente de flujo.",
+      "CASEFLOW_007_STAGE_NOT_STARTED": "Esta etapa aún no se ha iniciado.",
+      "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Esta etapa ya se completó.",
+      "CASEFLOW_007_CASE_CLOSED": "Este expediente está cerrado."
+    }
+  },
+  "caseWizard": {
+    "groups": {
+      "notification": "Notificación",
+      "investigation": "Investigación",
+      "closure": "Cierre"
+    },
+    "steps": {
+      "patient": "Paciente",
+      "caseOpening": "Apertura del caso",
+      "classification": "Clasificación inicial",
+      "notification": "Ficha de notificación",
+      "investigation": "Investigación",
+      "finalClassification": "Clasificación final"
+    },
+    "stepStatus": {
+      "notStarted": "Sin iniciar",
+      "inProgress": "Iniciado",
+      "completed": "Completado"
+    },
+    "stepLocked": {
+      "aria": "Bloqueado hasta completar {{stage}}"
+    },
+    "actions": {
+      "save": "Guardar",
+      "completeStage": "Completar etapa",
+      "next": "Siguiente",
+      "unsavedChangesTitle": "Hay cambios sin guardar",
+      "unsavedChangesBody": "Si continúas sin guardar, perderás lo que escribiste en este paso.",
+      "pendingFieldsTitle": "Faltan estos campos para completar la etapa"
+    },
+    "header": {
+      "status": "Estado",
+      "openedAt": "Apertura"
+    },
+    "error": {
+      "caseNotFound": "Este caso no existe",
+      "backToList": "Volver al listado",
+      "workflowMissing": "Este caso no tiene expediente de flujo",
+      "workflowMissingDescription": "El caso {{caseCode}} no tiene un expediente de flujo asociado. Avisa a un administrador para que revise el registro.",
+      "generic": "No pudimos cargar el expediente"
+    },
+    "readOnly": {
+      "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo."
+    },
+    "newCase": {
+      "title": "Nuevo expediente ESAVI",
+      "testCreateButton": "Prueba: simular creación de caso"
     }
   },
   "home": {
