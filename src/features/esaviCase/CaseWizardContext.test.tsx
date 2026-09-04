@@ -1,11 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { useEffect } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  CaseWizardProvider,
-  useCaseWizard,
-  type CaseWizardStepHandle,
-} from './CaseWizardContext';
+import { CaseWizardProvider, useCaseWizard, type CaseWizardStepHandle } from './CaseWizardContext';
 
 function FakeStep({ handle }: { handle: CaseWizardStepHandle }) {
   const { registerStep, unregisterStep } = useCaseWizard();
@@ -65,6 +61,8 @@ describe('CaseWizardContext', () => {
       useCaseWizard();
       return null;
     }
-    expect(() => render(<Broken />)).toThrow('useCaseWizard must be used within a CaseWizardProvider');
+    expect(() => render(<Broken />)).toThrow(
+      'useCaseWizard must be used within a CaseWizardProvider',
+    );
   });
 });

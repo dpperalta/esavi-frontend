@@ -31,7 +31,8 @@ export const CASE_WIZARD_STEPS: CaseWizardStepDefinition[] = [
   { slug: 'final-classification', group: 'closure', stage: 'FINAL_CLASSIFICATION' },
 ];
 
-type WorkflowStages = CaseWorkflowDetail['stages'];
+export type CaseWorkflowStages = CaseWorkflowDetail['stages'];
+type WorkflowStages = CaseWorkflowStages;
 
 // Unlocking hangs off the real precondition of each stage, never off a strict 3→4→5→6 chain
 // (SPEC FE08 §6): a strict chain would require `investigation` to close a serious case, which
@@ -48,4 +49,34 @@ export function isStepUnlocked(slug: CaseWizardStepSlug, stages: WorkflowStages)
   const precondition = STAGE_PRECONDITION[slug];
   if (!precondition) return true;
   return stages[precondition].exists;
+}
+
+// keyof WorkflowStages is camelCase (SPEC FE08 §3.3); CASE_WIZARD_STEPS' slugs are kebab-case
+// and 'final-classification' doesn't share a spelling with 'finalClassification' at all, so the
+// two can't be derived from one another by string manipulation.
+const WORKFLOW_STAGE_KEY_TO_SLUG: Record<keyof WorkflowStages, CaseWizardStepSlug> = {
+  classification: 'classification',
+  notification: 'notification',
+  investigation: 'investigation',
+  finalClassification: 'final-classification',
+};
+
+// The step whose completion unlocks `slug` — what the padlock's aria-label names (§3.7).
+// null when `slug` has no precondition of its own (patient, case-opening, classification).
+export function getPrecedingStepSlug(slug: CaseWizardStepSlug): CaseWizardStepSlug | null {
+  const precondition = STAGE_PRECONDITION[slug];
+  return precondition ? WORKFLOW_STAGE_KEY_TO_SLUG[precondition] : null;
+}
+
+const STAGE_TO_WORKFLOW_KEY: Record<CaseWorkflowStage, keyof WorkflowStages> = {
+  CLASSIFICATION: 'classification',
+  NOTIFICATION: 'notification',
+  INVESTIGATION: 'investigation',
+  FINAL_CLASSIFICATION: 'finalClassification',
+};
+
+// The `stages` entry a step's own `CaseWorkflowStage` reads from — not the precondition it
+// unlocks on (that's `getPrecedingStepSlug`), but the step's own progress.
+export function stageWorkflowKey(stage: CaseWorkflowStage): keyof WorkflowStages {
+  return STAGE_TO_WORKFLOW_KEY[stage];
 }
