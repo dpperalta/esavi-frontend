@@ -440,7 +440,11 @@
       "caseNotFound": "Este caso no existe",
       "backToList": "Volver al listado",
       "workflowMissing": "Este caso no tiene expediente de flujo",
-      "workflowMissingDescription": "El caso {{caseCode}} no tiene un expediente de flujo asociado. Avisa a un administrador para que revise el registro."
+      "workflowMissingDescription": "El caso {{caseCode}} no tiene un expediente de flujo asociado. Avisa a un administrador para que revise el registro.",
+      "generic": "No pudimos cargar el expediente"
+    },
+    "readOnly": {
+      "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo."
     }
   },
   "home": {

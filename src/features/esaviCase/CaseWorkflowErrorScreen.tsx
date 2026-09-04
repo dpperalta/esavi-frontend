@@ -47,6 +47,12 @@ function CaseWorkflowMissingScreen({ caseId }: CaseWorkflowMissingScreenProps) {
   );
 }
 
+// Lets CaseWizardPage (plan step 9) decide, before rendering, whether it owes this error a
+// dedicated screen or the generic one.
+export function hasDedicatedCaseWorkflowErrorScreen(code: string): boolean {
+  return code === CASE_NOT_FOUND_CODE || code === WORKFLOW_MISSING_CODE;
+}
+
 interface CaseWorkflowErrorScreenProps {
   error: EsaviApiError;
   caseId: string;

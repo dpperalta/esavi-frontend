@@ -80,3 +80,25 @@ const STAGE_TO_WORKFLOW_KEY: Record<CaseWorkflowStage, keyof WorkflowStages> = {
 export function stageWorkflowKey(stage: CaseWorkflowStage): keyof WorkflowStages {
   return STAGE_TO_WORKFLOW_KEY[stage];
 }
+
+// The slugs reachable through /esavi-cases/:id/wizard/:step — steps 1-2 never are (§3.1).
+export const REACHABLE_WIZARD_STEPS: CaseWizardStepDefinition[] = CASE_WIZARD_STEPS.filter(
+  (step) => step.stage !== null,
+);
+
+export function isReachableStepSlug(value: string): value is CaseWizardStepSlug {
+  return REACHABLE_WIZARD_STEPS.some((step) => step.slug === value);
+}
+
+// Where /esavi-cases/:id/wizard/:step lands when :step is missing, unrecognized, or locked
+// (SPEC FE08 §4 plan step 9): the most advanced step that's actually unlocked, walked in
+// process order — worst case that's `classification`, which has no precondition of its own.
+export function resolveResumeStep(stages: WorkflowStages): CaseWizardStepSlug {
+  let resumeSlug: CaseWizardStepSlug = 'classification';
+  for (const step of REACHABLE_WIZARD_STEPS) {
+    if (isStepUnlocked(step.slug, stages)) {
+      resumeSlug = step.slug;
+    }
+  }
+  return resumeSlug;
+}

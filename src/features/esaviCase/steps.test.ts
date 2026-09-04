@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
-import { CASE_WIZARD_STEPS, isStepUnlocked } from './steps';
+import { CASE_WIZARD_STEPS, isReachableStepSlug, isStepUnlocked, resolveResumeStep } from './steps';
 
 function buildStages(
   overrides: Partial<CaseWorkflowDetail['stages']> = {},
@@ -97,5 +97,49 @@ describe('isStepUnlocked', () => {
         }),
       ),
     ).toBe(true);
+  });
+});
+
+describe('isReachableStepSlug', () => {
+  it('acepta solo los cuatro pasos alcanzables por /wizard/:step', () => {
+    expect(isReachableStepSlug('classification')).toBe(true);
+    expect(isReachableStepSlug('notification')).toBe(true);
+    expect(isReachableStepSlug('investigation')).toBe(true);
+    expect(isReachableStepSlug('final-classification')).toBe(true);
+  });
+
+  it('rechaza patient, case-opening y cualquier valor desconocido', () => {
+    expect(isReachableStepSlug('patient')).toBe(false);
+    expect(isReachableStepSlug('case-opening')).toBe(false);
+    expect(isReachableStepSlug('not-a-step')).toBe(false);
+  });
+});
+
+describe('resolveResumeStep', () => {
+  it('resuelve a classification cuando nada empezó todavía', () => {
+    expect(resolveResumeStep(buildStages())).toBe('classification');
+  });
+
+  it('resuelve al paso desbloqueado más avanzado', () => {
+    const stages = buildStages({
+      classification: {
+        exists: true,
+        id: 'c-1',
+        startedAt: null,
+        endedAt: '2026-09-01',
+        durationMinutes: 10,
+      },
+      notification: {
+        exists: true,
+        id: 'n-1',
+        startedAt: null,
+        endedAt: null,
+        durationMinutes: null,
+      },
+    });
+
+    // investigation y final-classification comparten la misma precondición
+    // (notification.exists) — el orden de recorrido deja final-classification como el último.
+    expect(resolveResumeStep(stages)).toBe('final-classification');
   });
 });

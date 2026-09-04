@@ -440,7 +440,11 @@
       "caseNotFound": "Dit geval bestaat niet",
       "backToList": "Terug naar de lijst",
       "workflowMissing": "Dit geval heeft geen workflowdossier",
-      "workflowMissingDescription": "Geval {{caseCode}} heeft geen bijbehorend workflowdossier. Waarschuw een beheerder om dit te controleren."
+      "workflowMissingDescription": "Geval {{caseCode}} heeft geen bijbehorend workflowdossier. Waarschuw een beheerder om dit te controleren.",
+      "generic": "We konden het dossier niet laden"
+    },
+    "readOnly": {
+      "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken."
     }
   },
   "home": {
