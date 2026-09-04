@@ -435,6 +435,14 @@
       "levelTypesAction": "Geografische niveaus configureren"
     }
   },
+  "caseWizard": {
+    "error": {
+      "caseNotFound": "Dit geval bestaat niet",
+      "backToList": "Terug naar de lijst",
+      "workflowMissing": "Dit geval heeft geen workflowdossier",
+      "workflowMissingDescription": "Geval {{caseCode}} heeft geen bijbehorend workflowdossier. Waarschuw een beheerder om dit te controleren."
+    }
+  },
   "home": {
     "greeting": "Hallo, {{name}}",
     "roleLabel": "Uw rol: {{role}}"

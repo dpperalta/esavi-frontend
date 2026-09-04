@@ -435,6 +435,14 @@
       "levelTypesAction": "Configure the geographic levels"
     }
   },
+  "caseWizard": {
+    "error": {
+      "caseNotFound": "This case does not exist",
+      "backToList": "Back to the list",
+      "workflowMissing": "This case has no workflow record",
+      "workflowMissingDescription": "Case {{caseCode}} has no associated workflow record. Notify an administrator to review it."
+    }
+  },
   "home": {
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"

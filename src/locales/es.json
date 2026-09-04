@@ -435,6 +435,14 @@
       "levelTypesAction": "Configura los niveles geográficos"
     }
   },
+  "caseWizard": {
+    "error": {
+      "caseNotFound": "Este caso no existe",
+      "backToList": "Volver al listado",
+      "workflowMissing": "Este caso no tiene expediente de flujo",
+      "workflowMissingDescription": "El caso {{caseCode}} no tiene un expediente de flujo asociado. Avisa a un administrador para que revise el registro."
+    }
+  },
   "home": {
     "greeting": "Hola, {{name}}",
     "roleLabel": "Tu rol: {{role}}"
