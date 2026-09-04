@@ -616,6 +616,7 @@
     "actions": {
       "save": "Save",
       "completeStage": "Complete stage",
+      "stageCompleted": "Stage completed.",
       "next": "Next",
       "unsavedChangesTitle": "You have unsaved changes",
       "unsavedChangesBody": "If you continue without saving, you'll lose what you typed in this step.",

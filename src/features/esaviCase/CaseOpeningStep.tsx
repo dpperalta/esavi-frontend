@@ -60,6 +60,10 @@ export function CaseOpeningStep() {
 
   const [notifierDialogOpen, setNotifierDialogOpen] = useState(false);
   const [hasNotifier, setHasNotifier] = useState(false);
+  // `existingCase.data` only carries the facility name on reentry (SPEC FE10 §3.1) — on a fresh
+  // alta there's no case yet to read it back from, so the label of the option just picked in
+  // `ScopedHealthFacilitySelect` is kept here instead of being resolved a second time.
+  const [selectedFacilityLabel, setSelectedFacilityLabel] = useState<string | null>(null);
 
   function handleSubmit(values: CaseOpeningFormValues) {
     if (isEditing && effectiveCaseId) {
@@ -174,8 +178,11 @@ export function CaseOpeningStep() {
                   <FormControl>
                     <ScopedHealthFacilitySelect
                       value={field.value || null}
-                      resolvedLabel={existingCase.data?.healthFacility.name ?? null}
-                      onChange={(option) => field.onChange(option?.id ?? '')}
+                      resolvedLabel={existingCase.data?.healthFacility.name ?? selectedFacilityLabel}
+                      onChange={(option) => {
+                        field.onChange(option?.id ?? '');
+                        setSelectedFacilityLabel(option?.label ?? null);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
