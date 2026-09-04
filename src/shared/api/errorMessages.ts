@@ -63,6 +63,12 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   // SPEC FE09 §3.5 — not a toast: CaseWorkflowInbox reads this text itself and shows it inline
   // next to the `statusCode` selector, after clearing the offending filter from the URL.
   CASEFLOW_002_STATUS_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_002_STATUS_NOT_FOUND',
+  // SPEC FE09 §4.14 — deactivate/reactivate from the list's row menu, same four-code shape as
+  // every other entity's 005A/005B.
+  CASE_005A_NOT_FOUND: 'esaviCase.errors.CASE_005A_NOT_FOUND',
+  CASE_005B_NOT_FOUND: 'esaviCase.errors.CASE_005B_NOT_FOUND',
+  CASE_005A_ALREADY_INACTIVE: 'esaviCase.errors.CASE_005A_ALREADY_INACTIVE',
+  CASE_005B_ALREADY_ACTIVE: 'esaviCase.errors.CASE_005B_ALREADY_ACTIVE',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

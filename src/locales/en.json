@@ -552,6 +552,12 @@
         "description": "If you need access to it, ask an administrator to review your geographic coverage.",
         "backToList": "Back to the list"
       }
+    },
+    "errors": {
+      "CASE_005A_NOT_FOUND": "The case does not exist.",
+      "CASE_005B_NOT_FOUND": "The case does not exist.",
+      "CASE_005A_ALREADY_INACTIVE": "The case was already inactive.",
+      "CASE_005B_ALREADY_ACTIVE": "The case was already active."
     }
   },
   "caseWizard": {

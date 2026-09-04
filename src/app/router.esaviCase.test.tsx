@@ -6,6 +6,8 @@ import { setupServer } from 'msw/node';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { CaseWizardPage } from '@/features/esaviCase/CaseWizardPage';
+import { EsaviCaseDetailPage } from '@/features/esaviCase/EsaviCaseDetailPage';
+import { EsaviCaseListPage } from '@/features/esaviCase/EsaviCaseListPage';
 import { NewCasePage } from '@/features/esaviCase/NewCasePage';
 import { HomePage } from '@/features/home/HomePage';
 import { setAccessToken } from '@/shared/api/client';
@@ -76,6 +78,18 @@ function signInAs(roleName: string, level: number) {
         },
       }),
     ),
+    http.get('http://localhost:4500/api/esavi-cases', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get('http://localhost:4500/api/geo-level-types', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get('http://localhost:4500/api/geo-locations', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get('http://localhost:4500/api/catalog-types', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
     http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
       HttpResponse.json({
         ok: true,
@@ -137,7 +151,11 @@ function renderApp(initialPath: string) {
             <Route element={<RequireAuth />}>
               <Route path="/" element={<HomePage />} />
               <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
+                <Route path="/esavi-cases" element={<EsaviCaseListPage />} />
+                {/* SPEC FE09 §3.1: /esavi-cases/new declared before /esavi-cases/:id, mirroring
+                    app/router.tsx exactly — this is the test that pins the order down. */}
                 <Route path="/esavi-cases/new" element={<NewCasePage />} />
+                <Route path="/esavi-cases/:id" element={<EsaviCaseDetailPage />} />
                 <Route path="/esavi-cases/:id/wizard/:step?" element={<CaseWizardPage />} />
               </Route>
             </Route>
@@ -179,5 +197,41 @@ describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — con USER au
     renderApp('/esavi-cases/case-1/wizard/classification');
 
     await waitFor(() => expect(screen.getByText('ESAVI-2026-000001')).toBeInTheDocument());
+  });
+
+  // SPEC FE09 §3.1, §5: el orden de las rutas importa — /new compite por el mismo segmento que
+  // /:id. Si /esavi-cases/:id se declarara antes, "new" resolvería como un caseId y esta pantalla
+  // sería NewCasePage, no el detalle.
+  it('/esavi-cases/new abre NewCasePage y no EsaviCaseDetailPage con id="new"', async () => {
+    signInAs('USER', 25);
+
+    renderApp('/esavi-cases/new');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Nuevo expediente ESAVI' }),
+    ).toBeInTheDocument();
+    // El detalle pintaría "Volver al listado" y el bloque de estado del expediente; ninguno de
+    // los dos aparece si la ruta resolvió correctamente a NewCasePage.
+    expect(screen.queryByText('Volver al listado')).not.toBeInTheDocument();
+  });
+
+  it('/esavi-cases/case-1 abre EsaviCaseDetailPage', async () => {
+    signInAs('USER', 25);
+
+    renderApp('/esavi-cases/case-1');
+
+    await waitFor(() => expect(screen.getByText('ESAVI-2026-000001')).toBeInTheDocument());
+    expect(screen.getByText('Volver al listado')).toBeInTheDocument();
+  });
+});
+
+describe('Rutas /esavi-cases y /esavi-cases/:id — con ANALYTICS autenticado', () => {
+  it('un ANALYTICS es redirigido a / si teclea /esavi-cases', async () => {
+    signInAs('ANALYTICS', 10);
+
+    renderApp('/esavi-cases');
+
+    expect(await screen.findByText(/^Hola, /)).toBeInTheDocument();
+    expect(screen.queryByText('Casos ESAVI')).not.toBeInTheDocument();
   });
 });

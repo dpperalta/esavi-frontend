@@ -49,8 +49,10 @@ export const NAVIGATION: NavItem[] = [
     icon: ClipboardList,
     children: [
       // SPEC FE08 §3.1: replaces the single disabled `nav.items.esaviCase` with two live
-      // entries. `caseRegister` is USER's real minimum on ESAVI-CASE-001 (API-ROUTES.md);
-      // `caseBrowse` stays disabled until FE09 builds the listing behind it.
+      // entries. `caseRegister` and `caseBrowse` are both USER's real minimum, on
+      // ESAVI-CASE-001 and ESAVI-CASE-002A respectively (API-ROUTES.md). `caseBrowse` went
+      // live with SPEC FE09 — the tab doesn't travel in the link (§3.1): it always points at
+      // `/esavi-cases` without `?tab=`, and the screen resolves the default itself.
       {
         key: 'nav.items.caseRegister',
         icon: FilePlus2,
@@ -62,7 +64,6 @@ export const NAVIGATION: NavItem[] = [
         icon: FileText,
         path: '/esavi-cases',
         minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
       {
         key: 'nav.items.patient',
