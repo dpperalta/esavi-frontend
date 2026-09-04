@@ -570,7 +570,22 @@
         "change": "Wijzigen",
         "empty": "Geen gezondheidsvoorzieningen gevonden.",
         "outOfCoverage": "Buiten je geografische dekking"
-      }
+      },
+      "fields": {
+        "reportDate": "Meldingsdatum",
+        "eventDate": "Datum van het voorval",
+        "reportFillingDate": "Invuldatum van het formulier",
+        "notificationOrganization": "Meldende organisatie",
+        "details": "Details"
+      },
+      "errors": {
+        "eventDateAfterReportDate": "De datum van het voorval kan niet later zijn dan de meldingsdatum."
+      },
+      "noPatient": "Er is geen patiënt gekozen. Ga terug naar de vorige stap om er een te zoeken of aan te maken.",
+      "noCoverage": "Je hebt geen toegewezen gebied. Vraag een beheerder om je geografische dekking toe te wijzen: zonder dekking kun je geen gevallen openen.",
+      "irreversibilityNotice": "De patiënt kan daarna niet meer worden gewijzigd. Een geval dat tegen de verkeerde persoon is geopend, kan alleen worden gedeactiveerd, en dat vereist een beheerder.",
+      "createButton": "Geval aanmaken",
+      "continueButton": "Volgende"
     }
   },
   "caseWizard": {

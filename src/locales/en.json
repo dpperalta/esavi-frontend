@@ -570,7 +570,22 @@
         "change": "Change",
         "empty": "No health facilities found.",
         "outOfCoverage": "Outside your geographic coverage"
-      }
+      },
+      "fields": {
+        "reportDate": "Report date",
+        "eventDate": "Event date",
+        "reportFillingDate": "Report form filling date",
+        "notificationOrganization": "Notifying organization",
+        "details": "Details"
+      },
+      "errors": {
+        "eventDateAfterReportDate": "The event date cannot be later than the report date."
+      },
+      "noPatient": "No patient has been chosen. Go back to the previous step to search for or create one.",
+      "noCoverage": "You have no assigned territory. Ask an administrator to assign you geographic coverage: you cannot open cases without it.",
+      "irreversibilityNotice": "The patient cannot be changed afterward. A case opened against the wrong person can only be deactivated, and that requires an administrator.",
+      "createButton": "Create case",
+      "continueButton": "Next"
     }
   },
   "caseWizard": {

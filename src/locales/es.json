@@ -570,7 +570,22 @@
         "change": "Cambiar",
         "empty": "No se encontraron unidades de salud.",
         "outOfCoverage": "Fuera de tu cobertura geográfica"
-      }
+      },
+      "fields": {
+        "reportDate": "Fecha de reporte",
+        "eventDate": "Fecha del evento",
+        "reportFillingDate": "Fecha de llenado de la ficha",
+        "notificationOrganization": "Organización que notifica",
+        "details": "Detalles"
+      },
+      "errors": {
+        "eventDateAfterReportDate": "La fecha del evento no puede ser posterior a la fecha de reporte."
+      },
+      "noPatient": "No hay ningún paciente elegido. Vuelve al paso anterior para buscarlo o crearlo.",
+      "noCoverage": "No tienes territorio asignado. Pide a un administrador que te asigne cobertura geográfica: sin ella no puedes abrir casos.",
+      "irreversibilityNotice": "El paciente no se podrá cambiar después. Un caso abierto contra la persona equivocada sólo puede darse de baja, y eso exige un administrador.",
+      "createButton": "Crear caso",
+      "continueButton": "Siguiente"
     }
   },
   "caseWizard": {

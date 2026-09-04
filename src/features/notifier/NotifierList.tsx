@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { NotifierListRow } from '@/contracts/declared/notifier';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -22,6 +22,10 @@ import { notifierResource } from './api';
 
 export interface NotifierListProps {
   caseId: string;
+  // `CaseOpeningStep` gates "Siguiente" on this (SPEC FE10 §5: sin notificador no se avanza) —
+  // reusing the count `useList` already fetches here instead of a second, separate query for the
+  // same rows.
+  onCountChange?: (count: number) => void;
 }
 
 function NotifierRow({
@@ -67,7 +71,7 @@ function NotifierRow({
 // profesión por fila, *Editar* siempre visible y *Quitar* sólo con `useCan(ADMIN)`. La fila lee
 // `row.profession`/`row.case` resueltos — nunca un `professionItemId`/`caseId` plano, que
 // `NotifierListRow` no declara al primer nivel (SPEC FE10 §3.3).
-export function NotifierList({ caseId }: NotifierListProps) {
+export function NotifierList({ caseId, onCountChange }: NotifierListProps) {
   const { t } = useTranslation();
   const canRemove = useCan(ROLE_LEVELS.ADMIN);
   const list = notifierResource.useList({ pageSize: 100, filters: { caseId } });
@@ -78,6 +82,13 @@ export function NotifierList({ caseId }: NotifierListProps) {
     notifierId: null,
   });
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (list.data) {
+      onCountChange?.(list.data.count);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `onCountChange` is expected to be a stable callback (or the caller accepts the re-fire); re-including it here would defeat the point of forwarding just the count.
+  }, [list.data]);
 
   function handleConfirmRemove() {
     if (!removeTarget) return;

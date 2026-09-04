@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { EsaviCaseListFilters } from '@/contracts/esaviCase';
+import type { CreateEsaviCaseInput, EsaviCaseListFilters } from '@/contracts/esaviCase';
 import type { CaseWorkflowListFilters } from '@/contracts/caseWorkflow';
 
 // Both schemas do the opposite of the usual job (SPEC FE09 §3.5): they don't validate what the
@@ -86,3 +86,58 @@ export const caseWorkflowFiltersSchema = z
   }));
 
 export type CaseWorkflowFiltersResult = z.infer<typeof caseWorkflowFiltersSchema>;
+
+const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
+
+// `patientId` comes from context — `?patientId=` on create, `esaviCase.patient.patientId` on
+// reentry — and is never a form field; `004` doesn't even accept it (SPEC F11 §3.1, inmutable).
+// `countryIsoCode` isn't asked either (SPEC FE10 §2): it's resolved by `useCountryIsoCode` and
+// added by the caller. `isActive` isn't editable through this form.
+export type CaseOpeningFormValues = Omit<CreateEsaviCaseInput, 'patientId' | 'countryIsoCode' | 'isActive'>;
+
+// SPEC FE10 §3.5, rule 1: lexicographic over YYYY-MM-DD, never a constructed `Date` — same
+// comparison the backend's `CASE_004_INVALID_DATE_RANGE` runs. Bare marker, resolved by the
+// consumer against its own i18n key — same pattern as `resetPasswordSchema`'s `'passwordMismatch'`
+// and `esaviCaseFiltersSchema`'s `'rangeInvalid'` above.
+function checkEventDateNotAfterReportDate(
+  data: { reportDate?: string | null; eventDate?: string | null },
+  ctx: z.RefinementCtx,
+) {
+  if (data.eventDate && data.reportDate && data.eventDate > data.reportDate) {
+    ctx.addIssue({ code: 'custom', message: 'eventDateAfterReportDate', path: ['eventDate'] });
+  }
+}
+
+export const createEsaviCaseOpeningSchema = z
+  .object({
+    healthFacilityId: z.string().uuid(),
+    // `<DateField allowFuture={false}>` already refuses a future keystroke — no client-side
+    // "not future" check is repeated here, same reasoning as `features/patient/schemas.ts`.
+    reportDate: z.string().regex(isoDateRegex).nullable().optional(),
+    eventDate: z.string().regex(isoDateRegex).nullable().optional(),
+    reportFillingDate: z.string().regex(isoDateRegex).nullable().optional(),
+    notificationOrganization: z.preprocess(emptyToUndefined, z.string().trim().max(250).optional()),
+    details: z.preprocess(emptyToUndefined, z.string().optional()),
+  })
+  .superRefine(checkEventDateNotAfterReportDate);
+
+export type CaseOpeningUpdateFormValues = Partial<CaseOpeningFormValues>;
+
+// Never called, only type-checked — same technique and one-direction reasoning as
+// `features/patient/schemas.ts`.
+function _assertSchemaMatchesContract(
+  value: z.infer<typeof createEsaviCaseOpeningSchema>,
+): CaseOpeningFormValues {
+  return value;
+}
+void _assertSchemaMatchesContract;
+
+// SPEC FE10 §3.5. `CASE_001_PATIENT_NOT_FOUND`, `CASE_001_LOCALCODE_MISSING` and
+// `CASE_001_CODE_EXISTS` are deliberately absent: none of them is a field of this form — the
+// first is a toast that sends the user back to paso 1, the other two are toasts by `code` (no
+// field to mark, `caseCode` is server-generated).
+export const caseOpeningErrorFieldMap: Partial<Record<string, keyof CaseOpeningFormValues>> = {
+  CASE_001_FACILITY_NOT_FOUND: 'healthFacilityId',
+  CASE_001_FACILITY_OUT_OF_SCOPE: 'healthFacilityId',
+  CASE_004_INVALID_DATE_RANGE: 'eventDate',
+};
