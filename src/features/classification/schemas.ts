@@ -8,7 +8,9 @@ const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
 // `esavi-backend/src/helpers/severity.helper.ts` can't be `import`ed. This mirrors
 // `findSeverityViolation` field for field (SPEC FE11 §3.5) — the risk of the two drifting apart
 // is documented, not hidden (SPEC FE11 §7).
-const SERIOUS_CRITERION_FIELDS = [
+// Exported: `ClassificationStep` reuses both to compute `getPendingFields()` (SPEC FE11 §3.5)
+// without a second implementation of "does any criterion read true".
+export const SERIOUS_CRITERION_FIELDS = [
   'causedDeath',
   'causedDisability',
   'causedCongenitalAnomaly',
@@ -19,9 +21,9 @@ const SERIOUS_CRITERION_FIELDS = [
   'causedOtherCondition',
 ] as const;
 
-type SeverityCriterionField = (typeof SERIOUS_CRITERION_FIELDS)[number];
+export type SeverityCriterionField = (typeof SERIOUS_CRITERION_FIELDS)[number];
 
-function hasAnySeriousCriterion(data: Record<SeverityCriterionField, boolean | null>): boolean {
+export function hasAnySeriousCriterion(data: Record<SeverityCriterionField, boolean | null>): boolean {
   return SERIOUS_CRITERION_FIELDS.some((field) => data[field] === true);
 }
 

@@ -1,20 +1,11 @@
 import { Controller, type Control } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { ClassificationFormValues } from '@/features/classification/schemas';
+import {
+  SERIOUS_CRITERION_FIELDS as CRITERION_FIELDS,
+  type ClassificationFormValues,
+  type SeverityCriterionField as CriterionField,
+} from '@/features/classification/schemas';
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
-
-const CRITERION_FIELDS = [
-  'causedDeath',
-  'causedDisability',
-  'causedCongenitalAnomaly',
-  'causedFetalDeath',
-  'causedLifeThreatening',
-  'causedHospitalization',
-  'causedAbortion',
-  'causedOtherCondition',
-] as const;
-
-type CriterionField = (typeof CRITERION_FIELDS)[number];
 
 const CRITERION_LABEL_KEYS: Record<CriterionField, string> = {
   causedDeath: 'classification.criteria.causedDeath',
