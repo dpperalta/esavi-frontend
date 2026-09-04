@@ -114,7 +114,8 @@
       "administration": "Beheer"
     },
     "items": {
-      "esaviCase": "ESAVI-gevallen",
+      "caseRegister": "Registreren",
+      "caseBrowse": "Bekijken/bewerken",
       "patient": "Patiënten",
       "finalClassification": "Eindclassificatie",
       "notification": "Meldingen",

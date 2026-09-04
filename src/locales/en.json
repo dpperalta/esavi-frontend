@@ -114,7 +114,8 @@
       "administration": "Administration"
     },
     "items": {
-      "esaviCase": "ESAVI cases",
+      "caseRegister": "Register",
+      "caseBrowse": "View/edit",
       "patient": "Patients",
       "finalClassification": "Final classification",
       "notification": "Notifications",

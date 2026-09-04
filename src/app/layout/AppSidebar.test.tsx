@@ -58,20 +58,21 @@ describe('AppSidebar — filtro por rol', () => {
     renderSidebar([{ name: 'ANALYTICS', level: 10 }]);
 
     await waitFor(() => expect(screen.getByText('nav.home')).toBeInTheDocument());
-    expect(screen.queryByText('nav.items.esaviCase')).not.toBeInTheDocument();
+    expect(screen.queryByText('nav.items.caseRegister')).not.toBeInTheDocument();
     expect(screen.queryByText('nav.groups.cases')).not.toBeInTheDocument();
   });
 
-  it('con USER muestra los dieciséis hijos, sin «Usuarios»', async () => {
+  it('con USER muestra los diecisiete hijos, sin «Usuarios»', async () => {
     renderSidebar([{ name: 'USER', level: 25 }]);
 
-    await waitFor(() => expect(screen.getByText('nav.items.esaviCase')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('nav.items.caseRegister')).toBeInTheDocument());
+    expect(screen.getByText('nav.items.caseBrowse')).toBeInTheDocument();
     expect(screen.queryByText('nav.items.user')).not.toBeInTheDocument();
     expect(screen.getByText('nav.groups.administration')).toBeInTheDocument();
     expect(screen.getByText('nav.items.appRole')).toBeInTheDocument();
   });
 
-  it('con ADMIN muestra los diecisiete hijos, incluido «Usuarios»', async () => {
+  it('con ADMIN muestra los diecinueve hijos, incluido «Usuarios»', async () => {
     renderSidebar([{ name: 'ADMIN', level: 50 }]);
 
     await waitFor(() => expect(screen.getByText('nav.items.user')).toBeInTheDocument());
@@ -82,9 +83,9 @@ describe('AppSidebar — hijos deshabilitados', () => {
   it('no navega al hacer click y se anuncia como aria-disabled', async () => {
     renderSidebar([{ name: 'ADMIN', level: 50 }]);
 
-    await waitFor(() => expect(screen.getByText('nav.items.esaviCase')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('nav.items.caseBrowse')).toBeInTheDocument());
 
-    const disabledItem = screen.getByText('nav.items.esaviCase').closest('button');
+    const disabledItem = screen.getByText('nav.items.caseBrowse').closest('button');
     expect(disabledItem).toHaveAttribute('aria-disabled', 'true');
     expect(disabledItem).not.toHaveAttribute('disabled');
     expect(disabledItem?.tabIndex).toBe(0);
@@ -93,6 +94,16 @@ describe('AppSidebar — hijos deshabilitados', () => {
     expect(disabledItem).not.toHaveAttribute('href');
 
     fireEvent.click(disabledItem!);
-    expect(screen.getByText('nav.items.esaviCase')).toBeInTheDocument();
+    expect(screen.getByText('nav.items.caseBrowse')).toBeInTheDocument();
+  });
+
+  it('«Registrar» ya no está deshabilitado (SPEC FE08 §3.1)', async () => {
+    renderSidebar([{ name: 'ADMIN', level: 50 }]);
+
+    await waitFor(() => expect(screen.getByText('nav.items.caseRegister')).toBeInTheDocument());
+
+    const registerItem = screen.getByText('nav.items.caseRegister').closest('a');
+    expect(registerItem).toHaveAttribute('href', '/esavi-cases/new');
+    expect(registerItem).not.toHaveAttribute('aria-disabled');
   });
 });
