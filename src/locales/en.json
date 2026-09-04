@@ -435,6 +435,15 @@
       "levelTypesAction": "Configure the geographic levels"
     }
   },
+  "caseWorkflow": {
+    "errors": {
+      "CASEFLOW_006_CASE_NOT_FOUND": "The case does not exist.",
+      "CASEFLOW_006_NOT_FOUND": "The case has no workflow record.",
+      "CASEFLOW_007_STAGE_NOT_STARTED": "This stage hasn't started yet.",
+      "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "This stage is already complete.",
+      "CASEFLOW_007_CASE_CLOSED": "This case file is closed."
+    }
+  },
   "caseWizard": {
     "error": {
       "caseNotFound": "This case does not exist",

@@ -48,6 +48,18 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   GEOLOC_006_FILE_REQUIRED: 'geoBulkImport.errors.GEOLOC_006_FILE_REQUIRED',
   GEOLOC_006_FILE_INVALID: 'geoBulkImport.errors.GEOLOC_006_FILE_INVALID',
   GEOLOC_006_FILE_TOO_LARGE: 'geoBulkImport.errors.GEOLOC_006_FILE_TOO_LARGE',
+  // SPEC FE08 §3.6. The two `006` codes reach a dedicated screen (CaseWorkflowErrorScreen), not
+  // this catalog, in the one place this spec calls `006` — kept here anyway as the stable
+  // fallback text for any other caller. The three `007` codes are the ones that actually reach
+  // a toast: `STAGE_NOT_STARTED` and `STAGE_ALREADY_COMPLETED` are prevented client-side (the
+  // action bar disables "Completar etapa" while `!stages.<stage>.exists`) and only surface here
+  // if the workflow state was stale; `CASE_CLOSED` is the real race — the case closed in another
+  // tab between this one's last `006` and its `007`.
+  CASEFLOW_006_CASE_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_006_CASE_NOT_FOUND',
+  CASEFLOW_006_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_006_NOT_FOUND',
+  CASEFLOW_007_STAGE_NOT_STARTED: 'caseWorkflow.errors.CASEFLOW_007_STAGE_NOT_STARTED',
+  CASEFLOW_007_STAGE_ALREADY_COMPLETED: 'caseWorkflow.errors.CASEFLOW_007_STAGE_ALREADY_COMPLETED',
+  CASEFLOW_007_CASE_CLOSED: 'caseWorkflow.errors.CASEFLOW_007_CASE_CLOSED',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

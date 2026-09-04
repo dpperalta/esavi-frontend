@@ -435,6 +435,15 @@
       "levelTypesAction": "Geografische niveaus configureren"
     }
   },
+  "caseWorkflow": {
+    "errors": {
+      "CASEFLOW_006_CASE_NOT_FOUND": "Het geval bestaat niet.",
+      "CASEFLOW_006_NOT_FOUND": "Het geval heeft geen workflowdossier.",
+      "CASEFLOW_007_STAGE_NOT_STARTED": "Deze fase is nog niet gestart.",
+      "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Deze fase is al voltooid.",
+      "CASEFLOW_007_CASE_CLOSED": "Dit dossier is gesloten."
+    }
+  },
   "caseWizard": {
     "error": {
       "caseNotFound": "Dit geval bestaat niet",
