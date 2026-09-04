@@ -1,6 +1,6 @@
 # SPEC FE08 — Armazón del wizard del caso
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell y autenticación), SPEC FE02 (fábrica de recursos y primitivas), **SPEC F44 del backend** (`caseWorkflow`, sus doce operaciones y el bloque `stages`)
 > **Fecha:** 2026-09-03
 > **Objetivo:** El armazón navegable del expediente —ruta, stepper de cuatro grupos y seis pasos, barra de acciones y reanudación desde `ESAVI-CASEFLOW-006`— sin un solo formulario dentro.

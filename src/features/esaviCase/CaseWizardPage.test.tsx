@@ -56,6 +56,14 @@ function mockCase() {
   );
 }
 
+function mockWorkflowError(code: string) {
+  server.use(
+    http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
+      HttpResponse.json({ ok: false, message: 'error del backend', code }, { status: 404 }),
+    ),
+  );
+}
+
 function mockWorkflow(
   statusCode: string,
   stages: Record<string, { exists: boolean; endedAt: string | null }>,
@@ -156,5 +164,45 @@ describe('CaseWizardPage — CLOSED', () => {
     expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument();
+  });
+});
+
+describe('CaseWizardPage — las dos pantallas de error de 006', () => {
+  it('CASEFLOW_006_CASE_NOT_FOUND muestra la pantalla dedicada de caso inexistente', async () => {
+    mockCase();
+    mockWorkflowError('CASEFLOW_006_CASE_NOT_FOUND');
+
+    renderPage('/esavi-cases/case-1/wizard/classification');
+
+    await waitFor(() => expect(screen.getByText('Este caso no existe')).toBeInTheDocument());
+    expect(screen.queryByText('Este caso no tiene expediente de flujo')).not.toBeInTheDocument();
+    expect(screen.queryByText('No pudimos cargar el expediente')).not.toBeInTheDocument();
+  });
+
+  it('CASEFLOW_006_NOT_FOUND muestra la pantalla dedicada de flujo faltante, distinta', async () => {
+    mockCase();
+    mockWorkflowError('CASEFLOW_006_NOT_FOUND');
+
+    renderPage('/esavi-cases/case-1/wizard/classification');
+
+    await waitFor(() =>
+      expect(screen.getByText('Este caso no tiene expediente de flujo')).toBeInTheDocument(),
+    );
+    expect(screen.queryByText('Este caso no existe')).not.toBeInTheDocument();
+    expect(screen.queryByText('No pudimos cargar el expediente')).not.toBeInTheDocument();
+    // Names the case via the independent 003 read, per SPEC FE08 §3.6.
+    await waitFor(() => expect(screen.getByText(/ESAVI-2026-000001/)).toBeInTheDocument());
+  });
+
+  it('un code que no es de las dos pantallas dedicadas cae al error genérico', async () => {
+    mockCase();
+    mockWorkflowError('CASEFLOW_006_UNKNOWN');
+
+    renderPage('/esavi-cases/case-1/wizard/classification');
+
+    await waitFor(() =>
+      expect(screen.getByText('No pudimos cargar el expediente')).toBeInTheDocument(),
+    );
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
   });
 });
