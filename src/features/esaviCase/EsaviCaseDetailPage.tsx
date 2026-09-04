@@ -18,6 +18,17 @@ function formatDate(value: string | null): string {
   return value ? format(new Date(`${value}T00:00:00`), 'dd/MM/yyyy') : '—';
 }
 
+// `details` has no length limit on the backend (esaviCase.validator.ts only checks it's a
+// string) — the truncation is a client-only display choice, not a rule the server enforces.
+const DETAILS_MAX_WORDS = 200;
+
+function truncateWords(text: string | null, maxWords: number): string | null {
+  if (!text) return null;
+  const words = text.trim().split(/\s+/);
+  if (words.length <= maxWords) return text.trim();
+  return `${words.slice(0, maxWords).join(' ')}…`;
+}
+
 interface WorkflowStatusBlockProps {
   caseId: string;
 }
@@ -105,8 +116,19 @@ export function EsaviCaseDetailPage() {
     );
   }
 
-  const { caseCode, patient, healthFacility, reportDate, eventDate, reportFillingDate, appDetails } =
-    caseDetail.data;
+  const {
+    caseCode,
+    patient,
+    healthFacility,
+    reportDate,
+    eventDate,
+    reportFillingDate,
+    countryIsoCode,
+    notificationOrganization,
+    details,
+    appDetails,
+  } = caseDetail.data;
+  const truncatedDetails = truncateWords(details, DETAILS_MAX_WORDS);
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -150,6 +172,19 @@ export function EsaviCaseDetailPage() {
             <p className="text-sm text-foreground">
               {t('esaviCase.detail.reportFillingDate')}: {formatDate(reportFillingDate)}
             </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex flex-col gap-2">
+            <h2 className="text-base font-medium text-foreground">{t('esaviCase.detail.notification')}</h2>
+            <p className="text-sm text-foreground">
+              {t('esaviCase.detail.countryIsoCode')}: {countryIsoCode ?? '—'}
+            </p>
+            <p className="text-sm text-foreground">
+              {t('esaviCase.detail.notificationOrganization')}: {notificationOrganization ?? '—'}
+            </p>
+            <p className="text-sm text-muted-foreground">{truncatedDetails ?? '—'}</p>
           </CardContent>
         </Card>
       </div>

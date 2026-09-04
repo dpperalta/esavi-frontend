@@ -547,6 +547,9 @@
       "reportDate": "Report date",
       "eventDate": "Event date",
       "reportFillingDate": "Report filling date",
+      "notification": "Notification",
+      "countryIsoCode": "Country",
+      "notificationOrganization": "Notifying organization",
       "notFound": {
         "title": "This case does not exist or is out of your reach.",
         "description": "If you need access to it, ask an administrator to review your geographic coverage.",

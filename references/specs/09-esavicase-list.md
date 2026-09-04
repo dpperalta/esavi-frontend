@@ -37,7 +37,7 @@ Es el segundo de los siete specs que implementan `references/CASE-PROCESS.md` (�
 - **`<DateField>` en `shared/components/`** — la primitiva de `ARCHITECTURE.md` §4.3, adelantada desde FE10 (§1E). Recorte a `YYYY-MM-DD` y **la regla temporal por parámetro**: aquí se instancia con futuro permitido, porque los filtros no heredan `isNotFutureDate` (F48 §3.7). A partir de este spec es de todos y no se copia.
 - **`<CatalogSelect>` en `shared/components/`** — la primitiva de `ARCHITECTURE.md` §4.3, adelantada por la misma razón: la resolución de dos saltos `catalogType` → `catalogItem` ya está escrita a mano en `HealthFacilityListPage.tsx:117-131`, y una segunda copia la convertiría en patrón. La consume el filtro `statusCode` de la bandeja, sobre el catálogo `caseWorkflowStatus`.
 - **Tres componentes de shadcn que no están instalados**: `tabs`, `calendar` y `popover`.
-- **Página de resumen** `/esavi-cases/:id` — `ESAVI-CASE-003` para identidad, paciente, unidad de salud y las tres fechas; `useCaseWorkflow(caseId)` (`CASEFLOW-006`, reutilizado de FE08) para el estado del expediente; `<AuditTrail>` sobre `appDetails`, restringido a `SUPERADMIN` (`CONVENTIONS.md` §10.4); y el botón **«Abrir expediente»**, etiquetado según el estado y deshabilitado con `CLOSED`.
+- **Página de resumen** `/esavi-cases/:id` — `ESAVI-CASE-003` para identidad, paciente, unidad de salud, las tres fechas y una cuarta tarjeta **«Notificación»** (`countryIsoCode`, `notificationOrganization`, `details`) que llena el hueco que dejaban las tres tarjetas anteriores en la grilla de dos columnas — ningún dato nuevo del backend, son campos que `ESAVI-CASE-003` ya devuelve y que la primera versión de este spec no mostraba. `details` es texto libre sin límite en el backend, así que la tarjeta lo trunca a 200 palabras con `…` al final; no se pide truncarlo en el servidor. `useCaseWorkflow(caseId)` (`CASEFLOW-006`, reutilizado de FE08) resuelve el estado del expediente; `<AuditTrail>` sobre `appDetails`, restringido a `SUPERADMIN` (`CONVENTIONS.md` §10.4); y el botón **«Abrir expediente»**, etiquetado según el estado y deshabilitado con `CLOSED`.
 - **La pantalla de no encontrado del detalle**, con texto neutro y una salida: un caso ajeno y un caso inexistente son la misma respuesta byte a byte (F49 §122), así que la pantalla no finge distinguirlos y en cambio dice qué hacer.
 - **El estado vacío que nombra el alcance geográfico** — §1C. Distinto del vacío con filtros, que lleva su botón de limpiar.
 - **El enlace «casos de este paciente»** — `/esavi-cases?patientId=<id>` desde el menú de fila y desde el detalle, con una **cápsula con el nombre del paciente y una X** para quitarlo.
@@ -386,6 +386,7 @@ Catorce pasos. Los cinco primeros son de contrato y de primitivas: ninguna panta
 - [ ] «Abrir expediente» está deshabilitado mientras el `006` carga, **se habilita igual si el `006` falla**, y con `CLOSED` anuncia el modo de sólo lectura.
 - [ ] `<AuditTrail>` sólo lo ve `SUPERADMIN`.
 - [ ] Ningún campo del `003` se copia a `useState` ni a un store.
+- [ ] La tarjeta «Notificación» muestra `countryIsoCode`, `notificationOrganization` y `details`; un `details` de más de 200 palabras se corta en la palabra 200 y termina en `…`, sin romper el layout de dos columnas.
 
 **Contrato, primitivas y cierre**
 

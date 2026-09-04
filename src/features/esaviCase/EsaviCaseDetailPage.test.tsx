@@ -219,3 +219,62 @@ describe('EsaviCaseDetailPage — auditoría', () => {
     await waitFor(() => expect(screen.getByText('Historial de auditoría')).toBeInTheDocument());
   });
 });
+
+describe('EsaviCaseDetailPage — tarjeta de notificación', () => {
+  it('muestra countryIsoCode y notificationOrganization', async () => {
+    mockCurrentUser('USER', 25);
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases/case-1', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: caseDetail({ countryIsoCode: 'EC', notificationOrganization: 'MSP' }),
+        }),
+      ),
+      http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowDetail() }),
+      ),
+    );
+
+    renderPage();
+
+    expect(await screen.findByText('País: EC')).toBeInTheDocument();
+    expect(screen.getByText('Organismo notificador: MSP')).toBeInTheDocument();
+  });
+
+  it('un details de más de 200 palabras se corta en la palabra 200 y termina en «…»', async () => {
+    mockCurrentUser('USER', 25);
+    const longDetails = Array.from({ length: 250 }, (_, i) => `palabra${i + 1}`).join(' ');
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: caseDetail({ details: longDetails }) }),
+      ),
+      http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowDetail() }),
+      ),
+    );
+
+    renderPage();
+
+    const expectedText = `${Array.from({ length: 200 }, (_, i) => `palabra${i + 1}`).join(' ')}…`;
+    expect(await screen.findByText(expectedText)).toBeInTheDocument();
+    expect(screen.queryByText(/palabra201/)).not.toBeInTheDocument();
+  });
+
+  it('un details de 200 palabras o menos se muestra completo, sin puntos suspensivos', async () => {
+    mockCurrentUser('USER', 25);
+    const shortDetails = 'Caso con notas breves sobre el evento.';
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: caseDetail({ details: shortDetails }) }),
+      ),
+      http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowDetail() }),
+      ),
+    );
+
+    renderPage();
+
+    expect(await screen.findByText(shortDetails)).toBeInTheDocument();
+  });
+});

@@ -547,6 +547,9 @@
       "reportDate": "Rapportagedatum",
       "eventDate": "Gebeurtenisdatum",
       "reportFillingDate": "Datum indiening rapport",
+      "notification": "Melding",
+      "countryIsoCode": "Land",
+      "notificationOrganization": "Meldende organisatie",
       "notFound": {
         "title": "Dit geval bestaat niet of valt buiten jouw bereik.",
         "description": "Als je er toegang toe nodig hebt, vraag een beheerder om je geografische dekking te controleren.",
