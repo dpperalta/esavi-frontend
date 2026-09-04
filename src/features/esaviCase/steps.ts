@@ -81,10 +81,14 @@ export function stageWorkflowKey(stage: CaseWorkflowStage): keyof WorkflowStages
   return STAGE_TO_WORKFLOW_KEY[stage];
 }
 
-// The slugs reachable through /esavi-cases/:id/wizard/:step — steps 1-2 never are (§3.1).
-export const REACHABLE_WIZARD_STEPS: CaseWizardStepDefinition[] = CASE_WIZARD_STEPS.filter(
-  (step) => step.stage !== null,
-);
+// The slugs reachable through /esavi-cases/:id/wizard/:step — now all six (SPEC FE10 §8): steps
+// 1-2 stopped being excluded once FE10 gave them a reentry mode. They keep painting as
+// «Completado» in the stepper (being in the wizard at all means the case exists) and they keep
+// having no `stage`/precondition of their own, so `isStepUnlocked` and `resolveResumeStep` below
+// are unaffected — `classification`, the first step with a real precondition, still wins the
+// resume walk over them because it comes right after in this same array and is unconditionally
+// unlocked too.
+export const REACHABLE_WIZARD_STEPS: CaseWizardStepDefinition[] = CASE_WIZARD_STEPS;
 
 export function isReachableStepSlug(value: string): value is CaseWizardStepSlug {
   return REACHABLE_WIZARD_STEPS.some((step) => step.slug === value);

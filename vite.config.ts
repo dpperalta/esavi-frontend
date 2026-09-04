@@ -27,6 +27,9 @@ export default defineConfig({
     testTimeout: 15000,
     env: {
       VITE_API_BASE_URL: 'http://localhost:4500/api',
+      // Matches .env.example / .env.development — the fallback useCountryIsoCode reads when
+      // ESAVI_APP_COUNTRY_ISO_CODE hasn't been seeded yet (SPEC FE10 §3.2, §10.1).
+      VITE_ESAVI_APP_COUNTRY_ISO_CODE: 'ECU',
     },
   },
 });

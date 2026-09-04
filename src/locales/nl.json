@@ -479,7 +479,8 @@
       "healthFacility": {
         "label": "Gezondheidsvoorziening",
         "placeholder": "Gezondheidsvoorziening zoeken…",
-        "change": "Wijzigen"
+        "change": "Wijzigen",
+        "empty": "Geen gezondheidsvoorzieningen gevonden."
       },
       "geoLocation": {
         "label": "Geografische locatie"
@@ -560,7 +561,34 @@
       "CASE_005A_NOT_FOUND": "Het geval bestaat niet.",
       "CASE_005B_NOT_FOUND": "Het geval bestaat niet.",
       "CASE_005A_ALREADY_INACTIVE": "Het geval was al inactief.",
-      "CASE_005B_ALREADY_ACTIVE": "Het geval was al actief."
+      "CASE_005B_ALREADY_ACTIVE": "Het geval was al actief.",
+      "CASE_001_PATIENT_NOT_FOUND": "De gekozen patiënt bestaat niet meer. Ga terug naar de vorige stap om opnieuw te zoeken of aan te maken.",
+      "CASE_001_LOCALCODE_MISSING": "De gezondheidsvoorziening heeft geen lokale code ingesteld. Vraag een beheerder om deze in te vullen.",
+      "CASE_001_CODE_EXISTS": "We konden de gevalscode niet genereren. Probeer het opnieuw."
+    },
+    "opening": {
+      "healthFacility": {
+        "label": "Gezondheidsvoorziening",
+        "placeholder": "Gezondheidsvoorziening zoeken…",
+        "change": "Wijzigen",
+        "empty": "Geen gezondheidsvoorzieningen gevonden.",
+        "outOfCoverage": "Buiten je geografische dekking"
+      },
+      "fields": {
+        "reportDate": "Meldingsdatum",
+        "eventDate": "Datum van het voorval",
+        "reportFillingDate": "Invuldatum van het formulier",
+        "notificationOrganization": "Meldende organisatie",
+        "details": "Details"
+      },
+      "errors": {
+        "eventDateAfterReportDate": "De datum van het voorval kan niet later zijn dan de meldingsdatum."
+      },
+      "noPatient": "Er is geen patiënt gekozen. Ga terug naar de vorige stap om er een te zoeken of aan te maken.",
+      "noCoverage": "Je hebt geen toegewezen gebied. Vraag een beheerder om je geografische dekking toe te wijzen: zonder dekking kun je geen gevallen openen.",
+      "irreversibilityNotice": "De patiënt kan daarna niet meer worden gewijzigd. Een geval dat tegen de verkeerde persoon is geopend, kan alleen worden gedeactiveerd, en dat vereist een beheerder.",
+      "createButton": "Geval aanmaken",
+      "continueButton": "Volgende"
     }
   },
   "caseWizard": {
@@ -607,10 +635,86 @@
     },
     "readOnly": {
       "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken."
+    }
+  },
+  "patient": {
+    "form": {
+      "editTitle": "Patiënt bewerken",
+      "noDocument": "Heeft geen identiteitsdocument"
     },
-    "newCase": {
-      "title": "Nieuw ESAVI-geval",
-      "testCreateButton": "Test: gevalcreatie simuleren"
+    "fields": {
+      "names": "Voornamen",
+      "lastNames": "Achternamen",
+      "documentNumber": "Documentnummer",
+      "passportNumber": "Paspoort",
+      "birthDate": "Geboortedatum",
+      "email": "E-mail",
+      "phoneNumber": "Telefoon",
+      "sexItemId": "Geslacht",
+      "residenceGeoLocationId": "Woonlocatie"
+    },
+    "search": {
+      "modeLabel": "Zoekmodus patiënt",
+      "mode": {
+        "identifier": "Identificatie",
+        "name": "Naam"
+      },
+      "termLabel": "Zoekterm",
+      "identifierPlaceholder": "Identiteitskaart, paspoort of code van het gezondheidssysteem",
+      "namePlaceholder": "Volledige voor- en achternaam",
+      "identifierHint": "Exacte overeenkomst met de identiteitskaart, het paspoort of de code van het gezondheidssysteem.",
+      "nameHint": "Typ de volledige voor- en achternaam: een gedeeltelijke overeenkomst levert niets op.",
+      "empty": "Geen actieve patiënten gevonden met dat criterium.",
+      "inactiveFound": "Geen actieve patiënten, maar {{count}} inactieve patiënt(en) komen overeen met dat criterium."
+    },
+    "results": {
+      "useButton": "Deze patiënt gebruiken",
+      "createButton": "Patiënt aanmaken"
+    },
+    "duplicate": {
+      "title": "Dat document is al geregistreerd bij deze patiënt",
+      "useButton": "Gebruiken",
+      "unavailable": "Dat document is al geregistreerd bij een patiënt die je niet kunt zien. Vraag een beheerder om dit te controleren."
+    },
+    "provisional": {
+      "title": "Voorlopige identificatie gegenereerd",
+      "copy": "Kopiëren",
+      "copied": "Gekopieerd naar klembord"
+    },
+    "selected": {
+      "label": "Gekozen patiënt",
+      "change": "Patiënt wijzigen"
+    },
+    "reentry": {
+      "editButton": "Patiënt bewerken"
+    },
+    "actions": {
+      "continue": "Doorgaan"
+    }
+  },
+  "notifier": {
+    "form": {
+      "createTitle": "Nieuwe melder",
+      "editTitle": "Melder bewerken"
+    },
+    "fields": {
+      "firstName": "Voornamen",
+      "lastName": "Achternamen",
+      "professionItemId": "Beroep",
+      "geoLocationId": "Locatie",
+      "room": "Spreekkamer",
+      "address": "Adres",
+      "phoneNumber": "Telefoon",
+      "email": "E-mail",
+      "details": "Details"
+    },
+    "list": {
+      "addButton": "Melder toevoegen",
+      "removeButton": "Verwijderen",
+      "emptyRequired": "Er is minstens één melder nodig om door te gaan."
+    },
+    "errors": {
+      "NOTIFIER_001_CASE_NOT_FOUND": "Het geval is gedeactiveerd. Laad de pagina opnieuw voordat je verdergaat."
     }
   },
   "home": {

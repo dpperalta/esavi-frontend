@@ -47,7 +47,16 @@ export function ResourceForm<TFieldValues extends FieldValues>({
   children,
 }: ResourceFormProps<TFieldValues>) {
   const { t } = useTranslation();
-  const form = useForm<TFieldValues>({ resolver: zodResolver(schema), defaultValues });
+  // `onTouched`: no error hasta que el usuario sale del campo por primera vez (no se le grita en
+  // la primera tecla de un campo obligatorio); `reValidateMode: 'onChange'` es lo que hace que un
+  // error ya mostrado desaparezca en cuanto el valor vuelve a ser válido, sin esperar a un nuevo
+  // blur ni a un nuevo submit.
+  const form = useForm<TFieldValues>({
+    resolver: zodResolver(schema),
+    defaultValues,
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
+  });
 
   useEffect(() => {
     if (!error) {

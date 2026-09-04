@@ -479,7 +479,8 @@
       "healthFacility": {
         "label": "Health facility",
         "placeholder": "Search health facility…",
-        "change": "Change"
+        "change": "Change",
+        "empty": "No health facilities found."
       },
       "geoLocation": {
         "label": "Geographic location"
@@ -560,7 +561,34 @@
       "CASE_005A_NOT_FOUND": "The case does not exist.",
       "CASE_005B_NOT_FOUND": "The case does not exist.",
       "CASE_005A_ALREADY_INACTIVE": "The case was already inactive.",
-      "CASE_005B_ALREADY_ACTIVE": "The case was already active."
+      "CASE_005B_ALREADY_ACTIVE": "The case was already active.",
+      "CASE_001_PATIENT_NOT_FOUND": "The chosen patient no longer exists. Go back to the previous step to search for or create it again.",
+      "CASE_001_LOCALCODE_MISSING": "The health facility has no local code configured. Ask an administrator to complete it.",
+      "CASE_001_CODE_EXISTS": "We couldn't generate the case code. Try again."
+    },
+    "opening": {
+      "healthFacility": {
+        "label": "Health facility",
+        "placeholder": "Search health facility…",
+        "change": "Change",
+        "empty": "No health facilities found.",
+        "outOfCoverage": "Outside your geographic coverage"
+      },
+      "fields": {
+        "reportDate": "Report date",
+        "eventDate": "Event date",
+        "reportFillingDate": "Report form filling date",
+        "notificationOrganization": "Notifying organization",
+        "details": "Details"
+      },
+      "errors": {
+        "eventDateAfterReportDate": "The event date cannot be later than the report date."
+      },
+      "noPatient": "No patient has been chosen. Go back to the previous step to search for or create one.",
+      "noCoverage": "You have no assigned territory. Ask an administrator to assign you geographic coverage: you cannot open cases without it.",
+      "irreversibilityNotice": "The patient cannot be changed afterward. A case opened against the wrong person can only be deactivated, and that requires an administrator.",
+      "createButton": "Create case",
+      "continueButton": "Next"
     }
   },
   "caseWizard": {
@@ -607,10 +635,86 @@
     },
     "readOnly": {
       "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again."
+    }
+  },
+  "patient": {
+    "form": {
+      "editTitle": "Edit patient",
+      "noDocument": "Has no identity document"
     },
-    "newCase": {
-      "title": "New ESAVI case",
-      "testCreateButton": "Test: simulate case creation"
+    "fields": {
+      "names": "First names",
+      "lastNames": "Last names",
+      "documentNumber": "Document number",
+      "passportNumber": "Passport",
+      "birthDate": "Birth date",
+      "email": "Email",
+      "phoneNumber": "Phone",
+      "sexItemId": "Sex",
+      "residenceGeoLocationId": "Residence location"
+    },
+    "search": {
+      "modeLabel": "Patient search mode",
+      "mode": {
+        "identifier": "Identifier",
+        "name": "Name"
+      },
+      "termLabel": "Search term",
+      "identifierPlaceholder": "ID card, passport or health system code",
+      "namePlaceholder": "Full first and last name",
+      "identifierHint": "Exact match against the ID card, passport or health system code.",
+      "nameHint": "Type the full first and last name: a partial match finds nothing.",
+      "empty": "No active patients found for that criterion.",
+      "inactiveFound": "No active patients, but {{count}} inactive patient(s) match that criterion."
+    },
+    "results": {
+      "useButton": "Use this patient",
+      "createButton": "Create patient"
+    },
+    "duplicate": {
+      "title": "That document is already registered to this patient",
+      "useButton": "Use it",
+      "unavailable": "That document is already registered to a patient you can't see. Ask an administrator to review it."
+    },
+    "provisional": {
+      "title": "Provisional identifier generated",
+      "copy": "Copy",
+      "copied": "Copied to clipboard"
+    },
+    "selected": {
+      "label": "Selected patient",
+      "change": "Change patient"
+    },
+    "reentry": {
+      "editButton": "Edit patient"
+    },
+    "actions": {
+      "continue": "Continue"
+    }
+  },
+  "notifier": {
+    "form": {
+      "createTitle": "New notifier",
+      "editTitle": "Edit notifier"
+    },
+    "fields": {
+      "firstName": "First names",
+      "lastName": "Last names",
+      "professionItemId": "Profession",
+      "geoLocationId": "Location",
+      "room": "Room",
+      "address": "Address",
+      "phoneNumber": "Phone",
+      "email": "Email",
+      "details": "Details"
+    },
+    "list": {
+      "addButton": "Add notifier",
+      "removeButton": "Remove",
+      "emptyRequired": "At least one notifier is needed to continue."
+    },
+    "errors": {
+      "NOTIFIER_001_CASE_NOT_FOUND": "The case was deactivated. Reload the page before continuing."
     }
   },
   "home": {

@@ -479,7 +479,8 @@
       "healthFacility": {
         "label": "Unidad de salud",
         "placeholder": "Buscar unidad de salud…",
-        "change": "Cambiar"
+        "change": "Cambiar",
+        "empty": "No se encontraron unidades de salud."
       },
       "geoLocation": {
         "label": "Ubicación geográfica"
@@ -560,7 +561,34 @@
       "CASE_005A_NOT_FOUND": "El caso no existe.",
       "CASE_005B_NOT_FOUND": "El caso no existe.",
       "CASE_005A_ALREADY_INACTIVE": "El caso ya estaba inactivo.",
-      "CASE_005B_ALREADY_ACTIVE": "El caso ya estaba activo."
+      "CASE_005B_ALREADY_ACTIVE": "El caso ya estaba activo.",
+      "CASE_001_PATIENT_NOT_FOUND": "El paciente elegido ya no existe. Vuelve al paso anterior para buscarlo o crearlo de nuevo.",
+      "CASE_001_LOCALCODE_MISSING": "La unidad de salud no tiene código local configurado. Pide a un administrador que lo complete.",
+      "CASE_001_CODE_EXISTS": "No pudimos generar el código del caso. Inténtalo de nuevo."
+    },
+    "opening": {
+      "healthFacility": {
+        "label": "Unidad de salud",
+        "placeholder": "Buscar unidad de salud…",
+        "change": "Cambiar",
+        "empty": "No se encontraron unidades de salud.",
+        "outOfCoverage": "Fuera de tu cobertura geográfica"
+      },
+      "fields": {
+        "reportDate": "Fecha de reporte",
+        "eventDate": "Fecha del evento",
+        "reportFillingDate": "Fecha de llenado de la ficha",
+        "notificationOrganization": "Organización que notifica",
+        "details": "Detalles"
+      },
+      "errors": {
+        "eventDateAfterReportDate": "La fecha del evento no puede ser posterior a la fecha de reporte."
+      },
+      "noPatient": "No hay ningún paciente elegido. Vuelve al paso anterior para buscarlo o crearlo.",
+      "noCoverage": "No tienes territorio asignado. Pide a un administrador que te asigne cobertura geográfica: sin ella no puedes abrir casos.",
+      "irreversibilityNotice": "El paciente no se podrá cambiar después. Un caso abierto contra la persona equivocada sólo puede darse de baja, y eso exige un administrador.",
+      "createButton": "Crear caso",
+      "continueButton": "Siguiente"
     }
   },
   "caseWizard": {
@@ -607,10 +635,86 @@
     },
     "readOnly": {
       "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo."
+    }
+  },
+  "patient": {
+    "form": {
+      "editTitle": "Editar paciente",
+      "noDocument": "No tiene documento de identidad"
     },
-    "newCase": {
-      "title": "Nuevo expediente ESAVI",
-      "testCreateButton": "Prueba: simular creación de caso"
+    "fields": {
+      "names": "Nombres",
+      "lastNames": "Apellidos",
+      "documentNumber": "Número de documento",
+      "passportNumber": "Pasaporte",
+      "birthDate": "Fecha de nacimiento",
+      "email": "Correo electrónico",
+      "phoneNumber": "Teléfono",
+      "sexItemId": "Sexo",
+      "residenceGeoLocationId": "Lugar de residencia"
+    },
+    "search": {
+      "modeLabel": "Modo de búsqueda de paciente",
+      "mode": {
+        "identifier": "Identificador",
+        "name": "Nombre"
+      },
+      "termLabel": "Término de búsqueda",
+      "identifierPlaceholder": "Cédula, pasaporte o código del sistema de salud",
+      "namePlaceholder": "Nombre y apellido completos",
+      "identifierHint": "Coincidencia exacta con la cédula, el pasaporte o el código del sistema de salud.",
+      "nameHint": "Escribe el nombre y el apellido completos: una coincidencia parcial no encuentra nada.",
+      "empty": "No se encontraron pacientes activos con ese criterio.",
+      "inactiveFound": "No hay pacientes activos, pero hay {{count}} paciente(s) inactivo(s) con ese criterio."
+    },
+    "results": {
+      "useButton": "Usar este paciente",
+      "createButton": "Crear paciente"
+    },
+    "duplicate": {
+      "title": "Ese documento ya está registrado en este paciente",
+      "useButton": "Usarlo",
+      "unavailable": "Ese documento ya está registrado en un paciente que no está disponible. Pide a un administrador que lo revise."
+    },
+    "provisional": {
+      "title": "Identificador provisional generado",
+      "copy": "Copiar",
+      "copied": "Copiado al portapapeles"
+    },
+    "selected": {
+      "label": "Paciente elegido",
+      "change": "Cambiar paciente"
+    },
+    "reentry": {
+      "editButton": "Editar paciente"
+    },
+    "actions": {
+      "continue": "Continuar"
+    }
+  },
+  "notifier": {
+    "form": {
+      "createTitle": "Nuevo notificador",
+      "editTitle": "Editar notificador"
+    },
+    "fields": {
+      "firstName": "Nombres",
+      "lastName": "Apellidos",
+      "professionItemId": "Profesión",
+      "geoLocationId": "Ubicación",
+      "room": "Consultorio",
+      "address": "Dirección",
+      "phoneNumber": "Teléfono",
+      "email": "Correo electrónico",
+      "details": "Detalles"
+    },
+    "list": {
+      "addButton": "Agregar notificador",
+      "removeButton": "Quitar",
+      "emptyRequired": "Hace falta al menos un notificador para continuar."
+    },
+    "errors": {
+      "NOTIFIER_001_CASE_NOT_FOUND": "El caso se desactivó. Recarga la página antes de seguir."
     }
   },
   "home": {

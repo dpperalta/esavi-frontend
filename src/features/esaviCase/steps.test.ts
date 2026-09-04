@@ -101,16 +101,16 @@ describe('isStepUnlocked', () => {
 });
 
 describe('isReachableStepSlug', () => {
-  it('acepta solo los cuatro pasos alcanzables por /wizard/:step', () => {
+  it('acepta los seis pasos, incluidos patient y case-opening (SPEC FE10 §8)', () => {
+    expect(isReachableStepSlug('patient')).toBe(true);
+    expect(isReachableStepSlug('case-opening')).toBe(true);
     expect(isReachableStepSlug('classification')).toBe(true);
     expect(isReachableStepSlug('notification')).toBe(true);
     expect(isReachableStepSlug('investigation')).toBe(true);
     expect(isReachableStepSlug('final-classification')).toBe(true);
   });
 
-  it('rechaza patient, case-opening y cualquier valor desconocido', () => {
-    expect(isReachableStepSlug('patient')).toBe(false);
-    expect(isReachableStepSlug('case-opening')).toBe(false);
+  it('rechaza cualquier valor desconocido', () => {
     expect(isReachableStepSlug('not-a-step')).toBe(false);
   });
 });

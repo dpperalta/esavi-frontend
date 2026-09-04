@@ -15,13 +15,16 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 
 export interface CatalogSelectProps {
   typeCode: string;
-  // The item's `code` (e.g. `IN_INVESTIGATION`), not its `catalogItemId`: every consumer of this
-  // primitive reaches it from a URL filter, and a URL holds a stable, human-legible code —
-  // never an opaque UUID a stale seed could regenerate on reseed.
+  // What `value`/`onChange` carry: the item's `code` (e.g. `IN_INVESTIGATION`) by default — every
+  // consumer up to FE09 reaches it from a URL filter, and a URL holds a stable, human-legible
+  // code, never an opaque UUID a stale seed could regenerate on reseed. FE10 needs the other hop:
+  // `sexItemId`/`professionItemId` are `catalogItemId` in the validators, so it passes `emit="id"`
+  // instead of resolving code → id by hand at each of its two consumers (CONVENTIONS.md §10.4).
   value: string | null;
-  onChange: (code: string | null) => void;
+  onChange: (value: string | null) => void;
   ariaLabel: string;
   disabled?: boolean;
+  emit?: 'id' | 'code';
 }
 
 // ESAVI-CATTYPE-002 (resolves `typeCode` → `catalogTypeId`) + ESAVI-CATITEM-002A/002B (items of
@@ -30,7 +33,7 @@ export interface CatalogSelectProps {
 // their own 30-minute `staleTime` (CONVENTIONS.md §6.3); nothing is redeclared here, so two
 // instances with the same `typeCode` share both cache entries and cost one request per hop, not
 // one per instance.
-export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled }: CatalogSelectProps) {
+export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled, emit = 'code' }: CatalogSelectProps) {
   const { t } = useTranslation();
   const typesList = catalogTypeResource.useList({ pageSize: 100 });
   const catalogTypeId =
@@ -77,6 +80,7 @@ export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled }
   }
 
   const rows = itemsList.data?.rows ?? [];
+  const emittedValue = (row: (typeof rows)[number]) => (emit === 'id' ? row.catalogItemId : row.code);
 
   return (
     <Select value={value ?? ''} onValueChange={(nextValue) => onChange(nextValue || null)} disabled={disabled}>
@@ -85,7 +89,7 @@ export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled }
       </SelectTrigger>
       <SelectContent>
         {rows.map((row) => (
-          <SelectItem key={row.catalogItemId} value={row.code}>
+          <SelectItem key={row.catalogItemId} value={emittedValue(row)}>
             {row.name}
           </SelectItem>
         ))}

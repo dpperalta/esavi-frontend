@@ -69,6 +69,15 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   CASE_005B_NOT_FOUND: 'esaviCase.errors.CASE_005B_NOT_FOUND',
   CASE_005A_ALREADY_INACTIVE: 'esaviCase.errors.CASE_005A_ALREADY_INACTIVE',
   CASE_005B_ALREADY_ACTIVE: 'esaviCase.errors.CASE_005B_ALREADY_ACTIVE',
+  // SPEC FE10 §3.5 — the paciente no se elige en el paso 2, así que este código no tiene campo
+  // que marcar: toast, y `CaseOpeningStep` manda de vuelta al paso 1. `LOCALCODE_MISSING` y
+  // `CODE_EXISTS` tampoco tienen campo — `caseCode` lo genera el backend.
+  CASE_001_PATIENT_NOT_FOUND: 'esaviCase.errors.CASE_001_PATIENT_NOT_FOUND',
+  CASE_001_LOCALCODE_MISSING: 'esaviCase.errors.CASE_001_LOCALCODE_MISSING',
+  CASE_001_CODE_EXISTS: 'esaviCase.errors.CASE_001_CODE_EXISTS',
+  // SPEC FE10 §3.5 — sólo alcanzable si el caso se desactivó entre las dos escrituras de
+  // ESAVI-CASE-001 y ESAVI-NOTIFIER-001 (§3.2).
+  NOTIFIER_001_CASE_NOT_FOUND: 'notifier.errors.NOTIFIER_001_CASE_NOT_FOUND',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

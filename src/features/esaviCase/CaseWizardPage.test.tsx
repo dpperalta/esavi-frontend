@@ -148,6 +148,53 @@ describe('CaseWizardPage — reanudación y bloqueo de paso', () => {
   });
 });
 
+describe('CaseWizardPage — reentrada de patient y case-opening (SPEC FE10 §13)', () => {
+  it('/wizard/patient abre la identidad de sólo lectura con «Editar paciente», sin ofrecer cambiar de paciente', async () => {
+    mockCase();
+    mockWorkflow('OPEN', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: false, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+    server.use(
+      http.get('http://localhost:4500/api/patients/patient-1', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            patientId: 'patient-1',
+            names: 'Ana',
+            lastNames: 'Perez',
+            documentNumber: '0102030405',
+            passportNumber: null,
+            birthDate: null,
+            healthSystemCode: null,
+            email: null,
+            phoneNumber: null,
+            isActive: true,
+            createdAt: '2026-09-01T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            sex: null,
+            residence: null,
+          },
+        }),
+      ),
+    );
+
+    renderPage('/esavi-cases/case-1/wizard/patient');
+
+    expect(await screen.findByText('Ana Perez')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Editar paciente' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cambiar paciente' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Término de búsqueda')).not.toBeInTheDocument();
+    // patient no tiene stage: sin la barra genérica de Guardar/Completar etapa.
+    expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument();
+  });
+});
+
 describe('CaseWizardPage — CLOSED', () => {
   it('con CLOSED se renderiza el banner de sólo lectura y se ocultan Guardar y Completar etapa', async () => {
     mockCase();

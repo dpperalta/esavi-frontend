@@ -5,7 +5,9 @@ import { EsaviApiError } from '@/shared/api/types';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
+import { PatientStep } from '@/features/patient/PatientStep';
 import { esaviCaseResource } from './api';
+import { CaseOpeningStep } from './CaseOpeningStep';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
 import { CaseWizardHeader } from './CaseWizardHeader';
@@ -119,11 +121,21 @@ export function CaseWizardPage() {
             </div>
           )}
 
-          <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            {step}
-          </div>
+          {/* patient y case-opening llevan su propia barra de acciones — Continuar / Crear caso
+              · Guardar · Siguiente (SPEC FE10 §2) — y no tienen `stage`, así que la barra
+              genérica (Guardar · Completar etapa · Siguiente, atada a `useCaseWizard()`) no se
+              pinta para ellos. */}
+          {step === 'patient' && <PatientStep patientId={caseDetail.data.patient.patientId} />}
+          {step === 'case-opening' && <CaseOpeningStep />}
+          {step !== 'patient' && step !== 'case-opening' && (
+            <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              {step}
+            </div>
+          )}
 
-          <CaseWizardActionBar caseId={id} activeSlug={step} />
+          {step !== 'patient' && step !== 'case-opening' && (
+            <CaseWizardActionBar caseId={id} activeSlug={step} />
+          )}
         </div>
       </div>
     </CaseWizardProvider>

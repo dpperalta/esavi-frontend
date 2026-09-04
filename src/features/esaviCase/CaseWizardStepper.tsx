@@ -108,13 +108,9 @@ function StepRow({
     </span>
   );
 
-  // Steps 1-2 aren't reachable through this route (SPEC FE08 §3.1) — always shown done, never a
-  // link.
-  if (!step.stage) {
-    return <div className="flex min-h-11 items-center gap-2 rounded-md px-3 py-2">{content}</div>;
-  }
-
-  const unlocked = isStepUnlocked(step.slug, stages);
+  // Steps 1-2 have no precondition of their own — reaching the wizard at all means the case
+  // exists, so they're always unlocked (SPEC FE10 §8) and always rendered as a link.
+  const unlocked = !step.stage || isStepUnlocked(step.slug, stages);
 
   if (!unlocked) {
     const precedingSlug = getPrecedingStepSlug(step.slug);

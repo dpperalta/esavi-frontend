@@ -4,8 +4,8 @@ import { useSearchParams } from 'react-router-dom';
 import { XIcon } from 'lucide-react';
 import { useHealthFacilitySearch } from '@/features/healthFacility/api';
 import { DateField } from '@/shared/components/DateField';
+import { EntitySearchSelect, type EntitySearchOption } from '@/shared/components/EntitySearchSelect';
 import { GeoLocationPicker } from '@/shared/components/GeoLocationPicker';
-import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
@@ -141,10 +141,9 @@ function PatientCapsule({
   );
 }
 
-// Ad-hoc stand-in for `<EntitySearchSelect>` (not built until FE10, SPEC FE09 §3.5): resolves
-// against ESAVI-HFAC-006, the same search HealthFacilityListPage already consumes. A selected
-// facility collapses to a read-only chip with a "change" button, same shape GeoLocationPicker
-// uses for its own resolved value.
+// Consumes `<EntitySearchSelect>` (SPEC FE10 §4, paso 4) against ESAVI-HFAC-006, the same search
+// HealthFacilityListPage already uses. The ad-hoc stand-in this replaced is gone — its own
+// comment declared it provisional "hasta que llegue FE10" (SPEC FE09 §3.5, hallazgo E).
 function HealthFacilityFilter({
   value,
   setSearchParams,
@@ -154,93 +153,46 @@ function HealthFacilityFilter({
 }) {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [editing, setEditing] = useState(value === '');
+  // Name of `value` once resolved by a selection made here. Unknown when the id arrives from the
+  // URL itself (a shared link, a back-navigation): the chip then falls back to the raw id, same
+  // as the stand-in it replaces did.
+  const [resolvedLabel, setResolvedLabel] = useState<string | null>(null);
 
-  useEffect(() => {
-    const handle = window.setTimeout(() => setDebouncedQuery(query), SEARCH_DEBOUNCE_MS);
-    return () => window.clearTimeout(handle);
-  }, [query]);
+  const search = useHealthFacilitySearch({ q: query, pageSize: 10 });
 
-  const search = useHealthFacilitySearch({ q: debouncedQuery, pageSize: 10 });
+  const options: EntitySearchOption[] = (search.data?.rows ?? []).map((row) => ({
+    id: row.healthFacilityId,
+    label: row.name,
+  }));
 
-  function select(id: string, name: string) {
+  function handleChange(option: EntitySearchOption | null) {
+    setResolvedLabel(option?.label ?? null);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      next.set('healthFacilityId', id);
+      if (option) next.set('healthFacilityId', option.id);
+      else next.delete('healthFacilityId');
       return next;
     });
-    setQuery(name);
-    setEditing(false);
   }
-
-  function clear() {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete('healthFacilityId');
-      return next;
-    });
-    setQuery('');
-    setEditing(true);
-  }
-
-  if (!editing && value) {
-    return (
-      <div className="flex flex-col gap-1.5">
-        <Label>{t('esaviCase.filters.healthFacility.label')}</Label>
-        <div className="flex items-center justify-between gap-2 rounded-md border px-3 py-2">
-          <span className="text-sm text-foreground">{query || value}</span>
-          <div className="flex items-center gap-1">
-            <Button type="button" variant="outline" size="sm" onClick={() => setEditing(true)}>
-              {t('esaviCase.filters.healthFacility.change')}
-            </Button>
-            <button
-              type="button"
-              aria-label={t('common.select.clear')}
-              className="rounded-full text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              onClick={clear}
-            >
-              <XIcon aria-hidden="true" className="size-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const rows = search.data?.rows ?? [];
 
   return (
-    <div className="relative flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5">
       <Label htmlFor="esaviCaseFilters-healthFacility">{t('esaviCase.filters.healthFacility.label')}</Label>
-      <Input
-        id="esaviCaseFilters-healthFacility"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
+      <EntitySearchSelect
+        value={value || null}
+        resolvedLabel={resolvedLabel}
+        onChange={handleChange}
+        onQueryChange={setQuery}
+        options={options}
+        isLoading={search.isFetching}
+        isError={search.isError}
+        error={search.error}
+        onRetry={() => void search.refetch()}
         placeholder={t('esaviCase.filters.healthFacility.placeholder')}
-        onBlur={() => {
-          // Nothing picked, and the box is back to what the URL already has: fall back to the
-          // read-only chip instead of leaving a dangling empty search box (SPEC FE09 §3.5).
-          window.setTimeout(() => {
-            if (value) setEditing(false);
-          }, 150);
-        }}
+        ariaLabel={t('esaviCase.filters.healthFacility.label')}
+        changeLabel={t('esaviCase.filters.healthFacility.change')}
+        emptyMessage={t('esaviCase.filters.healthFacility.empty')}
       />
-      {debouncedQuery.trim().length >= 2 && rows.length > 0 && (
-        <ul className="absolute top-full z-10 mt-1 w-full rounded-lg border bg-popover shadow-md ring-1 ring-foreground/10">
-          {rows.map((row) => (
-            <li key={row.healthFacilityId}>
-              <button
-                type="button"
-                className="block w-full px-2.5 py-1.5 text-left text-sm hover:bg-muted"
-                onClick={() => select(row.healthFacilityId, row.name)}
-              >
-                {row.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
