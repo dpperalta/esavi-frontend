@@ -629,6 +629,41 @@
       "phoneNumber": "Telefoon",
       "sexItemId": "Geslacht",
       "residenceGeoLocationId": "Woonlocatie"
+    },
+    "search": {
+      "modeLabel": "Zoekmodus patiënt",
+      "mode": {
+        "identifier": "Identificatie",
+        "name": "Naam"
+      },
+      "termLabel": "Zoekterm",
+      "identifierPlaceholder": "Identiteitskaart, paspoort of code van het gezondheidssysteem",
+      "namePlaceholder": "Volledige voor- en achternaam",
+      "identifierHint": "Exacte overeenkomst met de identiteitskaart, het paspoort of de code van het gezondheidssysteem.",
+      "nameHint": "Typ de volledige voor- en achternaam: een gedeeltelijke overeenkomst levert niets op.",
+      "empty": "Geen actieve patiënten gevonden met dat criterium.",
+      "inactiveFound": "Geen actieve patiënten, maar {{count}} inactieve patiënt(en) komen overeen met dat criterium."
+    },
+    "results": {
+      "useButton": "Deze patiënt gebruiken",
+      "createButton": "Patiënt aanmaken"
+    },
+    "duplicate": {
+      "title": "Dat document is al geregistreerd bij deze patiënt",
+      "useButton": "Gebruiken",
+      "unavailable": "Dat document is al geregistreerd bij een patiënt die je niet kunt zien. Vraag een beheerder om dit te controleren."
+    },
+    "provisional": {
+      "title": "Voorlopige identificatie gegenereerd",
+      "copy": "Kopiëren",
+      "copied": "Gekopieerd naar klembord"
+    },
+    "selected": {
+      "label": "Gekozen patiënt",
+      "change": "Patiënt wijzigen"
+    },
+    "actions": {
+      "continue": "Doorgaan"
     }
   },
   "home": {

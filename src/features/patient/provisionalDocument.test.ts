@@ -32,7 +32,21 @@ describe('generateProvisionalDocument', () => {
 });
 
 describe('createWithProvisionalDocumentRetry', () => {
+  it('el primer intento reutiliza exactamente el initialDocumentNumber', async () => {
+    const initial = generateProvisionalDocument();
+    const submit = vi.fn(async (documentNumber: string) => documentNumber);
+
+    const result = await createWithProvisionalDocumentRetry(submit, () => true, {
+      initialDocumentNumber: initial,
+    });
+
+    expect(result).toBe(initial);
+    expect(submit).toHaveBeenCalledWith(initial);
+    expect(submit).toHaveBeenCalledTimes(1);
+  });
+
   it('un 409 sobre el PROV- regenera el identificador y reintenta hasta que uno funciona', async () => {
+    const initial = generateProvisionalDocument();
     const attempted: string[] = [];
     const submit = vi.fn(async (documentNumber: string) => {
       attempted.push(documentNumber);
@@ -42,9 +56,13 @@ describe('createWithProvisionalDocumentRetry', () => {
       return documentNumber;
     });
 
-    const result = await createWithProvisionalDocumentRetry(submit, () => true);
+    const result = await createWithProvisionalDocumentRetry(submit, () => true, {
+      initialDocumentNumber: initial,
+    });
 
+    expect(attempted[0]).toBe(initial);
     expect(result).toBe(attempted[1]);
+    expect(result).not.toBe(initial);
     expect(submit).toHaveBeenCalledTimes(2);
     expect(new Set(attempted).size).toBe(2);
   });
@@ -54,9 +72,11 @@ describe('createWithProvisionalDocumentRetry', () => {
       throw new Error('collision');
     });
 
-    await expect(createWithProvisionalDocumentRetry(submit, () => true)).rejects.toThrow(
-      'collision',
-    );
+    await expect(
+      createWithProvisionalDocumentRetry(submit, () => true, {
+        initialDocumentNumber: generateProvisionalDocument(),
+      }),
+    ).rejects.toThrow('collision');
     expect(submit).toHaveBeenCalledTimes(3);
   });
 
@@ -65,9 +85,11 @@ describe('createWithProvisionalDocumentRetry', () => {
       throw new Error('other error');
     });
 
-    await expect(createWithProvisionalDocumentRetry(submit, () => false)).rejects.toThrow(
-      'other error',
-    );
+    await expect(
+      createWithProvisionalDocumentRetry(submit, () => false, {
+        initialDocumentNumber: generateProvisionalDocument(),
+      }),
+    ).rejects.toThrow('other error');
     expect(submit).toHaveBeenCalledTimes(1);
   });
 });

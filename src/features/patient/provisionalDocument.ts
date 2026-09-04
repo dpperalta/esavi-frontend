@@ -36,22 +36,34 @@ export function isProvisionalDocumentNumber(value: string): boolean {
   return PROVISIONAL_DOCUMENT_REGEX.test(value.trim().toUpperCase());
 }
 
-// The retry rule of SPEC FE10 §3.5 and §7 riesgo: a `409` on a freshly generated `PROV-` is a
-// collision, not a finding (unlike a `409` on a document the user typed themselves) — regenerate
-// and try again, up to `maxAttempts` identifiers total. With four Crockford symbols there are
-// ~1M combinations per day, so a collision is already unlikely; this is what turns that into a
-// guaranteed behavior instead of a hope. `isCollision` stays the caller's call: only whoever built
-// the request body knows whether the document that just got rejected was the provisional one or
-// something the user actually typed.
+export interface ProvisionalDocumentRetryOptions {
+  // The value the "sin documento" checkbox already generated and showed, disabled, in
+  // `documentNumber` (SPEC FE10 §5: "Marcar «sin documento» genera un PROV-..." — the generation
+  // happens at check time, not at submit time). The first attempt reuses it exactly, so what the
+  // user saw in the field is what actually gets sent; only a collision regenerates a new one, and
+  // only then does the identifier the confirmation dialog shows differ from what was on screen.
+  initialDocumentNumber: string;
+  maxAttempts?: number;
+}
+
+// The retry rule of SPEC FE10 §3.5 and §7 riesgo: a `409` on a `PROV-` is a collision, not a
+// finding (unlike a `409` on a document the user typed themselves) — regenerate and try again, up
+// to `maxAttempts` identifiers total. With four Crockford symbols there are ~1M combinations per
+// day, so a collision is already unlikely; this is what turns that into a guaranteed behavior
+// instead of a hope. `isCollision` stays the caller's call: only whoever built the request body
+// knows whether the document that just got rejected was the provisional one or something the user
+// actually typed.
 export async function createWithProvisionalDocumentRetry<T>(
   submit: (documentNumber: string) => Promise<T>,
   isCollision: (error: unknown) => boolean,
-  maxAttempts: number = MAX_ATTEMPTS,
+  options: ProvisionalDocumentRetryOptions,
 ): Promise<T> {
+  const maxAttempts = options.maxAttempts ?? MAX_ATTEMPTS;
   let lastError: unknown;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const documentNumber = attempt === 0 ? options.initialDocumentNumber : generateProvisionalDocument();
     try {
-      return await submit(generateProvisionalDocument());
+      return await submit(documentNumber);
     } catch (error) {
       lastError = error;
       if (!isCollision(error)) {

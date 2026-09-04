@@ -629,6 +629,41 @@
       "phoneNumber": "Teléfono",
       "sexItemId": "Sexo",
       "residenceGeoLocationId": "Lugar de residencia"
+    },
+    "search": {
+      "modeLabel": "Modo de búsqueda de paciente",
+      "mode": {
+        "identifier": "Identificador",
+        "name": "Nombre"
+      },
+      "termLabel": "Término de búsqueda",
+      "identifierPlaceholder": "Cédula, pasaporte o código del sistema de salud",
+      "namePlaceholder": "Nombre y apellido completos",
+      "identifierHint": "Coincidencia exacta con la cédula, el pasaporte o el código del sistema de salud.",
+      "nameHint": "Escribe el nombre y el apellido completos: una coincidencia parcial no encuentra nada.",
+      "empty": "No se encontraron pacientes activos con ese criterio.",
+      "inactiveFound": "No hay pacientes activos, pero hay {{count}} paciente(s) inactivo(s) con ese criterio."
+    },
+    "results": {
+      "useButton": "Usar este paciente",
+      "createButton": "Crear paciente"
+    },
+    "duplicate": {
+      "title": "Ese documento ya está registrado en este paciente",
+      "useButton": "Usarlo",
+      "unavailable": "Ese documento ya está registrado en un paciente que no está disponible. Pide a un administrador que lo revise."
+    },
+    "provisional": {
+      "title": "Identificador provisional generado",
+      "copy": "Copiar",
+      "copied": "Copiado al portapapeles"
+    },
+    "selected": {
+      "label": "Paciente elegido",
+      "change": "Cambiar paciente"
+    },
+    "actions": {
+      "continue": "Continuar"
     }
   },
   "home": {

@@ -629,6 +629,41 @@
       "phoneNumber": "Phone",
       "sexItemId": "Sex",
       "residenceGeoLocationId": "Residence location"
+    },
+    "search": {
+      "modeLabel": "Patient search mode",
+      "mode": {
+        "identifier": "Identifier",
+        "name": "Name"
+      },
+      "termLabel": "Search term",
+      "identifierPlaceholder": "ID card, passport or health system code",
+      "namePlaceholder": "Full first and last name",
+      "identifierHint": "Exact match against the ID card, passport or health system code.",
+      "nameHint": "Type the full first and last name: a partial match finds nothing.",
+      "empty": "No active patients found for that criterion.",
+      "inactiveFound": "No active patients, but {{count}} inactive patient(s) match that criterion."
+    },
+    "results": {
+      "useButton": "Use this patient",
+      "createButton": "Create patient"
+    },
+    "duplicate": {
+      "title": "That document is already registered to this patient",
+      "useButton": "Use it",
+      "unavailable": "That document is already registered to a patient you can't see. Ask an administrator to review it."
+    },
+    "provisional": {
+      "title": "Provisional identifier generated",
+      "copy": "Copy",
+      "copied": "Copied to clipboard"
+    },
+    "selected": {
+      "label": "Selected patient",
+      "change": "Change patient"
+    },
+    "actions": {
+      "continue": "Continue"
     }
   },
   "home": {
