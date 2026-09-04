@@ -686,6 +686,9 @@
       "label": "Gekozen patiënt",
       "change": "Patiënt wijzigen"
     },
+    "reentry": {
+      "editButton": "Patiënt bewerken"
+    },
     "actions": {
       "continue": "Doorgaan"
     }

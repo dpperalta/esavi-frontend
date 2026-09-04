@@ -686,6 +686,9 @@
       "label": "Paciente elegido",
       "change": "Cambiar paciente"
     },
+    "reentry": {
+      "editButton": "Editar paciente"
+    },
     "actions": {
       "continue": "Continuar"
     }

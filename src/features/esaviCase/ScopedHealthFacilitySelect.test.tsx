@@ -141,10 +141,11 @@ function renderSelect() {
   );
 }
 
-// Each test carries an explicit 60s timeout: typing into this Popover+Command combobox is
+// Each test carries an explicit 90s timeout: typing into this Popover+Command combobox is
 // noticeably heavier than a plain `<input>` (same "yield intermittently stalls" cost `src/test/
 // user.ts` already documents for `delay: null`, just larger here, and worse still under the full
-// suite's worker contention) — real, not fake, and bounded well inside 60s on every observed run.
+// suite's worker contention, which has only grown as more Popover+Command tests joined) — real,
+// not fake, and bounded well inside 90s on every observed run.
 describe('ScopedHealthFacilitySelect — filtro por cobertura (SPEC FE10 §1C, §5)', () => {
   it('con USER, una unidad fuera de cobertura aparece deshabilitada y con su razón, no oculta', async () => {
     const user = setupUser();
@@ -162,7 +163,7 @@ describe('ScopedHealthFacilitySelect — filtro por cobertura (SPEC FE10 §1C, �
     const outOption = await screen.findByRole('option', { name: /Centro de salud Otro Cantón/ });
     expect(outOption).toHaveAttribute('aria-disabled', 'true');
     expect(outOption).toHaveTextContent('Fuera de tu cobertura geográfica');
-  }, 60000);
+  }, 90000);
 
   it('el cruce es contra coverage, no contra assigned: un cantón sólo en coverage sigue elegible', async () => {
     const user = setupUser();
@@ -177,7 +178,7 @@ describe('ScopedHealthFacilitySelect — filtro por cobertura (SPEC FE10 §1C, �
     const inOption = await screen.findByRole('option', { name: /Centro de salud Rumiñahui/ });
     expect(inOption).toHaveAttribute('aria-disabled', 'false');
     expect(inOption).not.toHaveTextContent('Fuera de tu cobertura geográfica');
-  }, 60000);
+  }, 90000);
 
   it('con ADMIN sin filas de cobertura, todas las unidades siguen elegibles', async () => {
     const user = setupUser();
@@ -193,5 +194,5 @@ describe('ScopedHealthFacilitySelect — filtro por cobertura (SPEC FE10 §1C, �
     const outOption = await screen.findByRole('option', { name: /Centro de salud Otro Cantón/ });
     expect(inOption).toHaveAttribute('aria-disabled', 'false');
     expect(outOption).toHaveAttribute('aria-disabled', 'false');
-  }, 60000);
+  }, 90000);
 });

@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { PatientForm } from './PatientForm';
+import { PatientFormDialog } from './PatientFormDialog';
 import { PatientSearchPanel, type PatientSearchMode } from './PatientSearchPanel';
 import { createWithProvisionalDocumentRetry, isProvisionalDocumentNumber } from './provisionalDocument';
 import { patientResource, usePatientSearchByIdentifier, usePatientSearchByName } from './api';
@@ -142,14 +143,55 @@ function SelectedPatientSummary({ patientId, onChange }: { patientId: string; on
   );
 }
 
-// Paso 1 del alta (SPEC FE10 §3.1): buscar o crear al paciente. Este archivo cubre el modo alta —
-// `/esavi-cases/new/patient` — únicamente; el modo reentrada (`/esavi-cases/:id/wizard/patient`,
-// identidad de sólo lectura + "Editar paciente") lo añade el paso 13 del plan de implementación,
-// que es el que también abre esos dos slugs en `steps.ts`.
-export function PatientStep() {
+// Modo reentrada (SPEC FE10 §3.1, §13): identidad en sólo lectura + «Editar paciente», que abre
+// el mismo `PatientFormDialog` del paso 8 (`004`). No ofrece cambiar de paciente — no hay campo
+// de búsqueda ni selector alguno en esta rama, sólo el resumen y el botón de edición.
+function PatientStepReentry({ patientId }: { patientId: string }) {
+  const { t } = useTranslation();
+  const existing = patientResource.useOne(patientId);
+  const [editOpen, setEditOpen] = useState(false);
+
+  if (existing.isLoading || !existing.data) {
+    return <Skeleton className="h-24 w-full" />;
+  }
+
+  return (
+    <Card>
+      <CardContent className="flex flex-col gap-3">
+        <p className="text-sm text-muted-foreground">{t('patient.selected.label')}</p>
+        <p className="text-base font-medium text-foreground">
+          {existing.data.names} {existing.data.lastNames}
+        </p>
+        <p className="text-sm text-muted-foreground">{existing.data.documentNumber ?? '—'}</p>
+        <Button type="button" variant="outline" className="self-start" onClick={() => setEditOpen(true)}>
+          {t('patient.reentry.editButton')}
+        </Button>
+      </CardContent>
+      <PatientFormDialog open={editOpen} patientId={patientId} onOpenChange={setEditOpen} />
+    </Card>
+  );
+}
+
+export interface PatientStepProps {
+  // Sólo lo pasa `CaseWizardPage` en modo reentrada — el `patient.patientId` ya resuelto del caso
+  // que esa página ya obtuvo. Su ausencia es la señal de que se está en el alta
+  // (`/esavi-cases/new/patient`); este componente no vuelve a pedir el caso por su cuenta.
+  patientId?: string;
+}
+
+// Paso 1 del alta y, con `patientId`, su reentrada (SPEC FE10 §3.1, §13): buscar o crear al
+// paciente, o mostrarlo de sólo lectura con edición.
+export function PatientStep({ patientId: reentryPatientId }: PatientStepProps = {}) {
+  if (reentryPatientId) {
+    return <PatientStepReentry patientId={reentryPatientId} />;
+  }
+  return <PatientStepCreate />;
+}
+
+function PatientStepCreate() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const patientId = searchParams.get('patientId');
+  const patientIdFromQuery = searchParams.get('patientId');
 
   const [mode, setMode] = useState<PatientSearchMode>('identifier');
   // Excepción declarada de §3.4/§7: un documento o un apellido es un dato personal, y la URL
@@ -241,8 +283,8 @@ export function PatientStep() {
 
   const mutationError = create.error instanceof EsaviApiError ? create.error : null;
 
-  if (patientId) {
-    return <SelectedPatientSummary patientId={patientId} onChange={() => setSearchParams({})} />;
+  if (patientIdFromQuery) {
+    return <SelectedPatientSummary patientId={patientIdFromQuery} onChange={() => setSearchParams({})} />;
   }
 
   const hasSearched = debouncedTerm.trim().length > 0;
