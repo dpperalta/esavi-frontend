@@ -25,6 +25,8 @@ const SYNC_MAP = [
   { source: 'healthFacility/healthFacility.types.ts', dest: 'healthFacility.ts' },
   { source: 'caseWorkflow/caseWorkflow.types.ts', dest: 'caseWorkflow.ts' },
   { source: 'esaviCase/esaviCase.types.ts', dest: 'esaviCase.ts' },
+  { source: 'patient/patient.types.ts', dest: 'patient.ts' },
+  { source: 'notifier/notifier.types.ts', dest: 'notifier.ts' },
 ];
 
 function buildHeader(sourceRelPath) {

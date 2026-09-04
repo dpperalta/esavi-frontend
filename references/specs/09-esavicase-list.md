@@ -1,6 +1,6 @@
 # SPEC FE09 — Listado y detalle de casos ESAVI
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell y autenticación), SPEC FE02 (fábrica de recursos y primitivas), SPEC FE08 (armazón del wizard: `features/esaviCase/api.ts`, `useCaseWorkflow`), **SPEC F06 del backend** (`esaviCase`), **SPEC F44** (`caseWorkflow`), **SPEC F48** (filtros de fecha y geografía), **SPEC F49** (alcance geográfico del usuario), **SPEC F52** (filtro `code`)
 > **Fecha:** 2026-09-03
 > **Objetivo:** La opción «Ver/editar» del menú: el listado de casos con sus catorce filtros en la URL, una bandeja por estado del proceso, y la página de resumen de sólo lectura desde la que se abre el expediente.
