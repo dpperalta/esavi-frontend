@@ -392,8 +392,8 @@ Catorce pasos. Los cinco primeros son de contrato y de primitivas: ninguna panta
 - [ ] `EsaviCaseListRow` y `CaseWorkflowListRow` reflejan la respuesta real, verificada contra `esaviCase.service.ts` y `caseWorkflow.service.ts`. **Ningún campo inventado.**
 - [ ] `row.appDetails` no compila sobre una fila del listado.
 - [ ] Las cinco declaraciones de `createResource` existentes compilan sin ser editadas.
-- [ ] `<DateField>` y `<CatalogSelect>` viven en `shared/components/` y **no** tienen copia dentro de `features/`.
-- [ ] `grep -rn "catalogTypeResource.useList" src/features/` devuelve **sólo** `HealthFacilityListPage.tsx`, la copia preexistente que §8 deja anotada — no una segunda.
+- [ ] `<DateField>` vive en `shared/components/` y no tiene copia dentro de `features/`. `<CatalogSelect>` vive en `shared/components/` para el consumo de este spec (el filtro `statusCode` de la bandeja); la copia preexistente de `features/catalogItem/CatalogSelect.tsx` (SPEC FE06, hallazgo de implementación anotado en §8) no se toca ni se duplica más allá de esa.
+- [ ] `grep -rn "catalogTypeResource.useList" src/features/` devuelve `HealthFacilityListPage.tsx`, `CatalogItemListPage.tsx`, `CatalogTypeListPage.tsx`, `CatalogTypeSelect.tsx` y `features/catalogItem/CatalogSelect.tsx` — las copias preexistentes que §8 deja anotadas — y **ninguna otra**, nueva, además de ésas.
 
 **Cierre (`CONVENTIONS.md` §14)**
 
@@ -459,6 +459,7 @@ Catorce pasos. Los cinco primeros son de contrato y de primitivas: ninguna panta
 | `shared/config/navigation.ts:57-63` | `nav.items.caseBrowse` pierde `disabled: true` |
 | `app/router.tsx` | Dos rutas nuevas. `/esavi-cases/new` se declara antes que `/esavi-cases/:id` |
 | `features/healthFacility/HealthFacilityListPage.tsx:117-131` | **No se toca en este spec.** Queda con su resolución de catálogo a mano, ahora duplicada por `<CatalogSelect>`. Migrarla es una línea y un spec de limpieza; hacerlo aquí ampliaría el alcance a una pantalla que este spec no construye |
+| `features/catalogItem/CatalogSelect.tsx` (usado en `HealthFacilityFormDialog.tsx`) | **Hallazgo durante la implementación, no previsto por este spec.** Ya existía un combo con la misma resolución de dos saltos —de SPEC FE06 §3.4, con props `value: string` + `onValueChange` + `onClear`, distintas de la primitiva de este spec (`value: string \| null` + `onChange`)— antes de que este spec llegara al paso 8. **No se toca en este spec**, por la misma razón que la fila de arriba: consolidarlo con `shared/components/CatalogSelect.tsx` significa migrar `HealthFacilityFormDialog.tsx`, una pantalla de FE06 que FE09 no construye. Queda como la segunda pieza de la misma deuda, para el mismo spec de limpieza que ya anota la fila de `HealthFacilityListPage.tsx` |
 
 ---
 
