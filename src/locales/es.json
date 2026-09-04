@@ -55,6 +55,9 @@
     },
     "select": {
       "clear": "Limpiar selección"
+    },
+    "dateField": {
+      "openCalendar": "Abrir calendario — {{field}}"
     }
   },
   "auth": {
