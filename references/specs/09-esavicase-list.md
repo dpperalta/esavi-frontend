@@ -37,7 +37,7 @@ Es el segundo de los siete specs que implementan `references/CASE-PROCESS.md` (�
 - **`<DateField>` en `shared/components/`** — la primitiva de `ARCHITECTURE.md` §4.3, adelantada desde FE10 (§1E). Recorte a `YYYY-MM-DD` y **la regla temporal por parámetro**: aquí se instancia con futuro permitido, porque los filtros no heredan `isNotFutureDate` (F48 §3.7). A partir de este spec es de todos y no se copia.
 - **`<CatalogSelect>` en `shared/components/`** — la primitiva de `ARCHITECTURE.md` §4.3, adelantada por la misma razón: la resolución de dos saltos `catalogType` → `catalogItem` ya está escrita a mano en `HealthFacilityListPage.tsx:117-131`, y una segunda copia la convertiría en patrón. La consume el filtro `statusCode` de la bandeja, sobre el catálogo `caseWorkflowStatus`.
 - **Tres componentes de shadcn que no están instalados**: `tabs`, `calendar` y `popover`.
-- **Página de resumen** `/esavi-cases/:id` — `ESAVI-CASE-003` para identidad, paciente, unidad de salud y las tres fechas; `useCaseWorkflow(caseId)` (`CASEFLOW-006`, reutilizado de FE08) para el estado del expediente; `<AuditTrail>` sobre `appDetails`, restringido a `SUPERADMIN` (`CONVENTIONS.md` §10.4); y el botón **«Abrir expediente»**, etiquetado según el estado y deshabilitado con `CLOSED`.
+- **Página de resumen** `/esavi-cases/:id` — `ESAVI-CASE-003` para identidad, paciente, unidad de salud, las tres fechas y una cuarta tarjeta **«Notificación»** (`countryIsoCode`, `notificationOrganization`, `details`) que llena el hueco que dejaban las tres tarjetas anteriores en la grilla de dos columnas — ningún dato nuevo del backend, son campos que `ESAVI-CASE-003` ya devuelve y que la primera versión de este spec no mostraba. `details` es texto libre sin límite en el backend, así que la tarjeta lo trunca a 200 palabras con `…` al final; no se pide truncarlo en el servidor. `useCaseWorkflow(caseId)` (`CASEFLOW-006`, reutilizado de FE08) resuelve el estado del expediente; `<AuditTrail>` sobre `appDetails`, restringido a `SUPERADMIN` (`CONVENTIONS.md` §10.4); y el botón **«Abrir expediente»**, etiquetado según el estado y deshabilitado con `CLOSED`.
 - **La pantalla de no encontrado del detalle**, con texto neutro y una salida: un caso ajeno y un caso inexistente son la misma respuesta byte a byte (F49 §122), así que la pantalla no finge distinguirlos y en cambio dice qué hacer.
 - **El estado vacío que nombra el alcance geográfico** — §1C. Distinto del vacío con filtros, que lleva su botón de limpiar.
 - **El enlace «casos de este paciente»** — `/esavi-cases?patientId=<id>` desde el menú de fila y desde el detalle, con una **cápsula con el nombre del paciente y una X** para quitarlo.
@@ -386,14 +386,15 @@ Catorce pasos. Los cinco primeros son de contrato y de primitivas: ninguna panta
 - [ ] «Abrir expediente» está deshabilitado mientras el `006` carga, **se habilita igual si el `006` falla**, y con `CLOSED` anuncia el modo de sólo lectura.
 - [ ] `<AuditTrail>` sólo lo ve `SUPERADMIN`.
 - [ ] Ningún campo del `003` se copia a `useState` ni a un store.
+- [ ] La tarjeta «Notificación» muestra `countryIsoCode`, `notificationOrganization` y `details`; un `details` de más de 200 palabras se corta en la palabra 200 y termina en `…`, sin romper el layout de dos columnas.
 
 **Contrato, primitivas y cierre**
 
 - [ ] `EsaviCaseListRow` y `CaseWorkflowListRow` reflejan la respuesta real, verificada contra `esaviCase.service.ts` y `caseWorkflow.service.ts`. **Ningún campo inventado.**
 - [ ] `row.appDetails` no compila sobre una fila del listado.
 - [ ] Las cinco declaraciones de `createResource` existentes compilan sin ser editadas.
-- [ ] `<DateField>` y `<CatalogSelect>` viven en `shared/components/` y **no** tienen copia dentro de `features/`.
-- [ ] `grep -rn "catalogTypeResource.useList" src/features/` devuelve **sólo** `HealthFacilityListPage.tsx`, la copia preexistente que §8 deja anotada — no una segunda.
+- [ ] `<DateField>` vive en `shared/components/` y no tiene copia dentro de `features/`. `<CatalogSelect>` vive en `shared/components/` para el consumo de este spec (el filtro `statusCode` de la bandeja); la copia preexistente de `features/catalogItem/CatalogSelect.tsx` (SPEC FE06, hallazgo de implementación anotado en §8) no se toca ni se duplica más allá de esa.
+- [ ] `grep -rn "catalogTypeResource.useList" src/features/` devuelve `HealthFacilityListPage.tsx`, `CatalogItemListPage.tsx`, `CatalogTypeListPage.tsx`, `CatalogTypeSelect.tsx` y `features/catalogItem/CatalogSelect.tsx` — las copias preexistentes que §8 deja anotadas — y **ninguna otra**, nueva, además de ésas.
 
 **Cierre (`CONVENTIONS.md` §14)**
 
@@ -459,6 +460,7 @@ Catorce pasos. Los cinco primeros son de contrato y de primitivas: ninguna panta
 | `shared/config/navigation.ts:57-63` | `nav.items.caseBrowse` pierde `disabled: true` |
 | `app/router.tsx` | Dos rutas nuevas. `/esavi-cases/new` se declara antes que `/esavi-cases/:id` |
 | `features/healthFacility/HealthFacilityListPage.tsx:117-131` | **No se toca en este spec.** Queda con su resolución de catálogo a mano, ahora duplicada por `<CatalogSelect>`. Migrarla es una línea y un spec de limpieza; hacerlo aquí ampliaría el alcance a una pantalla que este spec no construye |
+| `features/catalogItem/CatalogSelect.tsx` (usado en `HealthFacilityFormDialog.tsx`) | **Hallazgo durante la implementación, no previsto por este spec.** Ya existía un combo con la misma resolución de dos saltos —de SPEC FE06 §3.4, con props `value: string` + `onValueChange` + `onClear`, distintas de la primitiva de este spec (`value: string \| null` + `onChange`)— antes de que este spec llegara al paso 8. **No se toca en este spec**, por la misma razón que la fila de arriba: consolidarlo con `shared/components/CatalogSelect.tsx` significa migrar `HealthFacilityFormDialog.tsx`, una pantalla de FE06 que FE09 no construye. Queda como la segunda pieza de la misma deuda, para el mismo spec de limpieza que ya anota la fila de `HealthFacilityListPage.tsx` |
 
 ---
 

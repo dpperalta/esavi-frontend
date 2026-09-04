@@ -65,6 +65,10 @@ export interface ResourceTableProps<T> {
   rowActions?: (row: T) => ReactNode;
   onCreate?: () => void;
   canCreate?: boolean;
+  // i18n key for the create button's label — defaults to the generic "Crear". SPEC FE09 §3.6
+  // needs its own wording ("Registrar un caso") on the empty state, same precedent as
+  // `clearFiltersLabel` (CONVENTIONS.md §10.4: a prop on the primitive, never a local copy).
+  createLabel?: string;
   emptyKey?: string;
   emptyFilteredKey?: string;
   isFiltered?: boolean;
@@ -103,6 +107,7 @@ export function ResourceTable<T>({
   rowActions,
   onCreate,
   canCreate = false,
+  createLabel = 'common.actions.create',
   emptyKey = 'common.table.empty',
   emptyFilteredKey = 'common.table.emptyFiltered',
   isFiltered = false,
@@ -154,7 +159,7 @@ export function ResourceTable<T>({
         {onCreate && canCreate && (
           <Button type="button" onClick={onCreate} size="sm">
             <PlusIcon aria-hidden="true" />
-            {t('common.actions.create')}
+            {t(createLabel)}
           </Button>
         )}
       </div>
@@ -173,6 +178,7 @@ export function ResourceTable<T>({
           <ResourceTableEmpty
             messageKey={isFiltered ? emptyFilteredKey : emptyKey}
             onCreate={canCreate ? onCreate : undefined}
+            createLabel={createLabel}
             onClearFilters={isFiltered ? onClearFilters : undefined}
             clearFiltersLabel={clearFiltersLabel}
           />
@@ -372,6 +378,7 @@ function ResourceTableError({ message, onRetry }: ResourceTableErrorProps) {
 interface ResourceTableEmptyProps {
   messageKey: string;
   onCreate?: () => void;
+  createLabel?: string;
   onClearFilters?: () => void;
   clearFiltersLabel?: string;
 }
@@ -379,6 +386,7 @@ interface ResourceTableEmptyProps {
 function ResourceTableEmpty({
   messageKey,
   onCreate,
+  createLabel = 'common.actions.create',
   onClearFilters,
   clearFiltersLabel = 'common.table.clearFilters',
 }: ResourceTableEmptyProps) {
@@ -396,7 +404,7 @@ function ResourceTableEmpty({
       {onCreate && (
         <Button type="button" size="sm" onClick={onCreate}>
           <PlusIcon aria-hidden="true" />
-          {t('common.actions.create')}
+          {t(createLabel)}
         </Button>
       )}
     </div>

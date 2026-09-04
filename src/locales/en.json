@@ -55,6 +55,9 @@
     },
     "select": {
       "clear": "Clear selection"
+    },
+    "dateField": {
+      "openCalendar": "Open calendar — {{field}}"
     }
   },
   "auth": {
@@ -442,7 +445,122 @@
       "CASEFLOW_006_NOT_FOUND": "The case has no workflow record.",
       "CASEFLOW_007_STAGE_NOT_STARTED": "This stage hasn't started yet.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "This stage is already complete.",
-      "CASEFLOW_007_CASE_CLOSED": "This case file is closed."
+      "CASEFLOW_007_CASE_CLOSED": "This case file is closed.",
+      "CASEFLOW_002_STATUS_NOT_FOUND": "That status does not exist in the catalog. The filter was cleared."
+    },
+    "list": {
+      "columns": {
+        "caseCode": "Code",
+        "status": "Status",
+        "openedAt": "Opened on",
+        "progress": "Progress"
+      },
+      "caseCodeMissing": "No code",
+      "progressValue": "{{done}}/{{total}} stages",
+      "filters": {
+        "status": "Case file status",
+        "openedFrom": "Opened from",
+        "openedTo": "Opened before"
+      },
+      "empty": "There are no case files to show.",
+      "emptyFiltered": "No case file matches the filters."
+    }
+  },
+  "esaviCase": {
+    "filters": {
+      "code": {
+        "label": "Case code",
+        "placeholder": "Search by case code…"
+      },
+      "patient": {
+        "prefix": "Patient",
+        "clearAria": "Remove the patient filter"
+      },
+      "healthFacility": {
+        "label": "Health facility",
+        "placeholder": "Search health facility…",
+        "change": "Change"
+      },
+      "geoLocation": {
+        "label": "Geographic location"
+      },
+      "dateMode": {
+        "exact": "Exact",
+        "range": "Range"
+      },
+      "reportDate": {
+        "groupLabel": "Report date filter mode",
+        "exactLabel": "Report date",
+        "fromLabel": "Report date from",
+        "toLabel": "Report date to"
+      },
+      "eventDate": {
+        "groupLabel": "Event date filter mode",
+        "exactLabel": "Event date",
+        "fromLabel": "Event date from",
+        "toLabel": "Event date to"
+      },
+      "reportFillingDate": {
+        "groupLabel": "Report filling date filter mode",
+        "exactLabel": "Report filling date",
+        "fromLabel": "Report filling date from",
+        "toLabel": "Report filling date to"
+      },
+      "errors": {
+        "rangeInvalid": "The start date cannot be later than the end date."
+      }
+    },
+    "list": {
+      "title": "ESAVI cases",
+      "tabs": {
+        "cases": "By case",
+        "workflow": "Status inbox"
+      },
+      "filtersButton": "Filters",
+      "registerCase": "Register a case",
+      "columns": {
+        "caseCode": "Code",
+        "patient": "Patient",
+        "reportDate": "Report date",
+        "healthFacility": "Health facility",
+        "geoLocation": "Location"
+      },
+      "status": {
+        "inactive": "Inactive"
+      },
+      "empty": "No cases within your reach. If you think you should see cases here, your geographic coverage may not be assigned yet — ask an administrator.",
+      "emptyFiltered": "No case matches the filters.",
+      "rowActions": {
+        "viewDetail": "View detail",
+        "openCase": "Open case file",
+        "viewPatientCases": "View this patient's cases"
+      }
+    },
+    "detail": {
+      "backToList": "Back to the list",
+      "openCase": "Open case file",
+      "viewCaseReadOnly": "View case file (read-only)",
+      "workflowStatus": "Case file status",
+      "patient": "Patient",
+      "healthFacility": "Health facility",
+      "dates": "Dates",
+      "reportDate": "Report date",
+      "eventDate": "Event date",
+      "reportFillingDate": "Report filling date",
+      "notification": "Notification",
+      "countryIsoCode": "Country",
+      "notificationOrganization": "Notifying organization",
+      "notFound": {
+        "title": "This case does not exist or is out of your reach.",
+        "description": "If you need access to it, ask an administrator to review your geographic coverage.",
+        "backToList": "Back to the list"
+      }
+    },
+    "errors": {
+      "CASE_005A_NOT_FOUND": "The case does not exist.",
+      "CASE_005B_NOT_FOUND": "The case does not exist.",
+      "CASE_005A_ALREADY_INACTIVE": "The case was already inactive.",
+      "CASE_005B_ALREADY_ACTIVE": "The case was already active."
     }
   },
   "caseWizard": {
@@ -477,7 +595,8 @@
     },
     "header": {
       "status": "Status",
-      "openedAt": "Opened"
+      "openedAt": "Opened",
+      "backToList": "Back to the list"
     },
     "error": {
       "caseNotFound": "This case does not exist",

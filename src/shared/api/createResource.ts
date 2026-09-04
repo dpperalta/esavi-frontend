@@ -54,7 +54,12 @@ function replaceParentId(segment: string, parentId: string): string {
 // One declaration replaces the CRUD every entity would otherwise write by hand (ARCHITECTURE.md
 // §4, CONVENTIONS.md §5). Every mutation invalidates the root key — never enumerated keys — so
 // the factory never has to know which screens exist (SPEC FE02 §3.1).
-export function createResource<T, TCreateInput = Partial<T>, TUpdateInput = Partial<T>>(
+//
+// `TListRow` defaults to `T`: a list row is usually the same shape as the detail. SPEC FE09 §3.3
+// is the exception — `esaviCase`'s list row and detail differ — and this parameter is what lets
+// `useList`/`useListByParent` type their rows as `TListRow` without widening `useOne`'s `T` to
+// match, or casting at the API boundary (CONVENTIONS.md §9 forbids that `as`).
+export function createResource<T, TCreateInput = Partial<T>, TUpdateInput = Partial<T>, TListRow = T>(
   config: ResourceConfig<T>,
 ) {
   assertConfig(config);
@@ -76,7 +81,7 @@ export function createResource<T, TCreateInput = Partial<T>, TUpdateInput = Part
     return useQuery({
       queryKey: [config.key, 'list', { limit, offset, includeInactive, filters }],
       queryFn: async () => {
-        const response = await client.get<PaginatedResponse<T>>(url, {
+        const response = await client.get<PaginatedResponse<TListRow>>(url, {
           params: { limit, offset, ...filters },
         });
         return response.data;
@@ -168,7 +173,7 @@ export function createResource<T, TCreateInput = Partial<T>, TUpdateInput = Part
         { limit, offset, includeInactive, filters },
       ],
       queryFn: async () => {
-        const response = await client.get<PaginatedResponse<T>>(url, {
+        const response = await client.get<PaginatedResponse<TListRow>>(url, {
           params: { limit, offset, ...filters },
         });
         return response.data;

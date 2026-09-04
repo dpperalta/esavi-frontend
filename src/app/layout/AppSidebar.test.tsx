@@ -80,12 +80,15 @@ describe('AppSidebar — filtro por rol', () => {
 });
 
 describe('AppSidebar — hijos deshabilitados', () => {
+  // `nav.items.patient` is the current example (SPEC FE09 §2): the patients screen stays
+  // `disabled: true` — `caseBrowse` used to be this spec's example until SPEC FE09 built the
+  // listing behind it and lifted the flag (see the two tests below).
   it('no navega al hacer click y se anuncia como aria-disabled', async () => {
     renderSidebar([{ name: 'ADMIN', level: 50 }]);
 
-    await waitFor(() => expect(screen.getByText('nav.items.caseBrowse')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('nav.items.patient')).toBeInTheDocument());
 
-    const disabledItem = screen.getByText('nav.items.caseBrowse').closest('button');
+    const disabledItem = screen.getByText('nav.items.patient').closest('button');
     expect(disabledItem).toHaveAttribute('aria-disabled', 'true');
     expect(disabledItem).not.toHaveAttribute('disabled');
     expect(disabledItem?.tabIndex).toBe(0);
@@ -94,7 +97,7 @@ describe('AppSidebar — hijos deshabilitados', () => {
     expect(disabledItem).not.toHaveAttribute('href');
 
     fireEvent.click(disabledItem!);
-    expect(screen.getByText('nav.items.caseBrowse')).toBeInTheDocument();
+    expect(screen.getByText('nav.items.patient')).toBeInTheDocument();
   });
 
   it('«Registrar» ya no está deshabilitado (SPEC FE08 §3.1)', async () => {
@@ -105,5 +108,15 @@ describe('AppSidebar — hijos deshabilitados', () => {
     const registerItem = screen.getByText('nav.items.caseRegister').closest('a');
     expect(registerItem).toHaveAttribute('href', '/esavi-cases/new');
     expect(registerItem).not.toHaveAttribute('aria-disabled');
+  });
+
+  it('«Ver/editar» ya no está deshabilitado (SPEC FE09 §3.1)', async () => {
+    renderSidebar([{ name: 'ADMIN', level: 50 }]);
+
+    await waitFor(() => expect(screen.getByText('nav.items.caseBrowse')).toBeInTheDocument());
+
+    const browseItem = screen.getByText('nav.items.caseBrowse').closest('a');
+    expect(browseItem).toHaveAttribute('href', '/esavi-cases');
+    expect(browseItem).not.toHaveAttribute('aria-disabled');
   });
 });

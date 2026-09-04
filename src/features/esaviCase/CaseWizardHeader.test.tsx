@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
@@ -27,7 +28,9 @@ function renderHeader() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <CaseWizardHeader caseId="case-1" />
+      <MemoryRouter>
+        <CaseWizardHeader caseId="case-1" />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -122,5 +125,6 @@ describe('CaseWizardHeader', () => {
     expect(screen.getByText(/Ana Perez/)).toBeInTheDocument();
     expect(screen.getByText(/Centro Norte/)).toBeInTheDocument();
     expect(screen.getByText('Abierto')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Volver al listado' })).toBeInTheDocument();
   });
 });

@@ -5,6 +5,8 @@ import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
 import { CaseWizardPage } from '@/features/esaviCase/CaseWizardPage';
+import { EsaviCaseDetailPage } from '@/features/esaviCase/EsaviCaseDetailPage';
+import { EsaviCaseListPage } from '@/features/esaviCase/EsaviCaseListPage';
 import { NewCasePage } from '@/features/esaviCase/NewCasePage';
 import { GeoLevelTypeListPage } from '@/features/geoLevelType/GeoLevelTypeListPage';
 import { GeoBulkImportPage } from '@/features/geoLocation/GeoBulkImportPage';
@@ -42,7 +44,12 @@ export function AppRouter() {
                   caseWorkflow operations the wizard touches (API-ROUTES.md). `:step?` is optional
                   so /esavi-cases/:id/wizard alone resolves to the same page — CaseWizardPage
                   itself redirects to the resume step when `:step` is missing (SPEC FE08 §4). */}
+              <Route path="/esavi-cases" element={<EsaviCaseListPage />} />
+              {/* SPEC FE09 §3.1: /esavi-cases/new declared before /esavi-cases/:id — the static
+                  segment has to win the match, or "new" resolves as a case id and opens the
+                  detail page instead of NewCasePage. */}
               <Route path="/esavi-cases/new" element={<NewCasePage />} />
+              <Route path="/esavi-cases/:id" element={<EsaviCaseDetailPage />} />
               <Route path="/esavi-cases/:id/wizard/:step?" element={<CaseWizardPage />} />
             </Route>
           </Route>

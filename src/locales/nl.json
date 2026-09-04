@@ -55,6 +55,9 @@
     },
     "select": {
       "clear": "Selectie wissen"
+    },
+    "dateField": {
+      "openCalendar": "Kalender openen — {{field}}"
     }
   },
   "auth": {
@@ -442,7 +445,122 @@
       "CASEFLOW_006_NOT_FOUND": "Het geval heeft geen workflowdossier.",
       "CASEFLOW_007_STAGE_NOT_STARTED": "Deze fase is nog niet gestart.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Deze fase is al voltooid.",
-      "CASEFLOW_007_CASE_CLOSED": "Dit dossier is gesloten."
+      "CASEFLOW_007_CASE_CLOSED": "Dit dossier is gesloten.",
+      "CASEFLOW_002_STATUS_NOT_FOUND": "Die status bestaat niet in de catalogus. Het filter is gewist."
+    },
+    "list": {
+      "columns": {
+        "caseCode": "Code",
+        "status": "Status",
+        "openedAt": "Geopend op",
+        "progress": "Voortgang"
+      },
+      "caseCodeMissing": "Geen code",
+      "progressValue": "{{done}}/{{total}} fasen",
+      "filters": {
+        "status": "Status van het dossier",
+        "openedFrom": "Geopend vanaf",
+        "openedTo": "Geopend voor"
+      },
+      "empty": "Er zijn geen dossiers om te tonen.",
+      "emptyFiltered": "Geen dossier komt overeen met de filters."
+    }
+  },
+  "esaviCase": {
+    "filters": {
+      "code": {
+        "label": "Gevalcode",
+        "placeholder": "Zoeken op gevalcode…"
+      },
+      "patient": {
+        "prefix": "Patiënt",
+        "clearAria": "Patiëntfilter verwijderen"
+      },
+      "healthFacility": {
+        "label": "Gezondheidsvoorziening",
+        "placeholder": "Gezondheidsvoorziening zoeken…",
+        "change": "Wijzigen"
+      },
+      "geoLocation": {
+        "label": "Geografische locatie"
+      },
+      "dateMode": {
+        "exact": "Exact",
+        "range": "Bereik"
+      },
+      "reportDate": {
+        "groupLabel": "Modus filter rapportagedatum",
+        "exactLabel": "Rapportagedatum",
+        "fromLabel": "Rapportagedatum vanaf",
+        "toLabel": "Rapportagedatum tot"
+      },
+      "eventDate": {
+        "groupLabel": "Modus filter gebeurtenisdatum",
+        "exactLabel": "Gebeurtenisdatum",
+        "fromLabel": "Gebeurtenisdatum vanaf",
+        "toLabel": "Gebeurtenisdatum tot"
+      },
+      "reportFillingDate": {
+        "groupLabel": "Modus filter datum indiening rapport",
+        "exactLabel": "Datum indiening rapport",
+        "fromLabel": "Datum indiening rapport vanaf",
+        "toLabel": "Datum indiening rapport tot"
+      },
+      "errors": {
+        "rangeInvalid": "De begindatum kan niet later zijn dan de einddatum."
+      }
+    },
+    "list": {
+      "title": "ESAVI-gevallen",
+      "tabs": {
+        "cases": "Per geval",
+        "workflow": "Statusoverzicht"
+      },
+      "filtersButton": "Filters",
+      "registerCase": "Een geval registreren",
+      "columns": {
+        "caseCode": "Code",
+        "patient": "Patiënt",
+        "reportDate": "Rapportagedatum",
+        "healthFacility": "Gezondheidsvoorziening",
+        "geoLocation": "Locatie"
+      },
+      "status": {
+        "inactive": "Inactief"
+      },
+      "empty": "Geen gevallen binnen jouw bereik. Als je denkt dat je hier gevallen zou moeten zien, is je geografische dekking mogelijk nog niet toegewezen — vraag dit na bij een beheerder.",
+      "emptyFiltered": "Geen geval komt overeen met de filters.",
+      "rowActions": {
+        "viewDetail": "Detail bekijken",
+        "openCase": "Dossier openen",
+        "viewPatientCases": "Gevallen van deze patiënt bekijken"
+      }
+    },
+    "detail": {
+      "backToList": "Terug naar de lijst",
+      "openCase": "Dossier openen",
+      "viewCaseReadOnly": "Dossier bekijken (alleen-lezen)",
+      "workflowStatus": "Status van het dossier",
+      "patient": "Patiënt",
+      "healthFacility": "Gezondheidsvoorziening",
+      "dates": "Data",
+      "reportDate": "Rapportagedatum",
+      "eventDate": "Gebeurtenisdatum",
+      "reportFillingDate": "Datum indiening rapport",
+      "notification": "Melding",
+      "countryIsoCode": "Land",
+      "notificationOrganization": "Meldende organisatie",
+      "notFound": {
+        "title": "Dit geval bestaat niet of valt buiten jouw bereik.",
+        "description": "Als je er toegang toe nodig hebt, vraag een beheerder om je geografische dekking te controleren.",
+        "backToList": "Terug naar de lijst"
+      }
+    },
+    "errors": {
+      "CASE_005A_NOT_FOUND": "Het geval bestaat niet.",
+      "CASE_005B_NOT_FOUND": "Het geval bestaat niet.",
+      "CASE_005A_ALREADY_INACTIVE": "Het geval was al inactief.",
+      "CASE_005B_ALREADY_ACTIVE": "Het geval was al actief."
     }
   },
   "caseWizard": {
@@ -477,7 +595,8 @@
     },
     "header": {
       "status": "Status",
-      "openedAt": "Geopend"
+      "openedAt": "Geopend",
+      "backToList": "Terug naar de lijst"
     },
     "error": {
       "caseNotFound": "Dit geval bestaat niet",
