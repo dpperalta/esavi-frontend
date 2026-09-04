@@ -666,6 +666,28 @@
       "continue": "Continuar"
     }
   },
+  "notifier": {
+    "form": {
+      "createTitle": "Nuevo notificador",
+      "editTitle": "Editar notificador"
+    },
+    "fields": {
+      "firstName": "Nombres",
+      "lastName": "Apellidos",
+      "professionItemId": "Profesión",
+      "geoLocationId": "Ubicación",
+      "room": "Consultorio",
+      "address": "Dirección",
+      "phoneNumber": "Teléfono",
+      "email": "Correo electrónico",
+      "details": "Detalles"
+    },
+    "list": {
+      "addButton": "Agregar notificador",
+      "removeButton": "Quitar",
+      "emptyRequired": "Hace falta al menos un notificador para continuar."
+    }
+  },
   "home": {
     "greeting": "Hola, {{name}}",
     "roleLabel": "Tu rol: {{role}}"

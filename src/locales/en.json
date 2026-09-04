@@ -666,6 +666,28 @@
       "continue": "Continue"
     }
   },
+  "notifier": {
+    "form": {
+      "createTitle": "New notifier",
+      "editTitle": "Edit notifier"
+    },
+    "fields": {
+      "firstName": "First names",
+      "lastName": "Last names",
+      "professionItemId": "Profession",
+      "geoLocationId": "Location",
+      "room": "Room",
+      "address": "Address",
+      "phoneNumber": "Phone",
+      "email": "Email",
+      "details": "Details"
+    },
+    "list": {
+      "addButton": "Add notifier",
+      "removeButton": "Remove",
+      "emptyRequired": "At least one notifier is needed to continue."
+    }
+  },
   "home": {
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"

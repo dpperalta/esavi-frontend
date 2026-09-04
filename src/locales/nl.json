@@ -666,6 +666,28 @@
       "continue": "Doorgaan"
     }
   },
+  "notifier": {
+    "form": {
+      "createTitle": "Nieuwe melder",
+      "editTitle": "Melder bewerken"
+    },
+    "fields": {
+      "firstName": "Voornamen",
+      "lastName": "Achternamen",
+      "professionItemId": "Beroep",
+      "geoLocationId": "Locatie",
+      "room": "Spreekkamer",
+      "address": "Adres",
+      "phoneNumber": "Telefoon",
+      "email": "E-mail",
+      "details": "Details"
+    },
+    "list": {
+      "addButton": "Melder toevoegen",
+      "removeButton": "Verwijderen",
+      "emptyRequired": "Er is minstens één melder nodig om door te gaan."
+    }
+  },
   "home": {
     "greeting": "Hallo, {{name}}",
     "roleLabel": "Uw rol: {{role}}"
