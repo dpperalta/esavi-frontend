@@ -153,8 +153,8 @@ describe('CaseWizardPage — CLOSED', () => {
     renderPage('/esavi-cases/case-1/wizard/classification');
 
     await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
-    expect(screen.queryByText('caseWizard.actions.save')).not.toBeInTheDocument();
-    expect(screen.queryByText('caseWizard.actions.completeStage')).not.toBeInTheDocument();
-    expect(screen.getByText('caseWizard.actions.next')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument();
   });
 });

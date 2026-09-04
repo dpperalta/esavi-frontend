@@ -446,6 +446,39 @@
     }
   },
   "caseWizard": {
+    "groups": {
+      "notification": "Notificación",
+      "investigation": "Investigación",
+      "closure": "Cierre"
+    },
+    "steps": {
+      "patient": "Paciente",
+      "caseOpening": "Apertura del caso",
+      "classification": "Clasificación inicial",
+      "notification": "Ficha de notificación",
+      "investigation": "Investigación",
+      "finalClassification": "Clasificación final"
+    },
+    "stepStatus": {
+      "notStarted": "Sin iniciar",
+      "inProgress": "Iniciado",
+      "completed": "Completado"
+    },
+    "stepLocked": {
+      "aria": "Bloqueado hasta completar {{stage}}"
+    },
+    "actions": {
+      "save": "Guardar",
+      "completeStage": "Completar etapa",
+      "next": "Siguiente",
+      "unsavedChangesTitle": "Hay cambios sin guardar",
+      "unsavedChangesBody": "Si continúas sin guardar, perderás lo que escribiste en este paso.",
+      "pendingFieldsTitle": "Faltan estos campos para completar la etapa"
+    },
+    "header": {
+      "status": "Estado",
+      "openedAt": "Apertura"
+    },
     "error": {
       "caseNotFound": "Este caso no existe",
       "backToList": "Volver al listado",

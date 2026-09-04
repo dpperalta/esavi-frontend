@@ -446,6 +446,39 @@
     }
   },
   "caseWizard": {
+    "groups": {
+      "notification": "Notification",
+      "investigation": "Investigation",
+      "closure": "Closure"
+    },
+    "steps": {
+      "patient": "Patient",
+      "caseOpening": "Case opening",
+      "classification": "Initial classification",
+      "notification": "Notification form",
+      "investigation": "Investigation",
+      "finalClassification": "Final classification"
+    },
+    "stepStatus": {
+      "notStarted": "Not started",
+      "inProgress": "In progress",
+      "completed": "Completed"
+    },
+    "stepLocked": {
+      "aria": "Locked until {{stage}} is complete"
+    },
+    "actions": {
+      "save": "Save",
+      "completeStage": "Complete stage",
+      "next": "Next",
+      "unsavedChangesTitle": "You have unsaved changes",
+      "unsavedChangesBody": "If you continue without saving, you'll lose what you typed in this step.",
+      "pendingFieldsTitle": "These fields are still needed to complete the stage"
+    },
+    "header": {
+      "status": "Status",
+      "openedAt": "Opened"
+    },
     "error": {
       "caseNotFound": "This case does not exist",
       "backToList": "Back to the list",

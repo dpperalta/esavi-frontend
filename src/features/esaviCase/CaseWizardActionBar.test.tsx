@@ -1,6 +1,6 @@
 import '@/shared/config/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
@@ -95,8 +95,8 @@ describe('CaseWizardActionBar', () => {
 
     renderActionBar();
 
-    await waitFor(() => expect(screen.getByText('caseWizard.actions.save')).toBeInTheDocument());
-    expect(screen.getByText('caseWizard.actions.save').closest('button')).toBeDisabled();
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    expect(saveButton).toBeDisabled();
   });
 
   it("con stages.classification.exists === false el botón 'Completar etapa' está deshabilitado", async () => {
@@ -104,10 +104,8 @@ describe('CaseWizardActionBar', () => {
 
     renderActionBar();
 
-    await waitFor(() =>
-      expect(screen.getByText('caseWizard.actions.completeStage')).toBeInTheDocument(),
-    );
-    expect(screen.getByText('caseWizard.actions.completeStage').closest('button')).toBeDisabled();
+    const completeStageButton = await screen.findByRole('button', { name: 'Completar etapa' });
+    expect(completeStageButton).toBeDisabled();
   });
 
   it("con stages.classification.exists === true el botón 'Completar etapa' está habilitado", async () => {
@@ -115,9 +113,7 @@ describe('CaseWizardActionBar', () => {
 
     renderActionBar();
 
-    await waitFor(() =>
-      expect(screen.getByText('caseWizard.actions.completeStage')).toBeInTheDocument(),
-    );
-    expect(screen.getByText('caseWizard.actions.completeStage').closest('button')).toBeEnabled();
+    const completeStageButton = await screen.findByRole('button', { name: 'Completar etapa' });
+    expect(completeStageButton).toBeEnabled();
   });
 });

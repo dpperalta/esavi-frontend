@@ -446,6 +446,39 @@
     }
   },
   "caseWizard": {
+    "groups": {
+      "notification": "Melding",
+      "investigation": "Onderzoek",
+      "closure": "Afsluiting"
+    },
+    "steps": {
+      "patient": "Patiënt",
+      "caseOpening": "Opening van het geval",
+      "classification": "Eerste classificatie",
+      "notification": "Meldingsformulier",
+      "investigation": "Onderzoek",
+      "finalClassification": "Eindclassificatie"
+    },
+    "stepStatus": {
+      "notStarted": "Niet gestart",
+      "inProgress": "Bezig",
+      "completed": "Voltooid"
+    },
+    "stepLocked": {
+      "aria": "Vergrendeld tot {{stage}} is voltooid"
+    },
+    "actions": {
+      "save": "Opslaan",
+      "completeStage": "Fase voltooien",
+      "next": "Volgende",
+      "unsavedChangesTitle": "Er zijn niet-opgeslagen wijzigingen",
+      "unsavedChangesBody": "Als je doorgaat zonder op te slaan, verlies je wat je in deze stap hebt ingevoerd.",
+      "pendingFieldsTitle": "Deze velden ontbreken nog om de fase te voltooien"
+    },
+    "header": {
+      "status": "Status",
+      "openedAt": "Geopend"
+    },
     "error": {
       "caseNotFound": "Dit geval bestaat niet",
       "backToList": "Terug naar de lijst",
