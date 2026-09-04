@@ -8,12 +8,7 @@ const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
 // is `ESAVI-PATIENT-005A`/`005B`, out of scope of this spec (SPEC FE10 §2).
 export type PatientFormValues = Omit<CreatePatientInput, 'isActive'>;
 
-// The literal below is checked against `Record<keyof PatientFormValues, ...>`: a field added to
-// or removed from `CreatePatientInput` without a matching change here fails to compile instead of
-// drifting silently. This is what "deriva su tipo de formulario de CreatePatientInput, no lo
-// reescribe" (SPEC FE10 §3.3) means in practice — the contract type is imported, never redefined
-// (CONVENTIONS.md §9).
-const shape: Record<keyof PatientFormValues, z.ZodTypeAny> = {
+export const createPatientSchema = z.object({
   names: z.string().trim().min(1).max(200),
   lastNames: z.string().trim().min(1).max(200),
   // Required by `createPatientValidator` even though the DDL allows it null (SPEC FE10 §3.5, the
@@ -33,12 +28,26 @@ const shape: Record<keyof PatientFormValues, z.ZodTypeAny> = {
   residenceGeoLocationId: z.string().uuid().nullable().optional(),
   // `healthSystemCode` is deliberately absent (SPEC FE10 §3.5): it is never asked, and the
   // backend discards without error whatever arrives under that name.
-};
-
-export const createPatientSchema = z.object(shape);
+});
 export const updatePatientSchema = createPatientSchema.partial();
 
 export type PatientUpdateFormValues = Partial<PatientFormValues>;
+
+// Never called, only type-checked: whatever this schema parses out must be a valid
+// `CreatePatientInput` (minus `isActive`) — the shape that actually reaches `client.post`/`.put`.
+// If `CreatePatientInput` gains, loses or retypes a required field without a matching change
+// above, this fails to compile. This is what "deriva su tipo de formulario de CreatePatientInput,
+// no lo reescribe" (SPEC FE10 §3.3) means in practice — checked against the imported contract
+// type instead of redefining it (CONVENTIONS.md §9), without collapsing every field to
+// `ZodTypeAny` the way typing the schema's object literal as `Record<keyof T, ZodTypeAny>` would
+// (that erasure is what broke `zodResolver`'s inference the first time this was tried). Only this
+// direction is asserted: the schema deliberately never produces `null` for the plain-text optional
+// fields (an unset `<Input>` collapses to `undefined`, not `null`), so the contract's wider
+// `T | null` isn't — and doesn't need to be — fully representable the other way round.
+function _assertSchemaMatchesContract(value: z.infer<typeof createPatientSchema>): PatientFormValues {
+  return value;
+}
+void _assertSchemaMatchesContract;
 
 // SPEC FE10 §3.5. `PATIENT_001_DOCUMENT_EXISTS` is deliberately absent: it is not a field error,
 // it is the §3.6 finding-not-error flow (dispara -006, ofrece al titular). Only `PATIENT_004_...`

@@ -614,6 +614,23 @@
       "testCreateButton": "Prueba: simular creación de caso"
     }
   },
+  "patient": {
+    "form": {
+      "editTitle": "Editar paciente",
+      "noDocument": "No tiene documento de identidad"
+    },
+    "fields": {
+      "names": "Nombres",
+      "lastNames": "Apellidos",
+      "documentNumber": "Número de documento",
+      "passportNumber": "Pasaporte",
+      "birthDate": "Fecha de nacimiento",
+      "email": "Correo electrónico",
+      "phoneNumber": "Teléfono",
+      "sexItemId": "Sexo",
+      "residenceGeoLocationId": "Lugar de residencia"
+    }
+  },
   "home": {
     "greeting": "Hola, {{name}}",
     "roleLabel": "Tu rol: {{role}}"

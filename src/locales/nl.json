@@ -614,6 +614,23 @@
       "testCreateButton": "Test: gevalcreatie simuleren"
     }
   },
+  "patient": {
+    "form": {
+      "editTitle": "Patiënt bewerken",
+      "noDocument": "Heeft geen identiteitsdocument"
+    },
+    "fields": {
+      "names": "Voornamen",
+      "lastNames": "Achternamen",
+      "documentNumber": "Documentnummer",
+      "passportNumber": "Paspoort",
+      "birthDate": "Geboortedatum",
+      "email": "E-mail",
+      "phoneNumber": "Telefoon",
+      "sexItemId": "Geslacht",
+      "residenceGeoLocationId": "Woonlocatie"
+    }
+  },
   "home": {
     "greeting": "Hallo, {{name}}",
     "roleLabel": "Uw rol: {{role}}"

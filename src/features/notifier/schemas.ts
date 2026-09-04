@@ -9,10 +9,7 @@ const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
 // editable through this form either.
 export type NotifierFormValues = Omit<CreateNotifierInput, 'caseId' | 'isActive'>;
 
-// Checked against `Record<keyof NotifierFormValues, ...>` for the same reason as
-// `features/patient/schemas.ts`: the contract type is imported, never redefined
-// (CONVENTIONS.md §9).
-const shape: Record<keyof NotifierFormValues, z.ZodTypeAny> = {
+export const createNotifierSchema = z.object({
   firstName: z.string().trim().min(2).max(150),
   // Required by the application although the DDL allows it null (SPEC FE10 §3.5, segundo caso de
   // validador ≠ DDL): a notifier identified by a given name alone identifies nobody.
@@ -25,12 +22,19 @@ const shape: Record<keyof NotifierFormValues, z.ZodTypeAny> = {
   // No max declared (SPEC FE10 §3.5): the backend validator only runs `.isEmail()`.
   email: z.preprocess(emptyToUndefined, z.string().trim().email().optional()),
   details: z.preprocess(emptyToUndefined, z.string().optional()),
-};
-
-export const createNotifierSchema = z.object(shape);
+});
 export const updateNotifierSchema = createNotifierSchema.partial();
 
 export type NotifierUpdateFormValues = Partial<NotifierFormValues>;
+
+// Never called, only type-checked — same technique and same one-direction reasoning as
+// `features/patient/schemas.ts`: whatever this schema parses out must be a valid
+// `CreateNotifierInput` (minus `caseId`/`isActive`), checked against the imported contract type
+// instead of redefining it (CONVENTIONS.md §9).
+function _assertSchemaMatchesContract(value: z.infer<typeof createNotifierSchema>): NotifierFormValues {
+  return value;
+}
+void _assertSchemaMatchesContract;
 
 // SPEC FE10 §3.5. `NOTIFIER_001_CASE_NOT_FOUND` is deliberately absent: it's a toast, only
 // reachable if the case was deactivated between the two writes — never a field of this form.
