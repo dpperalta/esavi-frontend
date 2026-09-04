@@ -595,7 +595,8 @@
     },
     "header": {
       "status": "Status",
-      "openedAt": "Geopend"
+      "openedAt": "Geopend",
+      "backToList": "Terug naar de lijst"
     },
     "error": {
       "caseNotFound": "Dit geval bestaat niet",

@@ -1,6 +1,8 @@
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { esaviCaseResource } from './api';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
@@ -13,6 +15,7 @@ interface CaseWizardHeaderProps {
 // openedAt) — the two reads §3.2 names for the header.
 export function CaseWizardHeader({ caseId }: CaseWizardHeaderProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const caseDetail = esaviCaseResource.useOne(caseId);
   const workflow = useCaseWorkflow(caseId);
 
@@ -30,11 +33,19 @@ export function CaseWizardHeader({ caseId }: CaseWizardHeaderProps) {
   const { status, openedAt } = workflow.data;
 
   return (
-    <div className="flex flex-col gap-1 border-b border-border pb-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h1 className="text-lg font-medium text-foreground">{caseCode}</h1>
-        <span className="sr-only">{t('caseWizard.header.status')}</span>
-        <Badge variant={status.code === 'CLOSED' ? 'outline' : 'default'}>{status.name}</Badge>
+    <div className="flex flex-col gap-2 border-b border-border pb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-lg font-medium text-foreground">{caseCode}</h1>
+          <span className="sr-only">{t('caseWizard.header.status')}</span>
+          <Badge variant={status.code === 'CLOSED' ? 'outline' : 'default'}>{status.name}</Badge>
+        </div>
+        {/* Not in SPEC FE08's original plan — the wizard shipped before /esavi-cases existed to
+            return to. Added once FE09 built the listing behind it: the menu's own way back
+            always lands on "/", not on the list this expediente came from. */}
+        <Button type="button" variant="outline" size="sm" onClick={() => navigate('/esavi-cases')}>
+          {t('caseWizard.header.backToList')}
+        </Button>
       </div>
       <p className="text-sm text-muted-foreground">
         {patient.names} {patient.lastNames} · {healthFacility.name}

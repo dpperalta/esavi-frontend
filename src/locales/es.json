@@ -595,7 +595,8 @@
     },
     "header": {
       "status": "Estado",
-      "openedAt": "Apertura"
+      "openedAt": "Apertura",
+      "backToList": "Volver al listado"
     },
     "error": {
       "caseNotFound": "Este caso no existe",

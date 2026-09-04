@@ -595,7 +595,8 @@
     },
     "header": {
       "status": "Status",
-      "openedAt": "Opened"
+      "openedAt": "Opened",
+      "backToList": "Back to the list"
     },
     "error": {
       "caseNotFound": "This case does not exist",
