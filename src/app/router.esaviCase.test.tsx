@@ -3,13 +3,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { CaseOpeningStep } from '@/features/esaviCase/CaseOpeningStep';
 import { CaseWizardPage } from '@/features/esaviCase/CaseWizardPage';
 import { EsaviCaseDetailPage } from '@/features/esaviCase/EsaviCaseDetailPage';
 import { EsaviCaseListPage } from '@/features/esaviCase/EsaviCaseListPage';
-import { NewCasePage } from '@/features/esaviCase/NewCasePage';
 import { HomePage } from '@/features/home/HomePage';
+import { PatientStep } from '@/features/patient/PatientStep';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { RequireAuth } from '@/shared/components/RequireAuth';
@@ -152,9 +153,13 @@ function renderApp(initialPath: string) {
               <Route path="/" element={<HomePage />} />
               <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
                 <Route path="/esavi-cases" element={<EsaviCaseListPage />} />
-                {/* SPEC FE09 §3.1: /esavi-cases/new declared before /esavi-cases/:id, mirroring
-                    app/router.tsx exactly — this is the test that pins the order down. */}
-                <Route path="/esavi-cases/new" element={<NewCasePage />} />
+                {/* SPEC FE09 §3.1 / SPEC FE10 §3.1: /esavi-cases/new/... declared before
+                    /esavi-cases/:id, mirroring app/router.tsx exactly — this is the test that
+                    pins the order down. */}
+                <Route path="/esavi-cases/new" element={<PatientStep />} />
+                <Route path="/esavi-cases/new/patient" element={<PatientStep />} />
+                <Route path="/esavi-cases/new/case-opening" element={<CaseOpeningStep />} />
+                <Route path="/esavi-cases/new/:step" element={<PatientStep />} />
                 <Route path="/esavi-cases/:id" element={<EsaviCaseDetailPage />} />
                 <Route path="/esavi-cases/:id/wizard/:step?" element={<CaseWizardPage />} />
               </Route>
@@ -164,6 +169,44 @@ function renderApp(initialPath: string) {
       </TooltipProvider>
     </QueryClientProvider>,
   );
+}
+
+// Same route tree as `renderApp`, but via `createMemoryRouter` so the resulting location is
+// inspectable — needed only to prove a bad `:step` resolves in place, with no `Navigate`.
+function renderAppWithRouter(initialPath: string) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const router = createMemoryRouter(
+    [
+      { path: '/login', element: <div>login-screen</div> },
+      {
+        element: <RequireAuth />,
+        children: [
+          { path: '/', element: <HomePage /> },
+          {
+            element: <RequireRole level={ROLE_LEVELS.USER} />,
+            children: [
+              { path: '/esavi-cases', element: <EsaviCaseListPage /> },
+              { path: '/esavi-cases/new', element: <PatientStep /> },
+              { path: '/esavi-cases/new/patient', element: <PatientStep /> },
+              { path: '/esavi-cases/new/case-opening', element: <CaseOpeningStep /> },
+              { path: '/esavi-cases/new/:step', element: <PatientStep /> },
+              { path: '/esavi-cases/:id', element: <EsaviCaseDetailPage /> },
+              { path: '/esavi-cases/:id/wizard/:step?', element: <CaseWizardPage /> },
+            ],
+          },
+        ],
+      },
+    ],
+    { initialEntries: [initialPath] },
+  );
+  render(
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <RouterProvider router={router} />
+      </TooltipProvider>
+    </QueryClientProvider>,
+  );
+  return router;
 }
 
 describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — sin sesión', () => {
@@ -181,13 +224,13 @@ describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — sin sesión
 });
 
 describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — con USER autenticado', () => {
-  it('/esavi-cases/new resuelve', async () => {
+  it('/esavi-cases/new resuelve el paso 1 sin :step', async () => {
     signInAs('USER', 25);
 
     renderApp('/esavi-cases/new');
 
     expect(
-      await screen.findByRole('heading', { name: 'Nuevo expediente ESAVI' }),
+      await screen.findByRole('radiogroup', { name: 'Modo de búsqueda de paciente' }),
     ).toBeInTheDocument();
   });
 
@@ -199,20 +242,54 @@ describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — con USER au
     await waitFor(() => expect(screen.getByText('ESAVI-2026-000001')).toBeInTheDocument());
   });
 
-  // SPEC FE09 §3.1, §5: el orden de las rutas importa — /new compite por el mismo segmento que
-  // /:id. Si /esavi-cases/:id se declarara antes, "new" resolvería como un caseId y esta pantalla
-  // sería NewCasePage, no el detalle.
-  it('/esavi-cases/new abre NewCasePage y no EsaviCaseDetailPage con id="new"', async () => {
+  // SPEC FE09 §3.1, §5 / SPEC FE10 §3.1: el orden de las rutas importa — /new compite por el
+  // mismo segmento que /:id. Si /esavi-cases/:id se declarara antes, "new" resolvería como un
+  // caseId y esta pantalla sería el detalle, no el paso 1 del alta.
+  it('/esavi-cases/new abre PatientStep y no EsaviCaseDetailPage con id="new"', async () => {
     signInAs('USER', 25);
 
     renderApp('/esavi-cases/new');
 
     expect(
-      await screen.findByRole('heading', { name: 'Nuevo expediente ESAVI' }),
+      await screen.findByRole('radiogroup', { name: 'Modo de búsqueda de paciente' }),
     ).toBeInTheDocument();
     // El detalle pintaría "Volver al listado" y el bloque de estado del expediente; ninguno de
-    // los dos aparece si la ruta resolvió correctamente a NewCasePage.
+    // los dos aparece si la ruta resolvió correctamente al paso 1 del alta.
     expect(screen.queryByText('Volver al listado')).not.toBeInTheDocument();
+  });
+
+  it('/esavi-cases/new/case-opening abre CaseOpeningStep', async () => {
+    signInAs('USER', 25);
+    server.use(
+      http.get('http://localhost:4500/api/user-geo-locations/user/1/coverage', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { assigned: [{ geoLocationId: 'g1', name: 'Pichincha', level: 1 }], coverage: [], count: 1 },
+        }),
+      ),
+      http.get('http://localhost:4500/api/system-configs/code/ESAVI_APP_COUNTRY_ISO_CODE', () =>
+        HttpResponse.json({ ok: false, message: 'not found', code: 'SYSCONF_006_NOT_FOUND' }, { status: 404 }),
+      ),
+    );
+
+    renderApp('/esavi-cases/new/case-opening?patientId=patient-1');
+
+    expect(await screen.findByRole('button', { name: 'Crear caso' })).toBeInTheDocument();
+  });
+
+  // SPEC FE10 §3.4, §14: un valor de :step desconocido se trata como `patient`, sin redirigir —
+  // mismo criterio que el `?tab=` de FE09.
+  it('/esavi-cases/new/basura se comporta como patient sin redirigir', async () => {
+    signInAs('USER', 25);
+
+    const router = renderAppWithRouter('/esavi-cases/new/basura');
+
+    expect(
+      await screen.findByRole('radiogroup', { name: 'Modo de búsqueda de paciente' }),
+    ).toBeInTheDocument();
+    // No hay Navigate de por medio: la ruta sigue siendo la que se pidió.
+    expect(router.state.location.pathname).toBe('/esavi-cases/new/basura');
   });
 
   it('/esavi-cases/case-1 abre EsaviCaseDetailPage', async () => {

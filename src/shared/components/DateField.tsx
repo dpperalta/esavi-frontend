@@ -26,6 +26,12 @@ function todayIsoDate(): string {
   return format(new Date(), 'yyyy-MM-dd');
 }
 
+// A birth date or a report date is routinely decades back — paging one month at a time from 2026
+// to reach 1984 isn't a realistic interaction. `startMonth` is a fixed 120 years back, not derived
+// from `allowFuture`: both callers (the wizard's `birthDate`, the list's date filters) need the
+// same reach into the past.
+const OLDEST_NAVIGABLE_YEAR_OFFSET = 120;
+
 // Same comparison the backend validator runs (esaviCase.validator.ts: `toIsoDay(value) <=
 // todayIsoDate()`) — lexicographic over `YYYY-MM-DD`, never a constructed `Date`.
 function isFutureIsoDate(isoDate: string): boolean {
@@ -66,7 +72,10 @@ export function DateField({ value, onChange, ariaLabel, allowFuture, id, disable
         value={draft}
         max={allowFuture ? undefined : todayIsoDate()}
         onChange={(event) => commit(event.target.value || null)}
-        className="flex-1"
+        // The native picker indicator duplicates the button below, which opens the very same
+        // `<Calendar>` — typing the date still works with the indicator hidden, only the
+        // browser's own popup is gone.
+        className="flex-1 [&::-webkit-calendar-picker-indicator]:hidden"
       />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -83,6 +92,13 @@ export function DateField({ value, onChange, ariaLabel, allowFuture, id, disable
         <PopoverContent align="start" className="w-auto p-0">
           <Calendar
             mode="single"
+            captionLayout="dropdown"
+            startMonth={new Date(new Date().getFullYear() - OLDEST_NAVIGABLE_YEAR_OFFSET, 0)}
+            endMonth={allowFuture ? new Date(new Date().getFullYear() + 1, 11) : new Date()}
+            // Opens on the month of the value already selected, not always today's — editing a
+            // date from months or decades back shouldn't require paging back to it a second time
+            // right after the year/month dropdowns already got there once.
+            defaultMonth={value ? new Date(`${value}T00:00:00`) : undefined}
             selected={value ? new Date(`${value}T00:00:00`) : undefined}
             disabled={allowFuture ? undefined : { after: new Date() }}
             onSelect={(date) => {

@@ -561,7 +561,10 @@
       "CASE_005A_NOT_FOUND": "The case does not exist.",
       "CASE_005B_NOT_FOUND": "The case does not exist.",
       "CASE_005A_ALREADY_INACTIVE": "The case was already inactive.",
-      "CASE_005B_ALREADY_ACTIVE": "The case was already active."
+      "CASE_005B_ALREADY_ACTIVE": "The case was already active.",
+      "CASE_001_PATIENT_NOT_FOUND": "The chosen patient no longer exists. Go back to the previous step to search for or create it again.",
+      "CASE_001_LOCALCODE_MISSING": "The health facility has no local code configured. Ask an administrator to complete it.",
+      "CASE_001_CODE_EXISTS": "We couldn't generate the case code. Try again."
     },
     "opening": {
       "healthFacility": {
@@ -632,10 +635,6 @@
     },
     "readOnly": {
       "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again."
-    },
-    "newCase": {
-      "title": "New ESAVI case",
-      "testCreateButton": "Test: simulate case creation"
     }
   },
   "patient": {
@@ -713,6 +712,9 @@
       "addButton": "Add notifier",
       "removeButton": "Remove",
       "emptyRequired": "At least one notifier is needed to continue."
+    },
+    "errors": {
+      "NOTIFIER_001_CASE_NOT_FOUND": "The case was deactivated. Reload the page before continuing."
     }
   },
   "home": {

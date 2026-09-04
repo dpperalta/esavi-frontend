@@ -4,15 +4,16 @@ import { CatalogTypeListPage } from '@/features/catalogType/CatalogTypeListPage'
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
+import { CaseOpeningStep } from '@/features/esaviCase/CaseOpeningStep';
 import { CaseWizardPage } from '@/features/esaviCase/CaseWizardPage';
 import { EsaviCaseDetailPage } from '@/features/esaviCase/EsaviCaseDetailPage';
 import { EsaviCaseListPage } from '@/features/esaviCase/EsaviCaseListPage';
-import { NewCasePage } from '@/features/esaviCase/NewCasePage';
 import { GeoLevelTypeListPage } from '@/features/geoLevelType/GeoLevelTypeListPage';
 import { GeoBulkImportPage } from '@/features/geoLocation/GeoBulkImportPage';
 import { GeoLocationListPage } from '@/features/geoLocation/GeoLocationListPage';
 import { HealthFacilityListPage } from '@/features/healthFacility/HealthFacilityListPage';
 import { HomePage } from '@/features/home/HomePage';
+import { PatientStep } from '@/features/patient/PatientStep';
 import { RequireAuth } from '@/shared/components/RequireAuth';
 import { RequireRole } from '@/shared/components/RequireRole';
 import { ROLE_LEVELS } from '@/shared/config/roles';
@@ -45,10 +46,16 @@ export function AppRouter() {
                   so /esavi-cases/:id/wizard alone resolves to the same page — CaseWizardPage
                   itself redirects to the resume step when `:step` is missing (SPEC FE08 §4). */}
               <Route path="/esavi-cases" element={<EsaviCaseListPage />} />
-              {/* SPEC FE09 §3.1: /esavi-cases/new declared before /esavi-cases/:id — the static
-                  segment has to win the match, or "new" resolves as a case id and opens the
-                  detail page instead of NewCasePage. */}
-              <Route path="/esavi-cases/new" element={<NewCasePage />} />
+              {/* SPEC FE09 §3.1 / SPEC FE10 §3.1: /esavi-cases/new/... declared before
+                  /esavi-cases/:id — the static segment has to win the match, or "new" resolves
+                  as a case id and opens the detail page instead of the alta. No :step? here:
+                  the two real slugs are declared explicitly, and any other value falls through
+                  to the last route, which resolves it as `patient` without redirecting (SPEC
+                  FE10 §3.4) — the same criterion FE09's own `?tab=` already uses. */}
+              <Route path="/esavi-cases/new" element={<PatientStep />} />
+              <Route path="/esavi-cases/new/patient" element={<PatientStep />} />
+              <Route path="/esavi-cases/new/case-opening" element={<CaseOpeningStep />} />
+              <Route path="/esavi-cases/new/:step" element={<PatientStep />} />
               <Route path="/esavi-cases/:id" element={<EsaviCaseDetailPage />} />
               <Route path="/esavi-cases/:id/wizard/:step?" element={<CaseWizardPage />} />
             </Route>

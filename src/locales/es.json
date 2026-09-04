@@ -561,7 +561,10 @@
       "CASE_005A_NOT_FOUND": "El caso no existe.",
       "CASE_005B_NOT_FOUND": "El caso no existe.",
       "CASE_005A_ALREADY_INACTIVE": "El caso ya estaba inactivo.",
-      "CASE_005B_ALREADY_ACTIVE": "El caso ya estaba activo."
+      "CASE_005B_ALREADY_ACTIVE": "El caso ya estaba activo.",
+      "CASE_001_PATIENT_NOT_FOUND": "El paciente elegido ya no existe. Vuelve al paso anterior para buscarlo o crearlo de nuevo.",
+      "CASE_001_LOCALCODE_MISSING": "La unidad de salud no tiene código local configurado. Pide a un administrador que lo complete.",
+      "CASE_001_CODE_EXISTS": "No pudimos generar el código del caso. Inténtalo de nuevo."
     },
     "opening": {
       "healthFacility": {
@@ -632,10 +635,6 @@
     },
     "readOnly": {
       "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo."
-    },
-    "newCase": {
-      "title": "Nuevo expediente ESAVI",
-      "testCreateButton": "Prueba: simular creación de caso"
     }
   },
   "patient": {
@@ -713,6 +712,9 @@
       "addButton": "Agregar notificador",
       "removeButton": "Quitar",
       "emptyRequired": "Hace falta al menos un notificador para continuar."
+    },
+    "errors": {
+      "NOTIFIER_001_CASE_NOT_FOUND": "El caso se desactivó. Recarga la página antes de seguir."
     }
   },
   "home": {

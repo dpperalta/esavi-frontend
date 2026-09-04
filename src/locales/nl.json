@@ -561,7 +561,10 @@
       "CASE_005A_NOT_FOUND": "Het geval bestaat niet.",
       "CASE_005B_NOT_FOUND": "Het geval bestaat niet.",
       "CASE_005A_ALREADY_INACTIVE": "Het geval was al inactief.",
-      "CASE_005B_ALREADY_ACTIVE": "Het geval was al actief."
+      "CASE_005B_ALREADY_ACTIVE": "Het geval was al actief.",
+      "CASE_001_PATIENT_NOT_FOUND": "De gekozen patiënt bestaat niet meer. Ga terug naar de vorige stap om opnieuw te zoeken of aan te maken.",
+      "CASE_001_LOCALCODE_MISSING": "De gezondheidsvoorziening heeft geen lokale code ingesteld. Vraag een beheerder om deze in te vullen.",
+      "CASE_001_CODE_EXISTS": "We konden de gevalscode niet genereren. Probeer het opnieuw."
     },
     "opening": {
       "healthFacility": {
@@ -632,10 +635,6 @@
     },
     "readOnly": {
       "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken."
-    },
-    "newCase": {
-      "title": "Nieuw ESAVI-geval",
-      "testCreateButton": "Test: gevalcreatie simuleren"
     }
   },
   "patient": {
@@ -713,6 +712,9 @@
       "addButton": "Melder toevoegen",
       "removeButton": "Verwijderen",
       "emptyRequired": "Er is minstens één melder nodig om door te gaan."
+    },
+    "errors": {
+      "NOTIFIER_001_CASE_NOT_FOUND": "Het geval is gedeactiveerd. Laad de pagina opnieuw voordat je verdergaat."
     }
   },
   "home": {

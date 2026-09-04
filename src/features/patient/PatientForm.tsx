@@ -81,7 +81,7 @@ export function PatientForm({ form, onProvisionalDocumentGenerated }: PatientFor
           <FormItem>
             <FormLabel>{t('patient.fields.names')}</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input {...field} maxLength={200} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -94,7 +94,7 @@ export function PatientForm({ form, onProvisionalDocumentGenerated }: PatientFor
           <FormItem>
             <FormLabel>{t('patient.fields.lastNames')}</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input {...field} maxLength={200} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -107,7 +107,7 @@ export function PatientForm({ form, onProvisionalDocumentGenerated }: PatientFor
           <FormItem>
             <FormLabel>{t('patient.fields.documentNumber')}</FormLabel>
             <FormControl>
-              <Input {...field} disabled={noDocument} />
+              <Input {...field} disabled={noDocument} maxLength={100} />
             </FormControl>
             <FormMessage />
             <NoDocumentCheckbox checked={noDocument} onCheckedChange={handleNoDocumentChange} />
@@ -121,7 +121,7 @@ export function PatientForm({ form, onProvisionalDocumentGenerated }: PatientFor
           <FormItem>
             <FormLabel>{t('patient.fields.passportNumber')}</FormLabel>
             <FormControl>
-              <Input {...field} value={field.value ?? ''} />
+              <Input {...field} value={field.value ?? ''} maxLength={100} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -152,7 +152,7 @@ export function PatientForm({ form, onProvisionalDocumentGenerated }: PatientFor
           <FormItem>
             <FormLabel>{t('patient.fields.email')}</FormLabel>
             <FormControl>
-              <Input type="email" {...field} value={field.value ?? ''} />
+              <Input type="email" {...field} value={field.value ?? ''} maxLength={255} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -165,7 +165,7 @@ export function PatientForm({ form, onProvisionalDocumentGenerated }: PatientFor
           <FormItem>
             <FormLabel>{t('patient.fields.phoneNumber')}</FormLabel>
             <FormControl>
-              <Input {...field} value={field.value ?? ''} />
+              <Input {...field} value={field.value ?? ''} maxLength={50} />
             </FormControl>
             <FormMessage />
           </FormItem>
