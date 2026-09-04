@@ -491,6 +491,32 @@
       "errors": {
         "rangeInvalid": "La fecha inicial no puede ser posterior a la fecha final."
       }
+    },
+    "list": {
+      "title": "Casos ESAVI",
+      "tabs": {
+        "cases": "Por caso",
+        "workflow": "Bandeja por estado"
+      },
+      "filtersButton": "Filtros",
+      "registerCase": "Registrar un caso",
+      "columns": {
+        "caseCode": "Código",
+        "patient": "Paciente",
+        "reportDate": "Fecha de reporte",
+        "healthFacility": "Unidad de salud",
+        "geoLocation": "Ubicación"
+      },
+      "status": {
+        "inactive": "Inactivo"
+      },
+      "empty": "No hay casos a tu alcance. Si crees que deberías ver casos aquí, es posible que tu cobertura geográfica no esté asignada — pídeselo a un administrador.",
+      "emptyFiltered": "Ningún caso coincide con los filtros.",
+      "rowActions": {
+        "viewDetail": "Ver detalle",
+        "openCase": "Abrir expediente",
+        "viewPatientCases": "Ver casos de este paciente"
+      }
     }
   },
   "caseWizard": {

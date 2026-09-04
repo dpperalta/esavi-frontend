@@ -491,6 +491,32 @@
       "errors": {
         "rangeInvalid": "The start date cannot be later than the end date."
       }
+    },
+    "list": {
+      "title": "ESAVI cases",
+      "tabs": {
+        "cases": "By case",
+        "workflow": "Status inbox"
+      },
+      "filtersButton": "Filters",
+      "registerCase": "Register a case",
+      "columns": {
+        "caseCode": "Code",
+        "patient": "Patient",
+        "reportDate": "Report date",
+        "healthFacility": "Health facility",
+        "geoLocation": "Location"
+      },
+      "status": {
+        "inactive": "Inactive"
+      },
+      "empty": "No cases within your reach. If you think you should see cases here, your geographic coverage may not be assigned yet — ask an administrator.",
+      "emptyFiltered": "No case matches the filters.",
+      "rowActions": {
+        "viewDetail": "View detail",
+        "openCase": "Open case file",
+        "viewPatientCases": "View this patient's cases"
+      }
     }
   },
   "caseWizard": {

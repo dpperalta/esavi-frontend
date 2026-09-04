@@ -491,6 +491,32 @@
       "errors": {
         "rangeInvalid": "De begindatum kan niet later zijn dan de einddatum."
       }
+    },
+    "list": {
+      "title": "ESAVI-gevallen",
+      "tabs": {
+        "cases": "Per geval",
+        "workflow": "Statusoverzicht"
+      },
+      "filtersButton": "Filters",
+      "registerCase": "Een geval registreren",
+      "columns": {
+        "caseCode": "Code",
+        "patient": "Patiënt",
+        "reportDate": "Rapportagedatum",
+        "healthFacility": "Gezondheidsvoorziening",
+        "geoLocation": "Locatie"
+      },
+      "status": {
+        "inactive": "Inactief"
+      },
+      "empty": "Geen gevallen binnen jouw bereik. Als je denkt dat je hier gevallen zou moeten zien, is je geografische dekking mogelijk nog niet toegewezen — vraag dit na bij een beheerder.",
+      "emptyFiltered": "Geen geval komt overeen met de filters.",
+      "rowActions": {
+        "viewDetail": "Detail bekijken",
+        "openCase": "Dossier openen",
+        "viewPatientCases": "Gevallen van deze patiënt bekijken"
+      }
     }
   },
   "caseWizard": {

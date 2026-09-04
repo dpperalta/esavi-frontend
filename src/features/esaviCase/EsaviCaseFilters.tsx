@@ -20,7 +20,7 @@ type DateMode = 'exact' | 'range';
 
 // The fourteen (thirteen real, per `EsaviCaseListFilters`) query keys `esaviCaseFiltersSchema`
 // parses — SPEC FE09 §3.7's filter-count badge is derived from this list, never stored.
-const FILTER_PARAM_KEYS = [
+export const ESAVI_CASE_FILTER_PARAM_KEYS = [
   'code',
   'patientId',
   'healthFacilityId',
@@ -39,7 +39,7 @@ const FILTER_PARAM_KEYS = [
 // How many of the fourteen filters (§3.7) are actually present in the URL — the badge on the
 // mobile filter sheet's trigger button reads this, always derived from `searchParams`.
 export function countActiveEsaviCaseFilters(searchParams: URLSearchParams): number {
-  return FILTER_PARAM_KEYS.filter((key) => !!searchParams.get(key)).length;
+  return ESAVI_CASE_FILTER_PARAM_KEYS.filter((key) => !!searchParams.get(key)).length;
 }
 
 export interface EsaviCaseFiltersProps {
