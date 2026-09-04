@@ -479,7 +479,8 @@
       "healthFacility": {
         "label": "Gezondheidsvoorziening",
         "placeholder": "Gezondheidsvoorziening zoeken…",
-        "change": "Wijzigen"
+        "change": "Wijzigen",
+        "empty": "Geen gezondheidsvoorzieningen gevonden."
       },
       "geoLocation": {
         "label": "Geografische locatie"

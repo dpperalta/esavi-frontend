@@ -479,7 +479,8 @@
       "healthFacility": {
         "label": "Health facility",
         "placeholder": "Search health facility…",
-        "change": "Change"
+        "change": "Change",
+        "empty": "No health facilities found."
       },
       "geoLocation": {
         "label": "Geographic location"

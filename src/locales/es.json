@@ -479,7 +479,8 @@
       "healthFacility": {
         "label": "Unidad de salud",
         "placeholder": "Buscar unidad de salud…",
-        "change": "Cambiar"
+        "change": "Cambiar",
+        "empty": "No se encontraron unidades de salud."
       },
       "geoLocation": {
         "label": "Ubicación geográfica"
