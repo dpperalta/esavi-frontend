@@ -47,7 +47,9 @@ export function SeverityCriteriaGroup({ control, hasGroupError }: SeverityCriter
                 <span className="text-sm font-medium text-foreground">{label}</span>
                 <RadioGroup
                   aria-label={label}
-                  value={field.value === true ? 'true' : field.value === false ? 'false' : undefined}
+                  // `''`, no `undefined` — mismo motivo que la compuerta en `ClassificationStep`:
+                  // mantiene el `RadioGroup` controlado desde el primer render.
+                  value={field.value === true ? 'true' : field.value === false ? 'false' : ''}
                   onValueChange={(next) => field.onChange(next === 'true')}
                   className="flex w-auto gap-4"
                 >

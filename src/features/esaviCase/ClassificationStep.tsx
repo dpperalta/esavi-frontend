@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation, type TFunction } from 'react-i18next';
@@ -287,22 +287,31 @@ function ClassificationFormBody({
     [form, handleValidSubmit],
   );
 
-  const pendingFields = useMemo(
-    () => computePendingFields(watchedValues, t),
-    [watchedValues, t],
-  );
+  const pendingFields = computePendingFields(watchedValues, t);
 
-  // `activeStep` es un objeto plano en el contexto (SPEC FE08 §3.5): un handle nuevo en cada
-  // cambio relevante es lo que hace que `CaseWizardActionBar` vuelva a leer `isDirty` y
-  // `pendingFields` al vuelo, sin que el propio botón "Guardar" dependa de ninguno de los dos.
+  // Leídos por referencia dentro del handle, nunca capturados por valor: `registerStep` sólo
+  // vuelve a llamarse cuando `isDirty` cambia (una primitiva, casi siempre una sola vez por
+  // sesión), no en cada tecla — depender de `pendingFields`/`performSave` directamente en el
+  // array de dependencias reabre al `CaseWizardProvider` en cada cambio, que a su vez vuelve a
+  // renderizar este mismo componente y produce un bucle sin fin (visto en vivo: la suite se
+  // colgaba con CPU al 100% y cero salida, SPEC FE11 §9).
+  const performSaveRef = useRef(performSave);
+  performSaveRef.current = performSave;
+  const pendingFieldsRef = useRef(pendingFields);
+  pendingFieldsRef.current = pendingFields;
+
+  // `activeStep` es un objeto plano en el contexto (SPEC FE08 §3.5): un handle nuevo cuando
+  // `isDirty` cambia es lo que hace que `CaseWizardActionBar` vuelva a leer `isDirty` al vuelo,
+  // sin que el propio botón "Guardar" dependa de él. `pendingFields` se lee siempre en vivo desde
+  // la ref, así que no necesita disparar un nuevo registro para estar al día.
   useEffect(() => {
     registerStep({
-      save: performSave,
+      save: () => performSaveRef.current(),
       isDirty: form.formState.isDirty,
-      getPendingFields: () => pendingFields,
+      getPendingFields: () => pendingFieldsRef.current,
     });
     return () => unregisterStep();
-  }, [registerStep, unregisterStep, performSave, form.formState.isDirty, pendingFields]);
+  }, [registerStep, unregisterStep, form.formState.isDirty]);
 
   const criteriaError = (
     form.formState.errors as Record<string, { message?: string } | undefined>
@@ -330,7 +339,12 @@ function ClassificationFormBody({
             <>
               <RadioGroup
                 aria-label={t('classification.gate.label')}
-                value={field.value === true ? 'true' : field.value === false ? 'false' : undefined}
+                // Cadena vacía, no `undefined`, cuando no hay respuesta: Radix trata un
+                // `RadioGroup` sin `value` inicial como no controlado, y pasar a marcar «Sí»/«No»
+                // más tarde produce el warning de React de "uncontrolled to controlled". `''` no
+                // calza con ningún `RadioGroupItem`, así que sigue mostrándose sin marcar, pero
+                // el componente es controlado desde el primer render.
+                value={field.value === true ? 'true' : field.value === false ? 'false' : ''}
                 onValueChange={(next) => {
                   const nextValue = next === 'true';
                   // Sí → No con algún criterio ya marcado exige confirmar antes de limpiar
