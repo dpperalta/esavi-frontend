@@ -562,6 +562,15 @@
       "CASE_005B_NOT_FOUND": "The case does not exist.",
       "CASE_005A_ALREADY_INACTIVE": "The case was already inactive.",
       "CASE_005B_ALREADY_ACTIVE": "The case was already active."
+    },
+    "opening": {
+      "healthFacility": {
+        "label": "Health facility",
+        "placeholder": "Search health facility…",
+        "change": "Change",
+        "empty": "No health facilities found.",
+        "outOfCoverage": "Outside your geographic coverage"
+      }
     }
   },
   "caseWizard": {

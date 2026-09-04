@@ -141,7 +141,11 @@ export function EntitySearchSelect({
 
   return (
     <Popover open={open && showResults} onOpenChange={setOpen}>
-      <Command shouldFilter={false} className="overflow-visible bg-transparent p-0">
+      {/* `label` (not just `aria-label` on the input below) — cmdk wires its own hidden
+          `cmdk-label` and points `aria-labelledby` at it, which wins over `aria-label` per the
+          accessible-name computation; leaving `label` unset renders that hidden element empty
+          and silently erases the name a screen reader announces. */}
+      <Command shouldFilter={false} label={ariaLabel} className="overflow-visible bg-transparent p-0">
         <PopoverTrigger asChild>
           <div>
             <CommandInput

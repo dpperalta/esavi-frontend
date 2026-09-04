@@ -562,6 +562,15 @@
       "CASE_005B_NOT_FOUND": "Het geval bestaat niet.",
       "CASE_005A_ALREADY_INACTIVE": "Het geval was al inactief.",
       "CASE_005B_ALREADY_ACTIVE": "Het geval was al actief."
+    },
+    "opening": {
+      "healthFacility": {
+        "label": "Gezondheidsvoorziening",
+        "placeholder": "Gezondheidsvoorziening zoeken…",
+        "change": "Wijzigen",
+        "empty": "Geen gezondheidsvoorzieningen gevonden.",
+        "outOfCoverage": "Buiten je geografische dekking"
+      }
     }
   },
   "caseWizard": {

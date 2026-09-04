@@ -562,6 +562,15 @@
       "CASE_005B_NOT_FOUND": "El caso no existe.",
       "CASE_005A_ALREADY_INACTIVE": "El caso ya estaba inactivo.",
       "CASE_005B_ALREADY_ACTIVE": "El caso ya estaba activo."
+    },
+    "opening": {
+      "healthFacility": {
+        "label": "Unidad de salud",
+        "placeholder": "Buscar unidad de salud…",
+        "change": "Cambiar",
+        "empty": "No se encontraron unidades de salud.",
+        "outOfCoverage": "Fuera de tu cobertura geográfica"
+      }
     }
   },
   "caseWizard": {
