@@ -1,6 +1,6 @@
 # SPEC FE10 — Paciente y apertura del caso
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell y autenticación), SPEC FE02 (fábrica de recursos y primitivas), SPEC FE08 (armazón del wizard: `steps.ts`, `CaseWizardPage`, `CaseWizardStepper`, `NewCasePage`), SPEC FE09 (listado y detalle, `<DateField>`, `<CatalogSelect>`), **SPEC F05 del backend** (`patient`), **SPEC F07** (`notifier`), **SPEC F45** (búsqueda de paciente por nombre), **SPEC F11** (`patientId` inmutable en `ESAVI-CASE-004`), **SPEC F49** (alcance geográfico), **SPEC F43** (precedencia `systemConfig` sobre entorno)
 > **Fecha:** 2026-09-03
 > **Objetivo:** Los dos pasos que ocurren antes de que el caso exista: elegir o crear al paciente, y abrir el expediente con su unidad de salud y sus notificadores.
