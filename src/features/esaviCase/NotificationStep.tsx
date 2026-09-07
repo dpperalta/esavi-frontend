@@ -14,6 +14,7 @@ import type { SevereNotificationDetail } from '@/contracts/declared/severeNotifi
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
+import { EventList } from '@/features/notification/EventList';
 import {
   nonSevereNotificationByCaseKey,
   nonSevereNotificationResource,
@@ -173,6 +174,10 @@ interface NotificationFormBodyProps {
   notificationType: 'SEVERE' | 'NON_SEVERE';
   eventDate: string | null;
   pregnancyGate: PregnancyGateState;
+  // Caso cerrado (SPEC FE12b §3.6): las listas de satélites pasan a sólo lectura — sin «Añadir»
+  // y sin acciones de fila. El aviso en sí lo pinta `CaseWizardPage` (FE08); esto sólo retira las
+  // acciones que ese aviso ya explica que no aplican.
+  isClosed: boolean;
 }
 
 // The form itself (SPEC FE12a §3.5, §3.1): only mounted once `NotificationStep` resolved workflow
@@ -186,6 +191,7 @@ function NotificationFormBody({
   notificationType,
   eventDate,
   pregnancyGate,
+  isClosed,
 }: NotificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -579,6 +585,10 @@ function NotificationFormBody({
         </div>
       </div>
 
+      {/* Sólo existe con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
+          `notificationId` no hay padre al que colgar ningún evento. */}
+      <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-foreground">
           {t('notification.fields.outcomeItemId')}
@@ -829,6 +839,9 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
   }
 
   const notificationType = notificationTypeMaybe as 'SEVERE' | 'NON_SEVERE';
+  // Mismo criterio que `CaseWizardPage.tsx` (§10.3: la comprobación de `CLOSED` sigue entera en
+  // el cliente, no la impone el servidor en estos satélites).
+  const isClosed = workflow.data?.status.code === 'CLOSED';
 
   return (
     <NotificationFormBody
@@ -839,6 +852,7 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       notificationType={notificationType}
       eventDate={esaviCase.data?.eventDate ?? null}
       pregnancyGate={pregnancyGate}
+      isClosed={isClosed}
     />
   );
 }

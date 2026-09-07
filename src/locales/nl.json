@@ -864,6 +864,37 @@
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
+    },
+    "events": {
+      "sectionTitle": "Gebeurtenissen",
+      "fields": {
+        "esaviName": "AEFI-diagnose",
+        "esaviCode": "Code",
+        "isOtherEsavi": "Andere gebeurtenis (niet in de catalogus)",
+        "otherDescription": "Beschrijf de gebeurtenis",
+        "isMainEsavi": "Belangrijkste gebeurtenis",
+        "startDate": "Startdatum",
+        "startTime": "Starttijd",
+        "notes": "Opmerkingen"
+      },
+      "help": {
+        "isMainEsavi": "Er kan meer dan één belangrijkste gebeurtenis zijn."
+      },
+      "validation": {
+        "esaviNameRequired": "Voer de diagnose van de gebeurtenis in voordat je opslaat.",
+        "otherDescriptionRequired": "Beschrijf de gebeurtenis voordat je opslaat."
+      },
+      "form": {
+        "createTitle": "Gebeurtenis toevoegen",
+        "editTitle": "Gebeurtenis bewerken"
+      }
+    },
+    "satellites": {
+      "deleteTitle": "Deactiveren",
+      "deleteConfirm": "«{{name}}» deactiveren? Deze actie kan hier niet ongedaan worden gemaakt.",
+      "deleteAction": "Deactiveren",
+      "adminRequiredEdit": "Het corrigeren van deze klinische inhoud vereist een beheerder in deze omgeving.",
+      "adminRequiredDelete": "Het verwijderen van deze klinische inhoud vereist een beheerder in deze omgeving."
     }
   },
   "home": {

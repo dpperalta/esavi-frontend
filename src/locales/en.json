@@ -864,6 +864,37 @@
     "draft": {
       "restored": "Recovered unsaved changes from an earlier session.",
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."
+    },
+    "events": {
+      "sectionTitle": "Events",
+      "fields": {
+        "esaviName": "ESAVI diagnosis",
+        "esaviCode": "Code",
+        "isOtherEsavi": "Other event (not in the catalog)",
+        "otherDescription": "Describe the event",
+        "isMainEsavi": "Main event",
+        "startDate": "Start date",
+        "startTime": "Start time",
+        "notes": "Notes"
+      },
+      "help": {
+        "isMainEsavi": "There can be more than one main event."
+      },
+      "validation": {
+        "esaviNameRequired": "Enter the event's diagnosis before saving.",
+        "otherDescriptionRequired": "Describe the event before saving."
+      },
+      "form": {
+        "createTitle": "Add event",
+        "editTitle": "Edit event"
+      }
+    },
+    "satellites": {
+      "deleteTitle": "Deactivate",
+      "deleteConfirm": "Deactivate «{{name}}»? This action can't be undone from here.",
+      "deleteAction": "Deactivate",
+      "adminRequiredEdit": "Correcting this clinical content requires an administrator in this deployment.",
+      "adminRequiredDelete": "Removing this clinical content requires an administrator in this deployment."
     }
   },
   "home": {

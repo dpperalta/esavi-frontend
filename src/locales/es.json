@@ -864,6 +864,37 @@
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
+    },
+    "events": {
+      "sectionTitle": "Eventos",
+      "fields": {
+        "esaviName": "Diagnóstico del ESAVI",
+        "esaviCode": "Código",
+        "isOtherEsavi": "Otro evento (no está en el catálogo)",
+        "otherDescription": "Describe el evento",
+        "isMainEsavi": "Evento principal",
+        "startDate": "Fecha de inicio",
+        "startTime": "Hora de inicio",
+        "notes": "Observaciones"
+      },
+      "help": {
+        "isMainEsavi": "Puede haber más de un evento principal."
+      },
+      "validation": {
+        "esaviNameRequired": "Escribe el diagnóstico del evento antes de guardar.",
+        "otherDescriptionRequired": "Describe el evento antes de guardar."
+      },
+      "form": {
+        "createTitle": "Añadir evento",
+        "editTitle": "Editar evento"
+      }
+    },
+    "satellites": {
+      "deleteTitle": "Dar de baja",
+      "deleteConfirm": "¿Dar de baja «{{name}}»? Esta acción no se puede deshacer desde aquí.",
+      "deleteAction": "Dar de baja",
+      "adminRequiredEdit": "Corregir este contenido clínico exige un administrador en este despliegue.",
+      "adminRequiredDelete": "Retirar este contenido clínico exige un administrador en este despliegue."
     }
   },
   "home": {
