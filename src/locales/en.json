@@ -70,6 +70,14 @@
       "cancel": "Cancel",
       "save": "Save"
     },
+    "termSearch": {
+      "minChars": "Type at least {{count}} characters.",
+      "noResults": "No result matches; you can type it as-is.",
+      "serviceUnavailable": "The search service is not available right now; you can type it as-is.",
+      "clear": "Clear",
+      "resultsAnnounce": "{{count}} results",
+      "moreResults": "There were more results; narrow the search term."
+    },
     "answerOption": {
       "yes": "Yes",
       "no": "No",

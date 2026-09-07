@@ -70,6 +70,14 @@
       "cancel": "Annuleren",
       "save": "Opslaan"
     },
+    "termSearch": {
+      "minChars": "Typ minstens {{count}} tekens.",
+      "noResults": "Geen resultaat komt overeen; je kunt het zo intypen.",
+      "serviceUnavailable": "De zoekservice is nu niet beschikbaar; je kunt het zo intypen.",
+      "clear": "Verwijderen",
+      "resultsAnnounce": "{{count}} resultaten",
+      "moreResults": "Er waren meer resultaten; verfijn de zoekterm."
+    },
     "answerOption": {
       "yes": "Ja",
       "no": "Nee",

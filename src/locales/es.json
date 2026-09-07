@@ -70,6 +70,14 @@
       "cancel": "Cancelar",
       "save": "Guardar"
     },
+    "termSearch": {
+      "minChars": "Escribe al menos {{count}} caracteres.",
+      "noResults": "Ningún resultado coincide; puedes escribirlo tal cual.",
+      "serviceUnavailable": "El buscador no está disponible ahora mismo; puedes escribirlo tal cual.",
+      "clear": "Quitar",
+      "resultsAnnounce": "{{count}} resultados",
+      "moreResults": "Hubo más resultados; afina el término de búsqueda."
+    },
     "answerOption": {
       "yes": "Sí",
       "no": "No",
