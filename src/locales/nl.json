@@ -761,6 +761,32 @@
       "generic": "We konden de classificatie niet opslaan. Probeer het opnieuw."
     }
   },
+  "notification": {
+    "fields": {
+      "esaviDescription": "Beschrijving van het ESAVI",
+      "hasRelevantMedicalHistory": "Relevante medische voorgeschiedenis?",
+      "takesMedication": "Gebruikt medicatie?",
+      "outcomeItemId": "Uitkomst",
+      "requestInvestigation": "Onderzoek aanvragen?",
+      "notes": "Opmerkingen"
+    },
+    "help": {
+      "requestInvestigation": "Onafhankelijk van de ernst: een niet-ernstige gebeurtenis kan toch onderzocht worden, en een ernstige hoeft dat niet altijd te vereisen."
+    },
+    "validation": {
+      "esaviDescriptionRequired": "Beschrijf het ESAVI voordat je opslaat."
+    },
+    "pending": {
+      "hasRelevantMedicalHistory": "Relevante medische voorgeschiedenis",
+      "takesMedication": "Medicatiegebruik",
+      "outcomeItemId": "Uitkomst",
+      "requestInvestigation": "Onderzoeksaanvraag",
+      "deathFields": "Overlijdensgegevens"
+    },
+    "error": {
+      "load": "We konden de melding niet laden."
+    }
+  },
   "home": {
     "greeting": "Hallo, {{name}}",
     "roleLabel": "Uw rol: {{role}}"

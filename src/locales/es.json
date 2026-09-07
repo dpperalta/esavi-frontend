@@ -761,6 +761,32 @@
       "generic": "No pudimos guardar la clasificación. Intenta de nuevo."
     }
   },
+  "notification": {
+    "fields": {
+      "esaviDescription": "Descripción del ESAVI",
+      "hasRelevantMedicalHistory": "¿Tiene antecedentes médicos relevantes?",
+      "takesMedication": "¿Toma medicación?",
+      "outcomeItemId": "Desenlace",
+      "requestInvestigation": "¿Se solicita investigación?",
+      "notes": "Observaciones"
+    },
+    "help": {
+      "requestInvestigation": "Es independiente de la gravedad: un evento no grave puede investigarse y uno grave puede no requerirlo."
+    },
+    "validation": {
+      "esaviDescriptionRequired": "Describe el ESAVI antes de guardar."
+    },
+    "pending": {
+      "hasRelevantMedicalHistory": "Antecedente médico relevante",
+      "takesMedication": "Toma de medicación",
+      "outcomeItemId": "Desenlace",
+      "requestInvestigation": "Solicitud de investigación",
+      "deathFields": "Datos de fallecimiento"
+    },
+    "error": {
+      "load": "No pudimos cargar la notificación."
+    }
+  },
   "home": {
     "greeting": "Hola, {{name}}",
     "roleLabel": "Tu rol: {{role}}"

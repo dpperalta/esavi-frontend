@@ -761,6 +761,32 @@
       "generic": "We couldn't save the classification. Try again."
     }
   },
+  "notification": {
+    "fields": {
+      "esaviDescription": "ESAVI description",
+      "hasRelevantMedicalHistory": "Any relevant medical history?",
+      "takesMedication": "Taking medication?",
+      "outcomeItemId": "Outcome",
+      "requestInvestigation": "Request an investigation?",
+      "notes": "Notes"
+    },
+    "help": {
+      "requestInvestigation": "Independent of severity: a non-serious event can still be investigated, and a serious one may not require it."
+    },
+    "validation": {
+      "esaviDescriptionRequired": "Describe the ESAVI before saving."
+    },
+    "pending": {
+      "hasRelevantMedicalHistory": "Relevant medical history",
+      "takesMedication": "Medication use",
+      "outcomeItemId": "Outcome",
+      "requestInvestigation": "Investigation request",
+      "deathFields": "Death details"
+    },
+    "error": {
+      "load": "We couldn't load the notification."
+    }
+  },
   "home": {
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"

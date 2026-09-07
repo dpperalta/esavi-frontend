@@ -13,6 +13,7 @@ import { CaseWizardProvider } from './CaseWizardContext';
 import { CaseWizardHeader } from './CaseWizardHeader';
 import { CaseWizardStepper } from './CaseWizardStepper';
 import { ClassificationStep } from './ClassificationStep';
+import { NotificationStep } from './NotificationStep';
 import {
   CaseWorkflowErrorScreen,
   hasDedicatedCaseWorkflowErrorScreen,
@@ -129,11 +130,15 @@ export function CaseWizardPage() {
           {step === 'patient' && <PatientStep patientId={caseDetail.data.patient.patientId} />}
           {step === 'case-opening' && <CaseOpeningStep />}
           {step === 'classification' && <ClassificationStep caseId={id} />}
-          {step !== 'patient' && step !== 'case-opening' && step !== 'classification' && (
-            <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              {step}
-            </div>
-          )}
+          {step === 'notification' && <NotificationStep caseId={id} />}
+          {step !== 'patient' &&
+            step !== 'case-opening' &&
+            step !== 'classification' &&
+            step !== 'notification' && (
+              <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                {step}
+              </div>
+            )}
 
           {step !== 'patient' && step !== 'case-opening' && (
             <CaseWizardActionBar caseId={id} activeSlug={step} />

@@ -69,7 +69,7 @@ export const nonSevereNotificationResource = createResource<
   hasActivate: false,
 });
 
-function notificationByCaseKey(caseId: string) {
+export function notificationByCaseKey(caseId: string) {
   return ['notification', 'byCase', caseId] as const;
 }
 
