@@ -149,7 +149,38 @@ function mockCaseDetail() {
   );
 }
 
-function mockClassificationDetail(isSeriousEvent: boolean) {
+function mockPatientDetail(sexValue: string | null) {
+  server.use(
+    http.get('http://localhost:4500/api/patients/patient-1', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          patientId: 'patient-1',
+          names: 'Ana',
+          lastNames: 'Perez',
+          documentNumber: '0102030405',
+          passportNumber: null,
+          birthDate: null,
+          healthSystemCode: null,
+          email: null,
+          phoneNumber: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          sex: sexValue
+            ? { catalogItemId: `sex-${sexValue}`, code: sexValue, name: sexValue, value: sexValue }
+            : null,
+          residence: null,
+        },
+      }),
+    ),
+  );
+}
+
+function mockClassificationDetail(isSeriousEvent: boolean, age: number | null = 35) {
   server.use(
     http.get(`http://localhost:4500/api/classifications/case/${CASE_1}`, () =>
       HttpResponse.json({
@@ -157,7 +188,7 @@ function mockClassificationDetail(isSeriousEvent: boolean) {
         message: 'ok',
         data: {
           classificationId: CLASSIFICATION_1,
-          age: 35,
+          age,
           firstConsultationDate: null,
           isSeriousEvent,
           causedDeath: null,
@@ -828,5 +859,62 @@ describe('NotificationStep — cadena de guardado, la rama falla y se reintenta 
     await waitFor(() => expect(branchPostCalls).toBe(2));
     expect(headerPostCalls).toBe(1);
     expect(screen.queryByText('ya existe')).not.toBeInTheDocument();
+  }, 30000);
+});
+
+describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPEC FE12a §4 paso 13)', () => {
+  it('con paciente masculino, ningún campo de embarazo existe en el DOM', async () => {
+    mockCaseDetail();
+    mockPatientDetail('MALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    renderNotificationStep();
+
+    // Se espera a que el formulario esté listo (la ficha grave ya renderizada) antes de afirmar
+    // la ausencia — de lo contrario un falso negativo por el skeleton pasaría el test.
+    await screen.findByText('Ficha de notificación grave');
+
+    expect(
+      screen.queryByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Si aplica')).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText('Describe las complicaciones del embarazo'),
+    ).not.toBeInTheDocument();
+  }, 30000);
+
+  it('con paciente femenino y edad desconocida, el bloque aparece marcado «Si aplica»', async () => {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockClassificationDetail(true, null);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    renderNotificationStep();
+
+    expect(
+      await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Si aplica')).toBeInTheDocument();
+  }, 30000);
+
+  it('con paciente femenino en edad fértil, el bloque aparece sin la marca', async () => {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    renderNotificationStep();
+
+    expect(
+      await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Si aplica')).not.toBeInTheDocument();
   }, 30000);
 });

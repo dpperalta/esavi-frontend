@@ -7,7 +7,38 @@ import {
   isOtherSourceDescriptionRequirementMet,
   isPregnancyDescriptionRequirementMet,
   notificationSaveSchema,
+  resolvePregnancyGate,
 } from './schemas';
+
+describe('resolvePregnancyGate — CASE-PROCESS.md §7.4', () => {
+  it('MALE, cualquier edad: oculto', () => {
+    expect(resolvePregnancyGate('MALE', 25)).toBe('hidden');
+    expect(resolvePregnancyGate('MALE', null)).toBe('hidden');
+  });
+
+  it('cualquier sexo, edad conocida fuera de 15-49: oculto', () => {
+    expect(resolvePregnancyGate('FEMALE', 14)).toBe('hidden');
+    expect(resolvePregnancyGate('FEMALE', 50)).toBe('hidden');
+    expect(resolvePregnancyGate('UNKNOWN', 10)).toBe('hidden');
+  });
+
+  it('FEMALE, edad 15-49: visible, normal', () => {
+    expect(resolvePregnancyGate('FEMALE', 15)).toBe('visible');
+    expect(resolvePregnancyGate('FEMALE', 49)).toBe('visible');
+    expect(resolvePregnancyGate('FEMALE', 30)).toBe('visible');
+  });
+
+  it('FEMALE, edad desconocida: visible, «Si aplica»', () => {
+    expect(resolvePregnancyGate('FEMALE', null)).toBe('visibleIfApplicable');
+    expect(resolvePregnancyGate('FEMALE', undefined)).toBe('visibleIfApplicable');
+  });
+
+  it('UNKNOWN o sin informar, 15-49 o desconocida: visible, «Si aplica»', () => {
+    expect(resolvePregnancyGate('UNKNOWN', 30)).toBe('visibleIfApplicable');
+    expect(resolvePregnancyGate(null, 30)).toBe('visibleIfApplicable');
+    expect(resolvePregnancyGate(null, null)).toBe('visibleIfApplicable');
+  });
+});
 
 describe('isDeathFieldsRequirementMet — fallecimiento (SPEC FE12a §3.5, §7)', () => {
   it('muerte sin autopsyRequested: inválido', () => {

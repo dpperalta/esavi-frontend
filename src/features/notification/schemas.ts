@@ -112,6 +112,38 @@ export function isDeathDateNotBeforeEventDate(
   return deathDate >= eventDate;
 }
 
+const PREGNANCY_MIN_AGE = 15;
+const PREGNANCY_MAX_AGE = 49;
+
+export type PregnancyGateState = 'hidden' | 'visible' | 'visibleIfApplicable';
+
+// La compuerta de embarazo (`CASE-PROCESS.md` §7.4, citada por SPEC FE12a §3.5, §6 "Los
+// catálogos y la edad"). Comparar siempre por `sex.value`, nunca por `code`/`name` (SPEC F46) —
+// se recodifican por país y `value` es lo único congelado. La edad viene ya calculada por
+// `classification` (`resolveAgeAtEvent` en el backend): CASE-PROCESS.md §7.4 prohíbe
+// expresamente reimplementar la aritmética de calendario aquí.
+//
+// «Se oculta cuando conste que no aplica, no se muestra sólo cuando conste que aplica» — dos
+// exclusiones independientes (sexo `MALE`, o edad conocida y fuera de 15–49), y fuera de esos dos
+// casos el bloque se muestra. Se marca «Si aplica» cuando se muestra sin poder confirmarlo: sexo
+// desconocido/sin informar, o edad incalculable por falta de `birthDate`.
+export function resolvePregnancyGate(
+  sexValue: string | null | undefined,
+  age: number | null | undefined,
+): PregnancyGateState {
+  const ageKnown = age !== null && age !== undefined;
+  const ageInRange = ageKnown && age >= PREGNANCY_MIN_AGE && age <= PREGNANCY_MAX_AGE;
+  const ageOutOfRange = ageKnown && !ageInRange;
+
+  if (sexValue === 'MALE' || ageOutOfRange) {
+    return 'hidden';
+  }
+  if (sexValue === 'FEMALE' && ageInRange) {
+    return 'visible';
+  }
+  return 'visibleIfApplicable';
+}
+
 // `pregnancyComplicationsDescription`: visible sólo con `hasPregnancyComplications === 'YES'`.
 export function isPregnancyDescriptionRequirementMet(
   hasPregnancyComplications: AnswerOption | null | undefined,

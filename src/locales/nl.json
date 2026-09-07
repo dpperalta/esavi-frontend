@@ -784,7 +784,12 @@
       "hasPreviousEventHistory": "Voorgeschiedenis van een eerdere gebeurtenis?",
       "hasAllergyToOtherVaccines": "Allergie voor andere vaccins?",
       "hasAllergyToMedications": "Allergie voor medicatie?",
-      "hasAllergyToPreviousSameVaccine": "Allergie voor een eerdere dosis van hetzelfde vaccin?"
+      "hasAllergyToPreviousSameVaccine": "Allergie voor een eerdere dosis van hetzelfde vaccin?",
+      "hasPregnancyComplications": "Waren er zwangerschapscomplicaties?",
+      "pregnancyComplicationsDescription": "Beschrijf de zwangerschapscomplicaties"
+    },
+    "pregnancy": {
+      "ifApplicable": "Indien van toepassing"
     },
     "nonSevere": {
       "sectionTitle": "Niet-ernstige meldingsfiche",
@@ -806,7 +811,8 @@
       "deathDateBeforeEventDate": "De overlijdensdatum mag niet vóór de datum van de gebeurtenis liggen.",
       "deathDateFuture": "De overlijdensdatum mag niet in de toekomst liggen.",
       "atLeastOneVerificationSource": "Markeer minstens één verificatiebron.",
-      "otherSourceDescriptionRequired": "Beschrijf de andere bron voordat je opslaat."
+      "otherSourceDescriptionRequired": "Beschrijf de andere bron voordat je opslaat.",
+      "pregnancyDescriptionRequired": "Beschrijf de zwangerschapscomplicaties voordat je opslaat."
     },
     "pending": {
       "hasRelevantMedicalHistory": "Relevante medische voorgeschiedenis",
@@ -818,6 +824,8 @@
       "hasAllergyToOtherVaccines": "Allergie voor andere vaccins",
       "hasAllergyToMedications": "Allergie voor medicatie",
       "hasAllergyToPreviousSameVaccine": "Allergie voor een eerdere dosis van hetzelfde vaccin",
+      "hasPregnancyComplications": "Zwangerschapscomplicaties",
+      "pregnancyComplicationsDescription": "Beschrijving van de zwangerschapscomplicaties",
       "vaccinationHealthFacilityId": "Vaccinatie-instelling",
       "vaccinationSiteItemId": "Vaccinatieplaats",
       "vaccinationGeoLocationId": "Locatie van de vaccinatie",

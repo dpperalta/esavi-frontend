@@ -784,7 +784,12 @@
       "hasPreviousEventHistory": "Any history of a previous event?",
       "hasAllergyToOtherVaccines": "Any allergy to other vaccines?",
       "hasAllergyToMedications": "Any allergy to medications?",
-      "hasAllergyToPreviousSameVaccine": "Any allergy to a previous dose of the same vaccine?"
+      "hasAllergyToPreviousSameVaccine": "Any allergy to a previous dose of the same vaccine?",
+      "hasPregnancyComplications": "Were there any pregnancy complications?",
+      "pregnancyComplicationsDescription": "Describe the pregnancy complications"
+    },
+    "pregnancy": {
+      "ifApplicable": "If applicable"
     },
     "nonSevere": {
       "sectionTitle": "Non-severe notification record",
@@ -806,7 +811,8 @@
       "deathDateBeforeEventDate": "The date of death can't be earlier than the event date.",
       "deathDateFuture": "The date of death can't be in the future.",
       "atLeastOneVerificationSource": "Mark at least one verification source.",
-      "otherSourceDescriptionRequired": "Describe the other source before saving."
+      "otherSourceDescriptionRequired": "Describe the other source before saving.",
+      "pregnancyDescriptionRequired": "Describe the pregnancy complications before saving."
     },
     "pending": {
       "hasRelevantMedicalHistory": "Relevant medical history",
@@ -818,6 +824,8 @@
       "hasAllergyToOtherVaccines": "Allergy to other vaccines",
       "hasAllergyToMedications": "Allergy to medications",
       "hasAllergyToPreviousSameVaccine": "Allergy to a previous dose of the same vaccine",
+      "hasPregnancyComplications": "Pregnancy complications",
+      "pregnancyComplicationsDescription": "Pregnancy complications description",
       "vaccinationHealthFacilityId": "Vaccination facility",
       "vaccinationSiteItemId": "Vaccination site",
       "vaccinationGeoLocationId": "Vaccination location",

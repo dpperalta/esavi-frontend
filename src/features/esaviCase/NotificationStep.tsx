@@ -31,10 +31,13 @@ import {
   nonSevereNotificationErrorFieldMap,
   notificationErrorFieldMap,
   notificationSaveSchema,
+  resolvePregnancyGate,
   severeNotificationErrorFieldMap,
   type NotificationCompleteContext,
   type NotificationFormValues,
+  type PregnancyGateState,
 } from '@/features/notification/schemas';
+import { patientResource } from '@/features/patient/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { AnswerOptionField } from '@/shared/components/AnswerOptionField';
@@ -117,10 +120,7 @@ function buildNonSeverePayload(
   };
 }
 
-// Un i18n key por cada `path[0]` que `createNotificationCompleteSchema` puede señalar. Los dos de
-// embarazo (`hasPregnancyComplications`, `pregnancyComplicationsDescription`) no tienen entrada
-// todavía a propósito: mientras `pregnancyGateOpen` viaje en `false` (paso 13 la resuelve de
-// verdad), ese predicado nunca falla, así que el schema no puede señalarlos aún.
+// Un i18n key por cada `path[0]` que `createNotificationCompleteSchema` puede señalar.
 const PENDING_FIELD_LABEL_KEYS: Partial<Record<string, string>> = {
   hasRelevantMedicalHistory: 'notification.pending.hasRelevantMedicalHistory',
   takesMedication: 'notification.pending.takesMedication',
@@ -131,6 +131,8 @@ const PENDING_FIELD_LABEL_KEYS: Partial<Record<string, string>> = {
   hasAllergyToOtherVaccines: 'notification.pending.hasAllergyToOtherVaccines',
   hasAllergyToMedications: 'notification.pending.hasAllergyToMedications',
   hasAllergyToPreviousSameVaccine: 'notification.pending.hasAllergyToPreviousSameVaccine',
+  hasPregnancyComplications: 'notification.pending.hasPregnancyComplications',
+  pregnancyComplicationsDescription: 'notification.pending.pregnancyComplicationsDescription',
   vaccinationHealthFacilityId: 'notification.pending.vaccinationHealthFacilityId',
   vaccinationSiteItemId: 'notification.pending.vaccinationSiteItemId',
   vaccinationGeoLocationId: 'notification.pending.vaccinationGeoLocationId',
@@ -168,6 +170,7 @@ interface NotificationFormBodyProps {
   nonSevereNotification: NonSevereNotificationDetail | null;
   notificationType: 'SEVERE' | 'NON_SEVERE';
   eventDate: string | null;
+  pregnancyGate: PregnancyGateState;
 }
 
 // The form itself (SPEC FE12a §3.5, §3.1): only mounted once `NotificationStep` resolved workflow
@@ -180,6 +183,7 @@ function NotificationFormBody({
   nonSevereNotification,
   notificationType,
   eventDate,
+  pregnancyGate,
 }: NotificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -273,6 +277,19 @@ function NotificationFormBody({
     }
     wasVerifiedOtherSourceRef.current = isVerifiedOtherSource;
   }, [watchedValues.verifiedOtherSource, form]);
+
+  // La compuerta de embarazo puede cerrarse por un cambio en otro paso — sexo o fecha de
+  // nacimiento del paciente, fecha del evento (`CASE-PROCESS.md` §7.4) — mientras esta pantalla
+  // está montada; al cerrarse, limpia (§7.3) igual que las otras dos secciones condicionales.
+  const wasPregnancyGateOpenRef = useRef(pregnancyGate !== 'hidden');
+  useEffect(() => {
+    const isPregnancyGateOpen = pregnancyGate !== 'hidden';
+    if (wasPregnancyGateOpenRef.current && !isPregnancyGateOpen) {
+      form.setValue('hasPregnancyComplications', null, { shouldDirty: true });
+      form.setValue('pregnancyComplicationsDescription', null, { shouldDirty: true });
+    }
+    wasPregnancyGateOpenRef.current = isPregnancyGateOpen;
+  }, [pregnancyGate, form]);
 
   const handleValidSubmit = useCallback(
     async (values: NotificationFormValues) => {
@@ -424,10 +441,7 @@ function NotificationFormBody({
 
   const pendingFields = computePendingFields(
     watchedValues,
-    // `pregnancyGateOpen` en `false` hasta el paso 13, que resuelve la compuerta de verdad con el
-    // sexo del paciente y la edad de la clasificación (§7.4) — hasta entonces nunca pide
-    // `hasPregnancyComplications`, que tampoco está en pantalla todavía.
-    { notificationType, isDeathOutcome, pregnancyGateOpen: false },
+    { notificationType, isDeathOutcome, pregnancyGateOpen: pregnancyGate !== 'hidden' },
     t,
   );
 
@@ -629,7 +643,12 @@ function NotificationFormBody({
       </div>
 
       {notificationType === 'SEVERE' ? (
-        <SevereNotificationFields control={form.control} />
+        <SevereNotificationFields
+          control={form.control}
+          pregnancyGate={pregnancyGate}
+          hasPregnancyComplications={watchedValues.hasPregnancyComplications}
+          pregnancyComplicationsDescription={watchedValues.pregnancyComplicationsDescription}
+        />
       ) : (
         <NonSevereNotificationFields
           control={form.control}
@@ -693,10 +712,25 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
         ? nonSevereNotification
         : null;
 
+  // La compuerta de embarazo (`CASE-PROCESS.md` §7.4): sexo del paciente por `value`, nunca por
+  // `code`/`name` (SPEC F46) — la respuesta de `ESAVI-PATIENT-003` ya trae `sex` resuelto, sin
+  // necesidad de un segundo salto de catálogo. La edad viene ya calculada por `classification`,
+  // nunca reimplementada.
+  const patientId = esaviCase.data?.patient.patientId;
+  const patient = patientResource.useOne(patientId ?? '');
+  const pregnancyGate = resolvePregnancyGate(
+    patient.data?.sex?.value ?? null,
+    classification.data?.age ?? null,
+  );
+
   const readyToRenderForm =
     !!workflow.data &&
     !!esaviCase.data &&
     !!classification.data &&
+    // Esperar a `patient` evita el parpadeo de pintar el bloque de embarazo y ocultarlo un
+    // instante después en cuanto se resuelve el sexo real (mismo motivo que `ClassificationStep`
+    // espera `readyToResolveAge`, SPEC FE11 §3.6).
+    (!!patient.data || patient.isError) &&
     (!stageExists || (!!notification.data && activeBranch?.data !== undefined));
 
   const loadError = notification.error ?? activeBranch?.error;
@@ -720,6 +754,7 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       nonSevereNotification={nonSevereNotification.data ?? null}
       notificationType={notificationType}
       eventDate={esaviCase.data?.eventDate ?? null}
+      pregnancyGate={pregnancyGate}
     />
   );
 }
