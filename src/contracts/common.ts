@@ -23,3 +23,8 @@ export interface AppDetails {
     method: string;
     detail: string;
 }
+
+// Mirrors esavi-backend/src/constants/enums.constants.ts (shared by seven tables of the schema — SPEC FE12a §3.3).
+export const ANSWER_OPTIONS = ['YES', 'NO', 'UNKNOWN', 'NOT_APPLICABLE', 'NO_ANSWER'] as const;
+
+export type AnswerOption = (typeof ANSWER_OPTIONS)[number];
