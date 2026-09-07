@@ -8,7 +8,11 @@ import type { CreateClassificationInput } from '@/contracts/classification';
 import type { ClassificationDetail } from '@/contracts/declared/classification';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
-import { classificationResource, useClassificationByCase } from '@/features/classification/api';
+import {
+  classificationByCaseKey,
+  classificationResource,
+  useClassificationByCase,
+} from '@/features/classification/api';
 import {
   SERIOUS_CRITERION_FIELDS,
   classificationErrorFieldMap,
@@ -196,12 +200,10 @@ function ClassificationFormBody({
   const create = classificationResource.useCreate();
   const update = classificationResource.useUpdate();
 
-  // Semilla desde la fila existente (reentrada); se sustituye por el id que devuelve el primer
-  // `POST` exitoso de esta misma sesión, sin esperar a que `stages.classification.exists` se
-  // actualice desde fuera (SPEC FE11 §3.4).
-  const [classificationId, setClassificationId] = useState<string | null>(
-    classification?.classificationId ?? null,
-  );
+  // Nunca en `useState` (SPEC FE12a §4, paso 2): `classification` ya es la caché de TanStack
+  // Query (reentrada o el `POST` de esta misma sesión, escrito ahí abajo con `setQueryData`), así
+  // que el id se deriva del prop en cada render en vez de copiarse.
+  const classificationId = classification?.classificationId ?? null;
 
   // El `AlertDialog` de la compuerta Sí→No (SPEC FE11 §3.5, decisión §6): efímero, no forma parte
   // del contrato de estado de §3.4.
@@ -244,7 +246,7 @@ function ClassificationFormBody({
             ...payload,
             caseId,
           } as CreateClassificationInput);
-          setClassificationId(created.classificationId);
+          queryClient.setQueryData(classificationByCaseKey(caseId), created);
           toast.success(t('common.toast.created'));
         }
         // El `POST`/`PUT` avanza `CLASSIFICATION` en el workflow (SPEC FE11 §1C, §3.2) — sin
