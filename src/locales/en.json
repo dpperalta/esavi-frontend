@@ -56,6 +56,9 @@
     "select": {
       "clear": "Clear selection"
     },
+    "catalogSelect": {
+      "empty": "This catalog has no data loaded yet."
+    },
     "dateField": {
       "openCalendar": "Open calendar — {{field}}"
     },
@@ -891,6 +894,29 @@
       "meddraUnavailable": "The term search is not available right now; you can type it as-is.",
       "diagtermNotImported": "The dictionary for this source is not imported in this deployment.",
       "keepAsFreeText": "Save as free text"
+    },
+    "medications": {
+      "sectionTitle": "Concomitant medication",
+      "fields": {
+        "medicationName": "Medication",
+        "dose": "Dose",
+        "pharmaceuticalFormItemId": "Pharmaceutical form",
+        "administrationRouteItemId": "Administration route",
+        "startDate": "Start date",
+        "isOtherMedication": "Other medication (not in the catalog)",
+        "otherMedicationText": "Describe the medication"
+      },
+      "fromCatalog": "From the medication catalog.",
+      "notInCatalog": "No medication matches; it may not be in this deployment's catalog. You can type it as-is.",
+      "catalogUnavailable": "The medication search is not available right now; you can type it as-is.",
+      "validation": {
+        "medicationNameRequired": "Enter the medication's name before saving.",
+        "otherTextRequired": "Describe the medication before saving."
+      },
+      "form": {
+        "createTitle": "Add medication",
+        "editTitle": "Edit medication"
+      }
     },
     "satellites": {
       "deleteTitle": "Deactivate",

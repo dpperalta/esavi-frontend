@@ -56,6 +56,9 @@
     "select": {
       "clear": "Limpiar selección"
     },
+    "catalogSelect": {
+      "empty": "Este catálogo no tiene datos cargados todavía."
+    },
     "dateField": {
       "openCalendar": "Abrir calendario — {{field}}"
     },
@@ -891,6 +894,29 @@
       "meddraUnavailable": "El buscador de términos no está disponible ahora mismo; puedes escribirlo tal cual.",
       "diagtermNotImported": "El diccionario de esta fuente no está importado en este despliegue.",
       "keepAsFreeText": "Guardar como texto libre"
+    },
+    "medications": {
+      "sectionTitle": "Medicación concomitante",
+      "fields": {
+        "medicationName": "Medicamento",
+        "dose": "Dosis",
+        "pharmaceuticalFormItemId": "Forma farmacéutica",
+        "administrationRouteItemId": "Vía de administración",
+        "startDate": "Fecha de inicio",
+        "isOtherMedication": "Otra medicación (no está en el catálogo)",
+        "otherMedicationText": "Describe la medicación"
+      },
+      "fromCatalog": "Del catálogo de medicamentos.",
+      "notInCatalog": "Ningún medicamento coincide; puede no estar en el catálogo de este despliegue. Puedes escribirlo tal cual.",
+      "catalogUnavailable": "El buscador de medicación no está disponible ahora mismo; puedes escribirlo tal cual.",
+      "validation": {
+        "medicationNameRequired": "Escribe el nombre del medicamento antes de guardar.",
+        "otherTextRequired": "Describe la medicación antes de guardar."
+      },
+      "form": {
+        "createTitle": "Añadir medicación",
+        "editTitle": "Editar medicación"
+      }
     },
     "satellites": {
       "deleteTitle": "Dar de baja",

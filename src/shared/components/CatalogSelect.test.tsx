@@ -131,13 +131,33 @@ describe('CatalogSelect', () => {
     expect(itemCalls.count).toBe(1);
   });
 
-  it('un typeCode inexistente deja el selector vacío y deshabilitado, sin romper la pantalla', async () => {
+  it('un typeCode inexistente deja el selector deshabilitado y con su explicación', async () => {
     mockCatalogTypes();
 
     renderSelect({ typeCode: 'doesNotExist' });
 
     const select = await screen.findByRole('combobox');
     expect(select).toBeDisabled();
+    expect(screen.getByText('Este catálogo no tiene datos cargados todavía.')).toBeInTheDocument();
+  });
+
+  // CASE-PROCESS.md §10.5 — `pharmaceuticalForm`/`administrationRoute` están comentados en
+  // `esaviapp.sql`: el `catalogType` existe (`002` lo resuelve) pero no tiene ningún
+  // `catalogItem` sembrado. Sin esto, el desplegable saldría vacío pero habilitado, indistinguible
+  // de una pantalla rota.
+  it('un catalogType sembrado pero sin ítems también sale deshabilitado y con su explicación', async () => {
+    mockCatalogTypes();
+    server.use(
+      http.get('http://localhost:4500/api/catalog-items/type/type-workflow-status', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+
+    renderSelect({});
+
+    const select = await screen.findByRole('combobox');
+    expect(select).toBeDisabled();
+    expect(screen.getByText('Este catálogo no tiene datos cargados todavía.')).toBeInTheDocument();
   });
 
   it('emite el code del item elegido, no su catalogItemId', async () => {

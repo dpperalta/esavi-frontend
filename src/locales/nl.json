@@ -56,6 +56,9 @@
     "select": {
       "clear": "Selectie wissen"
     },
+    "catalogSelect": {
+      "empty": "Deze catalogus heeft nog geen gegevens geladen."
+    },
     "dateField": {
       "openCalendar": "Kalender openen — {{field}}"
     },
@@ -891,6 +894,29 @@
       "meddraUnavailable": "De zoekfunctie voor termen is nu niet beschikbaar; je kunt het zo intypen.",
       "diagtermNotImported": "Het woordenboek van deze bron is niet geïmporteerd in deze omgeving.",
       "keepAsFreeText": "Opslaan als vrije tekst"
+    },
+    "medications": {
+      "sectionTitle": "Gelijktijdige medicatie",
+      "fields": {
+        "medicationName": "Medicatie",
+        "dose": "Dosis",
+        "pharmaceuticalFormItemId": "Farmaceutische vorm",
+        "administrationRouteItemId": "Toedieningsweg",
+        "startDate": "Startdatum",
+        "isOtherMedication": "Andere medicatie (niet in de catalogus)",
+        "otherMedicationText": "Beschrijf de medicatie"
+      },
+      "fromCatalog": "Uit de medicatiecatalogus.",
+      "notInCatalog": "Geen medicatie komt overeen; mogelijk niet in de catalogus van deze omgeving. Je kunt het zo intypen.",
+      "catalogUnavailable": "De medicatiezoekfunctie is nu niet beschikbaar; je kunt het zo intypen.",
+      "validation": {
+        "medicationNameRequired": "Voer de naam van de medicatie in voordat je opslaat.",
+        "otherTextRequired": "Beschrijf de medicatie voordat je opslaat."
+      },
+      "form": {
+        "createTitle": "Medicatie toevoegen",
+        "editTitle": "Medicatie bewerken"
+      }
     },
     "satellites": {
       "deleteTitle": "Deactiveren",

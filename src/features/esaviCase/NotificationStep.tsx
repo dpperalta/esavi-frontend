@@ -15,6 +15,7 @@ import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { EventList } from '@/features/notification/EventList';
+import { MedicationList } from '@/features/notification/MedicationList';
 import {
   nonSevereNotificationByCaseKey,
   nonSevereNotificationResource,
@@ -585,9 +586,11 @@ function NotificationFormBody({
         </div>
       </div>
 
-      {/* Sólo existe con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
-          `notificationId` no hay padre al que colgar ningún evento. */}
+      {/* Sólo existen con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
+          `notificationId` no hay padre al que colgar ningún satélite. La compuerta de
+          `takesMedication` sobre `<MedicationList>` llega en el paso 11 de este spec. */}
       <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+      <MedicationList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-foreground">

@@ -55,16 +55,22 @@ export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled, 
     );
   }
 
-  // An unknown `typeCode` — the catalog seed doesn't have it. Left empty and disabled instead of
-  // thrown: a missing seed row is not a reason to break the screen around it.
-  if (!catalogTypeId) {
+  // Two ways a catalog can be empty (CASE-PROCESS.md §10.5): the `typeCode` itself isn't seeded
+  // (`!catalogTypeId`), or it is but no `catalogItem` row hangs from it yet — `pharmaceuticalForm`
+  // and `administrationRoute` are both commented out in `esaviapp.sql` today. Neither is a reason
+  // to break the screen around it, and neither is a plain empty dropdown either: a disabled
+  // `<Select>` with no explanation reads as broken, not as "nothing to choose from yet".
+  if (!catalogTypeId || rows.length === 0) {
     return (
-      <Select value="" disabled>
-        <SelectTrigger className="w-full" aria-label={ariaLabel} clearable={false}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent />
-      </Select>
+      <div className="flex flex-col gap-1">
+        <Select value="" disabled>
+          <SelectTrigger className="w-full" aria-label={ariaLabel} clearable={false}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent />
+        </Select>
+        <p className="text-xs text-muted-foreground">{t('common.catalogSelect.empty')}</p>
+      </div>
     );
   }
 
