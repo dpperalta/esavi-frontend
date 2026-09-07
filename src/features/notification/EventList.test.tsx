@@ -3,11 +3,20 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { EventList } from './EventList';
+
+const toastError = vi.fn();
+const toastSuccess = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    error: (...args: unknown[]) => toastError(...args),
+    success: (...args: unknown[]) => toastSuccess(...args),
+  },
+}));
 
 const server = setupServer();
 
@@ -26,6 +35,8 @@ beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
+  toastError.mockClear();
+  toastSuccess.mockClear();
 });
 
 function renderList() {
@@ -153,5 +164,63 @@ describe('EventList — SPEC FE12b §4 paso 8', () => {
     // Ninguna de las dos escrituras tocó la fila hermana, ni envió `isMainEsavi: false`.
     expect(puts.every((put) => put.body.isMainEsavi === true)).toBe(true);
     expect(puts.map((put) => put.id).sort()).toEqual([EVENT_1, EVENT_2].sort());
+  });
+
+  // SPEC FE12b §4 paso 14 — la baja con confirmación que nombra la fila.
+  it('dar de baja pide confirmación nombrando la fila y llama al DELETE sólo tras confirmar', async () => {
+    const user = setupUser();
+    server.use(
+      http.get(`http://localhost:4500/api/notification-events/case/case-1`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [eventRow({})] } }),
+      ),
+    );
+    let deleteCalls = 0;
+    server.use(
+      http.delete(`http://localhost:4500/api/notification-events/${EVENT_1}`, () => {
+        deleteCalls++;
+        return HttpResponse.json({ ok: true, message: 'ok' });
+      }),
+    );
+
+    renderList();
+
+    const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Fiebre alta' });
+    await user.click(deleteButton);
+
+    expect(await screen.findByText('¿Dar de baja «Fiebre alta»? Esta acción no se puede deshacer desde aquí.')).toBeInTheDocument();
+    expect(deleteCalls).toBe(0);
+
+    const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+    await user.click(confirmButton);
+
+    await waitFor(() => expect(deleteCalls).toBe(1));
+  });
+
+  // SPEC FE12b §4 paso 14 — el bloqueo por rol en el 005A: un 403 explica, no un toast genérico.
+  it('un 403 AUTH_ROLE_FORBIDDEN al confirmar la baja muestra el aviso de administrador', async () => {
+    const user = setupUser();
+    server.use(
+      http.get(`http://localhost:4500/api/notification-events/case/case-1`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [eventRow({})] } }),
+      ),
+      http.delete(`http://localhost:4500/api/notification-events/${EVENT_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'Rol insuficiente', code: 'AUTH_ROLE_FORBIDDEN' },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    renderList();
+
+    const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Fiebre alta' });
+    await user.click(deleteButton);
+    const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+    await user.click(confirmButton);
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
+    expect(toastError).toHaveBeenCalledWith(
+      'Retirar este contenido clínico exige un administrador en este despliegue.',
+    );
   });
 });

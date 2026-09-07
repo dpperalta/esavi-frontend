@@ -108,6 +108,18 @@ export function TermSearchField({
     setHighlighted(-1);
   }, [options]);
 
+  // Con la lista ahora limitada en alto y con scroll, navegar con flechas más allá del borde
+  // visible tiene que desplazarla — si no, el teclado "selecciona" una fila que el ratón nunca
+  // mostró.
+  useEffect(() => {
+    if (highlighted < 0) {
+      return;
+    }
+    document
+      .getElementById(`${listboxId}-option-${highlighted}`)
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [highlighted, listboxId]);
+
   const showPanel = open && !readOnly && trimmed.length > 0;
 
   function selectOption(option: TermSearchOption) {
@@ -196,7 +208,18 @@ export function TermSearchField({
                 </p>
               )}
               {meetsMinLength && !isLoading && !isError && options.length > 0 && (
-                <ul className="flex flex-col">
+                <ul
+                  className="flex max-h-72 flex-col overflow-y-auto"
+                  // El popover se abre dentro de un `<Dialog>`, que pone `pointer-events: none`
+                  // en el `<body>` mientras está abierto (bloqueo de foco de Radix). El wrapper de
+                  // posicionamiento del propio Popover hereda ese `none`, y en Chromium eso deja
+                  // a este elemento fuera del cálculo de la región "de scroll rápido": el evento
+                  // `wheel` sí llega (confirmado con un listener), pero el navegador nunca ejecuta
+                  // el scroll nativo. Se aplica a mano en vez de depender de él.
+                  onWheel={(event) => {
+                    event.currentTarget.scrollTop += event.deltaY;
+                  }}
+                >
                   {options.map((option, index) => (
                     <li
                       key={option.code}

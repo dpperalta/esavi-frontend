@@ -1433,3 +1433,159 @@ describe('NotificationStep — «al menos un evento» en «Completar etapa» (SP
     ));
   }, 30000);
 });
+
+// SPEC FE12b §4 paso 14 — integración de extremo a extremo: los dos satélites, montados junto a
+// `CaseWizardProvider` y `CaseWizardActionBar`, coexisten dentro del mismo paso 4. Las ramas de
+// `source`, los tres caminos del nombre de la medicación, las cuatro reglas condicionales y los
+// tres estados de la compuerta ya están cada uno probado por separado (pasos 7-13); esta prueba
+// verifica el cableado real de `NotificationStep`, no vuelve a demostrar la lógica de negocio.
+describe('NotificationStep — los dos satélites conviven en el mismo paso (SPEC FE12b §4 paso 14)', () => {
+  it('crear un evento y una medicación en la misma sesión, con la cabecera ya creada', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockPatientDetail('MALE');
+    mockClassificationDetail(true);
+    mockSevereNotificationBranch();
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+      ),
+      http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: 'Reacción local en el sitio de aplicación',
+            hasRelevantMedicalHistory: 'NO',
+            takesMedication: 'YES',
+            requestInvestigation: false,
+            deathDate: null,
+            autopsyRequested: null,
+            verbalAutopsyPerformed: null,
+            notes: null,
+            isActive: true,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+            outcome: null,
+          },
+        }),
+      ),
+      http.get('http://localhost:4500/api/catalog-types', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+
+    let events: unknown[] = [];
+    server.use(
+      http.get(`http://localhost:4500/api/notification-events/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: events.length, rows: events } }),
+      ),
+      http.get('http://localhost:4500/api/meddra/search', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.post('http://localhost:4500/api/notification-events', async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        const created = {
+          eventId: 'evt-1',
+          notificationId: NOTIFICATION_1,
+          diagnosticTermId: null,
+          sortOrder: 1,
+          esaviName: body.esaviName,
+          esaviCode: null,
+          esaviRawName: null,
+          isMainEsavi: false,
+          startDate: null,
+          startTime: null,
+          isOtherEsavi: false,
+          otherDescription: null,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          diagnosticTerm: null,
+        };
+        events = [created];
+        return HttpResponse.json({ ok: true, message: 'ok', data: created }, { status: 201 });
+      }),
+    );
+
+    let medications: unknown[] = [];
+    server.use(
+      http.get(`http://localhost:4500/api/notification-medications/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { count: medications.length, rows: medications },
+        }),
+      ),
+      http.get('http://localhost:4500/api/whodrug-products/search', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { term: 'par', count: 0, rows: [] } }),
+      ),
+      http.post('http://localhost:4500/api/notification-medications', async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        const created = {
+          medicationId: 'med-1',
+          notificationId: NOTIFICATION_1,
+          sortOrder: 1,
+          medicationName: body.medicationName,
+          medicationCode: null,
+          dose: null,
+          pharmaceuticalFormItemId: null,
+          administrationRouteItemId: null,
+          startDate: null,
+          isOtherMedication: false,
+          otherMedicationText: null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          pharmaceuticalForm: null,
+          administrationRoute: null,
+        };
+        medications = [created];
+        return HttpResponse.json({ ok: true, message: 'ok', data: created }, { status: 201 });
+      }),
+    );
+
+    renderNotificationStep();
+
+    await screen.findByLabelText('Descripción del ESAVI');
+
+    // El botón «Añadir» es genérico (`common.satelliteList.add`) y aparece una vez por lista —
+    // el primero es el de eventos, el segundo el de medicación, en el orden en que
+    // `NotificationStep` las monta.
+    const [addEventButton] = await screen.findAllByRole('button', { name: 'Añadir' });
+
+    // El evento, por texto libre — las tres ramas de `source` ya están probadas en
+    // `EventFormDialog.test.tsx`; aquí sólo hace falta que el flujo complete. El diálogo se monta
+    // sobre la pantalla sin desmontar el «Guardar» de `CaseWizardActionBar` — el suyo propio es
+    // el último en el documento, dentro del `<Dialog>`.
+    await user.click(addEventButton);
+    await user.type(await screen.findByLabelText('Diagnóstico del ESAVI'), 'Fiebre alta');
+    await user.keyboard('{Escape}');
+    const dialogSaveButtons = await screen.findAllByRole('button', { name: 'Guardar' });
+    await user.click(dialogSaveButtons[dialogSaveButtons.length - 1]);
+    await waitFor(() => expect(screen.getAllByText('Fiebre alta').length).toBeGreaterThan(0));
+
+    // La medicación, también por texto libre — los tres caminos del nombre ya están probados en
+    // `MedicationFormDialog.test.tsx`.
+    const addButtons = await screen.findAllByRole('button', { name: 'Añadir' });
+    await user.click(addButtons[1]);
+    await user.type(await screen.findByLabelText('Medicamento'), 'Paracetamol');
+    await user.keyboard('{Escape}');
+    const dialogSaveButtons2 = await screen.findAllByRole('button', { name: 'Guardar' });
+    await user.click(dialogSaveButtons2[dialogSaveButtons2.length - 1]);
+
+    await waitFor(() => expect(screen.getAllByText('Paracetamol').length).toBeGreaterThan(0));
+    // Y el evento sigue ahí: crear la medicación no desplazó ni ocultó la lista de eventos.
+    expect(screen.getAllByText('Fiebre alta').length).toBeGreaterThan(0);
+  }, 120000);
+});
