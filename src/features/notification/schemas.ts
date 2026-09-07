@@ -1,7 +1,9 @@
 import { z } from 'zod';
-import { ANSWER_OPTIONS, type AnswerOption } from '@/contracts/common';
+import { ANSWER_OPTIONS, TERM_SOURCES, type AnswerOption } from '@/contracts/common';
 import type { CreateNonSevereNotificationInput } from '@/contracts/nonSevereNotification';
+import type { CreateNotificationEventInput } from '@/contracts/notificationEvent';
 import type { CreateNotificationInput, NotificationType } from '@/contracts/notification';
+import type { CreateNotificationMedicationInput } from '@/contracts/notificationMedication';
 import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -323,4 +325,150 @@ export const nonSevereNotificationErrorFieldMap: Partial<Record<string, keyof No
   NSEVNOT_004_VACCINATION_SITE_NOT_FOUND: 'vaccinationSiteItemId',
   NSEVNOT_001_GEOLOCATION_NOT_FOUND: 'vaccinationGeoLocationId',
   NSEVNOT_004_GEOLOCATION_NOT_FOUND: 'vaccinationGeoLocationId',
+};
+
+// ---------------------------------------------------------------------------------------------
+// SPEC FE12b §3.5 — el evento y la medicación concomitante. Dos modales, dos `useForm` propios,
+// ninguno comparte estado con el de la cabecera: una fila de satélite se guarda al aceptar el
+// modal (§3.4).
+// ---------------------------------------------------------------------------------------------
+
+// `source` viaja al crear/actualizar y nunca vuelve en la respuesta (§3.3): es el único campo del
+// tipo que no es columna. `diagnosticTermId` y `esaviRawName` son derivados — la resolución los
+// escribe — y por eso no están aquí, igual que en `CreateNotificationEventInput`.
+export type NotificationEventFormValues = Omit<CreateNotificationEventInput, 'notificationId' | 'isActive'>;
+
+const timeRegex = /^\d{2}:\d{2}$/;
+
+// La regla de «otro evento», bidireccional: con `isOtherEsavi === true` la descripción es
+// obligatoria (`NOTIFEVT_00X_OTHER_DESCRIPTION_REQUIRED`); con `false`, una descripción presente
+// se rechaza (`NOTIFEVT_00X_OTHER_DESCRIPTION_NOT_ALLOWED`). Espejo de
+// `isPregnancyDescriptionRequirementMet` de arriba.
+export function isOtherEsaviDescriptionCoherent(
+  isOtherEsavi: boolean | null | undefined,
+  otherDescription: string | null | undefined,
+): boolean {
+  const trimmed = (otherDescription ?? '').trim();
+  return isOtherEsavi === true ? trimmed.length > 0 : trimmed.length === 0;
+}
+
+// La segunda mitad de la regla de «otro evento», unidireccional: declarar «otro» y conservar un
+// código o un término resuelto es una contradicción (`NOTIFEVT_00X_OTHER_ESAVI_CONFLICT`); lo
+// contrario — `isOtherEsavi === false` con código — no es un conflicto, es el caso normal.
+export function isOtherEsaviCodeConflictAbsent(
+  isOtherEsavi: boolean | null | undefined,
+  esaviCode: string | null | undefined,
+): boolean {
+  if (isOtherEsavi !== true) return true;
+  return (esaviCode ?? '').trim().length === 0;
+}
+
+// `esaviName` — lo que escribió el notificador — nunca se limpia al marcar «otro»; sólo el
+// buscador y `esaviCode` lo hacen (§3.5, "qué limpia cada una").
+export const notificationEventSchema = z
+  .object({
+    esaviName: z.string().trim().min(1).max(250),
+    esaviCode: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
+    source: z.enum(TERM_SOURCES).optional(),
+    isMainEsavi: z.boolean().optional(),
+    startDate: z.string().regex(isoDateRegex).nullable().optional(),
+    startTime: z.preprocess(emptyToUndefined, z.string().regex(timeRegex).nullable().optional()),
+    isOtherEsavi: z.boolean().optional(),
+    otherDescription: z.preprocess(emptyToUndefined, z.string().trim().max(500).nullable().optional()),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (!isOtherEsaviDescriptionCoherent(data.isOtherEsavi, data.otherDescription)) {
+      if (data.isOtherEsavi === true) {
+        ctx.addIssue({ code: 'custom', message: 'otherDescriptionRequired', path: ['otherDescription'] });
+      } else {
+        ctx.addIssue({ code: 'custom', message: 'otherDescriptionNotAllowed', path: ['isOtherEsavi'] });
+      }
+    }
+    if (!isOtherEsaviCodeConflictAbsent(data.isOtherEsavi, data.esaviCode)) {
+      ctx.addIssue({ code: 'custom', message: 'otherEsaviConflict', path: ['isOtherEsavi'] });
+    }
+  });
+
+// SPEC FE12b §3.5 "Errores del backend mapeados" — al campo. Los tres `NOT_ALLOWED`/`CONFLICT` van
+// a la bandera y no al campo que sobra: lo que sobra es la combinación, y el campo culpable está
+// oculto en ese momento (mismo criterio que `NOTIFCN_004_DEATH_FIELDS_NOT_ALLOWED` en FE12a). Los
+// dos `404` de `DIAGTERM_NOT_FOUND` no están aquí — tienen comportamiento propio, no un campo que
+// señalar (§3.5, cablea en el paso 9).
+export const notificationEventErrorFieldMap: Partial<Record<string, keyof NotificationEventFormValues>> = {
+  NOTIFEVT_001_OTHER_DESCRIPTION_REQUIRED: 'otherDescription',
+  NOTIFEVT_004_OTHER_DESCRIPTION_REQUIRED: 'otherDescription',
+  NOTIFEVT_001_OTHER_DESCRIPTION_NOT_ALLOWED: 'isOtherEsavi',
+  NOTIFEVT_004_OTHER_DESCRIPTION_NOT_ALLOWED: 'isOtherEsavi',
+  NOTIFEVT_001_OTHER_ESAVI_CONFLICT: 'isOtherEsavi',
+  NOTIFEVT_004_OTHER_ESAVI_CONFLICT: 'isOtherEsavi',
+};
+
+// `medicationCode` nunca es columna con control propio (§3.5): el buscador la rellena, o queda
+// vacía. `dose`, `startDate` y los dos catálogos son el resto de las once columnas de §5.4b.
+export type NotificationMedicationFormValues = Omit<
+  CreateNotificationMedicationInput,
+  'notificationId' | 'isActive'
+>;
+
+// La regla de «otra medicación», bidireccional — espejo exacto de la de eventos, pero sin la
+// segunda mitad: `medicationCode` no tiene maestro clínico que pueda entrar en conflicto con la
+// bandera (`CASE-PROCESS.md` §5.4b: "aquí `medicationCode` no entra en la regla").
+export function isOtherMedicationTextCoherent(
+  isOtherMedication: boolean | null | undefined,
+  otherMedicationText: string | null | undefined,
+): boolean {
+  const trimmed = (otherMedicationText ?? '').trim();
+  return isOtherMedication === true ? trimmed.length > 0 : trimmed.length === 0;
+}
+
+// La cuarta regla condicional, y la única que el backend no impone (§3.5): declarar «otra
+// medicación» significa que no está en el catálogo, así que un `medicationCode` del maestro
+// debajo sería una contradicción que el servidor aceptaría sin protestar. Se limpia en el
+// cliente, nunca en el servicio.
+export function isMedicationCodeClearedWhenOther(
+  isOtherMedication: boolean | null | undefined,
+  medicationCode: string | null | undefined,
+): boolean {
+  if (isOtherMedication !== true) return true;
+  return (medicationCode ?? '').trim().length === 0;
+}
+
+export const notificationMedicationSchema = z
+  .object({
+    medicationName: z.string().trim().min(1).max(250),
+    medicationCode: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
+    dose: z.preprocess(emptyToUndefined, z.string().trim().max(100).nullable().optional()),
+    pharmaceuticalFormItemId: z.string().uuid().nullable().optional(),
+    administrationRouteItemId: z.string().uuid().nullable().optional(),
+    startDate: z.string().regex(isoDateRegex).nullable().optional(),
+    isOtherMedication: z.boolean().optional(),
+    // Sin longitud declarada en el servicio (§3.5) — a diferencia de `otherDescription` del
+    // evento, que sí lleva `max(500)`.
+    otherMedicationText: z.preprocess(emptyToUndefined, z.string().trim().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (!isOtherMedicationTextCoherent(data.isOtherMedication, data.otherMedicationText)) {
+      if (data.isOtherMedication === true) {
+        ctx.addIssue({ code: 'custom', message: 'otherTextRequired', path: ['otherMedicationText'] });
+      } else {
+        ctx.addIssue({ code: 'custom', message: 'otherTextNotAllowed', path: ['isOtherMedication'] });
+      }
+    }
+    // La cuarta regla es del cliente, no del backend (§3.5): no hay código de error del servicio
+    // que mapear aquí, sólo la coherencia local antes de enviar.
+    if (!isMedicationCodeClearedWhenOther(data.isOtherMedication, data.medicationCode)) {
+      ctx.addIssue({ code: 'custom', message: 'medicationCodeNotAllowed', path: ['isOtherMedication'] });
+    }
+  });
+
+// Los dos `404` de catálogo (`PHARMACEUTICAL_FORM_NOT_FOUND`/`ADMINISTRATION_ROUTE_NOT_FOUND`) se
+// añaden en el paso 13, con el sufijo exacto copiado del servicio (§3.5).
+export const notificationMedicationErrorFieldMap: Partial<
+  Record<string, keyof NotificationMedicationFormValues>
+> = {
+  NOTIFMED_001_OTHER_TEXT_REQUIRED: 'otherMedicationText',
+  NOTIFMED_004_OTHER_TEXT_REQUIRED: 'otherMedicationText',
+  NOTIFMED_001_OTHER_TEXT_NOT_ALLOWED: 'isOtherMedication',
+  NOTIFMED_004_OTHER_TEXT_NOT_ALLOWED: 'isOtherMedication',
 };

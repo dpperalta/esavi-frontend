@@ -4,8 +4,14 @@ import {
   hasAnyVerificationSource,
   isDeathDateNotBeforeEventDate,
   isDeathFieldsRequirementMet,
+  isMedicationCodeClearedWhenOther,
+  isOtherEsaviCodeConflictAbsent,
+  isOtherEsaviDescriptionCoherent,
+  isOtherMedicationTextCoherent,
   isOtherSourceDescriptionRequirementMet,
   isPregnancyDescriptionRequirementMet,
+  notificationEventSchema,
+  notificationMedicationSchema,
   notificationSaveSchema,
   resolvePregnancyGate,
 } from './schemas';
@@ -276,5 +282,123 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
     expect(result.success).toBe(false);
     const paths = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
     expect(paths).toContain('deathDate');
+  });
+});
+
+// SPEC FE12b §4 paso 7 — los cuatro casos frontera de las cuatro reglas condicionales.
+describe('isOtherEsaviDescriptionCoherent / isOtherEsaviCodeConflictAbsent — el evento', () => {
+  it('«otro» sin descripción: incoherente', () => {
+    expect(isOtherEsaviDescriptionCoherent(true, null)).toBe(false);
+    expect(isOtherEsaviDescriptionCoherent(true, '   ')).toBe(false);
+  });
+
+  it('«otro» con descripción: coherente', () => {
+    expect(isOtherEsaviDescriptionCoherent(true, 'Reacción no catalogada')).toBe(true);
+  });
+
+  it('descripción presente con la bandera en false: incoherente', () => {
+    expect(isOtherEsaviDescriptionCoherent(false, 'Reacción no catalogada')).toBe(false);
+  });
+
+  it('sin descripción y la bandera en false: coherente', () => {
+    expect(isOtherEsaviDescriptionCoherent(false, null)).toBe(true);
+    expect(isOtherEsaviDescriptionCoherent(undefined, undefined)).toBe(true);
+  });
+
+  it('«otro» con código presente: conflicto', () => {
+    expect(isOtherEsaviCodeConflictAbsent(true, 'FIEBRE')).toBe(false);
+  });
+
+  it('«otro» sin código: sin conflicto', () => {
+    expect(isOtherEsaviCodeConflictAbsent(true, null)).toBe(true);
+    expect(isOtherEsaviCodeConflictAbsent(true, '   ')).toBe(true);
+  });
+
+  it('sin «otro», con código: no es un conflicto — es el caso normal', () => {
+    expect(isOtherEsaviCodeConflictAbsent(false, 'FIEBRE')).toBe(true);
+  });
+});
+
+describe('notificationEventSchema', () => {
+  const base = { esaviName: 'Fiebre alta' };
+
+  it('rechaza "otro" sin descripción, en el campo otherDescription', () => {
+    const result = notificationEventSchema.safeParse({ ...base, isOtherEsavi: true });
+    expect(result.success).toBe(false);
+    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'otherDescription');
+    expect(issue).toBeTruthy();
+  });
+
+  it('rechaza una descripción presente con la bandera en false, en isOtherEsavi', () => {
+    const result = notificationEventSchema.safeParse({
+      ...base,
+      isOtherEsavi: false,
+      otherDescription: 'Reacción no catalogada',
+    });
+    expect(result.success).toBe(false);
+    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'isOtherEsavi');
+    expect(issue).toBeTruthy();
+  });
+
+  it('rechaza "otro" con código presente, en isOtherEsavi (no en esaviCode)', () => {
+    const result = notificationEventSchema.safeParse({
+      ...base,
+      isOtherEsavi: true,
+      otherDescription: 'Reacción no catalogada',
+      esaviCode: 'FIEBRE',
+    });
+    expect(result.success).toBe(false);
+    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'isOtherEsavi');
+    expect(issue).toBeTruthy();
+  });
+
+  it('acepta el caso normal: sin "otro", con nombre y código', () => {
+    const result = notificationEventSchema.safeParse({
+      ...base,
+      esaviCode: 'FIEBRE',
+      source: 'MEDDRA',
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('isOtherMedicationTextCoherent / isMedicationCodeClearedWhenOther — la medicación', () => {
+  it('«otra» sin texto: incoherente; «otra» con texto: coherente', () => {
+    expect(isOtherMedicationTextCoherent(true, null)).toBe(false);
+    expect(isOtherMedicationTextCoherent(true, 'Paracetamol de otra marca')).toBe(true);
+  });
+
+  it('texto presente con la bandera en false: incoherente', () => {
+    expect(isOtherMedicationTextCoherent(false, 'Paracetamol de otra marca')).toBe(false);
+  });
+
+  it('medicationCode presente con isOtherMedication en true: se debe limpiar', () => {
+    expect(isMedicationCodeClearedWhenOther(true, 'PAR001')).toBe(false);
+  });
+
+  it('medicationCode presente con isOtherMedication en false: es el caso normal, del catálogo', () => {
+    expect(isMedicationCodeClearedWhenOther(false, 'PAR001')).toBe(true);
+  });
+});
+
+describe('notificationMedicationSchema', () => {
+  it('rechaza medicationCode presente con isOtherMedication en true, en isOtherMedication', () => {
+    const result = notificationMedicationSchema.safeParse({
+      medicationName: 'Paracetamol',
+      isOtherMedication: true,
+      otherMedicationText: 'Paracetamol de otra marca',
+      medicationCode: 'PAR001',
+    });
+    expect(result.success).toBe(false);
+    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'isOtherMedication');
+    expect(issue).toBeTruthy();
+  });
+
+  it('acepta el caso normal: del catálogo, sin "otra"', () => {
+    const result = notificationMedicationSchema.safeParse({
+      medicationName: 'Paracetamol',
+      medicationCode: 'PAR001',
+    });
+    expect(result.success).toBe(true);
   });
 });
