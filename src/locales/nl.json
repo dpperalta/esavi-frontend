@@ -773,8 +773,16 @@
     "help": {
       "requestInvestigation": "Onafhankelijk van de ernst: een niet-ernstige gebeurtenis kan toch onderzocht worden, en een ernstige hoeft dat niet altijd te vereisen."
     },
+    "death": {
+      "sectionTitle": "Overlijden",
+      "deathDate": "Overlijdensdatum",
+      "autopsyRequested": "Is er een autopsie aangevraagd?",
+      "verbalAutopsyPerformed": "Is er een verbale autopsie uitgevoerd?"
+    },
     "validation": {
-      "esaviDescriptionRequired": "Beschrijf het ESAVI voordat je opslaat."
+      "esaviDescriptionRequired": "Beschrijf het ESAVI voordat je opslaat.",
+      "deathDateBeforeEventDate": "De overlijdensdatum mag niet vóór de datum van de gebeurtenis liggen.",
+      "deathDateFuture": "De overlijdensdatum mag niet in de toekomst liggen."
     },
     "pending": {
       "hasRelevantMedicalHistory": "Relevante medische voorgeschiedenis",

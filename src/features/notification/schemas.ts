@@ -18,9 +18,9 @@ export type NotificationFormValues = Omit<
   'caseId' | 'notificationType' | 'isActive'
 > &
   Omit<CreateSevereNotificationInput, 'notificationId' | 'notes'> & {
-    severeNotes: CreateSevereNotificationInput['notes'];
+    severeNotes?: CreateSevereNotificationInput['notes'];
   } & Omit<CreateNonSevereNotificationInput, 'notificationId' | 'notes'> & {
-    nonSevereNotes: CreateNonSevereNotificationInput['notes'];
+    nonSevereNotes?: CreateNonSevereNotificationInput['notes'];
   };
 
 // Every field optional/nullable except `esaviDescription` — "sin él no hay fila que crear"
@@ -84,17 +84,32 @@ void _assertSchemaMatchesContract;
 // ---------------------------------------------------------------------------------------------
 
 // Fallecimiento (3 campos): visible sólo con `outcome.value === 'DEATH'`. `verbalAutopsyPerformed`
-// stays out of this predicate on purpose — §3.5 marks it optional even under death, so its value
-// (or lack of one) never makes the block incoherent.
+// nunca es obligatorio, ni siquiera bajo muerte (§3.5) — pero sigue siendo uno de los tres que el
+// backend rechaza fuera de `DEATH`: `notification.service.ts`'s `DEATH_FIELDS` los lista los
+// tres, y `NOTIFCN_00X_DEATH_FIELDS_NOT_ALLOWED` no distingue cuál de los tres sobra.
 export function isDeathFieldsRequirementMet(
   isDeathOutcome: boolean,
   deathDate: string | null | undefined,
   autopsyRequested: boolean | null | undefined,
+  verbalAutopsyPerformed: boolean | null | undefined,
 ): boolean {
   if (isDeathOutcome) {
     return deathDate != null && autopsyRequested != null;
   }
-  return deathDate == null && autopsyRequested == null;
+  return deathDate == null && autopsyRequested == null && verbalAutopsyPerformed == null;
+}
+
+// «No anterior a `case.eventDate`» (§3.5, decisión §6): regla del cliente — el servicio incluye
+// `eventDate` en la respuesta precisamente para esta comparación
+// (`notification.service.ts:30-32`), pero no la valida él mismo. Comparación lexicográfica sobre
+// `YYYY-MM-DD`, igual que el resto del repositorio hace con fechas ISO. `null` en cualquiera de
+// los dos lados no es un desacuerdo — nada que comparar todavía.
+export function isDeathDateNotBeforeEventDate(
+  deathDate: string | null | undefined,
+  eventDate: string | null | undefined,
+): boolean {
+  if (!deathDate || !eventDate) return true;
+  return deathDate >= eventDate;
 }
 
 // `pregnancyComplicationsDescription`: visible sólo con `hasPregnancyComplications === 'YES'`.
@@ -171,7 +186,14 @@ export function createNotificationCompleteSchema({
     if (data.requestInvestigation === undefined) {
       ctx.addIssue({ code: 'custom', message: 'required', path: ['requestInvestigation'] });
     }
-    if (!isDeathFieldsRequirementMet(isDeathOutcome, data.deathDate, data.autopsyRequested)) {
+    if (
+      !isDeathFieldsRequirementMet(
+        isDeathOutcome,
+        data.deathDate,
+        data.autopsyRequested,
+        data.verbalAutopsyPerformed,
+      )
+    ) {
       ctx.addIssue({ code: 'custom', message: 'deathFieldsRequired', path: ['deathDate'] });
     }
 

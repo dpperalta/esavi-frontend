@@ -773,8 +773,16 @@
     "help": {
       "requestInvestigation": "Independent of severity: a non-serious event can still be investigated, and a serious one may not require it."
     },
+    "death": {
+      "sectionTitle": "Death",
+      "deathDate": "Date of death",
+      "autopsyRequested": "Was an autopsy requested?",
+      "verbalAutopsyPerformed": "Was a verbal autopsy performed?"
+    },
     "validation": {
-      "esaviDescriptionRequired": "Describe the ESAVI before saving."
+      "esaviDescriptionRequired": "Describe the ESAVI before saving.",
+      "deathDateBeforeEventDate": "The date of death can't be earlier than the event date.",
+      "deathDateFuture": "The date of death can't be in the future."
     },
     "pending": {
       "hasRelevantMedicalHistory": "Relevant medical history",

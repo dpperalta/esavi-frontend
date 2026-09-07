@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createNotificationCompleteSchema,
   hasAnyVerificationSource,
+  isDeathDateNotBeforeEventDate,
   isDeathFieldsRequirementMet,
   isOtherSourceDescriptionRequirementMet,
   isPregnancyDescriptionRequirementMet,
@@ -10,23 +11,50 @@ import {
 
 describe('isDeathFieldsRequirementMet — fallecimiento (SPEC FE12a §3.5, §7)', () => {
   it('muerte sin autopsyRequested: inválido', () => {
-    expect(isDeathFieldsRequirementMet(true, '2026-01-01', undefined)).toBe(false);
+    expect(isDeathFieldsRequirementMet(true, '2026-01-01', undefined, null)).toBe(false);
   });
 
   it('muerte con deathDate y autopsyRequested:false: válido — false cuenta como informado', () => {
-    expect(isDeathFieldsRequirementMet(true, '2026-01-01', false)).toBe(true);
+    expect(isDeathFieldsRequirementMet(true, '2026-01-01', false, null)).toBe(true);
   });
 
   it('muerte sin deathDate: inválido', () => {
-    expect(isDeathFieldsRequirementMet(true, null, false)).toBe(false);
+    expect(isDeathFieldsRequirementMet(true, null, false, null)).toBe(false);
   });
 
   it('autopsyRequested:false bajo recuperación (no muerte): inválido, debe ser null', () => {
-    expect(isDeathFieldsRequirementMet(false, null, false)).toBe(false);
+    expect(isDeathFieldsRequirementMet(false, null, false, null)).toBe(false);
   });
 
-  it('sin muerte y los dos campos en null: válido', () => {
-    expect(isDeathFieldsRequirementMet(false, null, null)).toBe(true);
+  it('verbalAutopsyPerformed colgado bajo recuperación (no muerte): inválido', () => {
+    expect(isDeathFieldsRequirementMet(false, null, null, true)).toBe(false);
+  });
+
+  it('sin muerte y los tres campos en null: válido', () => {
+    expect(isDeathFieldsRequirementMet(false, null, null, null)).toBe(true);
+  });
+
+  it('muerte con verbalAutopsyPerformed sin responder: válido — nunca es obligatorio', () => {
+    expect(isDeathFieldsRequirementMet(true, '2026-01-01', true, undefined)).toBe(true);
+  });
+});
+
+describe('isDeathDateNotBeforeEventDate (SPEC FE12a §3.5)', () => {
+  it('deathDate anterior a eventDate: inválido', () => {
+    expect(isDeathDateNotBeforeEventDate('2026-01-01', '2026-01-15')).toBe(false);
+  });
+
+  it('deathDate igual a eventDate: válido', () => {
+    expect(isDeathDateNotBeforeEventDate('2026-01-15', '2026-01-15')).toBe(true);
+  });
+
+  it('deathDate posterior a eventDate: válido', () => {
+    expect(isDeathDateNotBeforeEventDate('2026-02-01', '2026-01-15')).toBe(true);
+  });
+
+  it('sin deathDate o sin eventDate: nada que comparar, válido', () => {
+    expect(isDeathDateNotBeforeEventDate(null, '2026-01-15')).toBe(true);
+    expect(isDeathDateNotBeforeEventDate('2026-01-01', null)).toBe(true);
   });
 });
 

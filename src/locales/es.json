@@ -773,8 +773,16 @@
     "help": {
       "requestInvestigation": "Es independiente de la gravedad: un evento no grave puede investigarse y uno grave puede no requerirlo."
     },
+    "death": {
+      "sectionTitle": "Fallecimiento",
+      "deathDate": "Fecha de fallecimiento",
+      "autopsyRequested": "¿Se solicitó autopsia?",
+      "verbalAutopsyPerformed": "¿Se realizó autopsia verbal?"
+    },
     "validation": {
-      "esaviDescriptionRequired": "Describe el ESAVI antes de guardar."
+      "esaviDescriptionRequired": "Describe el ESAVI antes de guardar.",
+      "deathDateBeforeEventDate": "La fecha de fallecimiento no puede ser anterior a la fecha del evento.",
+      "deathDateFuture": "La fecha de fallecimiento no puede ser futura."
     },
     "pending": {
       "hasRelevantMedicalHistory": "Antecedente médico relevante",

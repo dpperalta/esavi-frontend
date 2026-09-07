@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
-import { useTranslation, type TFunction } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { CreateNotificationInput } from '@/contracts/notification';
@@ -15,6 +16,7 @@ import {
   useNotificationByCase,
 } from '@/features/notification/api';
 import {
+  isDeathDateNotBeforeEventDate,
   isDeathFieldsRequirementMet,
   notificationErrorFieldMap,
   notificationSaveSchema,
@@ -24,10 +26,13 @@ import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { AnswerOptionField } from '@/shared/components/AnswerOptionField';
 import { CatalogSelect } from '@/shared/components/CatalogSelect';
+import { DateField } from '@/shared/components/DateField';
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
+import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
 
 function NotificationStepSkeleton() {
@@ -42,9 +47,10 @@ function NotificationStepSkeleton() {
 }
 
 // `caseId`/`notificationType` never travel from the form (SPEC FE12a §3.5) — the caller adds them
-// when building the `POST` body. Undefined `deathDate`/`autopsyRequested`/`verbalAutopsyPerformed`
-// fall back to `null`: the death section itself doesn't render until §4 paso 11, so these three
-// stay cleared until then, which is already the coherent "outside DEATH" state.
+// when building the `POST` body. `deathDate`/`autopsyRequested`/`verbalAutopsyPerformed` always
+// travel explicitly — `null` when the death section is hidden, whatever the form holds when it's
+// visible — so the same `PUT` that moves the outcome away from `DEATH` also clears the three
+// (§3.5 "al ocultarse pone los tres campos a null").
 function buildNotificationPayload(values: NotificationFormValues): Partial<CreateNotificationInput> {
   return {
     esaviDescription: values.esaviDescription.trim(),
@@ -80,7 +86,14 @@ function computeHeaderPendingFields(
   if (values.requestInvestigation === undefined) {
     pending.push(t('notification.pending.requestInvestigation'));
   }
-  if (!isDeathFieldsRequirementMet(isDeathOutcome, values.deathDate, values.autopsyRequested)) {
+  if (
+    !isDeathFieldsRequirementMet(
+      isDeathOutcome,
+      values.deathDate,
+      values.autopsyRequested,
+      values.verbalAutopsyPerformed,
+    )
+  ) {
     pending.push(t('notification.pending.deathFields'));
   }
   return pending;
@@ -90,12 +103,13 @@ interface NotificationFormBodyProps {
   caseId: string;
   notification: NotificationDetail | null;
   notificationType: 'SEVERE' | 'NON_SEVERE';
+  eventDate: string | null;
 }
 
 // The form itself (SPEC FE12a §3.5, §3.1): only mounted once `NotificationStep` resolved workflow
 // + classification + (on reentry) the notification row, so `defaultValues` is correct on the
 // first render — same pattern as `ClassificationFormBody`.
-function NotificationFormBody({ caseId, notification, notificationType }: NotificationFormBodyProps) {
+function NotificationFormBody({ caseId, notification, notificationType, eventDate }: NotificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { registerStep, unregisterStep } = useCaseWizard();
@@ -152,8 +166,33 @@ function NotificationFormBody({ caseId, notification, notificationType }: Notifi
     outcomeItems.rows.find((row) => row.catalogItemId === watchedValues.outcomeItemId)?.value ===
     'DEATH';
 
+  // Al ocultarse, limpia los tres campos a `null` (SPEC FE12a §3.5, §7): la sección deja de
+  // mostrarse en cuanto el desenlace deja de ser `DEATH`, y sin esto los tres seguirían colgados
+  // en el estado del formulario aunque ya no se vean — un `PUT` con esos valores fantasma
+  // respondería `NOTIFCN_00X_DEATH_FIELDS_NOT_ALLOWED`.
+  const wasDeathOutcomeRef = useRef(isDeathOutcome);
+  useEffect(() => {
+    if (wasDeathOutcomeRef.current && !isDeathOutcome) {
+      form.setValue('deathDate', null, { shouldDirty: true });
+      form.setValue('autopsyRequested', null, { shouldDirty: true });
+      form.setValue('verbalAutopsyPerformed', null, { shouldDirty: true });
+    }
+    wasDeathOutcomeRef.current = isDeathOutcome;
+  }, [isDeathOutcome, form]);
+
+  // Regla del cliente (SPEC FE12a §3.5, decisión §6): el servicio incluye `eventDate` en la
+  // respuesta precisamente para esta comparación, pero no la valida él mismo.
+  const deathDateValid = isDeathDateNotBeforeEventDate(watchedValues.deathDate, eventDate);
+
   const handleValidSubmit = useCallback(
     async (values: NotificationFormValues) => {
+      if (!isDeathDateNotBeforeEventDate(values.deathDate, eventDate)) {
+        form.setError('deathDate', {
+          type: 'client',
+          message: 'notification.validation.deathDateBeforeEventDate',
+        });
+        return;
+      }
       const payload = buildNotificationPayload(values);
       try {
         if (notificationId) {
@@ -200,7 +239,7 @@ function NotificationFormBody({ caseId, notification, notificationType }: Notifi
         toast.error(getErrorMessage(err));
       }
     },
-    [caseId, create, form, notificationId, notificationType, queryClient, t, update],
+    [caseId, create, eventDate, form, notificationId, notificationType, queryClient, t, update],
   );
 
   const performSave = useCallback(() => form.handleSubmit(handleValidSubmit)(), [form, handleValidSubmit]);
@@ -306,6 +345,73 @@ function NotificationFormBody({ caseId, notification, notificationType }: Notifi
         />
       </div>
 
+      {/* Sólo aparece con outcome.value === 'DEATH' (SPEC FE12a §3.5, §7) — nunca con `code` ni
+          `name`, que pertenecen al catálogo del país (SPEC F46). `aria-live="polite"` porque
+          aparece por un cambio en otro control: sin el anuncio, un lector de pantalla no se
+          entera de que acaban de aparecer tres campos, dos de ellos obligatorios. */}
+      <div aria-live="polite">
+        {isDeathOutcome && (
+          <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
+            <span className="text-sm font-medium text-foreground">
+              {t('notification.death.sectionTitle')}
+            </span>
+
+            <Controller
+              control={form.control}
+              name="deathDate"
+              render={({ field }) => (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-sm font-medium text-foreground">
+                    {t('notification.death.deathDate')}
+                  </span>
+                  <DateField
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    ariaLabel={t('notification.death.deathDate')}
+                    allowFuture={false}
+                  />
+                  {!deathDateValid && (
+                    <p role="alert" className="text-sm text-destructive">
+                      {t('notification.validation.deathDateBeforeEventDate')}
+                    </p>
+                  )}
+                </div>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="autopsyRequested"
+              render={({ field }) => (
+                <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
+                  <Switch
+                    checked={field.value === true}
+                    onCheckedChange={field.onChange}
+                    aria-label={t('notification.death.autopsyRequested')}
+                  />
+                  {t('notification.death.autopsyRequested')}
+                </label>
+              )}
+            />
+
+            <Controller
+              control={form.control}
+              name="verbalAutopsyPerformed"
+              render={({ field }) => (
+                <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
+                  <Switch
+                    checked={field.value === true}
+                    onCheckedChange={field.onChange}
+                    aria-label={t('notification.death.verbalAutopsyPerformed')}
+                  />
+                  {t('notification.death.verbalAutopsyPerformed')}
+                </label>
+              )}
+            />
+          </div>
+        )}
+      </div>
+
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-foreground">
           {t('notification.fields.requestInvestigation')}
@@ -367,6 +473,7 @@ export interface NotificationStepProps {
 export function NotificationStep({ caseId }: NotificationStepProps) {
   const { t } = useTranslation();
   const workflow = useCaseWorkflow(caseId);
+  const esaviCase = esaviCaseResource.useOne(caseId);
   const stageExists = workflow.data?.stages.notification.exists === true;
   // `006` sólo se llama en reentrada (mismo motivo que `useClassificationByCase`, SPEC FE11 §3.2).
   const classificationStageExists = workflow.data?.stages.classification.exists === true;
@@ -375,6 +482,7 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
 
   const readyToRenderForm =
     !!workflow.data &&
+    !!esaviCase.data &&
     !!classification.data &&
     (!stageExists || !!notification.data);
 
@@ -397,6 +505,7 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       caseId={caseId}
       notification={notification.data ?? null}
       notificationType={notificationType}
+      eventDate={esaviCase.data?.eventDate ?? null}
     />
   );
 }
