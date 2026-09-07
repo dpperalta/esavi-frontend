@@ -8,7 +8,11 @@ import type { CreateClassificationInput } from '@/contracts/classification';
 import type { ClassificationDetail } from '@/contracts/declared/classification';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
-import { classificationResource, useClassificationByCase } from '@/features/classification/api';
+import {
+  classificationByCaseKey,
+  classificationResource,
+  useClassificationByCase,
+} from '@/features/classification/api';
 import {
   SERIOUS_CRITERION_FIELDS,
   classificationErrorFieldMap,
@@ -178,6 +182,10 @@ interface ClassificationFormBodyProps {
   classification: ClassificationDetail | null;
   readyToResolveAge: boolean;
   canCalculateAge: boolean;
+  // `stages.notification.exists` (SPEC FE12a §4 paso 14): con la notificación ya creada, cambiar
+  // la gravedad aquí dejaría una ficha de la rama contraria colgando para siempre — `notificationType`
+  // se deriva una sola vez y `004` la ignora llegue o no (§1 "por qué existe este spec").
+  notificationStarted: boolean;
 }
 
 // El formulario en sí (SPEC FE11 §3.1, §3.4): sólo se monta una vez que `ClassificationStep`
@@ -189,6 +197,7 @@ function ClassificationFormBody({
   classification,
   readyToResolveAge,
   canCalculateAge,
+  notificationStarted,
 }: ClassificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -196,12 +205,10 @@ function ClassificationFormBody({
   const create = classificationResource.useCreate();
   const update = classificationResource.useUpdate();
 
-  // Semilla desde la fila existente (reentrada); se sustituye por el id que devuelve el primer
-  // `POST` exitoso de esta misma sesión, sin esperar a que `stages.classification.exists` se
-  // actualice desde fuera (SPEC FE11 §3.4).
-  const [classificationId, setClassificationId] = useState<string | null>(
-    classification?.classificationId ?? null,
-  );
+  // Nunca en `useState` (SPEC FE12a §4, paso 2): `classification` ya es la caché de TanStack
+  // Query (reentrada o el `POST` de esta misma sesión, escrito ahí abajo con `setQueryData`), así
+  // que el id se deriva del prop en cada render en vez de copiarse.
+  const classificationId = classification?.classificationId ?? null;
 
   // El `AlertDialog` de la compuerta Sí→No (SPEC FE11 §3.5, decisión §6): efímero, no forma parte
   // del contrato de estado de §3.4.
@@ -244,7 +251,7 @@ function ClassificationFormBody({
             ...payload,
             caseId,
           } as CreateClassificationInput);
-          setClassificationId(created.classificationId);
+          queryClient.setQueryData(classificationByCaseKey(caseId), created);
           toast.success(t('common.toast.created'));
         }
         // El `POST`/`PUT` avanza `CLASSIFICATION` en el workflow (SPEC FE11 §1C, §3.2) — sin
@@ -332,6 +339,9 @@ function ClassificationFormBody({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-foreground">{t('classification.gate.label')}</span>
+        {notificationStarted && (
+          <p className="text-sm text-muted-foreground">{t('classification.gate.lockedByNotification')}</p>
+        )}
         <Controller
           control={form.control}
           name="isSeriousEvent"
@@ -345,6 +355,7 @@ function ClassificationFormBody({
                 // calza con ningún `RadioGroupItem`, así que sigue mostrándose sin marcar, pero
                 // el componente es controlado desde el primer render.
                 value={field.value === true ? 'true' : field.value === false ? 'false' : ''}
+                disabled={notificationStarted}
                 onValueChange={(next) => {
                   const nextValue = next === 'true';
                   // Sí → No con algún criterio ya marcado exige confirmar antes de limpiar
@@ -502,6 +513,7 @@ export function ClassificationStep({ caseId }: ClassificationStepProps) {
       classification={classification.data ?? null}
       readyToResolveAge={readyToResolveAge}
       canCalculateAge={canCalculateAge}
+      notificationStarted={workflow.data?.stages.notification.exists === true}
     />
   );
 }

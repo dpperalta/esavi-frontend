@@ -27,7 +27,7 @@ export const classificationResource = createResource<
   adminPath: 'classifications/admin',
 });
 
-function classificationByCaseKey(caseId: string) {
+export function classificationByCaseKey(caseId: string) {
   return ['classification', 'byCase', caseId] as const;
 }
 

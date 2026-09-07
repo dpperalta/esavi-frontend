@@ -58,6 +58,13 @@
     },
     "dateField": {
       "openCalendar": "Abrir calendario — {{field}}"
+    },
+    "answerOption": {
+      "yes": "Sí",
+      "no": "No",
+      "unknown": "No se sabe",
+      "notApplicable": "No aplica",
+      "noAnswer": "Sin respuesta"
     }
   },
   "auth": {
@@ -724,7 +731,8 @@
       "yes": "Sí",
       "no": "No",
       "confirmClearTitle": "¿Cambiar a «No»?",
-      "confirmClearBody": "Se borrarán las respuestas de los ocho criterios de gravedad que ya marcaste. Esta acción no se puede deshacer."
+      "confirmClearBody": "Se borrarán las respuestas de los ocho criterios de gravedad que ya marcaste. Esta acción no se puede deshacer.",
+      "lockedByNotification": "No se puede cambiar: el caso ya tiene una notificación creada según esta gravedad. Un cambio requiere que un administrador purgue la ficha existente."
     },
     "criteria": {
       "causedDeath": "¿Causó la muerte?",
@@ -752,6 +760,91 @@
     "error": {
       "caseClosed": "El caso se cerró. Esta pantalla pasó a modo de sólo lectura.",
       "generic": "No pudimos guardar la clasificación. Intenta de nuevo."
+    }
+  },
+  "notification": {
+    "fields": {
+      "esaviDescription": "Descripción del ESAVI",
+      "hasRelevantMedicalHistory": "¿Tiene antecedentes médicos relevantes?",
+      "takesMedication": "¿Toma medicación?",
+      "outcomeItemId": "Desenlace",
+      "requestInvestigation": "¿Se solicita investigación?",
+      "notes": "Observaciones"
+    },
+    "help": {
+      "requestInvestigation": "Es independiente de la gravedad: un evento no grave puede investigarse y uno grave puede no requerirlo."
+    },
+    "death": {
+      "sectionTitle": "Fallecimiento",
+      "deathDate": "Fecha de fallecimiento",
+      "autopsyRequested": "¿Se solicitó autopsia?",
+      "verbalAutopsyPerformed": "¿Se realizó autopsia verbal?"
+    },
+    "severe": {
+      "sectionTitle": "Ficha de notificación grave",
+      "hasPreviousEventHistory": "¿Tiene antecedente de un evento previo?",
+      "hasAllergyToOtherVaccines": "¿Tiene alergia a otras vacunas?",
+      "hasAllergyToMedications": "¿Tiene alergia a medicamentos?",
+      "hasAllergyToPreviousSameVaccine": "¿Tiene alergia a una dosis previa de la misma vacuna?",
+      "hasPregnancyComplications": "¿Tuvo complicaciones el embarazo?",
+      "pregnancyComplicationsDescription": "Describe las complicaciones del embarazo"
+    },
+    "pregnancy": {
+      "ifApplicable": "Si aplica"
+    },
+    "nonSevere": {
+      "sectionTitle": "Ficha de notificación no grave",
+      "vaccinationHealthFacilityId": "Unidad de vacunación",
+      "vaccinationSiteItemId": "Sitio de vacunación",
+      "vaccinationCenterAddress": "Dirección del centro de vacunación",
+      "vaccinationGeoLocationId": "Ubicación de la vacunación",
+      "verificationLegend": "Fuentes de verificación",
+      "verifiedPhysicalDocument": "Documento físico",
+      "verifiedElectronicRecord": "Registro electrónico",
+      "verifiedVerbalReport": "Reporte verbal",
+      "verifiedClinicalRecord": "Historia clínica",
+      "verifiedUnknown": "No se sabe",
+      "verifiedOtherSource": "Otra fuente",
+      "otherSourceDescription": "Describe la otra fuente"
+    },
+    "validation": {
+      "esaviDescriptionRequired": "Describe el ESAVI antes de guardar.",
+      "deathDateBeforeEventDate": "La fecha de fallecimiento no puede ser anterior a la fecha del evento.",
+      "deathDateFuture": "La fecha de fallecimiento no puede ser futura.",
+      "atLeastOneVerificationSource": "Marca al menos una fuente de verificación.",
+      "otherSourceDescriptionRequired": "Describe la otra fuente antes de guardar.",
+      "pregnancyDescriptionRequired": "Describe las complicaciones del embarazo antes de guardar."
+    },
+    "pending": {
+      "hasRelevantMedicalHistory": "Antecedente médico relevante",
+      "takesMedication": "Toma de medicación",
+      "outcomeItemId": "Desenlace",
+      "requestInvestigation": "Solicitud de investigación",
+      "deathFields": "Datos de fallecimiento",
+      "hasPreviousEventHistory": "Antecedente de evento previo",
+      "hasAllergyToOtherVaccines": "Alergia a otras vacunas",
+      "hasAllergyToMedications": "Alergia a medicamentos",
+      "hasAllergyToPreviousSameVaccine": "Alergia a una dosis previa de la misma vacuna",
+      "hasPregnancyComplications": "Complicaciones del embarazo",
+      "pregnancyComplicationsDescription": "Descripción de las complicaciones del embarazo",
+      "vaccinationHealthFacilityId": "Unidad de vacunación",
+      "vaccinationSiteItemId": "Sitio de vacunación",
+      "vaccinationGeoLocationId": "Ubicación de la vacunación",
+      "verifiedAny": "Al menos una fuente de verificación",
+      "otherSourceDescription": "Descripción de la otra fuente"
+    },
+    "error": {
+      "load": "No pudimos cargar la notificación.",
+      "generic": "No pudimos guardar la notificación. Intenta de nuevo.",
+      "severeGeneric": "No pudimos guardar la ficha de notificación grave. Intenta de nuevo.",
+      "nonSevereGeneric": "No pudimos guardar la ficha de notificación no grave. Intenta de nuevo."
+    },
+    "blocked": {
+      "classificationInactive": "La clasificación de este caso está dada de baja. Hace falta que un administrador la reactive antes de poder notificar."
+    },
+    "draft": {
+      "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
+      "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
     }
   },
   "home": {

@@ -58,6 +58,13 @@
     },
     "dateField": {
       "openCalendar": "Open calendar — {{field}}"
+    },
+    "answerOption": {
+      "yes": "Yes",
+      "no": "No",
+      "unknown": "Unknown",
+      "notApplicable": "Not applicable",
+      "noAnswer": "No answer"
     }
   },
   "auth": {
@@ -724,7 +731,8 @@
       "yes": "Yes",
       "no": "No",
       "confirmClearTitle": "Switch to \"No\"?",
-      "confirmClearBody": "This clears the answers to the eight severity criteria you already marked. This cannot be undone."
+      "confirmClearBody": "This clears the answers to the eight severity criteria you already marked. This cannot be undone.",
+      "lockedByNotification": "Can't be changed: the case already has a notification created under this severity. Changing it requires an administrator to purge the existing record."
     },
     "criteria": {
       "causedDeath": "Did it cause death?",
@@ -752,6 +760,91 @@
     "error": {
       "caseClosed": "The case was closed. This screen switched to read-only mode.",
       "generic": "We couldn't save the classification. Try again."
+    }
+  },
+  "notification": {
+    "fields": {
+      "esaviDescription": "ESAVI description",
+      "hasRelevantMedicalHistory": "Any relevant medical history?",
+      "takesMedication": "Taking medication?",
+      "outcomeItemId": "Outcome",
+      "requestInvestigation": "Request an investigation?",
+      "notes": "Notes"
+    },
+    "help": {
+      "requestInvestigation": "Independent of severity: a non-serious event can still be investigated, and a serious one may not require it."
+    },
+    "death": {
+      "sectionTitle": "Death",
+      "deathDate": "Date of death",
+      "autopsyRequested": "Was an autopsy requested?",
+      "verbalAutopsyPerformed": "Was a verbal autopsy performed?"
+    },
+    "severe": {
+      "sectionTitle": "Severe notification record",
+      "hasPreviousEventHistory": "Any history of a previous event?",
+      "hasAllergyToOtherVaccines": "Any allergy to other vaccines?",
+      "hasAllergyToMedications": "Any allergy to medications?",
+      "hasAllergyToPreviousSameVaccine": "Any allergy to a previous dose of the same vaccine?",
+      "hasPregnancyComplications": "Were there any pregnancy complications?",
+      "pregnancyComplicationsDescription": "Describe the pregnancy complications"
+    },
+    "pregnancy": {
+      "ifApplicable": "If applicable"
+    },
+    "nonSevere": {
+      "sectionTitle": "Non-severe notification record",
+      "vaccinationHealthFacilityId": "Vaccination facility",
+      "vaccinationSiteItemId": "Vaccination site",
+      "vaccinationCenterAddress": "Vaccination center address",
+      "vaccinationGeoLocationId": "Vaccination location",
+      "verificationLegend": "Verification sources",
+      "verifiedPhysicalDocument": "Physical document",
+      "verifiedElectronicRecord": "Electronic record",
+      "verifiedVerbalReport": "Verbal report",
+      "verifiedClinicalRecord": "Clinical record",
+      "verifiedUnknown": "Unknown",
+      "verifiedOtherSource": "Other source",
+      "otherSourceDescription": "Describe the other source"
+    },
+    "validation": {
+      "esaviDescriptionRequired": "Describe the ESAVI before saving.",
+      "deathDateBeforeEventDate": "The date of death can't be earlier than the event date.",
+      "deathDateFuture": "The date of death can't be in the future.",
+      "atLeastOneVerificationSource": "Mark at least one verification source.",
+      "otherSourceDescriptionRequired": "Describe the other source before saving.",
+      "pregnancyDescriptionRequired": "Describe the pregnancy complications before saving."
+    },
+    "pending": {
+      "hasRelevantMedicalHistory": "Relevant medical history",
+      "takesMedication": "Medication use",
+      "outcomeItemId": "Outcome",
+      "requestInvestigation": "Investigation request",
+      "deathFields": "Death details",
+      "hasPreviousEventHistory": "History of a previous event",
+      "hasAllergyToOtherVaccines": "Allergy to other vaccines",
+      "hasAllergyToMedications": "Allergy to medications",
+      "hasAllergyToPreviousSameVaccine": "Allergy to a previous dose of the same vaccine",
+      "hasPregnancyComplications": "Pregnancy complications",
+      "pregnancyComplicationsDescription": "Pregnancy complications description",
+      "vaccinationHealthFacilityId": "Vaccination facility",
+      "vaccinationSiteItemId": "Vaccination site",
+      "vaccinationGeoLocationId": "Vaccination location",
+      "verifiedAny": "At least one verification source",
+      "otherSourceDescription": "Other source description"
+    },
+    "error": {
+      "load": "We couldn't load the notification.",
+      "generic": "We couldn't save the notification. Try again.",
+      "severeGeneric": "We couldn't save the severe notification record. Try again.",
+      "nonSevereGeneric": "We couldn't save the non-severe notification record. Try again."
+    },
+    "blocked": {
+      "classificationInactive": "This case's classification has been deactivated. An administrator needs to reactivate it before you can notify."
+    },
+    "draft": {
+      "restored": "Recovered unsaved changes from an earlier session.",
+      "discarded": "Discarded unsaved changes: the case was edited somewhere else."
     }
   },
   "home": {

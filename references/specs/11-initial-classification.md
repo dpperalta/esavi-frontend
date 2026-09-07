@@ -1,6 +1,6 @@
 # SPEC FE11 — Paso 3: Clasificación inicial
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell y autenticación), SPEC FE02 (fábrica de recursos y primitivas), SPEC FE08 (armazón del wizard: `steps.ts`, `CaseWizardContext`, `CaseWizardPage`), SPEC FE10 (patrón de paso del wizard, `<CatalogSelect emit>`), **SPEC F09 del backend** (CRUD de `classification`), **SPEC F44** (`ESAVI-CASEFLOW-012`, avance de etapa), `esavi-backend/src/helpers/severity.helper.ts` (matriz de coherencia)
 > **Fecha:** 2026-09-04
 > **Objetivo:** El formulario del paso 3 del wizard — clasificación inicial de gravedad — con su compuerta derivada, sus ocho criterios ternarios y la edad calculada o de respaldo.

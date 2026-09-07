@@ -94,6 +94,37 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   // El único con comportamiento propio además del texto: `ClassificationStep` fuerza el modo
   // `CLOSED` del armazón al capturarlo, sin esperar el próximo `006` de workflow (SPEC FE11 §3.5).
   CASEFLOW_012_CASE_CLOSED: 'classification.error.caseClosed',
+  // SPEC FE12a §3.5 — los `_CREATION_FAILED`, `_UPDATE_FAILED` y el `_NOT_FOUND`/`_CASE_NOT_FOUND`
+  // de crear (`001`) y actualizar (`004`) de las tres entidades (o su equivalente
+  // `_NOTIFICATION_NOT_FOUND` en las dos ramas, que no llevan `caseId` propio). Ninguno debería
+  // alcanzarse en uso normal — el mismo criterio que FE11 aplicó a los `CLASSIF_*` — así que
+  // comparten un texto genérico por entidad, no uno por código. Los códigos con comportamiento
+  // propio (`CASEFLOW_012_CASE_CLOSED`, `NOTIFCN_001_CASE_ALREADY_NOTIFIED`,
+  // `SEVNOT_001_ALREADY_EXISTS`/`NSEVNOT_001_ALREADY_EXISTS`,
+  // `SEVNOT_001_NOTIFICATION_NOT_SEVERE`/`NSEVNOT_001_NOTIFICATION_NOT_NON_SEVERE`) no están aquí:
+  // `NotificationStep.tsx` los intercepta antes de llegar a `getErrorMessage`.
+  NOTIFCN_001_CREATION_FAILED: 'notification.error.generic',
+  NOTIFCN_004_UPDATE_FAILED: 'notification.error.generic',
+  NOTIFCN_004_NOT_FOUND: 'notification.error.generic',
+  NOTIFCN_001_CASE_NOT_FOUND: 'notification.error.generic',
+  SEVNOT_001_CREATION_FAILED: 'notification.error.severeGeneric',
+  SEVNOT_004_UPDATE_FAILED: 'notification.error.severeGeneric',
+  SEVNOT_004_NOT_FOUND: 'notification.error.severeGeneric',
+  SEVNOT_001_NOTIFICATION_NOT_FOUND: 'notification.error.severeGeneric',
+  NSEVNOT_001_CREATION_FAILED: 'notification.error.nonSevereGeneric',
+  NSEVNOT_004_UPDATE_FAILED: 'notification.error.nonSevereGeneric',
+  NSEVNOT_004_NOT_FOUND: 'notification.error.nonSevereGeneric',
+  NSEVNOT_001_NOTIFICATION_NOT_FOUND: 'notification.error.nonSevereGeneric',
+  // Los `006` (lectura) son un camino aparte del de guardado: sólo se alcanzan desde la rama de
+  // error de carga de `NotificationStep`, nunca desde un toast de guardado, así que comparten un
+  // único texto de carga en vez de uno por entidad — la pantalla ya sabe que algo no cargó, no
+  // hace falta decir cuál de las tres filas fue.
+  NOTIFCN_006_NOT_FOUND: 'notification.error.load',
+  NOTIFCN_006_CASE_NOT_FOUND: 'notification.error.load',
+  SEVNOT_006_NOT_FOUND: 'notification.error.load',
+  SEVNOT_006_CASE_NOT_FOUND: 'notification.error.load',
+  NSEVNOT_006_NOT_FOUND: 'notification.error.load',
+  NSEVNOT_006_CASE_NOT_FOUND: 'notification.error.load',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

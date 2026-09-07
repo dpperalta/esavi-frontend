@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CurrentUser, LoginResponse } from '@/contracts/declared/auth';
 import { client, setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { useDraftsStore } from '@/shared/stores/draftsStore';
 import type { ForgotPasswordFormValues, LoginFormValues } from './schemas';
 
 // ESAVI-USER-007 — the only source of the user and their effective level (SPEC FE01 §1,
@@ -107,6 +108,9 @@ async function logout(): Promise<void> {
   }
   setAccessToken(null);
   tokenStore.clearRefreshToken();
+  // Clinical free text about an identified patient doesn't survive a logout on a shared
+  // workstation (SPEC FE12a §3.4).
+  useDraftsStore.getState().clearAll();
 }
 
 export function useLogout() {

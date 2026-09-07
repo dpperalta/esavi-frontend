@@ -19,7 +19,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { ROLE_LEVELS, getEffectiveLevel } from '@/shared/config/roles';
 import { esaviCaseResource } from './api';
-import { ScopedHealthFacilitySelect } from './ScopedHealthFacilitySelect';
+import { HealthFacilitySelect } from './HealthFacilitySelect';
 import { caseOpeningErrorFieldMap, createEsaviCaseOpeningSchema, type CaseOpeningFormValues } from './schemas';
 
 // Paso 2 del alta y a la vez su reentrada (SPEC FE10 §3.1): un solo componente. El route param
@@ -62,7 +62,7 @@ export function CaseOpeningStep() {
   const [hasNotifier, setHasNotifier] = useState(false);
   // `existingCase.data` only carries the facility name on reentry (SPEC FE10 §3.1) — on a fresh
   // alta there's no case yet to read it back from, so the label of the option just picked in
-  // `ScopedHealthFacilitySelect` is kept here instead of being resolved a second time.
+  // `HealthFacilitySelect` is kept here instead of being resolved a second time.
   const [selectedFacilityLabel, setSelectedFacilityLabel] = useState<string | null>(null);
 
   function handleSubmit(values: CaseOpeningFormValues) {
@@ -176,7 +176,7 @@ export function CaseOpeningStep() {
                 <FormItem>
                   <FormLabel>{t('esaviCase.opening.healthFacility.label')}</FormLabel>
                   <FormControl>
-                    <ScopedHealthFacilitySelect
+                    <HealthFacilitySelect
                       value={field.value || null}
                       resolvedLabel={existingCase.data?.healthFacility.name ?? selectedFacilityLabel}
                       onChange={(option) => {

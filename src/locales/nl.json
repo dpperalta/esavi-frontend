@@ -58,6 +58,13 @@
     },
     "dateField": {
       "openCalendar": "Kalender openen — {{field}}"
+    },
+    "answerOption": {
+      "yes": "Ja",
+      "no": "Nee",
+      "unknown": "Onbekend",
+      "notApplicable": "Niet van toepassing",
+      "noAnswer": "Geen antwoord"
     }
   },
   "auth": {
@@ -724,7 +731,8 @@
       "yes": "Ja",
       "no": "Nee",
       "confirmClearTitle": "Wijzigen naar \"Nee\"?",
-      "confirmClearBody": "Hiermee worden de antwoorden op de acht ernstcriteria die je al hebt gemarkeerd gewist. Dit kan niet ongedaan worden gemaakt."
+      "confirmClearBody": "Hiermee worden de antwoorden op de acht ernstcriteria die je al hebt gemarkeerd gewist. Dit kan niet ongedaan worden gemaakt.",
+      "lockedByNotification": "Kan niet worden gewijzigd: het dossier heeft al een melding op basis van deze ernst. Een wijziging vereist dat een beheerder de bestaande fiche verwijdert."
     },
     "criteria": {
       "causedDeath": "Veroorzaakte het overlijden?",
@@ -752,6 +760,91 @@
     "error": {
       "caseClosed": "Het dossier is gesloten. Dit scherm is nu alleen-lezen.",
       "generic": "We konden de classificatie niet opslaan. Probeer het opnieuw."
+    }
+  },
+  "notification": {
+    "fields": {
+      "esaviDescription": "Beschrijving van het ESAVI",
+      "hasRelevantMedicalHistory": "Relevante medische voorgeschiedenis?",
+      "takesMedication": "Gebruikt medicatie?",
+      "outcomeItemId": "Uitkomst",
+      "requestInvestigation": "Onderzoek aanvragen?",
+      "notes": "Opmerkingen"
+    },
+    "help": {
+      "requestInvestigation": "Onafhankelijk van de ernst: een niet-ernstige gebeurtenis kan toch onderzocht worden, en een ernstige hoeft dat niet altijd te vereisen."
+    },
+    "death": {
+      "sectionTitle": "Overlijden",
+      "deathDate": "Overlijdensdatum",
+      "autopsyRequested": "Is er een autopsie aangevraagd?",
+      "verbalAutopsyPerformed": "Is er een verbale autopsie uitgevoerd?"
+    },
+    "severe": {
+      "sectionTitle": "Ernstige meldingsfiche",
+      "hasPreviousEventHistory": "Voorgeschiedenis van een eerdere gebeurtenis?",
+      "hasAllergyToOtherVaccines": "Allergie voor andere vaccins?",
+      "hasAllergyToMedications": "Allergie voor medicatie?",
+      "hasAllergyToPreviousSameVaccine": "Allergie voor een eerdere dosis van hetzelfde vaccin?",
+      "hasPregnancyComplications": "Waren er zwangerschapscomplicaties?",
+      "pregnancyComplicationsDescription": "Beschrijf de zwangerschapscomplicaties"
+    },
+    "pregnancy": {
+      "ifApplicable": "Indien van toepassing"
+    },
+    "nonSevere": {
+      "sectionTitle": "Niet-ernstige meldingsfiche",
+      "vaccinationHealthFacilityId": "Vaccinatie-instelling",
+      "vaccinationSiteItemId": "Vaccinatieplaats",
+      "vaccinationCenterAddress": "Adres van het vaccinatiecentrum",
+      "vaccinationGeoLocationId": "Locatie van de vaccinatie",
+      "verificationLegend": "Verificatiebronnen",
+      "verifiedPhysicalDocument": "Fysiek document",
+      "verifiedElectronicRecord": "Elektronisch dossier",
+      "verifiedVerbalReport": "Mondeling verslag",
+      "verifiedClinicalRecord": "Klinisch dossier",
+      "verifiedUnknown": "Onbekend",
+      "verifiedOtherSource": "Andere bron",
+      "otherSourceDescription": "Beschrijf de andere bron"
+    },
+    "validation": {
+      "esaviDescriptionRequired": "Beschrijf het ESAVI voordat je opslaat.",
+      "deathDateBeforeEventDate": "De overlijdensdatum mag niet vóór de datum van de gebeurtenis liggen.",
+      "deathDateFuture": "De overlijdensdatum mag niet in de toekomst liggen.",
+      "atLeastOneVerificationSource": "Markeer minstens één verificatiebron.",
+      "otherSourceDescriptionRequired": "Beschrijf de andere bron voordat je opslaat.",
+      "pregnancyDescriptionRequired": "Beschrijf de zwangerschapscomplicaties voordat je opslaat."
+    },
+    "pending": {
+      "hasRelevantMedicalHistory": "Relevante medische voorgeschiedenis",
+      "takesMedication": "Medicatiegebruik",
+      "outcomeItemId": "Uitkomst",
+      "requestInvestigation": "Onderzoeksaanvraag",
+      "deathFields": "Overlijdensgegevens",
+      "hasPreviousEventHistory": "Voorgeschiedenis van een eerdere gebeurtenis",
+      "hasAllergyToOtherVaccines": "Allergie voor andere vaccins",
+      "hasAllergyToMedications": "Allergie voor medicatie",
+      "hasAllergyToPreviousSameVaccine": "Allergie voor een eerdere dosis van hetzelfde vaccin",
+      "hasPregnancyComplications": "Zwangerschapscomplicaties",
+      "pregnancyComplicationsDescription": "Beschrijving van de zwangerschapscomplicaties",
+      "vaccinationHealthFacilityId": "Vaccinatie-instelling",
+      "vaccinationSiteItemId": "Vaccinatieplaats",
+      "vaccinationGeoLocationId": "Locatie van de vaccinatie",
+      "verifiedAny": "Minstens één verificatiebron",
+      "otherSourceDescription": "Beschrijving van de andere bron"
+    },
+    "error": {
+      "load": "We konden de melding niet laden.",
+      "generic": "We konden de melding niet opslaan. Probeer het opnieuw.",
+      "severeGeneric": "We konden de ernstige meldingsfiche niet opslaan. Probeer het opnieuw.",
+      "nonSevereGeneric": "We konden de niet-ernstige meldingsfiche niet opslaan. Probeer het opnieuw."
+    },
+    "blocked": {
+      "classificationInactive": "De classificatie van dit dossier is gedeactiveerd. Een beheerder moet ze heractiveren voordat je kunt melden."
+    },
+    "draft": {
+      "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
+      "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
     }
   },
   "home": {

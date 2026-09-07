@@ -200,6 +200,12 @@ describe('CaseWizardPage — reanudación y bloqueo de paso', () => {
 
   it('/wizard sin :step reanuda en el paso que corresponde según stages', async () => {
     mockCase();
+    mockClassification();
+    server.use(
+      http.get('http://localhost:4500/api/catalog-types', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
     mockWorkflow('OPEN', {
       classification: { exists: true, endedAt: '2026-09-01' },
       notification: { exists: false, endedAt: null },
@@ -211,8 +217,9 @@ describe('CaseWizardPage — reanudación y bloqueo de paso', () => {
 
     // classification is done; notification is unlocked (classification.exists === true) and
     // is the most advanced unlocked step — investigation/final-classification stay locked
-    // (their precondition, notification.exists, is still false).
-    await waitFor(() => expect(screen.getByText('notification')).toBeInTheDocument());
+    // (their precondition, notification.exists, is still false). `notification` no es ya un
+    // placeholder (SPEC FE12a) — se confirma con el propio formulario, no con el slug crudo.
+    await waitFor(() => expect(screen.getByLabelText('Descripción del ESAVI')).toBeInTheDocument());
   });
 });
 

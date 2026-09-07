@@ -583,7 +583,7 @@ Las dos son 1:1 con **PK = FK**, y de ahí sale la primera regla práctica:
 | `hasAllergyToMedications` | Sí | `answerOption` |
 | `hasAllergyToPreviousSameVaccine` | Sí | `answerOption` |
 | `hasPregnancyComplications` | Sí | `answerOption` |
-| `pregnancyComplicationsDescription` | Condicional | **Regla del cliente, no del backend.** Visible y obligatoria sólo con `hasPregnancyComplications === 'YES'`; en cualquier otro caso oculta y limpiada. El servidor no la impone —se puede guardar una descripción bajo un `NO` sin que proteste—, así que la asimetría con `otherSourceDescription` la cierra el formulario (§7.3) |
+| `pregnancyComplicationsDescription` | Condicional | Visible y obligatoria sólo con `hasPregnancyComplications === 'YES'`; en cualquier otro caso oculta y limpiada. **El servidor la impone en las dos direcciones**, simétrica con `otherSourceDescription`: `severeNotification.service.ts:131-157` rechaza tanto la ausencia bajo `'YES'` como la presencia bajo cualquier otra respuesta, en el `001` y en el `004` (§7.3) |
 | `notes` | Sí | Texto libre |
 
 Cinco `answerOption` seguidas: es el bloque que más justifica `<AnswerOptionField>`. **Las cinco usan la variante `unknown`** (`YES` · `NO` · `UNKNOWN`), igual que las dos de la cabecera.
@@ -639,18 +639,22 @@ Ni `severeNotification` ni `nonSevereNotification` tienen `005A` ni `005B`. Sól
 
 #### Lo primero, porque condiciona todo lo demás: cuatro de las seis exigen ADMIN
 
+**Estado tras regenerar `API-ROUTES.md` el 2026-09-05.** La petición de §10.4 se atendió **sólo en el alta**:
+
 | Tabla | `POST` | `PUT` | `DELETE` lógico |
 |---|---|---|---|
-| `notificationEvent` | **ADMIN** | **ADMIN** | **ADMIN** |
-| `notificationVaccine` | **ADMIN** | **ADMIN** | **ADMIN** |
-| `notificationDiluent` | **ADMIN** | **ADMIN** | **ADMIN** |
-| `notificationMedication` | **ADMIN** | **ADMIN** | **ADMIN** |
+| `notificationEvent` | ✅ USER | **ADMIN** | **ADMIN** |
+| `notificationVaccine` | ✅ USER | **ADMIN** | **ADMIN** |
+| `notificationDiluent` | ✅ USER | **ADMIN** | **ADMIN** |
+| `notificationMedication` | ✅ USER | **ADMIN** | **ADMIN** |
 | `notificationPregnancy` | USER | USER | ADMIN |
 | `notificationPregnancyComplication` | USER | USER | ADMIN |
 
-La cabecera del paso 4 y sus dos ramas son **USER** (`NOTIFCN-001/-004`, `SEVNOT`, `NSEVNOT`). Los eventos, las vacunas, los diluyentes y la medicación concomitante —el contenido clínico del paso— **no**. Un USER puede describir el ESAVI en texto libre y no puede decir qué vacuna lo causó.
+La cabecera del paso 4 y sus dos ramas son **USER** (`NOTIFCN-001/-004`, `SEVNOT`, `NSEVNOT`), y desde el 2026-09-04 también lo es **crear** los cuatro satélites clínicos. Lo que sigue vedado a quien notifica es **corregir y retirar** lo que acaba de escribir.
 
-**Es un bloqueo duro del paso 4, no una molestia de permisos.** Está pedido al backend —§10.4, el mismo 2026-09-03 en que se cerró esta sección— y **el diseño de `FE12b` asume que las seis escrituras son `USER`**: no se replica en el cliente una restricción que está en vías de desaparecer. Mientras no llegue, el paso 4 lo completa un ADMIN.
+**El resultado intermedio es peor que el punto de partida, y por eso se deja dicho.** Antes la asimetría era coherente —un USER no tocaba el contenido clínico—; ahora puede crear una fila mal y no puede arreglarla. Nada explica que registrar qué vacuna causó el evento sea de USER y corregir una errata de ADMIN.
+
+**El diseño de `FE12b` sigue asumiendo que las seis escrituras son `USER`** (§10.4): no se replica en el cliente una restricción que está a medio retirar. Lo que cambia mientras tanto es el texto del aviso —distinto para corregir y para retirar—, no el diseño.
 
 #### `sortOrder` no se envía nunca, y no se reordena desde la pantalla
 
@@ -1033,7 +1037,7 @@ En los cuatro el campo **degrada a texto libre sin código**, que es un registro
 
 | Condición | Regla |
 |---|---|
-| Rol para escribir | **ADMIN** en eventos, vacunas, diluyentes y medicación; USER en embarazo y complicaciones. Bloqueo abierto en §10.4 |
+| Rol para escribir | **Crear es USER en las seis** desde el 2026-09-04; **corregir y retirar siguen en ADMIN** en eventos, vacunas, diluyentes y medicación. Bloqueo abierto a medias en §10.4 |
 | Orden de creación | Notificación → vacuna → diluyente; notificación → embarazo → complicación. El id del padre vuelve en la respuesta |
 | `sortOrder` | Nunca se envía; el orden es el de creación y no se reordena |
 | Bloqueantes de guardado | `esaviName` (evento), `medicationName` (medicación), `complicationTypeItemId` y `complicationName` (complicación), `wasPregnantAtVaccination` en el `001` (embarazo) |
@@ -2202,7 +2206,7 @@ Las reglas ya establecidas, todas con la misma forma:
 | Criterios de gravedad (§5.3) | La compuerta dice «Sí» | Se limpian a `null`, con confirmación |
 | Fallecimiento — 3 campos (§5.4) | `outcome.value === 'DEATH'` | Se limpian. Si no, el `PUT` da 400 |
 | `otherSourceDescription` (§5.4) | `verifiedOtherSource === true` | Se limpia. Si no, el `PUT` da 400 |
-| `pregnancyComplicationsDescription` (§5.4) | `hasPregnancyComplications === 'YES'` | Se limpia. **Regla del cliente**: el backend no la impone |
+| `pregnancyComplicationsDescription` (§5.4) | `hasPregnancyComplications === 'YES'` | Se limpia. Si no, el `PUT` da 400: `severeNotification.service.ts:131-157` impone la regla en las dos direcciones |
 | `otherDescription` del evento (§5.4b) | `isOtherEsavi === true` | Se limpia. Si no, el `PUT` da 400 |
 | Buscador de término del evento (§5.4b) | `isOtherEsavi === false` | Se limpian `esaviCode` y el término. Si no, el `PUT` da 400 |
 | `otherMedicationText` (§5.4b) | `isOtherMedication === true` | Se limpia. Si no, el `PUT` da 400 |
@@ -2319,7 +2323,7 @@ Pedirlos es el error más fácil de cometer, porque están en el DDL como cualqu
 
 ## 9. Los specs que implementan este proceso
 
-**Once specs**, en este orden — `FE12` y `FE13` se parten por tamaño, no por naturaleza. Cada uno cita este documento en lugar de repetirlo.
+**Trece specs**, en este orden — `FE12` y `FE13` se parten por tamaño, no por naturaleza. Cada uno cita este documento en lugar de repetirlo.
 
 | Spec | Cubre | Depende de |
 |---|---|---|
@@ -2328,9 +2332,13 @@ Pedirlos es el error más fácil de cometer, porque están en el DDL como cualqu
 | **FE10** — Pasos 1 y 2 | Paciente y apertura del caso. Los dos juntos porque son los únicos que ocurren **sin `caseId`** | §5.1, §5.2 |
 | **FE11** — Paso 3 | Clasificación inicial. Fija la gravedad, que manda sobre todo lo demás | §5.3, §6.1 |
 | **FE12a** — Paso 4, cabecera y rama | `notification`, `severeNotification`, `nonSevereNotification`. 33 columnas y la regla de fallecimiento | §5.4, §6.1, §7 |
-| **FE12b** — Paso 4, satélites | Los 6 satélites, 64 columnas, más `<WhodrugTreePicker>`, `<MeddraSearchField>` y `<SatelliteList>`. **Bloqueado por §10.4** | §5.4b, §6.5, §7.4 |
+| **FE12b** — Paso 4, eventos y medicación | `notificationEvent` (13 col.) y `notificationMedication` (11). La resolución del término, las dos reglas de «otro» y la compuerta de `takesMedication`. Deja `<SatelliteList>`, `<MeddraSearchField>` y `<TimeField>`. **Bloqueado por §10.4** | §5.4b, §7.3 |
+| **FE12c** — Paso 4, vacunas y diluyentes | `notificationVaccine` (14) y `notificationDiluent` (10). El árbol de cinco niveles, los tres textos copiados y las dos coherencias temporales. Deja `<WhodrugTreePicker>` y `<SearchableSelect>`. **Bloqueado por §10.4** | §5.4b |
+| **FE12d** — Paso 4, embarazo y complicaciones | `notificationPregnancy` (8) y `notificationPregnancyComplication` (8). La compuerta de §7.4, el rango de Naegele y la derivación de §6.5. **Bloqueado además por §10.6** | §5.4b, §6.5, §7.4 |
 | **FE13a…d** — Paso 5 | Investigación: cabecera, 8 satélites 1:1, 2 listas y 2 nietas. **Se parte en cuatro**, con el reparto de §5.5.0. Sin bloque de COVID (§10.7) | §5.5, §7 |
 | **FE14** — Paso 6 | Clasificación final y cierre, con las cuatro precondiciones de §4.4 | §5.6, §4.4 |
+
+**Por qué `FE12b` se partió en tres, decidido el 2026-09-04.** El paso 4 tenía dos specs y ahora tiene cuatro. Los seis satélites juntos son 64 columnas, dos niveles de anidamiento y **cuatro primitivas nuevas** —`<SatelliteList>`, `<WhodrugTreePicker>`, `<MeddraSearchField>` y `<SearchableSelect>`—, más de lo que `FE12a` abarcó con 33 columnas y dieciséis pasos. El corte no es arbitrario: `<SatelliteList>` nace en `FE12b` y los otros dos la consumen; el árbol WHODrug de cinco niveles es un spec entero por sí mismo; y el embarazo es lo único bloqueado además por datos (§10.6), así que aislarlo impide que su bloqueo arrastre a los otros dos. Los tres se implementan en orden y cada uno deja el paso 4 utilizable.
 
 **Por qué `FE09` va segundo y no último.** Con `FE08` y `FE09` las dos opciones del menú están vivas y un expediente es reanudable de punta a punta, aunque los pasos todavía no guarden nada: todo lo que venga después es rellenar formularios contra un armazón que ya funciona. Dejar el listado para el final significa hacer seis specs de formulario sin poder probarlos como los va a usar la gente.
 
@@ -2341,12 +2349,12 @@ Pedirlos es el error más fácil de cometer, porque están en el DDL como cualqu
 | Pieza | Quién la necesita primero |
 |---|---|
 | `<EntitySearchSelect>` | FE10 (unidad de salud) y FE12b (términos diagnósticos) |
-| `<WhodrugTreePicker>` | FE12b — sin él no hay selector de vacuna. Contrato en §5.4b |
-| `<MeddraSearchField>` | FE12b. Contrato en §5.4b |
-| `<AnswerOptionField>` | FE12a. Luego FE12b y las cuatro de FE13 |
-| `<DateField>`, `<TimeField>` | FE10 el primero; FE12b los dos |
-| `<SatelliteList>` | FE12b, cuatro veces. FE13, diez |
-| `<SearchableSelect>` | FE12b, con el árbol WHODrug |
+| `<WhodrugTreePicker>` | **FE12c** — sin él no hay selector de vacuna. Contrato en §5.4b |
+| `<MeddraSearchField>` | **FE12b**. Contrato en §5.4b |
+| `<AnswerOptionField>` | FE12a. Luego **FE12d** y las cuatro de FE13 |
+| `<DateField>`, `<TimeField>` | FE10 el primero; **FE12b** los dos |
+| `<SatelliteList>` | **FE12b la escribe**; FE12c y FE12d la consumen. Cuatro veces en el paso 4, diez en FE13 |
+| `<SearchableSelect>` | **FE12c**, con el árbol WHODrug |
 | `<NumberField>` con rango | FE13c (contadores del conglomerado) y FE13d |
 | `<MapPointPicker>` | **FE13d, y sólo ahí** |
 
@@ -2362,7 +2370,7 @@ Y lo que no es una primitiva:
 
 ## 10. Dependencias del otro repositorio
 
-Lo que este proceso necesita de `esavi-backend` y no puede resolverse aquí. Se acumula a medida que §5 avanza. Seis peticiones abiertas y una pregunta ya resuelta: §10.4 a §10.6 salieron del paso 4, §10.7 del paso 5.
+Lo que este proceso necesita de `esavi-backend` y no puede resolverse aquí. Se acumula a medida que §5 avanza. Ocho entradas: cuatro abiertas (§10.1, §10.3, §10.5, §10.6), una **abierta a medias** (§10.4), dos resueltas (§10.2 y §10.8) y una pregunta contestada (§10.7). §10.4 a §10.6 y §10.8 salieron del paso 4, §10.7 del paso 5.
 
 ### 10.1 Fila `systemConfig` con el código de país · **decidido, pendiente de crear**
 
@@ -2382,7 +2390,9 @@ La crea un SUPERADMIN con `ESAVI-SYSCONF-001`. El cliente la lee con `ESAVI-SYSC
 
 > El nombre **no** puede ser idéntico a los dos lados, a diferencia del resolutor del backend: Vite sólo expone al cliente lo que empieza por `VITE_`. La correspondencia es `ESAVI_APP_COUNTRY_ISO_CODE` ↔ `VITE_ESAVI_APP_COUNTRY_ISO_CODE`.
 
-### 10.2 `ESAVI-NOTIFIER-005A` debe admitir rol USER · **pedido**
+### 10.2 `ESAVI-NOTIFIER-005A` debe admitir rol USER · **resuelto el 2026-09-04**
+
+> `DELETE /api/notifiers/:id` es **`USER`** desde la regeneración de `API-ROUTES.md` del 2026-09-05. Un USER ya puede quitar un notificador que añadió por error. Se conserva el texto original porque el mismo argumento sigue abierto en §10.4 para los `005A` de los satélites del paso 4.
 
 `DELETE /api/notifiers/:id` es borrado lógico y hoy exige **ADMIN**. Con la lista de notificadores de §5.2, un USER puede añadir y no puede quitar — ni siquiera lo que acaba de añadir por error, y añadir es `USER` (`ESAVI-NOTIFIER-001`). La asimetría no protege nada: el borrado es lógico y reversible con `005B`.
 
@@ -2398,7 +2408,21 @@ Ver §6.3. La regla de §4.5 —un expediente cerrado no se edita, y sólo un AD
 
 Alcance a decidir por el backend, no por aquí: si la comprobación cubre también los satélites (`notificationEvent`, `notificationVaccine`, los catorce de la investigación…), que son la mayor parte de las escrituras reales de un expediente. Cubrir sólo los cuatro `004` deja la puerta entornada.
 
-### 10.4 Cuatro satélites del paso 4 exigen ADMIN para escribir · **pedido el 2026-09-03**
+### 10.4 Cuatro satélites del paso 4 exigen ADMIN para escribir · **resuelto a medias el 2026-09-04**
+
+> **Estado tras regenerar `API-ROUTES.md` el 2026-09-05.** La petición se atendió **sólo en el alta**. Los cuatro `001` bajaron a `USER`; los `004` y los `005A` **no**:
+>
+> | Operación | Pedido | Hoy |
+> |---|---|---|
+> | `NOTIFEVT-001`, `NOTIFVAC-001`, `NOTIFDIL-001`, `NOTIFMED-001` | USER | ✅ **USER** |
+> | `NOTIFEVT-004`, `NOTIFVAC-004`, `NOTIFDIL-004`, `NOTIFMED-004` | USER | ❌ ADMIN |
+> | `NOTIFEVT-005A`, `NOTIFVAC-005A`, `NOTIFDIL-005A`, `NOTIFMED-005A` | USER | ❌ ADMIN |
+> | `NOTIFPRG-005A`, `PREGCOMP-005A` | USER | ❌ ADMIN |
+> | `NOTIFIER-005A` (§10.2) | USER | ✅ **USER** |
+>
+> **El resultado intermedio es peor que el punto de partida, y por eso hay que decirlo.** Un USER puede ahora **crear** un evento o una medicación y no puede **corregirlo ni retirarlo**: escribe una fila mal y la fila se queda. Antes al menos la asimetría era coherente —no podía tocar nada—. La petición de abajo sigue abierta para los `004` y los `005A`, y **el reparto sugiere un descuido al aplicarla, no una política**: nada explica que crear contenido clínico sea de USER y corregirlo de ADMIN.
+
+**Petición original, del 2026-09-03:**
 
 **Es la dependencia más grave del documento.** Un USER notifica el caso, lo clasifica, describe el ESAVI en texto libre y rellena la rama grave o no grave — todo con rol `USER`. Y no puede registrar **qué vacuna se administró, qué diagnóstico tuvo, con qué diluyente se reconstituyó ni qué medicación tomaba**, porque las cuatro tablas exigen ADMIN en `POST`, `PUT` y `DELETE`:
 
@@ -2479,3 +2503,35 @@ Es la segunda fila de configuración que este proceso necesita, junto a la de §
 > **Lo único que queda abierto es del otro repositorio, y es menor:** si la tabla se retira del DDL o se deja con una nota. Ninguna de las dos cosas cambia nada de este cliente, así que no se pide — se anota. Lo que sí importaba era saberlo antes de escribir `FE13`, y ya se sabe.
 
 **Es el patrón que conviene repetir.** Una tabla en el esquema no es una obligación de implementarla, y la única forma de distinguir «pendiente» de «abandonada» es preguntar. Leer el DDL como si fuera la especificación habría añadido un bloque entero de once campos al paso 5 —y una petición de endpoints y catálogos a §10— por un vestigio.
+
+### 10.8 Buscador de medicamentos contra WHODrug · **resuelto el 2026-09-04**
+
+> **El endpoint existe y está implementado.** `SPEC F56` del backend —*espejo del estándar WHODrug y buscador de medicación concomitante*— está `Aprobado` con sus catorce pasos committeados, y `API-ROUTES.md` lo recoge desde la regeneración del 2026-09-05:
+>
+> ```
+> GET  /api/whodrug-products/search   ESAVI-WHODPROD-006   USER        buscar medicación concomitante
+> GET  /api/whodrug-products/admin    ESAVI-WHODPROD-002B  ADMIN       inspección del espejo
+> POST /api/whodrug-products/sync     ESAVI-WHODPROD-007   SUPERADMIN  sincronizar el estándar
+> ```
+>
+> **Contrato del `006`:** `term` obligatorio, **mínimo 3 caracteres tras `trim`**, máximo 250 —por debajo es `400` del validador—; `limit` opcional, por defecto 20 y tope 50. Devuelve `{ term, count, rows: [{ code, name }] }`, **a grano de medicamento** (`DISTINCT ON drugCode`). `count === limit` significa que hubo más y hay que afinar el término. **No lleva limitador de tasa**: consulta el espejo local, no un API licenciado. Errores propios: `503 WHODPROD_006_NOT_CONFIGURED` y `500 WHODPROD_006_FETCH_FAILED`.
+>
+> **Dos políticas que son configuración del servidor y no parámetros del cliente:** se excluyen los ATC configurados —las vacunas, `J07`— y se filtra por el país del despliegue. El cliente no puede pedir vacunas ni cambiar de país.
+>
+> **Y lo que F56 dejó fuera a propósito, que es lo que mantiene barato el aterrizaje:** `notificationMedication` **no** gana clave foránea, ni resolución implícita, ni ningún cambio en el CRUD del F21. `medicationName` y `medicationCode` siguen siendo texto libre que el backend no valida. El buscador rellena los dos campos; la fila conserva lo que se leyó, igual que los tres textos de `notificationVaccine`. Lo consume `FE12b`.
+
+**Contexto original, del 2026-09-04:**
+
+`notificationMedication.medicationName` y `medicationCode` son hoy dos textos libres sin maestro detrás (§5.4b): el código no se normaliza, no se valida y no hay FK. **Se decidió que dejen de escribirse a mano** y salgan de un buscador contra **WHODrug**, el mismo diccionario que ya sirve a las vacunas —otro conjunto de datos, no `vaccineWhodrug`—.
+
+**Lo que se guarda no cambia, y ésa es la parte importante:** el buscador rellena `medicationName` y `medicationCode`, **el `code`, nunca el id**. No hay columna de FK en la tabla y no se pide crearla: la fila conserva lo que se leyó, igual que los tres textos de `notificationVaccine` (§5.4b).
+
+| Pieza | Estado |
+|---|---|
+| Ruta de búsqueda | **No existe en `API-ROUTES.md`.** Es una entidad nueva del otro repositorio, de la forma de `ESAVI-WHODRUG-006A`…`E` o de `ESAVI-MEDDRA-006` |
+| Columnas | **Ninguna cambia.** `medicationName` (≤250, obligatorio) y `medicationCode` (≤250, opcional) |
+| Regla de «otra medicación» | Sin cambios. `medicationCode` sigue **sin entrar** en ella (§5.4b) |
+
+**Consecuencia para `FE12b`, y por eso se registra en vez de esperar:** el spec construye los dos campos como `<Input>` de texto libre, y el aterrizaje posterior es **sustituir dos `<Input>` por un componente**. No toca el contrato, ni el esquema Zod, ni las filas ya cargadas. Escribir `FE12b` ahora no genera trabajo que haya que deshacer.
+
+**Lo que se pide al otro repositorio:** un endpoint de búsqueda de medicamentos sobre WHODrug con rol `USER`, que devuelva al menos `code` y `name`, con mínimo de caracteres y limitador declarados —los dos precedentes están en `WHODRUG-006*` y `MEDDRA-006`—. Al añadirlo, `API-ROUTES.md` se regenera (`references/README.md`).
