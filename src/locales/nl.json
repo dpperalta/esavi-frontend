@@ -731,7 +731,8 @@
       "yes": "Ja",
       "no": "Nee",
       "confirmClearTitle": "Wijzigen naar \"Nee\"?",
-      "confirmClearBody": "Hiermee worden de antwoorden op de acht ernstcriteria die je al hebt gemarkeerd gewist. Dit kan niet ongedaan worden gemaakt."
+      "confirmClearBody": "Hiermee worden de antwoorden op de acht ernstcriteria die je al hebt gemarkeerd gewist. Dit kan niet ongedaan worden gemaakt.",
+      "lockedByNotification": "Kan niet worden gewijzigd: het dossier heeft al een melding op basis van deze ernst. Een wijziging vereist dat een beheerder de bestaande fiche verwijdert."
     },
     "criteria": {
       "causedDeath": "Veroorzaakte het overlijden?",

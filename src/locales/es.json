@@ -731,7 +731,8 @@
       "yes": "Sí",
       "no": "No",
       "confirmClearTitle": "¿Cambiar a «No»?",
-      "confirmClearBody": "Se borrarán las respuestas de los ocho criterios de gravedad que ya marcaste. Esta acción no se puede deshacer."
+      "confirmClearBody": "Se borrarán las respuestas de los ocho criterios de gravedad que ya marcaste. Esta acción no se puede deshacer.",
+      "lockedByNotification": "No se puede cambiar: el caso ya tiene una notificación creada según esta gravedad. Un cambio requiere que un administrador purgue la ficha existente."
     },
     "criteria": {
       "causedDeath": "¿Causó la muerte?",

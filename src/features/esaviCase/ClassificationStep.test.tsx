@@ -96,7 +96,7 @@ function mockPatientDetail(overrides: Record<string, unknown> = {}) {
   );
 }
 
-function mockWorkflow(classificationExists: boolean) {
+function mockWorkflow(classificationExists: boolean, notificationExists = false) {
   server.use(
     http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
       HttpResponse.json({
@@ -119,7 +119,13 @@ function mockWorkflow(classificationExists: boolean) {
               endedAt: null,
               durationMinutes: null,
             },
-            notification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+            notification: {
+              exists: notificationExists,
+              id: notificationExists ? 'notification-1' : null,
+              startedAt: null,
+              endedAt: null,
+              durationMinutes: null,
+            },
             investigation: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
             finalClassification: {
               exists: false,
@@ -395,5 +401,38 @@ describe('ClassificationStep — modo de la edad (SPEC FE11 §3.5, §4)', () => 
     // `<CatalogSelect>` resuelve `typeCode → catalogTypeId` con su propia query antes de pintar
     // el combobox — pinta un skeleton mientras tanto (CatalogSelect.tsx), de ahí `findByRole`.
     expect(await screen.findByRole('combobox', { name: 'Unidad' })).toBeInTheDocument();
+  }, 30000);
+});
+
+describe('ClassificationStep — compuerta congelada por notificación (SPEC FE12a §4 paso 14)', () => {
+  it('con stages.notification.exists, la compuerta está deshabilitada y firstConsultationDate no', async () => {
+    mockCaseDetail();
+    mockPatientDetail();
+    mockWorkflow(true, true);
+    mockClassificationDetail({ isSeriousEvent: true, causedDeath: true });
+
+    renderClassificationStep();
+
+    const gateGroup = await screen.findByRole('radiogroup', { name: '¿Es un evento grave?' });
+    await waitFor(() => expect(within(gateGroup).getByRole('radio', { name: 'Sí' })).toBeChecked());
+    expect(within(gateGroup).getByRole('radio', { name: 'Sí' })).toBeDisabled();
+    expect(within(gateGroup).getByRole('radio', { name: 'No' })).toBeDisabled();
+    expect(screen.getByText(/No se puede cambiar: el caso ya tiene una notificación creada/)).toBeInTheDocument();
+
+    const dateInput = screen.getByLabelText('Fecha de la primera consulta');
+    expect(dateInput).not.toBeDisabled();
+  }, 30000);
+
+  it('sin notificación, la compuerta sigue habilitada', async () => {
+    mockCaseDetail();
+    mockPatientDetail();
+    mockWorkflow(true, false);
+    mockClassificationDetail({ isSeriousEvent: true, causedDeath: true });
+
+    renderClassificationStep();
+
+    const gateGroup = await screen.findByRole('radiogroup', { name: '¿Es un evento grave?' });
+    await waitFor(() => expect(within(gateGroup).getByRole('radio', { name: 'Sí' })).toBeChecked());
+    expect(within(gateGroup).getByRole('radio', { name: 'Sí' })).not.toBeDisabled();
   }, 30000);
 });

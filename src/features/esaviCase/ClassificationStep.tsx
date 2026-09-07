@@ -182,6 +182,10 @@ interface ClassificationFormBodyProps {
   classification: ClassificationDetail | null;
   readyToResolveAge: boolean;
   canCalculateAge: boolean;
+  // `stages.notification.exists` (SPEC FE12a §4 paso 14): con la notificación ya creada, cambiar
+  // la gravedad aquí dejaría una ficha de la rama contraria colgando para siempre — `notificationType`
+  // se deriva una sola vez y `004` la ignora llegue o no (§1 "por qué existe este spec").
+  notificationStarted: boolean;
 }
 
 // El formulario en sí (SPEC FE11 §3.1, §3.4): sólo se monta una vez que `ClassificationStep`
@@ -193,6 +197,7 @@ function ClassificationFormBody({
   classification,
   readyToResolveAge,
   canCalculateAge,
+  notificationStarted,
 }: ClassificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -334,6 +339,9 @@ function ClassificationFormBody({
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-foreground">{t('classification.gate.label')}</span>
+        {notificationStarted && (
+          <p className="text-sm text-muted-foreground">{t('classification.gate.lockedByNotification')}</p>
+        )}
         <Controller
           control={form.control}
           name="isSeriousEvent"
@@ -347,6 +355,7 @@ function ClassificationFormBody({
                 // calza con ningún `RadioGroupItem`, así que sigue mostrándose sin marcar, pero
                 // el componente es controlado desde el primer render.
                 value={field.value === true ? 'true' : field.value === false ? 'false' : ''}
+                disabled={notificationStarted}
                 onValueChange={(next) => {
                   const nextValue = next === 'true';
                   // Sí → No con algún criterio ya marcado exige confirmar antes de limpiar
@@ -504,6 +513,7 @@ export function ClassificationStep({ caseId }: ClassificationStepProps) {
       classification={classification.data ?? null}
       readyToResolveAge={readyToResolveAge}
       canCalculateAge={canCalculateAge}
+      notificationStarted={workflow.data?.stages.notification.exists === true}
     />
   );
 }

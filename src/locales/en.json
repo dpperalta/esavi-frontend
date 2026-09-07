@@ -731,7 +731,8 @@
       "yes": "Yes",
       "no": "No",
       "confirmClearTitle": "Switch to \"No\"?",
-      "confirmClearBody": "This clears the answers to the eight severity criteria you already marked. This cannot be undone."
+      "confirmClearBody": "This clears the answers to the eight severity criteria you already marked. This cannot be undone.",
+      "lockedByNotification": "Can't be changed: the case already has a notification created under this severity. Changing it requires an administrator to purge the existing record."
     },
     "criteria": {
       "causedDeath": "Did it cause death?",
