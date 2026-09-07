@@ -838,6 +838,13 @@
       "generic": "No pudimos guardar la notificación. Intenta de nuevo.",
       "severeGeneric": "No pudimos guardar la ficha de notificación grave. Intenta de nuevo.",
       "nonSevereGeneric": "No pudimos guardar la ficha de notificación no grave. Intenta de nuevo."
+    },
+    "blocked": {
+      "classificationInactive": "La clasificación de este caso está dada de baja. Hace falta que un administrador la reactive antes de poder notificar."
+    },
+    "draft": {
+      "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
+      "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
     }
   },
   "home": {

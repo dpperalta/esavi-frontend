@@ -49,6 +49,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
+import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
 import { NonSevereNotificationFields } from './NonSevereNotificationFields';
@@ -244,7 +245,54 @@ function NotificationFormBody({
     reValidateMode: 'onChange',
   });
 
+  // El `updatedAt` de la fila en el momento de montar (SPEC FE12a §3.4) — nunca recalculado en
+  // cada render, o la regla de conflicto compararía siempre contra sí misma. `null` si todavía no
+  // hay cabecera, que es justo lo que la tabla de conflicto espera para "sin fila".
+  const baseUpdatedAtRef = useRef(notification?.updatedAt ?? null);
+
+  // Restaura o descarta el borrador al montar — "sólo al montar el paso. Nunca después" (SPEC
+  // FE12a §3.4). Corre una sola vez: `hasResolvedDraftRef` evita que un re-render posterior (por
+  // ejemplo, tras `setQueryData` del propio guardado) vuelva a evaluar la regla de conflicto.
+  const hasResolvedDraftRef = useRef(false);
+  useEffect(() => {
+    if (hasResolvedDraftRef.current) return;
+    hasResolvedDraftRef.current = true;
+    const draft = useDraftsStore.getState().get(caseId, 'notification');
+    const resolution = resolveDraftConflict(draft, baseUpdatedAtRef.current);
+    if (resolution === 'noDraft') return;
+    if (resolution === 'discard') {
+      useDraftsStore.getState().clear(caseId, 'notification');
+      toast.info(t('notification.draft.discarded'));
+      return;
+    }
+    // 'restore': gana el borrador sobre los valores de la fila que `defaultValues` ya sembró.
+    const draftValues = draft?.values as NotificationFormValues;
+    (Object.entries(draftValues) as [keyof NotificationFormValues, NotificationFormValues[keyof NotificationFormValues]][]).forEach(
+      ([key, value]) => {
+        form.setValue(key, value, { shouldDirty: true });
+      },
+    );
+    toast.info(t('notification.draft.restored'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const watchedValues = useWatch({ control: form.control }) as NotificationFormValues;
+
+  // Escritura con rebote de 500 ms en cada cambio (SPEC FE12a §3.4): `persist` de `draftsStore`
+  // escribe en `localStorage` en cada `set`, y sin rebote sería una escritura por tecla. Nunca
+  // antes de que el borrador se resuelva (`hasResolvedDraftRef`), o el efecto de arriba pisaría
+  // un borrador recién restaurado con los valores todavía sin aplicar del primer render.
+  const draftDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!hasResolvedDraftRef.current || !form.formState.isDirty) return;
+    if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
+    draftDebounceRef.current = setTimeout(() => {
+      useDraftsStore.getState().set(caseId, 'notification', watchedValues, baseUpdatedAtRef.current);
+    }, 500);
+    return () => {
+      if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
+    };
+  }, [caseId, watchedValues, form.formState.isDirty]);
 
   const isDeathOutcome =
     outcomeItems.rows.find((row) => row.catalogItemId === watchedValues.outcomeItemId)?.value ===
@@ -378,6 +426,10 @@ function NotificationFormBody({
         }
         toast.success(t(successToastKey));
         form.reset(values);
+        // Se borra en cuanto el guardado completo responde correctamente (SPEC FE12a §3.4) — no
+        // antes, para que un fallo de la rama deje el borrador como red de seguridad de lo que
+        // todavía no llegó a guardarse.
+        useDraftsStore.getState().clear(caseId, 'notification');
       } catch (err) {
         if (!(err instanceof EsaviApiError)) {
           throw err;
@@ -395,6 +447,7 @@ function NotificationFormBody({
           });
           toast.success(t(successToastKey));
           form.reset(values);
+          useDraftsStore.getState().clear(caseId, 'notification');
           return;
         }
         const notSameTypeCode =
@@ -733,6 +786,21 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
     // espera `readyToResolveAge`, SPEC FE11 §3.6).
     (!!patient.data || patient.isError) &&
     (!stageExists || (!!notification.data && activeBranch?.data !== undefined));
+
+  // `stages.classification.exists` cuenta también filas desactivadas (`CASE-PROCESS.md` §6.2:
+  // "exists no significa utilizable") — el propio `006` de classification filtra por `isActive`
+  // para cualquiera que no sea SUPERADMIN, así que un `USER` ve `404 CLASSIF_006_NOT_FOUND` justo
+  // cuando el workflow dice que la clasificación existe. No es el estado de error genérico: es
+  // que hace falta reactivarla antes de notificar (SPEC FE12a §3.6, §4 paso 16).
+  const classificationInactive =
+    classificationStageExists &&
+    classification.isError &&
+    classification.error instanceof EsaviApiError &&
+    classification.error.code === 'CLASSIF_006_NOT_FOUND';
+
+  if (classificationInactive) {
+    return <p className="text-sm text-muted-foreground">{t('notification.blocked.classificationInactive')}</p>;
+  }
 
   const loadError = notification.error ?? activeBranch?.error;
   if (notification.isError || activeBranch?.isError) {

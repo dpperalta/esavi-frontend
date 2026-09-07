@@ -838,6 +838,13 @@
       "generic": "We couldn't save the notification. Try again.",
       "severeGeneric": "We couldn't save the severe notification record. Try again.",
       "nonSevereGeneric": "We couldn't save the non-severe notification record. Try again."
+    },
+    "blocked": {
+      "classificationInactive": "This case's classification has been deactivated. An administrator needs to reactivate it before you can notify."
+    },
+    "draft": {
+      "restored": "Recovered unsaved changes from an earlier session.",
+      "discarded": "Discarded unsaved changes: the case was edited somewhere else."
     }
   },
   "home": {

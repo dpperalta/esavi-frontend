@@ -838,6 +838,13 @@
       "generic": "We konden de melding niet opslaan. Probeer het opnieuw.",
       "severeGeneric": "We konden de ernstige meldingsfiche niet opslaan. Probeer het opnieuw.",
       "nonSevereGeneric": "We konden de niet-ernstige meldingsfiche niet opslaan. Probeer het opnieuw."
+    },
+    "blocked": {
+      "classificationInactive": "De classificatie van dit dossier is gedeactiveerd. Een beheerder moet ze heractiveren voordat je kunt melden."
+    },
+    "draft": {
+      "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
+      "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
     }
   },
   "home": {

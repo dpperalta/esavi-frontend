@@ -7,6 +7,7 @@ import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
+import { useDraftsStore } from '@/shared/stores/draftsStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
 import { NotificationStep } from './NotificationStep';
@@ -26,6 +27,7 @@ afterAll(() => server.close());
 
 beforeEach(() => {
   localStorage.clear();
+  useDraftsStore.setState({ drafts: {} });
 });
 
 // Sin `outcome` sembrado entre los tipos: `<CatalogSelect typeCode="outcome">` cae en su rama
@@ -977,5 +979,128 @@ describe('NotificationStep — error de carga (SPEC FE12a §3.6, §4 paso 15)', 
       'Reacción local en el sitio de aplicación',
     );
     expect(screen.queryByText('No pudimos cargar la notificación.')).not.toBeInTheDocument();
+  }, 30000);
+});
+
+describe('NotificationStep — clasificación desactivada (CASE-PROCESS.md §6.2, SPEC FE12a §3.6, §4 paso 16)', () => {
+  it('con stages.classification.exists pero el 006 de classification en 404, muestra el aviso de reactivar', async () => {
+    mockCaseDetail();
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    // `stages.classification.exists` cuenta también filas desactivadas (§6.2) — el `006` propio
+    // de classification, en cambio, filtra por `isActive` para cualquiera que no sea SUPERADMIN,
+    // así que un `USER` recibe 404 justo cuando el workflow dice que la fila existe.
+    server.use(
+      http.get(`http://localhost:4500/api/classifications/case/${CASE_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrada', code: 'CLASSIF_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+
+    renderNotificationStep();
+
+    expect(
+      await screen.findByText(
+        'La clasificación de este caso está dada de baja. Hace falta que un administrador la reactive antes de poder notificar.',
+      ),
+    ).toBeInTheDocument();
+    // Ni la cabecera ni el formulario se muestran — el aviso reemplaza la pantalla entera.
+    expect(screen.queryByLabelText('Descripción del ESAVI')).not.toBeInTheDocument();
+    // Sin botón de reactivar (SPEC FE12a §3.6): `005B` es SUPERADMIN, y ofrecerlo a casi
+    // cualquiera es peor que explicar qué falta.
+    expect(screen.queryByRole('button', { name: /reactivar/i })).not.toBeInTheDocument();
+  }, 30000);
+});
+
+describe('NotificationStep — borrador persistido (SPEC FE12a §3.4, §4 paso 16)', () => {
+  it('con un borrador cuyo baseUpdatedAt coincide (null, sin fila todavía), se restaura sobre los valores de la fila', async () => {
+    mockCaseDetail();
+    mockClassificationDetail(true);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    useDraftsStore.getState().set(
+      CASE_1,
+      'notification',
+      { esaviDescription: 'Borrador recuperado de otra pestaña' },
+      null,
+    );
+
+    renderNotificationStep();
+
+    // El toast de aviso ("se recuperaron cambios...") no se verifica aquí: ningún test de este
+    // repositorio monta `<Toaster>` (sonner necesita el tema resuelto vía `preferencesStore`), y
+    // el efecto observable real — el valor restaurado — ya lo cubre esta aserción.
+    expect(await screen.findByLabelText('Descripción del ESAVI')).toHaveValue(
+      'Borrador recuperado de otra pestaña',
+    );
+  }, 30000);
+
+  it('con un borrador cuyo baseUpdatedAt no coincide con la fila, gana la fila y se descarta con aviso', async () => {
+    mockCaseDetail();
+    mockClassificationDetail(true);
+    mockEmptyCatalogTypes();
+    mockNotificationDetail();
+    mockSevereNotificationBranch();
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+      ),
+    );
+
+    // La fila real trae `updatedAt: null` (`mockNotificationDetail`) — un borrador que dice venir
+    // de una fila con otro `updatedAt` no coincide, así que la fila gana.
+    useDraftsStore.getState().set(
+      CASE_1,
+      'notification',
+      { esaviDescription: 'Borrador obsoleto' },
+      '2020-01-01T00:00:00.000Z',
+    );
+
+    renderNotificationStep();
+
+    expect(await screen.findByLabelText('Descripción del ESAVI')).toHaveValue(
+      'Reacción local en el sitio de aplicación',
+    );
+    // Se descarta: el efecto observable es que la fila ganó (arriba) y que el borrador ya no
+    // está en la tienda — el toast de aviso no se verifica aquí por la misma razón que en el
+    // test anterior.
+    await waitFor(() =>
+      expect(useDraftsStore.getState().get(CASE_1, 'notification')).toBeUndefined(),
+    );
+  }, 30000);
+
+  it('escribe el borrador con rebote y lo borra en cuanto el guardado completo responde', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockClassificationDetail(true);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+    mockSevereNotificationBranch();
+
+    renderNotificationStep();
+
+    const description = await screen.findByLabelText('Descripción del ESAVI');
+    await user.type(description, 'Reacción local en el sitio de aplicación');
+
+    await waitFor(
+      () =>
+        expect(useDraftsStore.getState().get(CASE_1, 'notification')?.values).toMatchObject({
+          esaviDescription: 'Reacción local en el sitio de aplicación',
+        }),
+      { timeout: 3000 },
+    );
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(useDraftsStore.getState().get(CASE_1, 'notification')).toBeUndefined());
   }, 30000);
 });
