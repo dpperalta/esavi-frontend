@@ -7,10 +7,16 @@ import { EsaviApiError } from '@/shared/api/types';
 import { EntitySearchSelect, type EntitySearchOption } from '@/shared/components/EntitySearchSelect';
 import { ROLE_LEVELS, getEffectiveLevel } from '@/shared/config/roles';
 
-export interface ScopedHealthFacilitySelectProps {
+export interface HealthFacilitySelectProps {
   value: string | null;
   resolvedLabel?: string | null;
   onChange: (option: EntitySearchOption | null) => void;
+  // `true` (default): the coverage filter of SPEC FE10 §1C, below. `false`: no filter at all,
+  // regardless of role — the vaccination unit of `nonSevereNotification` reads it this way on
+  // purpose, "sin filtro de cobertura" (SPEC FE12a §2, §3.5): the backend's `001`/`004` only
+  // check `isActive` on that column, so narrowing it here would reject a facility the server
+  // would accept.
+  scoped?: boolean;
 }
 
 // `<EntitySearchSelect>` over ESAVI-HFAC-006, crossed with ESAVI-USERGEO-008 (SPEC FE10 §1C, §4
@@ -19,10 +25,18 @@ export interface ScopedHealthFacilitySelectProps {
 // unfiltered, because the `POST` doesn't restrict them either (§6, decisión tomada). Out-of-scope
 // facilities stay in the list, disabled with their reason visible — hiding them reproduces
 // exactly the "unidad no encontrada" confusion the reason exists to prevent (§1C).
-export function ScopedHealthFacilitySelect({ value, resolvedLabel, onChange }: ScopedHealthFacilitySelectProps) {
+// Renamed from `ScopedHealthFacilitySelect` and given the `scoped` prop above instead of a
+// second component, per CONVENTIONS.md §10.4 (SPEC FE12a §4 paso 6): one primitive, one prop,
+// not two files that would always be imported together.
+export function HealthFacilitySelect({
+  value,
+  resolvedLabel,
+  onChange,
+  scoped = true,
+}: HealthFacilitySelectProps) {
   const { t } = useTranslation();
   const { data: user } = useCurrentUser();
-  const appliesFilter = !!user && getEffectiveLevel(user.roles) === ROLE_LEVELS.USER;
+  const appliesFilter = scoped && !!user && getEffectiveLevel(user.roles) === ROLE_LEVELS.USER;
 
   const coverage = useUserGeoCoverage(appliesFilter ? user.userId : '');
   // Crossed against `coverage` — the full recursive expansion, which already includes the

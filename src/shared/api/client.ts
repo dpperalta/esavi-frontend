@@ -1,4 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { useDraftsStore } from '@/shared/stores/draftsStore';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { tokenStore } from './tokenStore';
 import { EsaviApiError, type ApiErrorEnvelope, type ApiSuccessEnvelope } from './types';
@@ -86,6 +87,9 @@ function isRefreshTokenReused(code: string): boolean {
 function clearSession() {
   setAccessToken(null);
   tokenStore.clearRefreshToken();
+  // Same point as an explicit logout (SPEC FE12a §3.4): this path also covers an expired or
+  // reused refresh token, not just the logout button.
+  useDraftsStore.getState().clearAll();
 }
 
 // The five public auth endpoints (API-ROUTES.md's "sin fila" section, SPEC FE01 §3.2) never
