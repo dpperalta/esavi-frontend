@@ -916,7 +916,10 @@
       "form": {
         "createTitle": "Añadir medicación",
         "editTitle": "Editar medicación"
-      }
+      },
+      "gateLocked": "No se puede cambiar mientras haya medicaciones registradas. Bórralas una a una para poder cambiar la respuesta.",
+      "gateLockedNeedsAdmin": "No se puede cambiar mientras haya medicaciones registradas. Hace falta un administrador para borrarlas.",
+      "mismatch": "Esta respuesta no coincide con la medicación registrada más abajo."
     },
     "satellites": {
       "deleteTitle": "Dar de baja",

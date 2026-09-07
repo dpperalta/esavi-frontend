@@ -916,7 +916,10 @@
       "form": {
         "createTitle": "Add medication",
         "editTitle": "Edit medication"
-      }
+      },
+      "gateLocked": "This can't be changed while there is medication on record. Delete it one row at a time to change the answer.",
+      "gateLockedNeedsAdmin": "This can't be changed while there is medication on record. An administrator is needed to delete it.",
+      "mismatch": "This answer doesn't match the medication recorded below."
     },
     "satellites": {
       "deleteTitle": "Deactivate",

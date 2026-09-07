@@ -25,6 +25,7 @@ import {
   severeNotificationResource,
   useNonSevereNotificationByCase,
   useNotificationByCase,
+  useNotificationMedicationsByCase,
   useSevereNotificationByCase,
 } from '@/features/notification/api';
 import {
@@ -50,6 +51,8 @@ import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { ROLE_LEVELS } from '@/shared/config/roles';
+import { useCan } from '@/shared/hooks/useCan';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { esaviCaseResource } from './api';
@@ -212,6 +215,16 @@ function NotificationFormBody({
   const notificationId = notification?.notificationId ?? null;
   const severeNotificationId = severeNotification?.notificationId ?? null;
   const nonSevereNotificationId = nonSevereNotification?.notificationId ?? null;
+
+  // La misma clave que `<MedicationList>` consulta por su cuenta (TanStack Query la comparte, no
+  // duplica la petición): aquí sólo hace falta el conteo para bloquear `takesMedication` en la
+  // cabecera (SPEC FE12b §3.5, «la compuerta en su forma nueva»).
+  const medications = useNotificationMedicationsByCase(caseId, notificationId !== null);
+  const hasActiveMedications = (medications.data?.rows.length ?? 0) > 0;
+  // `useCan()` decide aquí sólo qué frase se muestra, nunca si el control existe (§3.5, la línea
+  // que §10.4 no quiere que se cruce): mientras `NOTIFMED-005A` siga en ADMIN, un USER no puede
+  // borrar las filas y por tanto no puede cambiar la respuesta en absoluto.
+  const canAdminMedications = useCan(ROLE_LEVELS.ADMIN);
 
   const defaultValues: NotificationFormValues = {
     esaviDescription: notification?.esaviDescription ?? '',
@@ -580,17 +593,34 @@ function NotificationFormBody({
                 onChange={field.onChange}
                 ariaLabel={t('notification.fields.takesMedication')}
                 variant="unknown"
+                disabled={hasActiveMedications}
               />
             )}
           />
+          {/* No es un aviso al guardar: es un campo que no se puede mover mientras haya datos que
+              quedarían huérfanos (SPEC FE12b §3.5). El texto asociado, no sólo el atributo
+              `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
+          {hasActiveMedications && (
+            <p className="text-sm text-muted-foreground">
+              {t(
+                canAdminMedications
+                  ? 'notification.medications.gateLocked'
+                  : 'notification.medications.gateLockedNeedsAdmin',
+              )}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Sólo existen con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
-          `notificationId` no hay padre al que colgar ningún satélite. La compuerta de
-          `takesMedication` sobre `<MedicationList>` llega en el paso 11 de este spec. */}
+          `notificationId` no hay padre al que colgar ningún satélite. */}
       <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
-      <MedicationList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+      <MedicationList
+        caseId={caseId}
+        notificationId={notificationId}
+        readOnly={isClosed}
+        takesMedication={watchedValues.takesMedication ?? null}
+      />
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-foreground">

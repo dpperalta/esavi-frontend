@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import type { AnswerOption } from '@/contracts/common';
 import type { NotificationMedicationDetail } from '@/contracts/declared/notificationMedication';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
@@ -26,6 +27,9 @@ export interface MedicationListProps {
   notificationId: string | null;
   // Caso cerrado (§3.6): sin «Añadir» y sin acciones de fila.
   readOnly?: boolean;
+  // La compuerta (§3.5): `'YES'` la muestra siempre; cualquier otro valor la oculta salvo que
+  // haya filas activas, en cuyo caso se muestra igual con el aviso de discrepancia.
+  takesMedication: AnswerOption | null;
 }
 
 function isRoleForbidden(error: unknown): boolean {
@@ -33,7 +37,12 @@ function isRoleForbidden(error: unknown): boolean {
 }
 
 // La segunda de las dos listas planas del paso 4 (SPEC FE12b §2), sobre `<SatelliteList>`.
-export function MedicationList({ caseId, notificationId, readOnly = false }: MedicationListProps) {
+export function MedicationList({
+  caseId,
+  notificationId,
+  readOnly = false,
+  takesMedication,
+}: MedicationListProps) {
   const { t } = useTranslation();
   const medications = useNotificationMedicationsByCase(caseId, notificationId !== null);
   const deactivate = notificationMedicationResource.useDeactivate();
@@ -44,7 +53,15 @@ export function MedicationList({ caseId, notificationId, readOnly = false }: Med
   });
   const [removeTarget, setRemoveTarget] = useState<NotificationMedicationDetail | null>(null);
 
-  if (notificationId === null) {
+  const rows = medications.data?.rows ?? [];
+  const hasActiveRows = rows.length > 0;
+  const answersYes = takesMedication === 'YES';
+  const showMismatch = !answersYes && hasActiveRows;
+
+  // Comparación estricta contra `'YES'`, como todas las de `answerOption` (§3.5): `NO`,
+  // `UNKNOWN`, `NOT_APPLICABLE`, `NO_ANSWER` y `null` cierran la sección por igual — salvo que
+  // haya filas activas, que es justo la discrepancia que hay que seguir mostrando.
+  if (notificationId === null || (!answersYes && !hasActiveRows)) {
     return null;
   }
 
@@ -87,10 +104,17 @@ export function MedicationList({ caseId, notificationId, readOnly = false }: Med
 
   return (
     <div className="flex flex-col gap-3">
+      {/* La cabecera dice otra cosa, pero las filas se quedan y se muestran (§3.5): la
+          incoherencia es visible y buscada, no un fallo silencioso. */}
+      {showMismatch && (
+        <p className="text-sm text-muted-foreground" role="status">
+          {t('notification.medications.mismatch')}
+        </p>
+      )}
       <SatelliteList<NotificationMedicationDetail>
         titleKey="notification.medications.sectionTitle"
         columns={columns}
-        rows={medications.data?.rows ?? []}
+        rows={rows}
         idField="medicationId"
         getRowLabel={(row) => row.medicationName}
         isLoading={medications.isLoading}

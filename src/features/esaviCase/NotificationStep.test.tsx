@@ -7,6 +7,7 @@ import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
+import { tokenStore } from '@/shared/api/tokenStore';
 import { useDraftsStore } from '@/shared/stores/draftsStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
@@ -1102,5 +1103,178 @@ describe('NotificationStep — borrador persistido (SPEC FE12a §3.4, §4 paso 1
     await user.click(saveButton);
 
     await waitFor(() => expect(useDraftsStore.getState().get(CASE_1, 'notification')).toBeUndefined());
+  }, 30000);
+});
+
+function signInAs(roleName: string, level: number) {
+  setAccessToken('a-token');
+  tokenStore.setRefreshToken('a-refresh-token');
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { userId: 'user-1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+      }),
+    ),
+  );
+}
+
+const MEDICATION_ROW = {
+  medicationId: 'med-1',
+  notificationId: NOTIFICATION_1,
+  sortOrder: 1,
+  medicationName: 'Paracetamol',
+  medicationCode: null,
+  dose: null,
+  pharmaceuticalFormItemId: null,
+  administrationRouteItemId: null,
+  startDate: null,
+  isOtherMedication: false,
+  otherMedicationText: null,
+  isActive: true,
+  createdAt: '2026-01-02T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+  pharmaceuticalForm: null,
+  administrationRoute: null,
+};
+
+// Reentrada con la cabecera ya en `takesMedication: 'YES'` — la compuerta de SPEC FE12b §4 paso 11
+// sólo se puede observar en reentrada, con la fila de `notification` ya creada.
+function mockReentryWithMedications(rows: unknown[]) {
+  mockCaseDetail();
+  mockPatientDetail('MALE');
+  mockClassificationDetail(true);
+  mockSevereNotificationBranch();
+  server.use(
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+    ),
+    http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: NOTIFICATION_1,
+          notificationType: 'SEVERE',
+          esaviDescription: 'Reacción local en el sitio de aplicación',
+          hasRelevantMedicalHistory: null,
+          takesMedication: 'YES',
+          requestInvestigation: false,
+          deathDate: null,
+          autopsyRequested: null,
+          verbalAutopsyPerformed: null,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+          outcome: null,
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/notification-events/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get(`http://localhost:4500/api/notification-medications/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: rows.length, rows } }),
+    ),
+    http.get('http://localhost:4500/api/catalog-types', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+  );
+}
+
+describe('NotificationStep — compuerta de takesMedication (SPEC FE12b §4 paso 11)', () => {
+  it('con una medicación cargada y rol USER, el campo queda deshabilitado y menciona a un administrador', async () => {
+    signInAs('USER', 25);
+    mockReentryWithMedications([MEDICATION_ROW]);
+
+    renderNotificationStep();
+
+    const field = await screen.findByRole('combobox', { name: '¿Toma medicación?' });
+    await waitFor(() => expect(field).toBeDisabled());
+    expect(await screen.findByText(/Hace falta un administrador/)).toBeInTheDocument();
+  }, 30000);
+
+  it('con una medicación cargada y rol ADMIN, el campo queda deshabilitado sin mencionar a un administrador', async () => {
+    signInAs('ADMIN', 50);
+    mockReentryWithMedications([MEDICATION_ROW]);
+
+    renderNotificationStep();
+
+    const field = await screen.findByRole('combobox', { name: '¿Toma medicación?' });
+    await waitFor(() => expect(field).toBeDisabled());
+    expect(await screen.findByText(/Bórralas una a una/)).toBeInTheDocument();
+    expect(screen.queryByText(/administrador/)).not.toBeInTheDocument();
+  }, 30000);
+
+  it('borrada la última fila, el campo vuelve a ser editable sin recargar', async () => {
+    const user = setupUser();
+    signInAs('ADMIN', 50);
+    let rows: unknown[] = [MEDICATION_ROW];
+    mockCaseDetail();
+    mockPatientDetail('MALE');
+    mockClassificationDetail(true);
+    mockSevereNotificationBranch();
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+      ),
+      http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: 'Reacción local en el sitio de aplicación',
+            hasRelevantMedicalHistory: null,
+            takesMedication: 'YES',
+            requestInvestigation: false,
+            deathDate: null,
+            autopsyRequested: null,
+            verbalAutopsyPerformed: null,
+            notes: null,
+            isActive: true,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+            outcome: null,
+          },
+        }),
+      ),
+      http.get(`http://localhost:4500/api/notification-events/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get(`http://localhost:4500/api/notification-medications/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: rows.length, rows } }),
+      ),
+      http.delete(`http://localhost:4500/api/notification-medications/${MEDICATION_ROW.medicationId}`, () => {
+        rows = [];
+        return HttpResponse.json({ ok: true, message: 'ok' });
+      }),
+      http.get('http://localhost:4500/api/catalog-types', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+
+    renderNotificationStep();
+
+    const field = await screen.findByRole('combobox', { name: '¿Toma medicación?' });
+    await waitFor(() => expect(field).toBeDisabled());
+
+    const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Paracetamol' });
+    await user.click(deleteButton);
+    const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+    await user.click(confirmButton);
+
+    await waitFor(() => expect(field).not.toBeDisabled());
   }, 30000);
 });

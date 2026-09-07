@@ -916,7 +916,10 @@
       "form": {
         "createTitle": "Medicatie toevoegen",
         "editTitle": "Medicatie bewerken"
-      }
+      },
+      "gateLocked": "Dit kan niet worden gewijzigd zolang er medicatie geregistreerd staat. Verwijder deze één voor één om het antwoord te wijzigen.",
+      "gateLockedNeedsAdmin": "Dit kan niet worden gewijzigd zolang er medicatie geregistreerd staat. Een beheerder is nodig om deze te verwijderen.",
+      "mismatch": "Dit antwoord komt niet overeen met de hieronder geregistreerde medicatie."
     },
     "satellites": {
       "deleteTitle": "Deactiveren",

@@ -31,7 +31,7 @@ describe('MedicationList — SPEC FE12b §4 paso 10', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { container } = render(
       <QueryClientProvider client={queryClient}>
-        <MedicationList caseId="case-1" notificationId={null} />
+        <MedicationList caseId="case-1" notificationId={null} takesMedication={null} />
       </QueryClientProvider>,
     );
 
@@ -85,7 +85,7 @@ describe('MedicationList — SPEC FE12b §4 paso 10', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={queryClient}>
-        <MedicationList caseId="case-1" notificationId={NOTIFICATION_ID} />
+        <MedicationList caseId="case-1" notificationId={NOTIFICATION_ID} takesMedication="YES" />
       </QueryClientProvider>,
     );
 

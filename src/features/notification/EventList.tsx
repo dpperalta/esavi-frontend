@@ -80,7 +80,7 @@ export function EventList({ caseId, notificationId, readOnly = false }: EventLis
           toast.error(t('notification.satellites.adminRequiredDelete'));
           return;
         }
-        toast.error(toGenericMessage(error, t('notification.events.error.generic')));
+        toast.error(error instanceof EsaviApiError ? getErrorMessage(error) : t('common.errors.unexpected'));
       },
     });
   }
