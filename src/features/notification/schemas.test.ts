@@ -193,6 +193,7 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       notificationType: 'SEVERE',
       isDeathOutcome: false,
       pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -209,6 +210,7 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       notificationType: 'SEVERE',
       isDeathOutcome: false,
       pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
     });
     const result = schema.safeParse(baseValid);
     expect(result.success).toBe(false);
@@ -222,6 +224,7 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       notificationType: 'SEVERE',
       isDeathOutcome: false,
       pregnancyGateOpen: true,
+      hasAtLeastOneEvent: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -240,6 +243,7 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       notificationType: 'NON_SEVERE',
       isDeathOutcome: false,
       pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
     });
     const result = schema.safeParse(baseValid);
     expect(result.success).toBe(false);
@@ -255,6 +259,7 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       notificationType: 'NON_SEVERE',
       isDeathOutcome: false,
       pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -271,6 +276,7 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       notificationType: 'NON_SEVERE',
       isDeathOutcome: true,
       pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -282,6 +288,43 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
     expect(result.success).toBe(false);
     const paths = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
     expect(paths).toContain('deathDate');
+  });
+
+  // SPEC FE12b §4 paso 12 — el primer obligatorio de proceso del paso 4.
+  it('con cero eventos, falla con un issue en "events"', () => {
+    const schema = createNotificationCompleteSchema({
+      notificationType: 'SEVERE',
+      isDeathOutcome: false,
+      pregnancyGateOpen: false,
+      hasAtLeastOneEvent: false,
+    });
+    const result = schema.safeParse({
+      ...baseValid,
+      hasPreviousEventHistory: 'NO',
+      hasAllergyToOtherVaccines: 'NO',
+      hasAllergyToMedications: 'NO',
+      hasAllergyToPreviousSameVaccine: 'NO',
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
+    expect(paths).toContain('events');
+  });
+
+  it('con al menos un evento, ya no aparece "events" entre los pendientes', () => {
+    const schema = createNotificationCompleteSchema({
+      notificationType: 'SEVERE',
+      isDeathOutcome: false,
+      pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
+    });
+    const result = schema.safeParse({
+      ...baseValid,
+      hasPreviousEventHistory: 'NO',
+      hasAllergyToOtherVaccines: 'NO',
+      hasAllergyToMedications: 'NO',
+      hasAllergyToPreviousSameVaccine: 'NO',
+    });
+    expect(result.success).toBe(true);
   });
 });
 

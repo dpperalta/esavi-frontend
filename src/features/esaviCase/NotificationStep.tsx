@@ -25,6 +25,7 @@ import {
   severeNotificationResource,
   useNonSevereNotificationByCase,
   useNotificationByCase,
+  useNotificationEventsByCase,
   useNotificationMedicationsByCase,
   useSevereNotificationByCase,
 } from '@/features/notification/api';
@@ -145,6 +146,7 @@ const PENDING_FIELD_LABEL_KEYS: Partial<Record<string, string>> = {
   vaccinationGeoLocationId: 'notification.pending.vaccinationGeoLocationId',
   verifiedAny: 'notification.pending.verifiedAny',
   otherSourceDescription: 'notification.pending.otherSourceDescription',
+  events: 'notification.pending.atLeastOneEvent',
 };
 
 // Corre `createNotificationCompleteSchema` sobre los valores actuales del formulario en vez de
@@ -221,6 +223,10 @@ function NotificationFormBody({
   // cabecera (SPEC FE12b §3.5, «la compuerta en su forma nueva»).
   const medications = useNotificationMedicationsByCase(caseId, notificationId !== null);
   const hasActiveMedications = (medications.data?.rows.length ?? 0) > 0;
+  // Ídem con `<EventList>`: el obligatorio de proceso «al menos un evento» (§4 paso 12) sólo
+  // necesita el conteo, no las filas.
+  const events = useNotificationEventsByCase(caseId, notificationId !== null);
+  const hasAtLeastOneEvent = (events.data?.rows.length ?? 0) > 0;
   // `useCan()` decide aquí sólo qué frase se muestra, nunca si el control existe (§3.5, la línea
   // que §10.4 no quiere que se cruce): mientras `NOTIFMED-005A` siga en ADMIN, un USER no puede
   // borrar las filas y por tanto no puede cambiar la respuesta en absoluto.
@@ -515,7 +521,12 @@ function NotificationFormBody({
 
   const pendingFields = computePendingFields(
     watchedValues,
-    { notificationType, isDeathOutcome, pregnancyGateOpen: pregnancyGate !== 'hidden' },
+    {
+      notificationType,
+      isDeathOutcome,
+      pregnancyGateOpen: pregnancyGate !== 'hidden',
+      hasAtLeastOneEvent,
+    },
     t,
   );
 
@@ -535,7 +546,12 @@ function NotificationFormBody({
       getPendingFields: () => pendingFieldsRef.current,
     });
     return () => unregisterStep();
-  }, [registerStep, unregisterStep, form.formState.isDirty]);
+    // `hasAtLeastOneEvent` entra en las dependencias a propósito (SPEC FE12b §4 paso 12): a
+    // diferencia del resto de `pendingFields`, que sólo cambian cuando el formulario se ensucia,
+    // éste depende de una consulta que puede resolver después del montaje sin que el usuario
+    // haya tocado nada — sin este disparador, `CaseWizardProvider` seguiría leyendo el
+    // `activeStep` de antes de que los eventos cargaran.
+  }, [registerStep, unregisterStep, form.formState.isDirty, hasAtLeastOneEvent]);
 
   return (
     <div className="flex flex-col gap-6">

@@ -853,7 +853,8 @@
       "vaccinationSiteItemId": "Vaccination site",
       "vaccinationGeoLocationId": "Vaccination location",
       "verifiedAny": "At least one verification source",
-      "otherSourceDescription": "Other source description"
+      "otherSourceDescription": "Other source description",
+      "atLeastOneEvent": "At least one ESAVI event"
     },
     "error": {
       "load": "We couldn't load the notification.",

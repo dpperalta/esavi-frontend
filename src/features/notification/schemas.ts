@@ -194,6 +194,10 @@ export interface NotificationCompleteContext {
   isDeathOutcome: boolean;
   // §7.4: only a woman of fertile age opens this gate. Also context, same reason.
   pregnancyGateOpen: boolean;
+  // SPEC FE12b §2, §4 paso 12: el primer obligatorio de proceso del paso 4. Vive en otra tabla
+  // (`notificationEvent`), así que no hay campo del formulario que comprobar — llega como
+  // contexto, igual que los otros dos derivados de arriba.
+  hasAtLeastOneEvent: boolean;
 }
 
 // "Completar etapa" (§3.5): everything `notificationSaveSchema` already checks, plus the
@@ -206,8 +210,15 @@ export function createNotificationCompleteSchema({
   notificationType,
   isDeathOutcome,
   pregnancyGateOpen,
+  hasAtLeastOneEvent,
 }: NotificationCompleteContext) {
   return notificationBaseSchema.superRefine((data, ctx) => {
+    // El primer obligatorio de proceso del paso 4 (§2, §4 paso 12): un ESAVI sin ningún
+    // diagnóstico registrado es un párrafo de texto que ningún análisis puede contar. No bloquea
+    // «Guardar» — sólo aparece en la lista de «Completar etapa», como el resto de este schema.
+    if (!hasAtLeastOneEvent) {
+      ctx.addIssue({ code: 'custom', message: 'atLeastOneEvent', path: ['events'] });
+    }
     if (!data.hasRelevantMedicalHistory) {
       ctx.addIssue({ code: 'custom', message: 'required', path: ['hasRelevantMedicalHistory'] });
     }

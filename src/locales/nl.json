@@ -853,7 +853,8 @@
       "vaccinationSiteItemId": "Vaccinatieplaats",
       "vaccinationGeoLocationId": "Locatie van de vaccinatie",
       "verifiedAny": "Minstens één verificatiebron",
-      "otherSourceDescription": "Beschrijving van de andere bron"
+      "otherSourceDescription": "Beschrijving van de andere bron",
+      "atLeastOneEvent": "Minstens één AEFI-gebeurtenis"
     },
     "error": {
       "load": "We konden de melding niet laden.",

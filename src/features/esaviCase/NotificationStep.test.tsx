@@ -1278,3 +1278,158 @@ describe('NotificationStep — compuerta de takesMedication (SPEC FE12b §4 paso
     await waitFor(() => expect(field).not.toBeDisabled());
   }, 30000);
 });
+
+// SPEC FE12b §4 paso 12 — el primer obligatorio de proceso del paso 4, sólo observable en
+// reentrada (necesita `notificationId` para poder mostrar la lista de eventos).
+function mockReentryWithEvents(eventRows: unknown[]) {
+  mockCaseDetail();
+  mockPatientDetail('MALE');
+  mockClassificationDetail(true);
+  mockSevereNotificationBranch();
+  server.use(
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+    ),
+    http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: NOTIFICATION_1,
+          notificationType: 'SEVERE',
+          esaviDescription: 'Reacción local en el sitio de aplicación',
+          hasRelevantMedicalHistory: 'NO',
+          takesMedication: 'NO',
+          requestInvestigation: false,
+          deathDate: null,
+          autopsyRequested: null,
+          verbalAutopsyPerformed: null,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+          outcome: null,
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/notification-events/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: eventRows.length, rows: eventRows } }),
+    ),
+    http.get(`http://localhost:4500/api/notification-medications/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get('http://localhost:4500/api/catalog-types', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.put(`http://localhost:4500/api/notifications/${NOTIFICATION_1}`, async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      return HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: NOTIFICATION_1,
+          notificationType: 'SEVERE',
+          esaviDescription: body.esaviDescription,
+          hasRelevantMedicalHistory: body.hasRelevantMedicalHistory ?? null,
+          takesMedication: body.takesMedication ?? null,
+          requestInvestigation: body.requestInvestigation ?? false,
+          deathDate: null,
+          autopsyRequested: null,
+          verbalAutopsyPerformed: null,
+          notes: body.notes ?? null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: '2026-01-03T00:00:00.000Z',
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+          outcome: null,
+        },
+      });
+    }),
+    http.put(`http://localhost:4500/api/severe-notifications/${SEVERE_NOTIFICATION_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: SEVERE_NOTIFICATION_1,
+          hasPreviousEventHistory: null,
+          hasAllergyToOtherVaccines: null,
+          hasAllergyToMedications: null,
+          hasAllergyToPreviousSameVaccine: null,
+          hasPregnancyComplications: null,
+          pregnancyComplicationsDescription: null,
+          notes: null,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      }),
+    ),
+  );
+}
+
+const EVENT_ROW = {
+  eventId: 'evt-1',
+  notificationId: NOTIFICATION_1,
+  diagnosticTermId: null,
+  sortOrder: 1,
+  esaviName: 'Fiebre alta',
+  esaviCode: null,
+  esaviRawName: null,
+  isMainEsavi: false,
+  startDate: null,
+  startTime: null,
+  isOtherEsavi: false,
+  otherDescription: null,
+  notes: null,
+  isActive: true,
+  createdAt: '2026-01-02T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+  diagnosticTerm: null,
+};
+
+describe('NotificationStep — «al menos un evento» en «Completar etapa» (SPEC FE12b §4 paso 12)', () => {
+  it('con cero eventos, la lista de pendientes de «Completar etapa» incluye «Al menos un evento del ESAVI»', async () => {
+    mockReentryWithEvents([]);
+
+    renderNotificationStep();
+
+    await screen.findByLabelText('Descripción del ESAVI');
+    expect(await screen.findByText('Al menos un evento del ESAVI')).toBeInTheDocument();
+  }, 30000);
+
+  it('con un evento, «Al menos un evento del ESAVI» ya no aparece entre los pendientes', async () => {
+    mockReentryWithEvents([EVENT_ROW]);
+
+    renderNotificationStep();
+
+    await screen.findByLabelText('Descripción del ESAVI');
+    await waitFor(() => expect(screen.queryByText('Al menos un evento del ESAVI')).not.toBeInTheDocument());
+  }, 30000);
+
+  it('«Guardar» funciona igual con cero eventos pendientes', async () => {
+    const user = setupUser();
+    mockReentryWithEvents([]);
+
+    renderNotificationStep();
+
+    const description = await screen.findByLabelText('Descripción del ESAVI');
+    await user.clear(description);
+    await user.type(description, 'Reacción local en el sitio de aplicación, editada');
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(screen.getByLabelText('Descripción del ESAVI')).toHaveValue(
+      'Reacción local en el sitio de aplicación, editada',
+    ));
+  }, 30000);
+});
