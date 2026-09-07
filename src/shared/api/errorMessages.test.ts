@@ -27,4 +27,34 @@ describe('getErrorMessage', () => {
 
     expect(getErrorMessage(error)).toBe(expected);
   });
+
+  // SPEC FE12a §3.5, plan step 15 — un texto genérico por entidad para los `_CREATION_FAILED`/
+  // `_UPDATE_FAILED`/`_NOT_FOUND` de guardado, y uno solo compartido para los `006` de lectura.
+  it.each([
+    ['NOTIFCN_001_CREATION_FAILED', 'No pudimos guardar la notificación. Intenta de nuevo.'],
+    ['NOTIFCN_004_UPDATE_FAILED', 'No pudimos guardar la notificación. Intenta de nuevo.'],
+    ['NOTIFCN_004_NOT_FOUND', 'No pudimos guardar la notificación. Intenta de nuevo.'],
+    ['NOTIFCN_001_CASE_NOT_FOUND', 'No pudimos guardar la notificación. Intenta de nuevo.'],
+    ['SEVNOT_001_CREATION_FAILED', 'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.'],
+    ['SEVNOT_004_UPDATE_FAILED', 'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.'],
+    ['SEVNOT_004_NOT_FOUND', 'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.'],
+    ['SEVNOT_001_NOTIFICATION_NOT_FOUND', 'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.'],
+    ['NSEVNOT_001_CREATION_FAILED', 'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.'],
+    ['NSEVNOT_004_UPDATE_FAILED', 'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.'],
+    ['NSEVNOT_004_NOT_FOUND', 'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.'],
+    [
+      'NSEVNOT_001_NOTIFICATION_NOT_FOUND',
+      'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.',
+    ],
+    ['NOTIFCN_006_NOT_FOUND', 'No pudimos cargar la notificación.'],
+    ['NOTIFCN_006_CASE_NOT_FOUND', 'No pudimos cargar la notificación.'],
+    ['SEVNOT_006_NOT_FOUND', 'No pudimos cargar la notificación.'],
+    ['SEVNOT_006_CASE_NOT_FOUND', 'No pudimos cargar la notificación.'],
+    ['NSEVNOT_006_NOT_FOUND', 'No pudimos cargar la notificación.'],
+    ['NSEVNOT_006_CASE_NOT_FOUND', 'No pudimos cargar la notificación.'],
+  ])('mapea %s a su texto propio', (code, expected) => {
+    const error = new EsaviApiError('mensaje del backend', 500, code);
+
+    expect(getErrorMessage(error)).toBe(expected);
+  });
 });

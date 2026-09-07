@@ -834,7 +834,10 @@
       "otherSourceDescription": "Descripción de la otra fuente"
     },
     "error": {
-      "load": "No pudimos cargar la notificación."
+      "load": "No pudimos cargar la notificación.",
+      "generic": "No pudimos guardar la notificación. Intenta de nuevo.",
+      "severeGeneric": "No pudimos guardar la ficha de notificación grave. Intenta de nuevo.",
+      "nonSevereGeneric": "No pudimos guardar la ficha de notificación no grave. Intenta de nuevo."
     }
   },
   "home": {

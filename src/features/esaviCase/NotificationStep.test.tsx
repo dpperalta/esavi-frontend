@@ -918,3 +918,64 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     expect(screen.queryByText('Si aplica')).not.toBeInTheDocument();
   }, 30000);
 });
+
+describe('NotificationStep — error de carga (SPEC FE12a §3.6, §4 paso 15)', () => {
+  it('con un 006 fallido, muestra el mensaje y un botón de reintentar que recupera la pantalla', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockClassificationDetail(true);
+    mockEmptyCatalogTypes();
+
+    let notificationCalls = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+      ),
+      http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () => {
+        notificationCalls++;
+        if (notificationCalls === 1) {
+          return HttpResponse.json(
+            { ok: false, message: 'error del servidor', code: 'NOTIFCN_006_NOT_FOUND' },
+            { status: 404 },
+          );
+        }
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: 'Reacción local en el sitio de aplicación',
+            hasRelevantMedicalHistory: null,
+            takesMedication: null,
+            requestInvestigation: false,
+            deathDate: null,
+            autopsyRequested: null,
+            verbalAutopsyPerformed: null,
+            notes: null,
+            isActive: true,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+            outcome: null,
+          },
+        });
+      }),
+    );
+    mockSevereNotificationBranch();
+
+    renderNotificationStep();
+
+    expect(await screen.findByText('No pudimos cargar la notificación.')).toBeInTheDocument();
+    const retryButton = screen.getByRole('button', { name: 'Reintentar' });
+
+    await user.click(retryButton);
+
+    expect(await screen.findByLabelText('Descripción del ESAVI')).toHaveValue(
+      'Reacción local en el sitio de aplicación',
+    );
+    expect(screen.queryByText('No pudimos cargar la notificación.')).not.toBeInTheDocument();
+  }, 30000);
+});

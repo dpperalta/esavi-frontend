@@ -834,7 +834,10 @@
       "otherSourceDescription": "Beschrijving van de andere bron"
     },
     "error": {
-      "load": "We konden de melding niet laden."
+      "load": "We konden de melding niet laden.",
+      "generic": "We konden de melding niet opslaan. Probeer het opnieuw.",
+      "severeGeneric": "We konden de ernstige meldingsfiche niet opslaan. Probeer het opnieuw.",
+      "nonSevereGeneric": "We konden de niet-ernstige meldingsfiche niet opslaan. Probeer het opnieuw."
     }
   },
   "home": {

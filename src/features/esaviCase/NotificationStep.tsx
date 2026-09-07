@@ -43,6 +43,7 @@ import { EsaviApiError } from '@/shared/api/types';
 import { AnswerOptionField } from '@/shared/components/AnswerOptionField';
 import { CatalogSelect } from '@/shared/components/CatalogSelect';
 import { DateField } from '@/shared/components/DateField';
+import { Button } from '@/shared/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Switch } from '@/shared/components/ui/switch';
@@ -737,7 +738,22 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
   if (notification.isError || activeBranch?.isError) {
     const message =
       loadError instanceof EsaviApiError ? getErrorMessage(loadError) : t('common.errors.unexpected');
-    return <p className="text-sm text-destructive">{message}</p>;
+    return (
+      <div className="flex items-center gap-2">
+        <p className="text-sm text-destructive">{message}</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            void notification.refetch();
+            void activeBranch?.refetch();
+          }}
+        >
+          {t('common.table.retry')}
+        </Button>
+      </div>
+    );
   }
 
   if (!readyToRenderForm) {
