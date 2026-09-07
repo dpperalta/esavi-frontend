@@ -63,6 +63,13 @@
       "placeholder": "UU:MM",
       "invalid": "De tijd is niet geldig. Gebruik het formaat UU:MM."
     },
+    "satelliteList": {
+      "add": "Toevoegen",
+      "edit": "{{name}} bewerken",
+      "delete": "{{name}} verwijderen",
+      "cancel": "Annuleren",
+      "save": "Opslaan"
+    },
     "answerOption": {
       "yes": "Ja",
       "no": "Nee",

@@ -63,6 +63,13 @@
       "placeholder": "HH:MM",
       "invalid": "The time is not valid. Use the HH:MM format."
     },
+    "satelliteList": {
+      "add": "Add",
+      "edit": "Edit {{name}}",
+      "delete": "Delete {{name}}",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
     "answerOption": {
       "yes": "Yes",
       "no": "No",
