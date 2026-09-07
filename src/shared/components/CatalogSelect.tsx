@@ -1,9 +1,8 @@
 import { useTranslation } from 'react-i18next';
-import { catalogItemResource } from '@/features/catalogItem/api';
-import { catalogTypeResource } from '@/features/catalogType/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { Button } from '@/shared/components/ui/button';
+import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 import {
   Select,
   SelectContent,
@@ -28,38 +27,28 @@ export interface CatalogSelectProps {
 }
 
 // ESAVI-CATTYPE-002 (resolves `typeCode` → `catalogTypeId`) + ESAVI-CATITEM-002A/002B (items of
-// that type) — the primitive of ARCHITECTURE.md §4.3, adelantada por SPEC FE09 §1E: the two-hop
-// resolution HealthFacilityListPage.tsx:117-131 already writes by hand. Both resources declare
-// their own 30-minute `staleTime` (CONVENTIONS.md §6.3); nothing is redeclared here, so two
-// instances with the same `typeCode` share both cache entries and cost one request per hop, not
-// one per instance.
+// that type) — the primitive of ARCHITECTURE.md §4.3, adelantada por SPEC FE09 §1E, whose
+// two-hop resolution now lives in `useCatalogItemsByTypeCode` (SPEC FE12a §4 paso 4) so a screen
+// that needs to compare by `catalogItem.value` shares it instead of reimplementing it. Both
+// resources declare their own 30-minute `staleTime` (CONVENTIONS.md §6.3); nothing is redeclared
+// here, so two instances with the same `typeCode` share both cache entries and cost one request
+// per hop, not one per instance.
 export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled, emit = 'code' }: CatalogSelectProps) {
   const { t } = useTranslation();
-  const typesList = catalogTypeResource.useList({ pageSize: 100 });
-  const catalogTypeId =
-    typesList.data?.rows.find((row) => row.code === typeCode)?.catalogTypeId ?? '';
-  const itemsList = catalogItemResource.useListByParent!(catalogTypeId, { pageSize: 100 });
+  const { isLoading, isError, error, catalogTypeId, rows, refetch } =
+    useCatalogItemsByTypeCode(typeCode);
 
-  if (typesList.isLoading || itemsList.isLoading) {
+  if (isLoading) {
     return <Skeleton className="h-8 w-full" />;
   }
 
-  if (typesList.isError || itemsList.isError) {
-    const error = typesList.isError ? typesList.error : itemsList.error;
+  if (isError) {
     const message =
       error instanceof EsaviApiError ? getErrorMessage(error) : t('common.errors.unexpected');
     return (
       <div className="flex items-center gap-2">
         <p className="text-sm text-destructive">{message}</p>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            void typesList.refetch();
-            void itemsList.refetch();
-          }}
-        >
+        <Button type="button" variant="outline" size="sm" onClick={refetch}>
           {t('common.table.retry')}
         </Button>
       </div>
@@ -79,7 +68,6 @@ export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled, 
     );
   }
 
-  const rows = itemsList.data?.rows ?? [];
   const emittedValue = (row: (typeof rows)[number]) => (emit === 'id' ? row.catalogItemId : row.code);
 
   return (
