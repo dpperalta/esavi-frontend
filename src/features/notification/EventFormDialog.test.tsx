@@ -3,11 +3,20 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { EventFormDialog } from './EventFormDialog';
+
+const toastError = vi.fn();
+const toastSuccess = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    error: (...args: unknown[]) => toastError(...args),
+    success: (...args: unknown[]) => toastSuccess(...args),
+  },
+}));
 
 const server = setupServer();
 
@@ -18,6 +27,8 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   server.resetHandlers();
   setAccessToken(null);
+  toastError.mockClear();
+  toastSuccess.mockClear();
 });
 afterAll(() => server.close());
 
@@ -197,5 +208,31 @@ describe('EventFormDialog — SPEC FE12b §4 paso 9', () => {
 
     await waitFor(() => expect(requestBody).not.toBeNull());
     expect(requestBody).toMatchObject({ esaviName: 'fiebre altisima', esaviCode: 'FIEBRE01' });
+  }, 60000);
+
+  // SPEC FE12b §4 paso 13 — el aviso de administrador de §10.4, no un toast genérico.
+  it('un 403 AUTH_ROLE_FORBIDDEN en el PUT muestra el aviso de administrador, no un toast genérico', async () => {
+    server.use(
+      http.get(`http://localhost:4500/api/notification-events/${EVENT_ID}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: baseEventRow() }),
+      ),
+      http.put(`http://localhost:4500/api/notification-events/${EVENT_ID}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'Rol insuficiente', code: 'AUTH_ROLE_FORBIDDEN' },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    const user = setupUser();
+    renderDialog(EVENT_ID);
+
+    await screen.findByDisplayValue('Fiebre alta');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
+    expect(toastError).toHaveBeenCalledWith(
+      'Corregir este contenido clínico exige un administrador en este despliegue.',
+    );
   }, 60000);
 });

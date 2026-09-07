@@ -894,7 +894,11 @@
       },
       "meddraUnavailable": "The term search is not available right now; you can type it as-is.",
       "diagtermNotImported": "The dictionary for this source is not imported in this deployment.",
-      "keepAsFreeText": "Save as free text"
+      "keepAsFreeText": "Save as free text",
+      "error": {
+        "load": "We couldn't load the events.",
+        "generic": "We couldn't save the event. Try again."
+      }
     },
     "medications": {
       "sectionTitle": "Concomitant medication",
@@ -920,7 +924,11 @@
       },
       "gateLocked": "This can't be changed while there is medication on record. Delete it one row at a time to change the answer.",
       "gateLockedNeedsAdmin": "This can't be changed while there is medication on record. An administrator is needed to delete it.",
-      "mismatch": "This answer doesn't match the medication recorded below."
+      "mismatch": "This answer doesn't match the medication recorded below.",
+      "error": {
+        "load": "We couldn't load the concomitant medication.",
+        "generic": "We couldn't save the medication. Try again."
+      }
     },
     "satellites": {
       "deleteTitle": "Deactivate",

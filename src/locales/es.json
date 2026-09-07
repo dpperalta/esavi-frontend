@@ -894,7 +894,11 @@
       },
       "meddraUnavailable": "El buscador de términos no está disponible ahora mismo; puedes escribirlo tal cual.",
       "diagtermNotImported": "El diccionario de esta fuente no está importado en este despliegue.",
-      "keepAsFreeText": "Guardar como texto libre"
+      "keepAsFreeText": "Guardar como texto libre",
+      "error": {
+        "load": "No pudimos cargar los eventos.",
+        "generic": "No pudimos guardar el evento. Intenta de nuevo."
+      }
     },
     "medications": {
       "sectionTitle": "Medicación concomitante",
@@ -920,7 +924,11 @@
       },
       "gateLocked": "No se puede cambiar mientras haya medicaciones registradas. Bórralas una a una para poder cambiar la respuesta.",
       "gateLockedNeedsAdmin": "No se puede cambiar mientras haya medicaciones registradas. Hace falta un administrador para borrarlas.",
-      "mismatch": "Esta respuesta no coincide con la medicación registrada más abajo."
+      "mismatch": "Esta respuesta no coincide con la medicación registrada más abajo.",
+      "error": {
+        "load": "No pudimos cargar la medicación concomitante.",
+        "generic": "No pudimos guardar la medicación. Intenta de nuevo."
+      }
     },
     "satellites": {
       "deleteTitle": "Dar de baja",
