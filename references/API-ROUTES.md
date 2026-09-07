@@ -1,8 +1,9 @@
 # Inventario de rutas del backend
 
 > **Fuente:** `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES`
-> **Generado:** 2026-09-02 · **333 rutas** en **43 grupos**
-> **Verificado:** 2026-09-03 — regenerado sin cambios, y cruzado además contra los routers reales de `src/routes/`: las 333 filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Generado:** 2026-09-05 · **336 rutas** en **44 grupos**
+> **Verificado:** 2026-09-03 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Cambios de la regeneración del 2026-09-05:** grupo **`WHODPROD`** nuevo con tres rutas (SPEC F56 del backend, espejo del estándar WHODrug y buscador de medicación concomitante). Y **§10.4 de `CASE-PROCESS.md` aplicada a medias**: los cuatro `001` de `NOTIFEVT`, `NOTIFVAC`, `NOTIFDIL` y `NOTIFMED` bajaron a `USER`, pero sus `004` y `005A` **siguen en `ADMIN`**; `ESAVI-NOTIFIER-005A` (§10.2) sí bajó a `USER`
 > **Regenerar:** ver `README.md` de este directorio
 
 `ROUTE_RULES` es la matriz canónica de la §9 de `CONVENTIONS.md`, y el backend la
@@ -412,7 +413,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-diluents` | ADMIN | `ESAVI-NOTIFDIL-001` |
+| `POST` | `/api/notification-diluents` | USER | `ESAVI-NOTIFDIL-001` |
 | `GET` | `/api/notification-diluents/admin/vaccine/:id` | ADMIN | `ESAVI-NOTIFDIL-002B` |
 | `GET` | `/api/notification-diluents/vaccine/:id` | USER | `ESAVI-NOTIFDIL-002A` |
 | `DELETE` | `/api/notification-diluents/purge/:id` | SUPERADMIN | `ESAVI-NOTIFDIL-005C` |
@@ -425,7 +426,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-events` | ADMIN | `ESAVI-NOTIFEVT-001` |
+| `POST` | `/api/notification-events` | USER | `ESAVI-NOTIFEVT-001` |
 | `GET` | `/api/notification-events/case/:id` | USER | `ESAVI-NOTIFEVT-006` |
 | `GET` | `/api/notification-events/admin/notification/:id` | ADMIN | `ESAVI-NOTIFEVT-002B` |
 | `GET` | `/api/notification-events/notification/:id` | USER | `ESAVI-NOTIFEVT-002A` |
@@ -444,7 +445,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/notifiers/admin` | ADMIN | `ESAVI-NOTIFIER-002B` |
 | `GET` | `/api/notifiers/:id` | USER | `ESAVI-NOTIFIER-003` |
 | `PUT` | `/api/notifiers/:id` | USER | `ESAVI-NOTIFIER-004` |
-| `DELETE` | `/api/notifiers/:id` | ADMIN | `ESAVI-NOTIFIER-005A` |
+| `DELETE` | `/api/notifiers/:id` | USER | `ESAVI-NOTIFIER-005A` |
 | `PATCH` | `/api/notifiers/activate/:id` | SUPERADMIN | `ESAVI-NOTIFIER-005B` |
 | `DELETE` | `/api/notifiers/purge/:id` | SUPERADMIN | `ESAVI-NOTIFIER-005C` |
 
@@ -452,7 +453,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-medications` | ADMIN | `ESAVI-NOTIFMED-001` |
+| `POST` | `/api/notification-medications` | USER | `ESAVI-NOTIFMED-001` |
 | `GET` | `/api/notification-medications/case/:id` | USER | `ESAVI-NOTIFMED-006` |
 | `GET` | `/api/notification-medications/admin/notification/:id` | ADMIN | `ESAVI-NOTIFMED-002B` |
 | `GET` | `/api/notification-medications/notification/:id` | USER | `ESAVI-NOTIFMED-002A` |
@@ -478,7 +479,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-vaccines` | ADMIN | `ESAVI-NOTIFVAC-001` |
+| `POST` | `/api/notification-vaccines` | USER | `ESAVI-NOTIFVAC-001` |
 | `GET` | `/api/notification-vaccines/case/:id` | USER | `ESAVI-NOTIFVAC-006` |
 | `GET` | `/api/notification-vaccines/admin/notification/:id` | ADMIN | `ESAVI-NOTIFVAC-002B` |
 | `GET` | `/api/notification-vaccines/notification/:id` | USER | `ESAVI-NOTIFVAC-002A` |
@@ -592,6 +593,14 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/user-roles/:id` | USER | `ESAVI-USERROLE-003` |
 | `DELETE` | `/api/user-roles/:id` | ADMIN | `ESAVI-USERROLE-005A` |
 | `PATCH` | `/api/user-roles/activate/:id` | SUPERADMIN | `ESAVI-USERROLE-005B` |
+
+### WHODPROD
+
+| Método | Ruta | Rol mínimo | Código |
+|---|---|---|---|
+| `GET` | `/api/whodrug-products/search` | USER | `ESAVI-WHODPROD-006` |
+| `GET` | `/api/whodrug-products/admin` | ADMIN | `ESAVI-WHODPROD-002B` |
+| `POST` | `/api/whodrug-products/sync` | SUPERADMIN | `ESAVI-WHODPROD-007` |
 
 ### WHODRUG
 
