@@ -58,6 +58,13 @@
     },
     "dateField": {
       "openCalendar": "Kalender openen — {{field}}"
+    },
+    "answerOption": {
+      "yes": "Ja",
+      "no": "Nee",
+      "unknown": "Onbekend",
+      "notApplicable": "Niet van toepassing",
+      "noAnswer": "Geen antwoord"
     }
   },
   "auth": {

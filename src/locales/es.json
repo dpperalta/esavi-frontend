@@ -58,6 +58,13 @@
     },
     "dateField": {
       "openCalendar": "Abrir calendario — {{field}}"
+    },
+    "answerOption": {
+      "yes": "Sí",
+      "no": "No",
+      "unknown": "No se sabe",
+      "notApplicable": "No aplica",
+      "noAnswer": "Sin respuesta"
     }
   },
   "auth": {
