@@ -887,7 +887,10 @@
       "form": {
         "createTitle": "Add event",
         "editTitle": "Edit event"
-      }
+      },
+      "meddraUnavailable": "The term search is not available right now; you can type it as-is.",
+      "diagtermNotImported": "The dictionary for this source is not imported in this deployment.",
+      "keepAsFreeText": "Save as free text"
     },
     "satellites": {
       "deleteTitle": "Deactivate",

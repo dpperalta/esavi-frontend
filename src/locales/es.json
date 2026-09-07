@@ -887,7 +887,10 @@
       "form": {
         "createTitle": "Añadir evento",
         "editTitle": "Editar evento"
-      }
+      },
+      "meddraUnavailable": "El buscador de términos no está disponible ahora mismo; puedes escribirlo tal cual.",
+      "diagtermNotImported": "El diccionario de esta fuente no está importado en este despliegue.",
+      "keepAsFreeText": "Guardar como texto libre"
     },
     "satellites": {
       "deleteTitle": "Dar de baja",

@@ -9,6 +9,7 @@ import type { NonSevereNotificationDetail } from '@/contracts/declared/nonSevere
 import type { NotificationDetail } from '@/contracts/declared/notification';
 import type { NotificationEventDetail } from '@/contracts/declared/notificationEvent';
 import type { NotificationMedicationDetail } from '@/contracts/declared/notificationMedication';
+import type { MeddraSearchResult } from '@/contracts/declared/meddra';
 import type { SevereNotificationDetail } from '@/contracts/declared/severeNotification';
 import type { WhodrugProductSearchResult } from '@/contracts/declared/whodrugProduct';
 import { client } from '@/shared/api/client';
@@ -200,6 +201,31 @@ export function useNotificationEventsByCase(caseId: string | undefined, enabled:
       return response.data;
     },
     enabled: enabled && caseId !== undefined,
+  });
+}
+
+// ESAVI-MEDDRA-006 — search against the licensed dictionary, never against `diagnosticTerm`
+// directly: the clinical catalog is only ever read or written by the resolution the service runs
+// on `POST`/`PUT` of `notificationEvent` (SPEC FE12b §3.2, "Qué no se consume"). `term` is the
+// only parameter the backend accepts — `take` and the level flags live in
+// `ESAVI_MEDDRA_SEARCH_CONFIG` and are not open to the client (meddra.validator.ts). `staleTime`
+// is 5 minutes, matching the server's own per-term-and-language cache, because behind this one
+// there is a paid API limited to 60 requests per 15 minutes (SPEC FE12b §3.4).
+export function useMeddraSearch(term: string) {
+  const trimmed = term.trim();
+
+  return useQuery({
+    queryKey: ['meddra', 'search', trimmed],
+    queryFn: async () => {
+      const response = await client.get<MeddraSearchResult>('meddra/search', {
+        params: { term: trimmed },
+      });
+      return response.data;
+    },
+    // Below the validator's three-character minimum the backend answers 400 — the hook never
+    // fires, same reasoning as `useWhodrugProductSearch`'s own floor.
+    enabled: trimmed.length >= 3,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

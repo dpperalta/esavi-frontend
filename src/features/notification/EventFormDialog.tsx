@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -6,15 +6,18 @@ import type { CreateNotificationEventInput } from '@/contracts/notificationEvent
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { DateField } from '@/shared/components/DateField';
+import { MeddraSearchField } from '@/shared/components/MeddraSearchField';
 import { ResourceForm } from '@/shared/components/ResourceForm';
+import type { TermSearchOption } from '@/shared/components/TermSearchField';
 import { TimeField } from '@/shared/components/TimeField';
+import { Button } from '@/shared/components/ui/button';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import { FormControl, FormField, FormItem, FormLabel } from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { notificationEventResource } from './api';
+import { notificationEventResource, useMeddraSearch } from './api';
 import {
   notificationEventErrorFieldMap,
   notificationEventSchema,
@@ -35,24 +38,40 @@ function isRoleForbidden(error: EsaviApiError): boolean {
   return error.code === 'AUTH_ROLE_FORBIDDEN';
 }
 
-// Separado de `EventFormDialog` a propósito: sus hooks (`useRef`/`useEffect`) tienen que montarse
-// y desmontarse con este subárbol, y `<ResourceForm>` no siempre existe — mientras `existing.data`
-// no ha resuelto en modo edición, el diálogo pinta un `<p>` de carga en su lugar. Si estos hooks
-// vivieran en la función que `ResourceForm` invoca como `children`, aparecerían de golpe en un
-// render posterior de `EventFormDialog` y romperían el orden de hooks de React.
-function EventFormFields({ form }: { form: UseFormReturn<NotificationEventFormValues> }) {
+function isDiagtermNotFound(error: EsaviApiError): boolean {
+  return error.code.endsWith('_DIAGTERM_NOT_FOUND');
+}
+
+interface EventFormFieldsProps {
+  form: UseFormReturn<NotificationEventFormValues>;
+  mutationError: EsaviApiError | null;
+  // Reenvía el formulario con `esaviCode`/`source` ya borrados — la acción de
+  // `NOTIFEVT_00X_DIAGTERM_NOT_FOUND` (§3.5), que no es un error del usuario sino un diccionario
+  // sin importar en este despliegue.
+  onSaveAsFreeText: (values: NotificationEventFormValues) => void;
+}
+
+// Separado de `EventFormDialog` a propósito: sus hooks (`useRef`/`useEffect`/`useState`) tienen
+// que montarse y desmontarse con este subárbol, y `<ResourceForm>` no siempre existe — mientras
+// `existing.data` no ha resuelto en modo edición, el diálogo pinta un `<p>` de carga en su lugar.
+// Si estos hooks vivieran en la función que `ResourceForm` invoca como `children`, aparecerían de
+// golpe en un render posterior de `EventFormDialog` y romperían el orden de hooks de React.
+function EventFormFields({ form, mutationError, onSaveAsFreeText }: EventFormFieldsProps) {
   const { t } = useTranslation();
   const isOtherEsavi = form.watch('isOtherEsavi');
   const wasOtherEsaviRef = useRef(isOtherEsavi ?? false);
+  const [meddraQuery, setMeddraQuery] = useState('');
+  const meddraSearch = useMeddraSearch(meddraQuery);
 
-  // Al marcar «otro», el código deja de tener sentido; al desmarcarlo, la descripción deja de
-  // tener sentido — se limpian en el mismo cambio, no al enviar (§3.5, misma técnica que las
-  // secciones condicionales de `NotificationStep`).
+  // Al marcar «otro», el código (y la rama que traía) dejan de tener sentido; al desmarcarlo, la
+  // descripción deja de tener sentido — se limpian en el mismo cambio, no al enviar (§3.5, misma
+  // técnica que las secciones condicionales de `NotificationStep`).
   useEffect(() => {
     const current = isOtherEsavi ?? false;
     if (current !== wasOtherEsaviRef.current) {
       if (current) {
         form.setValue('esaviCode', null, { shouldDirty: true });
+        form.setValue('source', undefined, { shouldDirty: true });
       } else {
         form.setValue('otherDescription', null, { shouldDirty: true });
       }
@@ -60,6 +79,23 @@ function EventFormFields({ form }: { form: UseFormReturn<NotificationEventFormVa
     wasOtherEsaviRef.current = current;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- sólo dispara con el cambio de la bandera, no en cada render del formulario.
   }, [isOtherEsavi]);
+
+  // §3.5 "El campo del término": elegir una sugerencia fija `source: 'MEDDRA'`; escribirla a mano
+  // la deja en `'LOCAL'`, explícito. Editar `esaviName` después no toca ninguna de las dos — la
+  // rama sigue el origen del código, nunca el del nombre.
+  function handleSelectMeddraTerm(option: TermSearchOption) {
+    form.setValue('esaviName', option.name, { shouldDirty: true });
+    form.setValue('esaviCode', option.code, { shouldDirty: true });
+    form.setValue('source', 'MEDDRA', { shouldDirty: true });
+  }
+
+  function handleEsaviCodeChange(raw: string) {
+    const trimmed = raw.trim();
+    form.setValue('esaviCode', trimmed || null, { shouldDirty: true });
+    form.setValue('source', trimmed ? 'LOCAL' : undefined, { shouldDirty: true });
+  }
+
+  const showDiagtermNotFound = !!mutationError && isDiagtermNotFound(mutationError);
 
   return (
     <>
@@ -70,7 +106,18 @@ function EventFormFields({ form }: { form: UseFormReturn<NotificationEventFormVa
           <FormItem>
             <FormLabel>{t('notification.events.fields.esaviName')}</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <MeddraSearchField
+                value={field.value}
+                onValueChange={field.onChange}
+                onSelect={handleSelectMeddraTerm}
+                onQueryChange={setMeddraQuery}
+                options={meddraSearch.data?.rows ?? []}
+                isLoading={meddraSearch.isLoading}
+                isError={meddraSearch.isError}
+                serviceUnavailableMessage={t('notification.events.meddraUnavailable')}
+                placeholder={t('notification.events.fields.esaviName')}
+                ariaLabel={t('notification.events.fields.esaviName')}
+              />
             </FormControl>
             {fieldState.error && (
               <p className="text-sm text-destructive">
@@ -104,8 +151,33 @@ function EventFormFields({ form }: { form: UseFormReturn<NotificationEventFormVa
             <FormItem>
               <FormLabel>{t('notification.events.fields.esaviCode')}</FormLabel>
               <FormControl>
-                <Input {...field} value={field.value ?? ''} />
+                <Input
+                  value={field.value ?? ''}
+                  onChange={(event) => handleEsaviCodeChange(event.target.value)}
+                />
               </FormControl>
+              {showDiagtermNotFound && (
+                <div className="flex flex-col gap-2 rounded-md border border-dashed p-2">
+                  <p className="text-sm text-muted-foreground">
+                    {t('notification.events.diagtermNotImported')}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="self-start"
+                    onClick={() =>
+                      onSaveAsFreeText({
+                        ...form.getValues(),
+                        esaviCode: null,
+                        source: undefined,
+                      })
+                    }
+                  >
+                    {t('notification.events.keepAsFreeText')}
+                  </Button>
+                </div>
+              )}
             </FormItem>
           )}
         />
@@ -202,9 +274,9 @@ function EventFormFields({ form }: { form: UseFormReturn<NotificationEventFormVa
   );
 }
 
-// El evento del ESAVI — todos los campos de §3.5 menos la resolución del término (paso 9 de
-// este spec le da a `esaviName`/`esaviCode` su `<MeddraSearchField>`). `esaviName` nunca se
-// limpia al marcar «otro»: sigue siendo lo que escribió el notificador (§3.5).
+// El evento del ESAVI — todos los campos de §3.5, con la resolución del término contra MedDRA
+// (SPEC FE12b §4 paso 9). `esaviName` nunca se limpia al marcar «otro»: sigue siendo lo que
+// escribió el notificador.
 export function EventFormDialog({ open, onOpenChange, notificationId, eventId }: EventFormDialogProps) {
   const { t } = useTranslation();
   const isEditing = eventId !== null;
@@ -226,9 +298,12 @@ export function EventFormDialog({ open, onOpenChange, notificationId, eventId }:
     // Las dos reglas de «otro» ya garantizan la coherencia (`notificationEventSchema`), así que
     // lo que se envía es literalmente el estado resultante del formulario — CONVENTIONS.md §6.5
     // manda el objeto completo, con el campo oculto viajando en `null` en el mismo `PUT`.
+    // `source` viaja tal cual lo dejó el campo del término: sin código no viaja (queda
+    // `undefined`, y `JSON.stringify` lo omite del cuerpo) — nunca por omisión accidental.
     const payload: Partial<CreateNotificationEventInput> = {
       esaviName: values.esaviName.trim(),
       esaviCode: values.isOtherEsavi ? null : (values.esaviCode ?? null),
+      source: values.isOtherEsavi ? undefined : values.source,
       isMainEsavi: values.isMainEsavi ?? false,
       startDate: values.startDate ?? null,
       startTime: values.startTime ?? null,
@@ -258,6 +333,12 @@ export function EventFormDialog({ open, onOpenChange, notificationId, eventId }:
   }
 
   function handleUnmappedError(error: EsaviApiError) {
+    // No es un error del usuario: el diccionario de esa fuente no está importado en este
+    // despliegue. `EventFormFields` ya lo explica junto al campo de código, con la acción de
+    // guardar como texto libre — un toast aquí sería redundante (§3.5).
+    if (isDiagtermNotFound(error)) {
+      return;
+    }
     if (isRoleForbidden(error)) {
       toast.error(t('notification.satellites.adminRequiredEdit'));
       return;
@@ -282,8 +363,10 @@ export function EventFormDialog({ open, onOpenChange, notificationId, eventId }:
             key={eventId ?? 'create'}
             schema={notificationEventSchema}
             defaultValues={{
-              esaviName: existing.data?.esaviName ?? '',
-              esaviCode: existing.data?.esaviRawName ? null : (existing.data?.esaviCode ?? null),
+              // `esaviRawName` es lo que escribió el notificador; se muestra en su lugar cuando
+              // existe, porque `esaviName` ya trae la reescritura del maestro (§3.3, §3.5).
+              esaviName: existing.data?.esaviRawName ?? existing.data?.esaviName ?? '',
+              esaviCode: existing.data?.esaviCode ?? null,
               isMainEsavi: existing.data?.isMainEsavi ?? false,
               startDate: existing.data?.startDate ?? null,
               startTime: existing.data?.startTime ?? null,
@@ -300,7 +383,9 @@ export function EventFormDialog({ open, onOpenChange, notificationId, eventId }:
             submitLabel="common.satelliteList.save"
             cancelLabel="common.satelliteList.cancel"
           >
-            {(form) => <EventFormFields form={form} />}
+            {(form) => (
+              <EventFormFields form={form} mutationError={mutationError} onSaveAsFreeText={handleSubmit} />
+            )}
           </ResourceForm>
         )}
         {!readyToRender && <p className="py-4 text-sm text-muted-foreground">{t('common.loading')}</p>}

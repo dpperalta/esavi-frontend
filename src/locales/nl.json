@@ -887,7 +887,10 @@
       "form": {
         "createTitle": "Gebeurtenis toevoegen",
         "editTitle": "Gebeurtenis bewerken"
-      }
+      },
+      "meddraUnavailable": "De zoekfunctie voor termen is nu niet beschikbaar; je kunt het zo intypen.",
+      "diagtermNotImported": "Het woordenboek van deze bron is niet geïmporteerd in deze omgeving.",
+      "keepAsFreeText": "Opslaan als vrije tekst"
     },
     "satellites": {
       "deleteTitle": "Deactiveren",

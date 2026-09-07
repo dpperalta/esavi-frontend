@@ -87,17 +87,23 @@ describe('EventList — SPEC FE12b §4 paso 8', () => {
         requestBody = (await request.json()) as Record<string, unknown>;
         return HttpResponse.json({ ok: true, message: 'ok', data: eventRow({}) });
       }),
+      http.get('http://localhost:4500/api/meddra/search', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
     );
 
     renderList();
 
     await user.click(await screen.findByRole('button', { name: 'Añadir' }));
     await user.type(await screen.findByLabelText('Diagnóstico del ESAVI'), 'Fiebre alta');
+    await user.keyboard('{Escape}');
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
     await waitFor(() => expect(requestBody).not.toBeNull());
     expect(requestBody).toMatchObject({ esaviName: 'Fiebre alta', notificationId: NOTIFICATION_ID });
-  });
+    // `esaviName` es ahora un `<MeddraSearchField>` (SPEC FE12b §4 paso 9): más pesado que un
+    // `<input>` liso en este entorno, mismo motivo documentado en `src/test/user.ts`.
+  }, 60000);
 
   it('marcar dos eventos como principales no desmarca ninguno: cada PUT toca sólo su propia fila', async () => {
     const user = setupUser();
