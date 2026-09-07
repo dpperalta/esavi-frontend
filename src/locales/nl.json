@@ -779,17 +779,50 @@
       "autopsyRequested": "Is er een autopsie aangevraagd?",
       "verbalAutopsyPerformed": "Is er een verbale autopsie uitgevoerd?"
     },
+    "severe": {
+      "sectionTitle": "Ernstige meldingsfiche",
+      "hasPreviousEventHistory": "Voorgeschiedenis van een eerdere gebeurtenis?",
+      "hasAllergyToOtherVaccines": "Allergie voor andere vaccins?",
+      "hasAllergyToMedications": "Allergie voor medicatie?",
+      "hasAllergyToPreviousSameVaccine": "Allergie voor een eerdere dosis van hetzelfde vaccin?"
+    },
+    "nonSevere": {
+      "sectionTitle": "Niet-ernstige meldingsfiche",
+      "vaccinationHealthFacilityId": "Vaccinatie-instelling",
+      "vaccinationSiteItemId": "Vaccinatieplaats",
+      "vaccinationCenterAddress": "Adres van het vaccinatiecentrum",
+      "vaccinationGeoLocationId": "Locatie van de vaccinatie",
+      "verificationLegend": "Verificatiebronnen",
+      "verifiedPhysicalDocument": "Fysiek document",
+      "verifiedElectronicRecord": "Elektronisch dossier",
+      "verifiedVerbalReport": "Mondeling verslag",
+      "verifiedClinicalRecord": "Klinisch dossier",
+      "verifiedUnknown": "Onbekend",
+      "verifiedOtherSource": "Andere bron",
+      "otherSourceDescription": "Beschrijf de andere bron"
+    },
     "validation": {
       "esaviDescriptionRequired": "Beschrijf het ESAVI voordat je opslaat.",
       "deathDateBeforeEventDate": "De overlijdensdatum mag niet vóór de datum van de gebeurtenis liggen.",
-      "deathDateFuture": "De overlijdensdatum mag niet in de toekomst liggen."
+      "deathDateFuture": "De overlijdensdatum mag niet in de toekomst liggen.",
+      "atLeastOneVerificationSource": "Markeer minstens één verificatiebron.",
+      "otherSourceDescriptionRequired": "Beschrijf de andere bron voordat je opslaat."
     },
     "pending": {
       "hasRelevantMedicalHistory": "Relevante medische voorgeschiedenis",
       "takesMedication": "Medicatiegebruik",
       "outcomeItemId": "Uitkomst",
       "requestInvestigation": "Onderzoeksaanvraag",
-      "deathFields": "Overlijdensgegevens"
+      "deathFields": "Overlijdensgegevens",
+      "hasPreviousEventHistory": "Voorgeschiedenis van een eerdere gebeurtenis",
+      "hasAllergyToOtherVaccines": "Allergie voor andere vaccins",
+      "hasAllergyToMedications": "Allergie voor medicatie",
+      "hasAllergyToPreviousSameVaccine": "Allergie voor een eerdere dosis van hetzelfde vaccin",
+      "vaccinationHealthFacilityId": "Vaccinatie-instelling",
+      "vaccinationSiteItemId": "Vaccinatieplaats",
+      "vaccinationGeoLocationId": "Locatie van de vaccinatie",
+      "verifiedAny": "Minstens één verificatiebron",
+      "otherSourceDescription": "Beschrijving van de andere bron"
     },
     "error": {
       "load": "We konden de melding niet laden."

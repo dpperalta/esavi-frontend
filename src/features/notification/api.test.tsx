@@ -92,8 +92,8 @@ describe('useSevereNotificationByCase / useNonSevereNotificationByCase — ESAVI
     const Wrapper = createWrapper();
     const { result } = renderHook(
       () => ({
-        severe: useSevereNotificationByCase('case-1', 'SEVERE'),
-        nonSevere: useNonSevereNotificationByCase('case-1', 'SEVERE'),
+        severe: useSevereNotificationByCase('case-1', 'SEVERE', true),
+        nonSevere: useNonSevereNotificationByCase('case-1', 'SEVERE', true),
       }),
       { wrapper: Wrapper },
     );
@@ -120,8 +120,8 @@ describe('useSevereNotificationByCase / useNonSevereNotificationByCase — ESAVI
     const Wrapper = createWrapper();
     const { result } = renderHook(
       () => ({
-        severe: useSevereNotificationByCase('case-1', 'NON_SEVERE'),
-        nonSevere: useNonSevereNotificationByCase('case-1', 'NON_SEVERE'),
+        severe: useSevereNotificationByCase('case-1', 'NON_SEVERE', true),
+        nonSevere: useNonSevereNotificationByCase('case-1', 'NON_SEVERE', true),
       }),
       { wrapper: Wrapper },
     );
@@ -129,5 +129,64 @@ describe('useSevereNotificationByCase / useNonSevereNotificationByCase — ESAVI
     await waitFor(() => expect(result.current.nonSevere.isSuccess).toBe(true));
     expect(nonSevereHit).toBe(true);
     expect(severeHit).toBe(false);
+  });
+
+  it('con stageExists:false no pega a la red — un caso fresco no tiene cabecera todavía', () => {
+    let hit = false;
+    server.use(
+      http.get('http://localhost:4500/api/severe-notifications/case/case-1', () => {
+        hit = true;
+        return HttpResponse.json({ ok: false, message: 'not found', code: 'X' }, { status: 404 });
+      }),
+    );
+
+    const Wrapper = createWrapper();
+    const { result } = renderHook(() => useSevereNotificationByCase('case-1', 'SEVERE', false), {
+      wrapper: Wrapper,
+    });
+
+    expect(result.current.fetchStatus).toBe('idle');
+    expect(hit).toBe(false);
+  });
+
+  // La cabecera existe (stageExists:true) pero la rama todavía no — justo el fallo parcial que
+  // SPEC FE12a §4 paso 12 existe para recuperar. `SEVNOT_006_NOT_FOUND`/`NSEVNOT_006_NOT_FOUND`
+  // resuelven a `null`, no a un error que rompa la pantalla.
+  it('con la rama sin crear todavía, SEVNOT_006_NOT_FOUND resuelve a null en vez de isError', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/severe-notifications/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrada', code: 'SEVNOT_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+
+    const Wrapper = createWrapper();
+    const { result } = renderHook(() => useSevereNotificationByCase('case-1', 'SEVERE', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
+  });
+
+  it('con la rama sin crear todavía, NSEVNOT_006_NOT_FOUND resuelve a null en vez de isError', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/non-severe-notifications/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrada', code: 'NSEVNOT_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+
+    const Wrapper = createWrapper();
+    const { result } = renderHook(() => useNonSevereNotificationByCase('case-1', 'NON_SEVERE', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
   });
 });

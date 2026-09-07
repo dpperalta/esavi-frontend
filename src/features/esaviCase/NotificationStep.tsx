@@ -5,21 +5,34 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { CreateNonSevereNotificationInput } from '@/contracts/nonSevereNotification';
 import type { CreateNotificationInput } from '@/contracts/notification';
+import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
+import type { NonSevereNotificationDetail } from '@/contracts/declared/nonSevereNotification';
 import type { NotificationDetail } from '@/contracts/declared/notification';
+import type { SevereNotificationDetail } from '@/contracts/declared/severeNotification';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import {
+  nonSevereNotificationByCaseKey,
+  nonSevereNotificationResource,
   notificationByCaseKey,
   notificationResource,
+  severeNotificationByCaseKey,
+  severeNotificationResource,
+  useNonSevereNotificationByCase,
   useNotificationByCase,
+  useSevereNotificationByCase,
 } from '@/features/notification/api';
 import {
+  createNotificationCompleteSchema,
   isDeathDateNotBeforeEventDate,
-  isDeathFieldsRequirementMet,
+  nonSevereNotificationErrorFieldMap,
   notificationErrorFieldMap,
   notificationSaveSchema,
+  severeNotificationErrorFieldMap,
+  type NotificationCompleteContext,
   type NotificationFormValues,
 } from '@/features/notification/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -34,6 +47,8 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
+import { NonSevereNotificationFields } from './NonSevereNotificationFields';
+import { SevereNotificationFields } from './SevereNotificationFields';
 
 function NotificationStepSkeleton() {
   return (
@@ -69,32 +84,79 @@ function buildNotificationPayload(values: NotificationFormValues): Partial<Creat
   };
 }
 
-// Header-only for now (§4 paso 10): the two branches (paso 12) and the pregnancy gate (paso 13)
-// aren't rendered yet, so `createNotificationCompleteSchema` of `features/notification/schemas.ts`
-// isn't wired in here either — it would list pending fields for controls that don't exist on
-// screen yet. This mirrors exactly what it will check once those steps land, just narrowed to
-// what's actually on screen today.
-function computeHeaderPendingFields(
+function buildSeverePayload(values: NotificationFormValues): Partial<CreateSevereNotificationInput> {
+  return {
+    hasPreviousEventHistory: values.hasPreviousEventHistory ?? null,
+    hasAllergyToOtherVaccines: values.hasAllergyToOtherVaccines ?? null,
+    hasAllergyToMedications: values.hasAllergyToMedications ?? null,
+    hasAllergyToPreviousSameVaccine: values.hasAllergyToPreviousSameVaccine ?? null,
+    // Los dos de embarazo llegan en SPEC FE12a §4 paso 13, con la compuerta — hasta entonces
+    // viajan en `null`, que es su estado coherente sin compuerta abierta.
+    hasPregnancyComplications: values.hasPregnancyComplications ?? null,
+    pregnancyComplicationsDescription: values.pregnancyComplicationsDescription ?? null,
+    notes: values.severeNotes ?? null,
+  };
+}
+
+function buildNonSeverePayload(
   values: NotificationFormValues,
-  isDeathOutcome: boolean,
+): Partial<CreateNonSevereNotificationInput> {
+  return {
+    vaccinationHealthFacilityId: values.vaccinationHealthFacilityId ?? null,
+    vaccinationSiteItemId: values.vaccinationSiteItemId ?? null,
+    vaccinationCenterAddress: values.vaccinationCenterAddress ?? null,
+    vaccinationGeoLocationId: values.vaccinationGeoLocationId ?? null,
+    verifiedPhysicalDocument: values.verifiedPhysicalDocument ?? null,
+    verifiedElectronicRecord: values.verifiedElectronicRecord ?? null,
+    verifiedVerbalReport: values.verifiedVerbalReport ?? null,
+    verifiedClinicalRecord: values.verifiedClinicalRecord ?? null,
+    verifiedUnknown: values.verifiedUnknown ?? null,
+    verifiedOtherSource: values.verifiedOtherSource ?? null,
+    otherSourceDescription: values.otherSourceDescription ?? null,
+    notes: values.nonSevereNotes ?? null,
+  };
+}
+
+// Un i18n key por cada `path[0]` que `createNotificationCompleteSchema` puede señalar. Los dos de
+// embarazo (`hasPregnancyComplications`, `pregnancyComplicationsDescription`) no tienen entrada
+// todavía a propósito: mientras `pregnancyGateOpen` viaje en `false` (paso 13 la resuelve de
+// verdad), ese predicado nunca falla, así que el schema no puede señalarlos aún.
+const PENDING_FIELD_LABEL_KEYS: Partial<Record<string, string>> = {
+  hasRelevantMedicalHistory: 'notification.pending.hasRelevantMedicalHistory',
+  takesMedication: 'notification.pending.takesMedication',
+  outcomeItemId: 'notification.pending.outcomeItemId',
+  requestInvestigation: 'notification.pending.requestInvestigation',
+  deathDate: 'notification.pending.deathFields',
+  hasPreviousEventHistory: 'notification.pending.hasPreviousEventHistory',
+  hasAllergyToOtherVaccines: 'notification.pending.hasAllergyToOtherVaccines',
+  hasAllergyToMedications: 'notification.pending.hasAllergyToMedications',
+  hasAllergyToPreviousSameVaccine: 'notification.pending.hasAllergyToPreviousSameVaccine',
+  vaccinationHealthFacilityId: 'notification.pending.vaccinationHealthFacilityId',
+  vaccinationSiteItemId: 'notification.pending.vaccinationSiteItemId',
+  vaccinationGeoLocationId: 'notification.pending.vaccinationGeoLocationId',
+  verifiedAny: 'notification.pending.verifiedAny',
+  otherSourceDescription: 'notification.pending.otherSourceDescription',
+};
+
+// Corre `createNotificationCompleteSchema` sobre los valores actuales del formulario en vez de
+// replicar la matriz a mano (SPEC FE12a §4 paso 12) — ahora que las dos ramas están en pantalla,
+// el schema ya conoce todo lo que hay que pedir. Un `path[0]` sin entrada en el mapa (los dos de
+// embarazo, por ahora) simplemente no se lista — no revienta.
+function computePendingFields(
+  values: NotificationFormValues,
+  context: NotificationCompleteContext,
   t: TFunction,
 ): string[] {
+  const result = createNotificationCompleteSchema(context).safeParse(values);
+  if (result.success) return [];
+  const seen = new Set<string>();
   const pending: string[] = [];
-  if (!values.hasRelevantMedicalHistory) pending.push(t('notification.pending.hasRelevantMedicalHistory'));
-  if (!values.takesMedication) pending.push(t('notification.pending.takesMedication'));
-  if (!values.outcomeItemId) pending.push(t('notification.pending.outcomeItemId'));
-  if (values.requestInvestigation === undefined) {
-    pending.push(t('notification.pending.requestInvestigation'));
-  }
-  if (
-    !isDeathFieldsRequirementMet(
-      isDeathOutcome,
-      values.deathDate,
-      values.autopsyRequested,
-      values.verbalAutopsyPerformed,
-    )
-  ) {
-    pending.push(t('notification.pending.deathFields'));
+  for (const issue of result.error.issues) {
+    const key = String(issue.path[0] ?? '');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const labelKey = PENDING_FIELD_LABEL_KEYS[key];
+    if (labelKey) pending.push(t(labelKey));
   }
   return pending;
 }
@@ -102,24 +164,41 @@ function computeHeaderPendingFields(
 interface NotificationFormBodyProps {
   caseId: string;
   notification: NotificationDetail | null;
+  severeNotification: SevereNotificationDetail | null;
+  nonSevereNotification: NonSevereNotificationDetail | null;
   notificationType: 'SEVERE' | 'NON_SEVERE';
   eventDate: string | null;
 }
 
 // The form itself (SPEC FE12a §3.5, §3.1): only mounted once `NotificationStep` resolved workflow
-// + classification + (on reentry) the notification row, so `defaultValues` is correct on the
-// first render — same pattern as `ClassificationFormBody`.
-function NotificationFormBody({ caseId, notification, notificationType, eventDate }: NotificationFormBodyProps) {
+// + classification + (on reentry) the notification row and the matching branch, so
+// `defaultValues` is correct on the first render — same pattern as `ClassificationFormBody`.
+function NotificationFormBody({
+  caseId,
+  notification,
+  severeNotification,
+  nonSevereNotification,
+  notificationType,
+  eventDate,
+}: NotificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { registerStep, unregisterStep } = useCaseWizard();
   const create = notificationResource.useCreate();
   const update = notificationResource.useUpdate();
+  const severeCreate = severeNotificationResource.useCreate();
+  const severeUpdate = severeNotificationResource.useUpdate();
+  const nonSevereCreate = nonSevereNotificationResource.useCreate();
+  const nonSevereUpdate = nonSevereNotificationResource.useUpdate();
   const outcomeItems = useCatalogItemsByTypeCode('outcome');
 
   // Never in `useState` (SPEC FE12a §3.4, corrigiendo el mismo patrón de FE11 en el paso 2 de
-  // este spec): se deriva del prop, que viene de la caché escrita con `setQueryData` más abajo.
+  // este spec): se derivan de los props, que vienen de la caché escrita con `setQueryData` más
+  // abajo. `POST` o `PUT` de cada rama se decide por lo que devolvió su propio `006`
+  // (SPEC FE12a §7 riesgo), nunca por si la cabecera existe.
   const notificationId = notification?.notificationId ?? null;
+  const severeNotificationId = severeNotification?.notificationId ?? null;
+  const nonSevereNotificationId = nonSevereNotification?.notificationId ?? null;
 
   const defaultValues: NotificationFormValues = {
     esaviDescription: notification?.esaviDescription ?? '',
@@ -131,26 +210,26 @@ function NotificationFormBody({ caseId, notification, notificationType, eventDat
     autopsyRequested: notification?.autopsyRequested ?? null,
     verbalAutopsyPerformed: notification?.verbalAutopsyPerformed ?? null,
     notes: notification?.notes ?? null,
-    // Las dos ramas no se editan todavía (paso 12) — nacen en `null` sin que este paso las toque.
-    hasPreviousEventHistory: null,
-    hasAllergyToOtherVaccines: null,
-    hasAllergyToMedications: null,
-    hasAllergyToPreviousSameVaccine: null,
-    hasPregnancyComplications: null,
-    pregnancyComplicationsDescription: null,
-    severeNotes: null,
-    vaccinationHealthFacilityId: null,
-    vaccinationSiteItemId: null,
-    vaccinationCenterAddress: null,
-    vaccinationGeoLocationId: null,
-    verifiedPhysicalDocument: null,
-    verifiedElectronicRecord: null,
-    verifiedVerbalReport: null,
-    verifiedClinicalRecord: null,
-    verifiedUnknown: null,
-    verifiedOtherSource: null,
-    otherSourceDescription: null,
-    nonSevereNotes: null,
+    hasPreviousEventHistory: severeNotification?.hasPreviousEventHistory ?? null,
+    hasAllergyToOtherVaccines: severeNotification?.hasAllergyToOtherVaccines ?? null,
+    hasAllergyToMedications: severeNotification?.hasAllergyToMedications ?? null,
+    hasAllergyToPreviousSameVaccine: severeNotification?.hasAllergyToPreviousSameVaccine ?? null,
+    // Los dos de embarazo llegan en el paso 13, junto con su compuerta.
+    hasPregnancyComplications: severeNotification?.hasPregnancyComplications ?? null,
+    pregnancyComplicationsDescription: severeNotification?.pregnancyComplicationsDescription ?? null,
+    severeNotes: severeNotification?.notes ?? null,
+    vaccinationHealthFacilityId: nonSevereNotification?.vaccinationHealthFacility?.healthFacilityId ?? null,
+    vaccinationSiteItemId: nonSevereNotification?.vaccinationSite?.catalogItemId ?? null,
+    vaccinationCenterAddress: nonSevereNotification?.vaccinationCenterAddress ?? null,
+    vaccinationGeoLocationId: nonSevereNotification?.vaccinationGeoLocation?.geoLocationId ?? null,
+    verifiedPhysicalDocument: nonSevereNotification?.verifiedPhysicalDocument ?? null,
+    verifiedElectronicRecord: nonSevereNotification?.verifiedElectronicRecord ?? null,
+    verifiedVerbalReport: nonSevereNotification?.verifiedVerbalReport ?? null,
+    verifiedClinicalRecord: nonSevereNotification?.verifiedClinicalRecord ?? null,
+    verifiedUnknown: nonSevereNotification?.verifiedUnknown ?? null,
+    verifiedOtherSource: nonSevereNotification?.verifiedOtherSource ?? null,
+    otherSourceDescription: nonSevereNotification?.otherSourceDescription ?? null,
+    nonSevereNotes: nonSevereNotification?.notes ?? null,
   };
 
   const form = useForm<NotificationFormValues>({
@@ -184,6 +263,17 @@ function NotificationFormBody({ caseId, notification, notificationType, eventDat
   // respuesta precisamente para esta comparación, pero no la valida él mismo.
   const deathDateValid = isDeathDateNotBeforeEventDate(watchedValues.deathDate, eventDate);
 
+  // Mismo mecanismo que la sección de fallecimiento: `otherSourceDescription` sólo se muestra con
+  // `verifiedOtherSource === true`, y al ocultarse se limpia sin esperar a un segundo guardado.
+  const wasVerifiedOtherSourceRef = useRef(watchedValues.verifiedOtherSource === true);
+  useEffect(() => {
+    const isVerifiedOtherSource = watchedValues.verifiedOtherSource === true;
+    if (wasVerifiedOtherSourceRef.current && !isVerifiedOtherSource) {
+      form.setValue('otherSourceDescription', null, { shouldDirty: true });
+    }
+    wasVerifiedOtherSourceRef.current = isVerifiedOtherSource;
+  }, [watchedValues.verifiedOtherSource, form]);
+
   const handleValidSubmit = useCallback(
     async (values: NotificationFormValues) => {
       if (!isDeathDateNotBeforeEventDate(values.deathDate, eventDate)) {
@@ -193,24 +283,26 @@ function NotificationFormBody({ caseId, notification, notificationType, eventDat
         });
         return;
       }
-      const payload = buildNotificationPayload(values);
+
+      // Fase 1 — la cabecera. `resolvedNotificationId` es lo que la rama necesita para
+      // encadenarse en el mismo "Guardar" (SPEC FE12a §3.5, §6 "El guardado").
+      let resolvedNotificationId = notificationId;
+      const headerPayload = buildNotificationPayload(values);
       try {
-        if (notificationId) {
-          await update.mutateAsync({ id: notificationId, data: payload });
-          toast.success(t('common.toast.updated'));
+        if (resolvedNotificationId) {
+          await update.mutateAsync({ id: resolvedNotificationId, data: headerPayload });
         } else {
           const created = await create.mutateAsync({
-            ...payload,
+            ...headerPayload,
             caseId,
             notificationType,
           } as CreateNotificationInput);
+          resolvedNotificationId = created.notificationId;
           queryClient.setQueryData(notificationByCaseKey(caseId), created);
-          toast.success(t('common.toast.created'));
         }
         // El `001`/`004` sella `notificationStartedAt` y avanza el workflow (SPEC FE12a §3.4
         // punto 4) — sin invalidar esto, el stepper seguiría mostrando el paso como no iniciado.
         await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
-        form.reset(values);
       } catch (err) {
         if (!(err instanceof EsaviApiError)) {
           throw err;
@@ -237,14 +329,107 @@ function NotificationFormBody({ caseId, notification, notificationType, eventDat
           return;
         }
         toast.error(getErrorMessage(err));
+        return;
+      }
+
+      // Fase 2 — la rama, con el `notificationId` que acaba de resolver la fase 1 (SPEC FE12a §4
+      // paso 12). Si esto falla, la cabecera ya quedó creada y visible: no se deshace nada, y el
+      // siguiente "Guardar" reintenta sólo la rama, porque `resolvedNotificationId` ya existe.
+      const successToastKey = notificationId ? 'common.toast.updated' : 'common.toast.created';
+      try {
+        if (notificationType === 'SEVERE') {
+          const branchPayload = buildSeverePayload(values);
+          if (severeNotificationId) {
+            await severeUpdate.mutateAsync({ id: severeNotificationId, data: branchPayload });
+          } else {
+            await severeCreate.mutateAsync({
+              ...branchPayload,
+              notificationId: resolvedNotificationId,
+            } as CreateSevereNotificationInput);
+          }
+        } else {
+          const branchPayload = buildNonSeverePayload(values);
+          if (nonSevereNotificationId) {
+            await nonSevereUpdate.mutateAsync({ id: nonSevereNotificationId, data: branchPayload });
+          } else {
+            await nonSevereCreate.mutateAsync({
+              ...branchPayload,
+              notificationId: resolvedNotificationId,
+            } as CreateNonSevereNotificationInput);
+          }
+        }
+        toast.success(t(successToastKey));
+        form.reset(values);
+      } catch (err) {
+        if (!(err instanceof EsaviApiError)) {
+          throw err;
+        }
+        const alreadyExistsCode =
+          notificationType === 'SEVERE' ? 'SEVNOT_001_ALREADY_EXISTS' : 'NSEVNOT_001_ALREADY_EXISTS';
+        // Se trata como éxito (SPEC FE12a §3.5, §6): el `POST` anterior sí llegó, sólo se perdió
+        // la respuesta — no hay nada que reintentar, sólo releer con el `006`.
+        if (err.code === alreadyExistsCode) {
+          await queryClient.invalidateQueries({
+            queryKey:
+              notificationType === 'SEVERE'
+                ? severeNotificationByCaseKey(caseId)
+                : nonSevereNotificationByCaseKey(caseId),
+          });
+          toast.success(t(successToastKey));
+          form.reset(values);
+          return;
+        }
+        const notSameTypeCode =
+          notificationType === 'SEVERE'
+            ? 'SEVNOT_001_NOTIFICATION_NOT_SEVERE'
+            : 'NSEVNOT_001_NOTIFICATION_NOT_NON_SEVERE';
+        // La gravedad ya no es la que esta pestaña creía (SPEC FE12a §3.5, §7 riesgo "dos
+        // pestañas"): se invalida workflow y clasificación en vez de reintentar a ciegas.
+        if (err.code === notSameTypeCode) {
+          await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
+          await queryClient.invalidateQueries({ queryKey: ['classification'] });
+          toast.error(getErrorMessage(err));
+          return;
+        }
+        const branchFieldMap =
+          notificationType === 'SEVERE' ? severeNotificationErrorFieldMap : nonSevereNotificationErrorFieldMap;
+        const field = branchFieldMap[err.code];
+        if (field) {
+          form.setError(field, { type: 'server', message: err.message });
+          return;
+        }
+        toast.error(getErrorMessage(err));
       }
     },
-    [caseId, create, eventDate, form, notificationId, notificationType, queryClient, t, update],
+    [
+      caseId,
+      create,
+      eventDate,
+      form,
+      nonSevereCreate,
+      nonSevereNotificationId,
+      nonSevereUpdate,
+      notificationId,
+      notificationType,
+      queryClient,
+      severeCreate,
+      severeNotificationId,
+      severeUpdate,
+      t,
+      update,
+    ],
   );
 
   const performSave = useCallback(() => form.handleSubmit(handleValidSubmit)(), [form, handleValidSubmit]);
 
-  const pendingFields = computeHeaderPendingFields(watchedValues, isDeathOutcome, t);
+  const pendingFields = computePendingFields(
+    watchedValues,
+    // `pregnancyGateOpen` en `false` hasta el paso 13, que resuelve la compuerta de verdad con el
+    // sexo del paciente y la edad de la clasificación (§7.4) — hasta entonces nunca pide
+    // `hasPregnancyComplications`, que tampoco está en pantalla todavía.
+    { notificationType, isDeathOutcome, pregnancyGateOpen: false },
+    t,
+  );
 
   // Leídos por referencia, nunca capturados por valor (SPEC FE11 §9, replicado desde el
   // principio por SPEC FE12a §4 paso 10): `registerStep` sólo se vuelve a llamar cuando
@@ -443,6 +628,17 @@ function NotificationFormBody({ caseId, notification, notificationType, eventDat
         />
       </div>
 
+      {notificationType === 'SEVERE' ? (
+        <SevereNotificationFields control={form.control} />
+      ) : (
+        <NonSevereNotificationFields
+          control={form.control}
+          initialHealthFacilityLabel={nonSevereNotification?.vaccinationHealthFacility?.name ?? null}
+          verifiedOtherSource={watchedValues.verifiedOtherSource}
+          otherSourceDescription={watchedValues.otherSourceDescription}
+        />
+      )}
+
       <Controller
         control={form.control}
         name="notes"
@@ -479,18 +675,34 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
   const classificationStageExists = workflow.data?.stages.classification.exists === true;
   const classification = useClassificationByCase(caseId, classificationStageExists);
   const notification = useNotificationByCase(caseId, stageExists);
+  // `notificationType` no existe todavía si `classification` no ha resuelto — los dos hooks de
+  // rama, igual que todos los demás, se llaman siempre (reglas de los hooks) y se autogobiernan
+  // por su propio `enabled` (SPEC FE12a §4 paso 8, corregido en el paso 12: también exige
+  // `stageExists`, no sólo el tipo).
+  const notificationTypeMaybe = classification.data
+    ? classification.data.isSeriousEvent
+      ? ('SEVERE' as const)
+      : ('NON_SEVERE' as const)
+    : undefined;
+  const severeNotification = useSevereNotificationByCase(caseId, notificationTypeMaybe, stageExists);
+  const nonSevereNotification = useNonSevereNotificationByCase(caseId, notificationTypeMaybe, stageExists);
+  const activeBranch =
+    notificationTypeMaybe === 'SEVERE'
+      ? severeNotification
+      : notificationTypeMaybe === 'NON_SEVERE'
+        ? nonSevereNotification
+        : null;
 
   const readyToRenderForm =
     !!workflow.data &&
     !!esaviCase.data &&
     !!classification.data &&
-    (!stageExists || !!notification.data);
+    (!stageExists || (!!notification.data && activeBranch?.data !== undefined));
 
-  if (notification.isError) {
+  const loadError = notification.error ?? activeBranch?.error;
+  if (notification.isError || activeBranch?.isError) {
     const message =
-      notification.error instanceof EsaviApiError
-        ? getErrorMessage(notification.error)
-        : t('common.errors.unexpected');
+      loadError instanceof EsaviApiError ? getErrorMessage(loadError) : t('common.errors.unexpected');
     return <p className="text-sm text-destructive">{message}</p>;
   }
 
@@ -498,12 +710,14 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
     return <NotificationStepSkeleton />;
   }
 
-  const notificationType = classification.data?.isSeriousEvent ? 'SEVERE' : 'NON_SEVERE';
+  const notificationType = notificationTypeMaybe as 'SEVERE' | 'NON_SEVERE';
 
   return (
     <NotificationFormBody
       caseId={caseId}
       notification={notification.data ?? null}
+      severeNotification={severeNotification.data ?? null}
+      nonSevereNotification={nonSevereNotification.data ?? null}
       notificationType={notificationType}
       eventDate={esaviCase.data?.eventDate ?? null}
     />

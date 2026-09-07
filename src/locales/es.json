@@ -779,17 +779,50 @@
       "autopsyRequested": "¿Se solicitó autopsia?",
       "verbalAutopsyPerformed": "¿Se realizó autopsia verbal?"
     },
+    "severe": {
+      "sectionTitle": "Ficha de notificación grave",
+      "hasPreviousEventHistory": "¿Tiene antecedente de un evento previo?",
+      "hasAllergyToOtherVaccines": "¿Tiene alergia a otras vacunas?",
+      "hasAllergyToMedications": "¿Tiene alergia a medicamentos?",
+      "hasAllergyToPreviousSameVaccine": "¿Tiene alergia a una dosis previa de la misma vacuna?"
+    },
+    "nonSevere": {
+      "sectionTitle": "Ficha de notificación no grave",
+      "vaccinationHealthFacilityId": "Unidad de vacunación",
+      "vaccinationSiteItemId": "Sitio de vacunación",
+      "vaccinationCenterAddress": "Dirección del centro de vacunación",
+      "vaccinationGeoLocationId": "Ubicación de la vacunación",
+      "verificationLegend": "Fuentes de verificación",
+      "verifiedPhysicalDocument": "Documento físico",
+      "verifiedElectronicRecord": "Registro electrónico",
+      "verifiedVerbalReport": "Reporte verbal",
+      "verifiedClinicalRecord": "Historia clínica",
+      "verifiedUnknown": "No se sabe",
+      "verifiedOtherSource": "Otra fuente",
+      "otherSourceDescription": "Describe la otra fuente"
+    },
     "validation": {
       "esaviDescriptionRequired": "Describe el ESAVI antes de guardar.",
       "deathDateBeforeEventDate": "La fecha de fallecimiento no puede ser anterior a la fecha del evento.",
-      "deathDateFuture": "La fecha de fallecimiento no puede ser futura."
+      "deathDateFuture": "La fecha de fallecimiento no puede ser futura.",
+      "atLeastOneVerificationSource": "Marca al menos una fuente de verificación.",
+      "otherSourceDescriptionRequired": "Describe la otra fuente antes de guardar."
     },
     "pending": {
       "hasRelevantMedicalHistory": "Antecedente médico relevante",
       "takesMedication": "Toma de medicación",
       "outcomeItemId": "Desenlace",
       "requestInvestigation": "Solicitud de investigación",
-      "deathFields": "Datos de fallecimiento"
+      "deathFields": "Datos de fallecimiento",
+      "hasPreviousEventHistory": "Antecedente de evento previo",
+      "hasAllergyToOtherVaccines": "Alergia a otras vacunas",
+      "hasAllergyToMedications": "Alergia a medicamentos",
+      "hasAllergyToPreviousSameVaccine": "Alergia a una dosis previa de la misma vacuna",
+      "vaccinationHealthFacilityId": "Unidad de vacunación",
+      "vaccinationSiteItemId": "Sitio de vacunación",
+      "vaccinationGeoLocationId": "Ubicación de la vacunación",
+      "verifiedAny": "Al menos una fuente de verificación",
+      "otherSourceDescription": "Descripción de la otra fuente"
     },
     "error": {
       "load": "No pudimos cargar la notificación."

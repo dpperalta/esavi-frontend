@@ -265,6 +265,84 @@ function mockWorkflow(getCallCounter: { count: number }) {
   );
 }
 
+const SEVERE_NOTIFICATION_1 = 'severe-notification-1';
+
+// La rama grave, en su forma más simple: no existe hasta que el `POST` la crea, igual que hace
+// `mockWorkflow` con la cabecera. Usado por los tests que no examinan la rama en sí, sólo
+// necesitan que la cadena de guardado (SPEC FE12a §4 paso 12) no explote contra un endpoint sin
+// mockear.
+function mockSevereNotificationBranch() {
+  let exists = false;
+  let lastPostBody: Record<string, unknown> | null = null;
+  server.use(
+    http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () => {
+      if (!exists) {
+        return HttpResponse.json(
+          { ok: false, message: 'no encontrada', code: 'SEVNOT_006_NOT_FOUND' },
+          { status: 404 },
+        );
+      }
+      return HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: SEVERE_NOTIFICATION_1,
+          hasPreviousEventHistory: lastPostBody?.hasPreviousEventHistory ?? null,
+          hasAllergyToOtherVaccines: lastPostBody?.hasAllergyToOtherVaccines ?? null,
+          hasAllergyToMedications: lastPostBody?.hasAllergyToMedications ?? null,
+          hasAllergyToPreviousSameVaccine: lastPostBody?.hasAllergyToPreviousSameVaccine ?? null,
+          hasPregnancyComplications: null,
+          pregnancyComplicationsDescription: null,
+          notes: lastPostBody?.notes ?? null,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          notification: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: 'Reacción local en el sitio de aplicación',
+            isActive: true,
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+          },
+        },
+      });
+    }),
+    http.post('http://localhost:4500/api/severe-notifications', async ({ request }) => {
+      lastPostBody = (await request.json()) as Record<string, unknown>;
+      exists = true;
+      return HttpResponse.json(
+        {
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: SEVERE_NOTIFICATION_1,
+            hasPreviousEventHistory: lastPostBody.hasPreviousEventHistory ?? null,
+            hasAllergyToOtherVaccines: lastPostBody.hasAllergyToOtherVaccines ?? null,
+            hasAllergyToMedications: lastPostBody.hasAllergyToMedications ?? null,
+            hasAllergyToPreviousSameVaccine: lastPostBody.hasAllergyToPreviousSameVaccine ?? null,
+            hasPregnancyComplications: null,
+            pregnancyComplicationsDescription: null,
+            notes: lastPostBody.notes ?? null,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            notification: {
+              notificationId: NOTIFICATION_1,
+              notificationType: 'SEVERE',
+              esaviDescription: 'Reacción local en el sitio de aplicación',
+              isActive: true,
+              case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+            },
+          },
+        },
+        { status: 201 },
+      );
+    }),
+  );
+}
+
 function mockNotificationDetail() {
   server.use(
     http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
@@ -317,6 +395,7 @@ describe('NotificationStep — alta sin fila previa (SPEC FE12a §3.4, §5, §4 
     mockClassificationDetail(true);
     mockEmptyCatalogTypes();
     mockWorkflow(workflowCalls);
+    mockSevereNotificationBranch();
 
     renderNotificationStep();
 
@@ -341,6 +420,7 @@ describe('NotificationStep — reentrada (SPEC FE12a §3.4, §5)', () => {
     mockClassificationDetail(true);
     mockEmptyCatalogTypes();
     mockNotificationDetail();
+    mockSevereNotificationBranch();
 
     let postCalls = 0;
     server.use(
@@ -459,6 +539,44 @@ describe('NotificationStep — sección de fallecimiento (SPEC FE12a §3.5, §7,
           },
         });
       }),
+      // Este test no examina la rama en sí — sólo que la cadena de guardado (SPEC FE12a §4 paso
+      // 12) no se rompa contra un endpoint sin mockear.
+      http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrada', code: 'SEVNOT_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+      http.post('http://localhost:4500/api/severe-notifications', () =>
+        HttpResponse.json(
+          {
+            ok: true,
+            message: 'ok',
+            data: {
+              notificationId: 'severe-notification-1',
+              hasPreviousEventHistory: null,
+              hasAllergyToOtherVaccines: null,
+              hasAllergyToMedications: null,
+              hasAllergyToPreviousSameVaccine: null,
+              hasPregnancyComplications: null,
+              pregnancyComplicationsDescription: null,
+              notes: null,
+              createdAt: '2026-01-02T00:00:00.000Z',
+              updatedAt: null,
+              deletedAt: null,
+              appDetails: [],
+              notification: {
+                notificationId: NOTIFICATION_1,
+                notificationType: 'SEVERE',
+                esaviDescription: 'Reacción local en el sitio de aplicación',
+                isActive: true,
+                case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+              },
+            },
+          },
+          { status: 201 },
+        ),
+      ),
     );
 
     renderNotificationStep();
@@ -535,5 +653,180 @@ describe('NotificationStep — sección de fallecimiento (SPEC FE12a §3.5, §7,
     expect(
       await screen.findByText('La fecha de fallecimiento no puede ser anterior a la fecha del evento.'),
     ).toBeInTheDocument();
+  }, 30000);
+});
+
+describe('NotificationStep — cadena de guardado, la rama falla y se reintenta (SPEC FE12a §4 paso 12, §5)', () => {
+  it('si el POST de la rama falla, la cabecera sigue creada; el reintento la completa sin repetir el POST de la cabecera', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockClassificationDetail(true);
+    mockEmptyCatalogTypes();
+
+    let notificationExists = false;
+    let headerPostCalls = 0;
+    const branchExists = false;
+    let branchPostCalls = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(notificationExists) }),
+      ),
+      http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: 'Reacción local en el sitio de aplicación',
+            hasRelevantMedicalHistory: null,
+            takesMedication: null,
+            requestInvestigation: false,
+            deathDate: null,
+            autopsyRequested: null,
+            verbalAutopsyPerformed: null,
+            notes: null,
+            isActive: true,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+            outcome: null,
+          },
+        }),
+      ),
+      http.post('http://localhost:4500/api/notifications', async ({ request }) => {
+        headerPostCalls++;
+        const body = (await request.json()) as Record<string, unknown>;
+        notificationExists = true;
+        return HttpResponse.json(
+          {
+            ok: true,
+            message: 'ok',
+            data: {
+              notificationId: NOTIFICATION_1,
+              notificationType: body.notificationType,
+              esaviDescription: body.esaviDescription,
+              hasRelevantMedicalHistory: null,
+              takesMedication: null,
+              requestInvestigation: false,
+              deathDate: null,
+              autopsyRequested: null,
+              verbalAutopsyPerformed: null,
+              notes: null,
+              isActive: true,
+              createdAt: '2026-01-02T00:00:00.000Z',
+              updatedAt: null,
+              deletedAt: null,
+              appDetails: [],
+              case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+              outcome: null,
+            },
+          },
+          { status: 201 },
+        );
+      }),
+      http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () => {
+        if (!branchExists) {
+          return HttpResponse.json(
+            { ok: false, message: 'no encontrada', code: 'SEVNOT_006_NOT_FOUND' },
+            { status: 404 },
+          );
+        }
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: 'severe-notification-1',
+            hasPreviousEventHistory: null,
+            hasAllergyToOtherVaccines: null,
+            hasAllergyToMedications: null,
+            hasAllergyToPreviousSameVaccine: null,
+            hasPregnancyComplications: null,
+            pregnancyComplicationsDescription: null,
+            notes: null,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            notification: {
+              notificationId: NOTIFICATION_1,
+              notificationType: 'SEVERE',
+              esaviDescription: 'Reacción local en el sitio de aplicación',
+              isActive: true,
+              case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+            },
+          },
+        });
+      }),
+      http.put(`http://localhost:4500/api/notifications/${NOTIFICATION_1}`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: body.esaviDescription,
+            hasRelevantMedicalHistory: null,
+            takesMedication: null,
+            requestInvestigation: false,
+            deathDate: null,
+            autopsyRequested: null,
+            verbalAutopsyPerformed: null,
+            notes: null,
+            isActive: true,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: '2026-01-03T00:00:00.000Z',
+            deletedAt: null,
+            appDetails: [],
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+            outcome: null,
+          },
+        });
+      }),
+      // El primer POST de la rama falla (error genérico); el segundo — el reintento — responde
+      // `SEVNOT_001_ALREADY_EXISTS`, que se trata como éxito (SPEC FE12a §3.5, §6): el primer
+      // intento sí llegó al servidor, sólo se perdió la respuesta.
+      http.post('http://localhost:4500/api/severe-notifications', () => {
+        branchPostCalls++;
+        if (branchPostCalls === 1) {
+          return HttpResponse.json(
+            { ok: false, message: 'error del servidor', code: 'SEVNOT_001_CREATION_FAILED' },
+            { status: 500 },
+          );
+        }
+        return HttpResponse.json(
+          { ok: false, message: 'ya existe', code: 'SEVNOT_001_ALREADY_EXISTS' },
+          { status: 409 },
+        );
+      }),
+    );
+
+    renderNotificationStep();
+
+    const description = await screen.findByLabelText('Descripción del ESAVI');
+    await user.type(description, 'Reacción local en el sitio de aplicación');
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    // La cabecera se creó pese al fallo de la rama.
+    await waitFor(() => expect(headerPostCalls).toBe(1));
+    await waitFor(() => expect(branchPostCalls).toBe(1));
+    // Sigue visible: el mismo campo, ya guardado, no desaparece ni se limpia.
+    expect(screen.getByLabelText('Descripción del ESAVI')).toHaveValue(
+      'Reacción local en el sitio de aplicación',
+    );
+
+    // El reintento: un segundo "Guardar" no repite el POST de la cabecera — sólo el de la rama —
+    // y el `SEVNOT_001_ALREADY_EXISTS` no se muestra como error.
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(branchPostCalls).toBe(2));
+    expect(headerPostCalls).toBe(1);
+    expect(screen.queryByText('ya existe')).not.toBeInTheDocument();
   }, 30000);
 });

@@ -779,17 +779,50 @@
       "autopsyRequested": "Was an autopsy requested?",
       "verbalAutopsyPerformed": "Was a verbal autopsy performed?"
     },
+    "severe": {
+      "sectionTitle": "Severe notification record",
+      "hasPreviousEventHistory": "Any history of a previous event?",
+      "hasAllergyToOtherVaccines": "Any allergy to other vaccines?",
+      "hasAllergyToMedications": "Any allergy to medications?",
+      "hasAllergyToPreviousSameVaccine": "Any allergy to a previous dose of the same vaccine?"
+    },
+    "nonSevere": {
+      "sectionTitle": "Non-severe notification record",
+      "vaccinationHealthFacilityId": "Vaccination facility",
+      "vaccinationSiteItemId": "Vaccination site",
+      "vaccinationCenterAddress": "Vaccination center address",
+      "vaccinationGeoLocationId": "Vaccination location",
+      "verificationLegend": "Verification sources",
+      "verifiedPhysicalDocument": "Physical document",
+      "verifiedElectronicRecord": "Electronic record",
+      "verifiedVerbalReport": "Verbal report",
+      "verifiedClinicalRecord": "Clinical record",
+      "verifiedUnknown": "Unknown",
+      "verifiedOtherSource": "Other source",
+      "otherSourceDescription": "Describe the other source"
+    },
     "validation": {
       "esaviDescriptionRequired": "Describe the ESAVI before saving.",
       "deathDateBeforeEventDate": "The date of death can't be earlier than the event date.",
-      "deathDateFuture": "The date of death can't be in the future."
+      "deathDateFuture": "The date of death can't be in the future.",
+      "atLeastOneVerificationSource": "Mark at least one verification source.",
+      "otherSourceDescriptionRequired": "Describe the other source before saving."
     },
     "pending": {
       "hasRelevantMedicalHistory": "Relevant medical history",
       "takesMedication": "Medication use",
       "outcomeItemId": "Outcome",
       "requestInvestigation": "Investigation request",
-      "deathFields": "Death details"
+      "deathFields": "Death details",
+      "hasPreviousEventHistory": "History of a previous event",
+      "hasAllergyToOtherVaccines": "Allergy to other vaccines",
+      "hasAllergyToMedications": "Allergy to medications",
+      "hasAllergyToPreviousSameVaccine": "Allergy to a previous dose of the same vaccine",
+      "vaccinationHealthFacilityId": "Vaccination facility",
+      "vaccinationSiteItemId": "Vaccination site",
+      "vaccinationGeoLocationId": "Vaccination location",
+      "verifiedAny": "At least one verification source",
+      "otherSourceDescription": "Other source description"
     },
     "error": {
       "load": "We couldn't load the notification."

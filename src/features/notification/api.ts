@@ -7,6 +7,7 @@ import type { NotificationDetail } from '@/contracts/declared/notification';
 import type { SevereNotificationDetail } from '@/contracts/declared/severeNotification';
 import { client } from '@/shared/api/client';
 import { createResource } from '@/shared/api/createResource';
+import { EsaviApiError } from '@/shared/api/types';
 
 // POST   /api/notifications                ESAVI-NOTIFCN-001  USER   create (+ seals notificationStartedAt)
 // GET    /api/notifications                ESAVI-NOTIFCN-002A USER   active listing — unused, no notification screen (SPEC FE12a §3.2)
@@ -88,47 +89,68 @@ export function useNotificationByCase(caseId: string | undefined, enabled: boole
   });
 }
 
-function severeNotificationByCaseKey(caseId: string) {
+export function severeNotificationByCaseKey(caseId: string) {
   return ['severeNotification', 'byCase', caseId] as const;
 }
 
-// ESAVI-SEVNOT-006. `enabled` only with `SEVERE` (SPEC FE12a §3.4 and criterio de aceptación:
-// con un caso `SEVERE` la pantalla no llama a `non-severe-notifications/case/:id`, y al revés) —
-// the branch that does not match `notificationType` does not exist by definition, and asking for
-// it is a guaranteed `404` on every load of the step.
+// ESAVI-SEVNOT-006. `enabled` needs both `SEVERE` (SPEC FE12a §3.4 and criterio de aceptación:
+// con un caso `SEVERE` la pantalla no llama a `non-severe-notifications/case/:id`, y al revés —
+// the branch that does not match `notificationType` does not exist by definition) and the header
+// itself existing (`stageExists`, passed in by the caller): a fresh case has no header yet either.
+// Even with both, the branch can still be legitimately missing — the exact partial-failure this
+// spec exists to recover from (SPEC FE12a §4 paso 12, §7 riesgo "cabecera creada, rama falla") —
+// so `SEVNOT_006_NOT_FOUND` resolves to `null`, "confirmed: no row yet", instead of throwing;
+// `useNotificationByCase` above never needs this because its own `stageExists` gate already means
+// the row is there.
 export function useSevereNotificationByCase(
   caseId: string | undefined,
   notificationType: NotificationType | undefined,
+  stageExists: boolean,
 ) {
   return useQuery({
     queryKey: severeNotificationByCaseKey(caseId ?? ''),
     queryFn: async () => {
-      const response = await client.get<SevereNotificationDetail>(
-        `severe-notifications/case/${caseId}`,
-      );
-      return response.data;
+      try {
+        const response = await client.get<SevereNotificationDetail>(
+          `severe-notifications/case/${caseId}`,
+        );
+        return response.data;
+      } catch (err) {
+        if (err instanceof EsaviApiError && err.code === 'SEVNOT_006_NOT_FOUND') {
+          return null;
+        }
+        throw err;
+      }
     },
-    enabled: caseId !== undefined && notificationType === 'SEVERE',
+    enabled: stageExists && caseId !== undefined && notificationType === 'SEVERE',
   });
 }
 
-function nonSevereNotificationByCaseKey(caseId: string) {
+export function nonSevereNotificationByCaseKey(caseId: string) {
   return ['nonSevereNotification', 'byCase', caseId] as const;
 }
 
-// ESAVI-NSEVNOT-006. `enabled` only with `NON_SEVERE`, mirroring its severe sibling above.
+// ESAVI-NSEVNOT-006. Mirrors its severe sibling above in every respect, `NOT_FOUND` code included.
 export function useNonSevereNotificationByCase(
   caseId: string | undefined,
   notificationType: NotificationType | undefined,
+  stageExists: boolean,
 ) {
   return useQuery({
     queryKey: nonSevereNotificationByCaseKey(caseId ?? ''),
     queryFn: async () => {
-      const response = await client.get<NonSevereNotificationDetail>(
-        `non-severe-notifications/case/${caseId}`,
-      );
-      return response.data;
+      try {
+        const response = await client.get<NonSevereNotificationDetail>(
+          `non-severe-notifications/case/${caseId}`,
+        );
+        return response.data;
+      } catch (err) {
+        if (err instanceof EsaviApiError && err.code === 'NSEVNOT_006_NOT_FOUND') {
+          return null;
+        }
+        throw err;
+      }
     },
-    enabled: caseId !== undefined && notificationType === 'NON_SEVERE',
+    enabled: stageExists && caseId !== undefined && notificationType === 'NON_SEVERE',
   });
 }
