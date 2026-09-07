@@ -829,7 +829,7 @@ La medicación concomitante. Son **N**.
 | `notificationId` | No | Del contexto. **Inmutable** |
 | `sortOrder` | No | Disparador |
 | `medicationName` | **Sí — obligatorio** | ≤250, `trim`, no vacío |
-| `medicationCode` | Sí | ≤250. **Sin maestro detrás**: no se normaliza a `CONSTANT_CASE` y no se valida |
+| `medicationCode` | Sí | ≤250. **Sigue sin FK y sin validación** — no se normaliza a `CONSTANT_CASE` —, pero desde FE12b lo rellena un buscador contra el espejo de WHODrug (`ESAVI-WHODPROD-006`); ya no es un texto tecleado a mano |
 | `dose` | Sí | ≤100, texto libre |
 | `pharmaceuticalFormItemId` | Sí | `<CatalogSelect typeCode="pharmaceuticalForm">`. **Catálogo sin sembrar** → §10.5 |
 | `administrationRouteItemId` | Sí | `<CatalogSelect typeCode="administrationRoute">`. Ídem |
@@ -845,16 +845,16 @@ La medicación concomitante. Son **N**.
 
 ##### `notification.takesMedication` gobierna esta lista
 
-**Decidido: la lista sólo se muestra con `takesMedication === 'YES'`.** Es §7.3 aplicada entre dos tablas y a través de un paso: la pregunta está en la cabecera de la notificación, la respuesta en su propia fila, y las medicaciones cuelgan de la misma notificación. Comparación **estricta contra `'YES'`**, como todas las de `answerOption` — `NO`, `UNKNOWN`, `NOT_APPLICABLE`, `NO_ANSWER` y el `null` cierran la lista por igual.
+**Decidido (revisado por FE12b): con filas activas, la respuesta no se puede cambiar.** Es §7.3 aplicada entre dos tablas y a través de un paso: la pregunta está en la cabecera de la notificación, la respuesta en su propia fila, y las medicaciones cuelgan de la misma notificación. Comparación **estricta contra `'YES'`**, como todas las de `answerOption` — `NO`, `UNKNOWN`, `NOT_APPLICABLE`, `NO_ANSWER` y el `null` se comportan igual frente a la compuerta.
 
-**Y aquí ocultar no puede limpiar, que es lo que hace este caso distinto de todos los anteriores.** Las filas ya cargadas no se borran al cerrar la compuerta:
+**Y aquí ocultar no puede limpiar, que es lo que hace este caso distinto de todos los anteriores.** Borrar filas en cascada al cambiar una respuesta no es una opción:
 
 - `ESAVI-NOTIFMED-005A` es **ADMIN** (§10.4), así que un USER **no puede** borrarlas aunque quisiera.
-- Y aunque pudiera, borrar N filas al cambiar una respuesta es una cascada de escrituras que puede fallar a medias y dejar la mitad de la lista viva.
+- Y aunque pudiera, borrar N filas de una sola vez es una cascada de escrituras que puede fallar a medias y dejar la mitad de la lista viva.
 
-**Entonces: se avisa antes de guardar el cambio de respuesta**, diciendo cuántas medicaciones van a quedar ocultas, y las filas se quedan. Es el tercer caso de la escala de §7.3 —el mismo que el bloque de autopsia—: hay compuertas que sólo se pueden avisar.
+**La versión anterior de esta regla decía «se avisa antes de guardar y las filas se quedan».** Eso dejaba la incoherencia registrada a propósito, pero nunca resuelta: un `takesMedication: 'NO'` con tres medicaciones guardadas seguía así indefinidamente. **La regla revisada la resuelve al revés y mejor:** con filas activas cargadas, el campo `takesMedication` de la cabecera queda **deshabilitado** — no se puede tocar hasta que el usuario borre las filas de medicación una a una, viéndolas. Sin filas activas, el campo vuelve a ser editable sin recargar la página. No hay cascada, no hay escritura múltiple que pueda fallar a medias, y no quedan datos huérfanos.
 
-> **La incoherencia resultante es visible y buscada.** Un `takesMedication: 'NO'` con tres medicaciones guardadas no es un fallo silencioso: la pantalla lo dice al ocurrir y el paso 6 lo vuelve a decir al cerrar. Lo que no hace el formulario es destruir datos clínicos para que una respuesta cuadre.
+> **La incoherencia sigue siendo posible sobre datos anteriores a esta regla, y sigue siendo visible y buscada.** Un caso con `takesMedication` distinto de `'YES'` y medicaciones ya guardadas —de antes de FE12b, o escrito directamente contra la API— muestra la lista igual, con el aviso de que la cabecera dice otra cosa; el paso 6 lo vuelve a decir al cerrar (§5.6). Lo que no hace el formulario, en ningún caso, es destruir datos clínicos para que una respuesta cuadre.
 
 ---
 
@@ -2021,7 +2021,7 @@ Lo que sí es de este paso: **las incoherencias que los pasos anteriores dejaron
 | Incoherencia | Dónde se dejó pasar | Qué hace el paso 6 |
 |---|---|---|
 | Autopsia registrada bajo un desenlace que no es muerte | §6.6 — el paciente puede morir después de notificar | **Bloquea.** A esta altura ya no queda nada por saberse: o se corrige el desenlace, o se retira la autopsia |
-| `takesMedication` distinto de `'YES'` con medicación cargada | §5.4b — no se borran filas al cambiar una respuesta | **Avisa y no bloquea.** El dato clínico es correcto; lo que está mal es la respuesta, y corregirla es un clic |
+| `takesMedication` distinto de `'YES'` con medicación cargada | §5.4b — desde FE12b la respuesta no se puede cambiar con filas activas, pero un caso anterior a esa regla —o escrito directo contra la API— puede seguir así | **Avisa y no bloquea.** El dato clínico es correcto; lo que está mal es la respuesta, y corregirla exige antes borrar las filas |
 | Los tres `affected*` no suman `similarEventCount` | §5.5.5 — el desglose puede llegar incompleto | **Avisa y no bloquea.** Puede seguir siendo incompleto el día del cierre |
 | Gravedad inicial cambiada con la notificación ya creada | §6.1 — la rama no se puede rehacer sin SUPERADMIN | **Bloquea.** Un caso grave con ficha de no grave no se archiva |
 | Complicaciones del embarazo declaradas en tres sitios | §6.5 — las filas mandan y los dos `answerOption` se derivan | **Nada.** La derivación ya lo impide en el formulario |
@@ -2214,7 +2214,7 @@ Las reglas ya establecidas, todas con la misma forma:
 | `otherDescription` de la fuente (§5.5.2) | `other === true` | Se limpia. **El `004` limpia la heredada él solo**; enviarla apagada es 400 |
 | `autopsyDate` (§5.5.2) | `isAutopsyPerformed === true` | Se limpia. **El `004` la fuerza a `null` en el diff**, sin `UPDATE` si ya estaba |
 | `scheduledAutopsyDate` (§5.5.2) | `isAutopsyScheduled === true` | Ídem |
-| Lista de medicación concomitante (§5.4b) | `takesMedication === 'YES'` **estricto** | **No se limpia: se avisa.** `NOTIFMED-005A` es ADMIN, y borrar N filas al cambiar una respuesta puede fallar a medias |
+| Lista de medicación concomitante (§5.4b) | `takesMedication === 'YES'` **estricto** | **No se limpia y no se puede cerrar.** Con filas activas, `takesMedication` queda deshabilitado hasta que el usuario las borre una a una — no hay cascada que pueda fallar a medias |
 | Las 9 columnas de embarazo (§5.5.3) | `isPregnancyConfirmed === 'YES'` **estricto** | Se limpian. **El `004` fuerza a `null` la que no viaja**; la que viaja con contenido da 400 |
 | Los 3 pares bandera/explicación (§5.5.3) | Su bandera en `true` | Se limpian. Si no, el `PUT` da 400 |
 | Las 4 columnas del conglomerado (§5.5.4) | `isCluster === 'YES'` **estricto** | Se limpian. **Un solo código de error para las cuatro**, no cuatro |
@@ -2237,7 +2237,7 @@ Las reglas ya establecidas, todas con la misma forma:
 
 **Y limpiar no es borrar la fila.** `notificationPregnancy` fue la excepción que obligó a decirlo, y el paso 5 la convierte en norma: sus **ocho satélites 1:1 no tienen `isActive`** (§5.5.0), así que ninguno se retira desde el asistente. Cuando lo que se oculta es un bloque entero con fila propia, se vacían sus campos; la fila se queda.
 
-**Y hay un caso más, el último de la escala: ni siquiera limpiar.** La lista de medicación concomitante (§5.4b) no se puede vaciar al cerrarse su compuerta —`NOTIFMED-005A` es ADMIN, y borrar N filas al cambiar una respuesta es una cascada que puede fallar a medias—, así que **sólo cabe avisar antes de guardar**. Las tres formas, en orden de daño: se limpia el campo, se limpia la fila, o se avisa y no se toca nada.
+**Y hay un caso más que no encaja en «limpiar», y que FE12b resolvió bloqueando en vez de avisando.** La lista de medicación concomitante (§5.4b) no se puede vaciar en cascada al cerrarse su compuerta —`NOTIFMED-005A` es ADMIN, y borrar N filas de una sola vez es una cascada que puede fallar a medias—, así que la respuesta **no se puede cambiar** mientras haya filas activas: hay que borrarlas una a una primero. Las tres formas, en orden de daño: se limpia el campo, se limpia la fila, o se bloquea el cambio de respuesta hasta que el usuario borre las filas él mismo.
 
 **Y un caso que parece de esta sección y no lo es.** El bloque de autopsia (§6.6) **no tiene compuerta**: se muestra siempre, con cualquier desenlace, porque el paciente puede morir después de notificar. Ahí no hay nada que ocultar ni que limpiar — hay un aviso que señala una incoherencia real y ofrece resolverla. Ocultar es integridad cuando el campo **no puede** aplicar a este paciente; cuando sí puede y todavía no consta, ocultar es perder el dato.
 
