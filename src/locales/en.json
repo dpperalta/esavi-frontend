@@ -59,6 +59,10 @@
     "dateField": {
       "openCalendar": "Open calendar — {{field}}"
     },
+    "timeField": {
+      "placeholder": "HH:MM",
+      "invalid": "The time is not valid. Use the HH:MM format."
+    },
     "answerOption": {
       "yes": "Yes",
       "no": "No",

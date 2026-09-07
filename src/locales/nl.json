@@ -59,6 +59,10 @@
     "dateField": {
       "openCalendar": "Kalender openen — {{field}}"
     },
+    "timeField": {
+      "placeholder": "UU:MM",
+      "invalid": "De tijd is niet geldig. Gebruik het formaat UU:MM."
+    },
     "answerOption": {
       "yes": "Ja",
       "no": "Nee",
