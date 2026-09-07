@@ -125,6 +125,41 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   SEVNOT_006_CASE_NOT_FOUND: 'notification.error.load',
   NSEVNOT_006_NOT_FOUND: 'notification.error.load',
   NSEVNOT_006_CASE_NOT_FOUND: 'notification.error.load',
+  // SPEC FE12b §3.5, §4 paso 13 — mismo criterio que el bloque de arriba: un texto genérico por
+  // entidad para lo que ninguna acción de la pantalla debería alcanzar en uso normal.
+  // `AUTH_ROLE_FORBIDDEN` no está aquí: `EventFormDialog`/`MedicationFormDialog`/`EventList`/
+  // `MedicationList` lo interceptan antes de llegar a `getErrorMessage` (§10.4, el aviso de
+  // administrador). Los tres `NOT_ALLOWED`/`CONFLICT` de las reglas de «otro» tampoco — van al
+  // campo vía `errorFieldMap`, no al toast.
+  NOTIFEVT_001_CREATION_FAILED: 'notification.events.error.generic',
+  NOTIFEVT_004_UPDATE_FAILED: 'notification.events.error.generic',
+  NOTIFEVT_004_NOT_FOUND: 'notification.events.error.generic',
+  NOTIFEVT_005A_DELETE_FAILED: 'notification.events.error.generic',
+  NOTIFEVT_005A_NOT_FOUND: 'notification.events.error.generic',
+  NOTIFEVT_001_NOTIFICATION_NOT_FOUND: 'notification.events.error.generic',
+  NOTIFEVT_006_NOT_FOUND: 'notification.events.error.load',
+  NOTIFEVT_006_CASE_NOT_FOUND: 'notification.events.error.load',
+  NOTIFEVT_006_NOTIFICATION_NOT_FOUND: 'notification.events.error.load',
+  NOTIFMED_001_CREATION_FAILED: 'notification.medications.error.generic',
+  NOTIFMED_004_UPDATE_FAILED: 'notification.medications.error.generic',
+  NOTIFMED_004_NOT_FOUND: 'notification.medications.error.generic',
+  NOTIFMED_005A_DELETE_FAILED: 'notification.medications.error.generic',
+  NOTIFMED_005A_NOT_FOUND: 'notification.medications.error.generic',
+  NOTIFMED_001_NOTIFICATION_NOT_FOUND: 'notification.medications.error.generic',
+  NOTIFMED_006_NOT_FOUND: 'notification.medications.error.load',
+  NOTIFMED_006_CASE_NOT_FOUND: 'notification.medications.error.load',
+  NOTIFMED_006_NOTIFICATION_NOT_FOUND: 'notification.medications.error.load',
+  // Los dos buscadores nunca deberían alcanzar este toast en uso normal: `<TermSearchField>`
+  // intercepta `isError` y degrada a texto libre con el mismo texto de estado de servicio antes
+  // de que un `EsaviApiError` llegue tan lejos (§3.5) — esto es sólo el respaldo estable para
+  // cualquier otro llamador, igual que el resto de este archivo.
+  MEDDRA_006_DISABLED: 'notification.events.meddraUnavailable',
+  MEDDRA_006_NOT_CONFIGURED: 'notification.events.meddraUnavailable',
+  MEDDRA_006_TIMEOUT: 'notification.events.meddraUnavailable',
+  MEDDRA_006_SEARCH_FAILED: 'notification.events.meddraUnavailable',
+  MEDDRA_006_AUTH_FAILED: 'notification.events.meddraUnavailable',
+  WHODPROD_006_NOT_CONFIGURED: 'notification.medications.catalogUnavailable',
+  WHODPROD_006_FETCH_FAILED: 'notification.medications.catalogUnavailable',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

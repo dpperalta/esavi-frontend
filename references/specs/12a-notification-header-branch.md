@@ -1,6 +1,6 @@
 # SPEC FE12a — Paso 4: notificación, cabecera y rama
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (armazón del wizard), SPEC FE10 (paciente y apertura del caso — de ahí salen el sexo y la fecha del evento), SPEC FE11 (clasificación inicial — de ahí sale la gravedad). Del backend: SPEC F10 (notification), SPEC F13 (severeNotification), SPEC F14 (nonSevereNotification), SPEC F44 (case-workflow) y SPEC F46 (`code` frente a `value` en `catalogItem`).
 > **Fecha:** 2026-09-04
 > **Objetivo:** El paso 4 del wizard — la cabecera de la notificación y su ficha grave o no grave — con la gravedad derivada del paso 3 y sin los seis satélites.

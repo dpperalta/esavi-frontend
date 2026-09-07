@@ -56,8 +56,30 @@
     "select": {
       "clear": "Selectie wissen"
     },
+    "catalogSelect": {
+      "empty": "Deze catalogus heeft nog geen gegevens geladen."
+    },
     "dateField": {
       "openCalendar": "Kalender openen — {{field}}"
+    },
+    "timeField": {
+      "placeholder": "UU:MM",
+      "invalid": "De tijd is niet geldig. Gebruik het formaat UU:MM."
+    },
+    "satelliteList": {
+      "add": "Toevoegen",
+      "edit": "{{name}} bewerken",
+      "delete": "{{name}} verwijderen",
+      "cancel": "Annuleren",
+      "save": "Opslaan"
+    },
+    "termSearch": {
+      "minChars": "Typ minstens {{count}} tekens.",
+      "noResults": "Geen resultaat komt overeen; je kunt het zo intypen.",
+      "serviceUnavailable": "De zoekservice is nu niet beschikbaar; je kunt het zo intypen.",
+      "clear": "Verwijderen",
+      "resultsAnnounce": "{{count}} resultaten",
+      "moreResults": "Er waren meer resultaten; verfijn de zoekterm."
     },
     "answerOption": {
       "yes": "Ja",
@@ -831,7 +853,8 @@
       "vaccinationSiteItemId": "Vaccinatieplaats",
       "vaccinationGeoLocationId": "Locatie van de vaccinatie",
       "verifiedAny": "Minstens één verificatiebron",
-      "otherSourceDescription": "Beschrijving van de andere bron"
+      "otherSourceDescription": "Beschrijving van de andere bron",
+      "atLeastOneEvent": "Minstens één AEFI-gebeurtenis"
     },
     "error": {
       "load": "We konden de melding niet laden.",
@@ -845,6 +868,74 @@
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
+    },
+    "events": {
+      "sectionTitle": "Gebeurtenissen",
+      "fields": {
+        "esaviName": "AEFI-diagnose",
+        "esaviCode": "Code",
+        "isOtherEsavi": "Andere gebeurtenis (niet in de catalogus)",
+        "otherDescription": "Beschrijf de gebeurtenis",
+        "isMainEsavi": "Belangrijkste gebeurtenis",
+        "startDate": "Startdatum",
+        "startTime": "Starttijd",
+        "notes": "Opmerkingen"
+      },
+      "help": {
+        "isMainEsavi": "Er kan meer dan één belangrijkste gebeurtenis zijn."
+      },
+      "validation": {
+        "esaviNameRequired": "Voer de diagnose van de gebeurtenis in voordat je opslaat.",
+        "otherDescriptionRequired": "Beschrijf de gebeurtenis voordat je opslaat."
+      },
+      "form": {
+        "createTitle": "Gebeurtenis toevoegen",
+        "editTitle": "Gebeurtenis bewerken"
+      },
+      "meddraUnavailable": "De zoekfunctie voor termen is nu niet beschikbaar; je kunt het zo intypen.",
+      "diagtermNotImported": "Het woordenboek van deze bron is niet geïmporteerd in deze omgeving.",
+      "keepAsFreeText": "Opslaan als vrije tekst",
+      "error": {
+        "load": "We konden de gebeurtenissen niet laden.",
+        "generic": "We konden de gebeurtenis niet opslaan. Probeer het opnieuw."
+      }
+    },
+    "medications": {
+      "sectionTitle": "Gelijktijdige medicatie",
+      "fields": {
+        "medicationName": "Medicatie",
+        "dose": "Dosis",
+        "pharmaceuticalFormItemId": "Farmaceutische vorm",
+        "administrationRouteItemId": "Toedieningsweg",
+        "startDate": "Startdatum",
+        "isOtherMedication": "Andere medicatie (niet in de catalogus)",
+        "otherMedicationText": "Beschrijf de medicatie"
+      },
+      "fromCatalog": "Uit de medicatiecatalogus.",
+      "notInCatalog": "Geen medicatie komt overeen; mogelijk niet in de catalogus van deze omgeving. Je kunt het zo intypen.",
+      "catalogUnavailable": "De medicatiezoekfunctie is nu niet beschikbaar; je kunt het zo intypen.",
+      "validation": {
+        "medicationNameRequired": "Voer de naam van de medicatie in voordat je opslaat.",
+        "otherTextRequired": "Beschrijf de medicatie voordat je opslaat."
+      },
+      "form": {
+        "createTitle": "Medicatie toevoegen",
+        "editTitle": "Medicatie bewerken"
+      },
+      "gateLocked": "Dit kan niet worden gewijzigd zolang er medicatie geregistreerd staat. Verwijder deze één voor één om het antwoord te wijzigen.",
+      "gateLockedNeedsAdmin": "Dit kan niet worden gewijzigd zolang er medicatie geregistreerd staat. Een beheerder is nodig om deze te verwijderen.",
+      "mismatch": "Dit antwoord komt niet overeen met de hieronder geregistreerde medicatie.",
+      "error": {
+        "load": "We konden de gelijktijdige medicatie niet laden.",
+        "generic": "We konden de medicatie niet opslaan. Probeer het opnieuw."
+      }
+    },
+    "satellites": {
+      "deleteTitle": "Deactiveren",
+      "deleteConfirm": "«{{name}}» deactiveren? Deze actie kan hier niet ongedaan worden gemaakt.",
+      "deleteAction": "Deactiveren",
+      "adminRequiredEdit": "Het corrigeren van deze klinische inhoud vereist een beheerder in deze omgeving.",
+      "adminRequiredDelete": "Het verwijderen van deze klinische inhoud vereist een beheerder in deze omgeving."
     }
   },
   "home": {

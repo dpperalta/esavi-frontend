@@ -9,7 +9,10 @@ import { tokenStore } from '@/shared/api/tokenStore';
 import {
   useNonSevereNotificationByCase,
   useNotificationByCase,
+  useNotificationEventsByCase,
+  useNotificationMedicationsByCase,
   useSevereNotificationByCase,
+  useWhodrugProductSearch,
 } from './api';
 
 const server = setupServer();
@@ -188,5 +191,110 @@ describe('useSevereNotificationByCase / useNonSevereNotificationByCase — ESAVI
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toBeNull();
+  });
+});
+
+// SPEC FE12b §4 paso 6 — abrir el paso 4 con la cabecera creada dispara exactamente dos
+// peticiones nuevas, las dos a `/case/:id`, y ninguna al buscador hasta que se teclea.
+describe('useNotificationEventsByCase / useNotificationMedicationsByCase — ESAVI-NOTIFEVT-006 / ESAVI-NOTIFMED-006', () => {
+  it('con enabled:true, las dos leen por caseId y no por notificationId', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/notification-events/case/case-1', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { count: 1, rows: [{ eventId: 'e-1', esaviName: 'Fiebre alta' }] },
+        }),
+      ),
+      http.get('http://localhost:4500/api/notification-medications/case/case-1', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { count: 0, rows: [] },
+        }),
+      ),
+    );
+
+    const Wrapper = createWrapper();
+    const { result } = renderHook(
+      () => ({
+        events: useNotificationEventsByCase('case-1', true),
+        medications: useNotificationMedicationsByCase('case-1', true),
+      }),
+      { wrapper: Wrapper },
+    );
+
+    await waitFor(() => expect(result.current.events.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.medications.isSuccess).toBe(true));
+    expect(result.current.events.data?.count).toBe(1);
+    expect(result.current.medications.data?.count).toBe(0);
+  });
+
+  it('con enabled:false (sin cabecera todavía) ninguna de las dos pega a la red', () => {
+    let eventsHit = false;
+    let medicationsHit = false;
+    server.use(
+      http.get('http://localhost:4500/api/notification-events/case/case-1', () => {
+        eventsHit = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+      http.get('http://localhost:4500/api/notification-medications/case/case-1', () => {
+        medicationsHit = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    const Wrapper = createWrapper();
+    const { result } = renderHook(
+      () => ({
+        events: useNotificationEventsByCase('case-1', false),
+        medications: useNotificationMedicationsByCase('case-1', false),
+      }),
+      { wrapper: Wrapper },
+    );
+
+    expect(result.current.events.fetchStatus).toBe('idle');
+    expect(result.current.medications.fetchStatus).toBe('idle');
+    expect(eventsHit).toBe(false);
+    expect(medicationsHit).toBe(false);
+  });
+});
+
+describe('useWhodrugProductSearch — ESAVI-WHODPROD-006', () => {
+  it('con menos de 3 caracteres no llama al buscador', () => {
+    let hit = false;
+    server.use(
+      http.get('http://localhost:4500/api/whodrug-products/search', () => {
+        hit = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { term: 'pa', count: 0, rows: [] } });
+      }),
+    );
+
+    const Wrapper = createWrapper();
+    const { result } = renderHook(() => useWhodrugProductSearch('pa'), { wrapper: Wrapper });
+
+    expect(result.current.fetchStatus).toBe('idle');
+    expect(hit).toBe(false);
+  });
+
+  it('con 3 caracteres pide term y limit=20', async () => {
+    let requestedUrl: URL | null = null;
+    server.use(
+      http.get('http://localhost:4500/api/whodrug-products/search', ({ request }) => {
+        requestedUrl = new URL(request.url);
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { term: 'par', count: 1, rows: [{ code: 'PAR001', name: 'Paracetamol' }] },
+        });
+      }),
+    );
+
+    const Wrapper = createWrapper();
+    const { result } = renderHook(() => useWhodrugProductSearch('par'), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(requestedUrl?.searchParams.get('term')).toBe('par');
+    expect(requestedUrl?.searchParams.get('limit')).toBe('20');
   });
 });

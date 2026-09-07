@@ -28,3 +28,8 @@ export interface AppDetails {
 export const ANSWER_OPTIONS = ['YES', 'NO', 'UNKNOWN', 'NOT_APPLICABLE', 'NO_ANSWER'] as const;
 
 export type AnswerOption = (typeof ANSWER_OPTIONS)[number];
+
+// Mirrors esavi-backend/src/constants/enums.constants.ts (shared home for enums declared alongside AnswerOption — SPEC FE12b §4 paso 2).
+export const TERM_SOURCES = ['MEDDRA', 'WHODRUG', 'LOCAL', 'OTHER'] as const;
+
+export type TermSource = (typeof TERM_SOURCES)[number];

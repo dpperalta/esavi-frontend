@@ -14,6 +14,8 @@ import type { SevereNotificationDetail } from '@/contracts/declared/severeNotifi
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
+import { EventList } from '@/features/notification/EventList';
+import { MedicationList } from '@/features/notification/MedicationList';
 import {
   nonSevereNotificationByCaseKey,
   nonSevereNotificationResource,
@@ -23,6 +25,8 @@ import {
   severeNotificationResource,
   useNonSevereNotificationByCase,
   useNotificationByCase,
+  useNotificationEventsByCase,
+  useNotificationMedicationsByCase,
   useSevereNotificationByCase,
 } from '@/features/notification/api';
 import {
@@ -48,6 +52,8 @@ import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { ROLE_LEVELS } from '@/shared/config/roles';
+import { useCan } from '@/shared/hooks/useCan';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { esaviCaseResource } from './api';
@@ -140,6 +146,7 @@ const PENDING_FIELD_LABEL_KEYS: Partial<Record<string, string>> = {
   vaccinationGeoLocationId: 'notification.pending.vaccinationGeoLocationId',
   verifiedAny: 'notification.pending.verifiedAny',
   otherSourceDescription: 'notification.pending.otherSourceDescription',
+  events: 'notification.pending.atLeastOneEvent',
 };
 
 // Corre `createNotificationCompleteSchema` sobre los valores actuales del formulario en vez de
@@ -173,6 +180,10 @@ interface NotificationFormBodyProps {
   notificationType: 'SEVERE' | 'NON_SEVERE';
   eventDate: string | null;
   pregnancyGate: PregnancyGateState;
+  // Caso cerrado (SPEC FE12b §3.6): las listas de satélites pasan a sólo lectura — sin «Añadir»
+  // y sin acciones de fila. El aviso en sí lo pinta `CaseWizardPage` (FE08); esto sólo retira las
+  // acciones que ese aviso ya explica que no aplican.
+  isClosed: boolean;
 }
 
 // The form itself (SPEC FE12a §3.5, §3.1): only mounted once `NotificationStep` resolved workflow
@@ -186,6 +197,7 @@ function NotificationFormBody({
   notificationType,
   eventDate,
   pregnancyGate,
+  isClosed,
 }: NotificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -205,6 +217,20 @@ function NotificationFormBody({
   const notificationId = notification?.notificationId ?? null;
   const severeNotificationId = severeNotification?.notificationId ?? null;
   const nonSevereNotificationId = nonSevereNotification?.notificationId ?? null;
+
+  // La misma clave que `<MedicationList>` consulta por su cuenta (TanStack Query la comparte, no
+  // duplica la petición): aquí sólo hace falta el conteo para bloquear `takesMedication` en la
+  // cabecera (SPEC FE12b §3.5, «la compuerta en su forma nueva»).
+  const medications = useNotificationMedicationsByCase(caseId, notificationId !== null);
+  const hasActiveMedications = (medications.data?.rows.length ?? 0) > 0;
+  // Ídem con `<EventList>`: el obligatorio de proceso «al menos un evento» (§4 paso 12) sólo
+  // necesita el conteo, no las filas.
+  const events = useNotificationEventsByCase(caseId, notificationId !== null);
+  const hasAtLeastOneEvent = (events.data?.rows.length ?? 0) > 0;
+  // `useCan()` decide aquí sólo qué frase se muestra, nunca si el control existe (§3.5, la línea
+  // que §10.4 no quiere que se cruce): mientras `NOTIFMED-005A` siga en ADMIN, un USER no puede
+  // borrar las filas y por tanto no puede cambiar la respuesta en absoluto.
+  const canAdminMedications = useCan(ROLE_LEVELS.ADMIN);
 
   const defaultValues: NotificationFormValues = {
     esaviDescription: notification?.esaviDescription ?? '',
@@ -495,7 +521,12 @@ function NotificationFormBody({
 
   const pendingFields = computePendingFields(
     watchedValues,
-    { notificationType, isDeathOutcome, pregnancyGateOpen: pregnancyGate !== 'hidden' },
+    {
+      notificationType,
+      isDeathOutcome,
+      pregnancyGateOpen: pregnancyGate !== 'hidden',
+      hasAtLeastOneEvent,
+    },
     t,
   );
 
@@ -515,7 +546,12 @@ function NotificationFormBody({
       getPendingFields: () => pendingFieldsRef.current,
     });
     return () => unregisterStep();
-  }, [registerStep, unregisterStep, form.formState.isDirty]);
+    // `hasAtLeastOneEvent` entra en las dependencias a propósito (SPEC FE12b §4 paso 12): a
+    // diferencia del resto de `pendingFields`, que sólo cambian cuando el formulario se ensucia,
+    // éste depende de una consulta que puede resolver después del montaje sin que el usuario
+    // haya tocado nada — sin este disparador, `CaseWizardProvider` seguiría leyendo el
+    // `activeStep` de antes de que los eventos cargaran.
+  }, [registerStep, unregisterStep, form.formState.isDirty, hasAtLeastOneEvent]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -573,11 +609,34 @@ function NotificationFormBody({
                 onChange={field.onChange}
                 ariaLabel={t('notification.fields.takesMedication')}
                 variant="unknown"
+                disabled={hasActiveMedications}
               />
             )}
           />
+          {/* No es un aviso al guardar: es un campo que no se puede mover mientras haya datos que
+              quedarían huérfanos (SPEC FE12b §3.5). El texto asociado, no sólo el atributo
+              `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
+          {hasActiveMedications && (
+            <p className="text-sm text-muted-foreground">
+              {t(
+                canAdminMedications
+                  ? 'notification.medications.gateLocked'
+                  : 'notification.medications.gateLockedNeedsAdmin',
+              )}
+            </p>
+          )}
         </div>
       </div>
+
+      {/* Sólo existen con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
+          `notificationId` no hay padre al que colgar ningún satélite. */}
+      <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+      <MedicationList
+        caseId={caseId}
+        notificationId={notificationId}
+        readOnly={isClosed}
+        takesMedication={watchedValues.takesMedication ?? null}
+      />
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-foreground">
@@ -829,6 +888,9 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
   }
 
   const notificationType = notificationTypeMaybe as 'SEVERE' | 'NON_SEVERE';
+  // Mismo criterio que `CaseWizardPage.tsx` (§10.3: la comprobación de `CLOSED` sigue entera en
+  // el cliente, no la impone el servidor en estos satélites).
+  const isClosed = workflow.data?.status.code === 'CLOSED';
 
   return (
     <NotificationFormBody
@@ -839,6 +901,7 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       notificationType={notificationType}
       eventDate={esaviCase.data?.eventDate ?? null}
       pregnancyGate={pregnancyGate}
+      isClosed={isClosed}
     />
   );
 }

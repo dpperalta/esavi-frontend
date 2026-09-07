@@ -56,8 +56,30 @@
     "select": {
       "clear": "Limpiar selección"
     },
+    "catalogSelect": {
+      "empty": "Este catálogo no tiene datos cargados todavía."
+    },
     "dateField": {
       "openCalendar": "Abrir calendario — {{field}}"
+    },
+    "timeField": {
+      "placeholder": "HH:MM",
+      "invalid": "La hora no es válida. Usa el formato HH:MM."
+    },
+    "satelliteList": {
+      "add": "Añadir",
+      "edit": "Editar {{name}}",
+      "delete": "Eliminar {{name}}",
+      "cancel": "Cancelar",
+      "save": "Guardar"
+    },
+    "termSearch": {
+      "minChars": "Escribe al menos {{count}} caracteres.",
+      "noResults": "Ningún resultado coincide; puedes escribirlo tal cual.",
+      "serviceUnavailable": "El buscador no está disponible ahora mismo; puedes escribirlo tal cual.",
+      "clear": "Quitar",
+      "resultsAnnounce": "{{count}} resultados",
+      "moreResults": "Hubo más resultados; afina el término de búsqueda."
     },
     "answerOption": {
       "yes": "Sí",
@@ -831,7 +853,8 @@
       "vaccinationSiteItemId": "Sitio de vacunación",
       "vaccinationGeoLocationId": "Ubicación de la vacunación",
       "verifiedAny": "Al menos una fuente de verificación",
-      "otherSourceDescription": "Descripción de la otra fuente"
+      "otherSourceDescription": "Descripción de la otra fuente",
+      "atLeastOneEvent": "Al menos un evento del ESAVI"
     },
     "error": {
       "load": "No pudimos cargar la notificación.",
@@ -845,6 +868,74 @@
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
+    },
+    "events": {
+      "sectionTitle": "Eventos",
+      "fields": {
+        "esaviName": "Diagnóstico del ESAVI",
+        "esaviCode": "Código",
+        "isOtherEsavi": "Otro evento (no está en el catálogo)",
+        "otherDescription": "Describe el evento",
+        "isMainEsavi": "Evento principal",
+        "startDate": "Fecha de inicio",
+        "startTime": "Hora de inicio",
+        "notes": "Observaciones"
+      },
+      "help": {
+        "isMainEsavi": "Puede haber más de un evento principal."
+      },
+      "validation": {
+        "esaviNameRequired": "Escribe el diagnóstico del evento antes de guardar.",
+        "otherDescriptionRequired": "Describe el evento antes de guardar."
+      },
+      "form": {
+        "createTitle": "Añadir evento",
+        "editTitle": "Editar evento"
+      },
+      "meddraUnavailable": "El buscador de términos no está disponible ahora mismo; puedes escribirlo tal cual.",
+      "diagtermNotImported": "El diccionario de esta fuente no está importado en este despliegue.",
+      "keepAsFreeText": "Guardar como texto libre",
+      "error": {
+        "load": "No pudimos cargar los eventos.",
+        "generic": "No pudimos guardar el evento. Intenta de nuevo."
+      }
+    },
+    "medications": {
+      "sectionTitle": "Medicación concomitante",
+      "fields": {
+        "medicationName": "Medicamento",
+        "dose": "Dosis",
+        "pharmaceuticalFormItemId": "Forma farmacéutica",
+        "administrationRouteItemId": "Vía de administración",
+        "startDate": "Fecha de inicio",
+        "isOtherMedication": "Otra medicación (no está en el catálogo)",
+        "otherMedicationText": "Describe la medicación"
+      },
+      "fromCatalog": "Del catálogo de medicamentos.",
+      "notInCatalog": "Ningún medicamento coincide; puede no estar en el catálogo de este despliegue. Puedes escribirlo tal cual.",
+      "catalogUnavailable": "El buscador de medicación no está disponible ahora mismo; puedes escribirlo tal cual.",
+      "validation": {
+        "medicationNameRequired": "Escribe el nombre del medicamento antes de guardar.",
+        "otherTextRequired": "Describe la medicación antes de guardar."
+      },
+      "form": {
+        "createTitle": "Añadir medicación",
+        "editTitle": "Editar medicación"
+      },
+      "gateLocked": "No se puede cambiar mientras haya medicaciones registradas. Bórralas una a una para poder cambiar la respuesta.",
+      "gateLockedNeedsAdmin": "No se puede cambiar mientras haya medicaciones registradas. Hace falta un administrador para borrarlas.",
+      "mismatch": "Esta respuesta no coincide con la medicación registrada más abajo.",
+      "error": {
+        "load": "No pudimos cargar la medicación concomitante.",
+        "generic": "No pudimos guardar la medicación. Intenta de nuevo."
+      }
+    },
+    "satellites": {
+      "deleteTitle": "Dar de baja",
+      "deleteConfirm": "¿Dar de baja «{{name}}»? Esta acción no se puede deshacer desde aquí.",
+      "deleteAction": "Dar de baja",
+      "adminRequiredEdit": "Corregir este contenido clínico exige un administrador en este despliegue.",
+      "adminRequiredDelete": "Retirar este contenido clínico exige un administrador en este despliegue."
     }
   },
   "home": {

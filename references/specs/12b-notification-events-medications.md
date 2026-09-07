@@ -1,6 +1,6 @@
 # SPEC FE12b — Paso 4: eventos y medicación concomitante
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE08 (armazón del wizard), SPEC FE12a (la cabecera de la notificación — sin su fila no hay `notificationId` al que colgar nada, y de ella sale `takesMedication`). Del backend: SPEC F16 (notificationEvent), SPEC F21 (notificationMedication), SPEC F15 (diagnosticTerm y su resolución), SPEC F55 (búsqueda de términos MedDRA) y SPEC F56 (espejo del estándar WHODrug y buscador de medicación concomitante).
 > **Fecha:** 2026-09-05
 > **Objetivo:** Las dos primeras listas de satélites del paso 4 —los diagnósticos del ESAVI y la medicación concomitante— con sus dos buscadores contra maestro, y las tres primitivas compartidas que nacen con ellas.

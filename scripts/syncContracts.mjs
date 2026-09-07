@@ -36,6 +36,11 @@ const SYNC_MAP = [
     source: 'nonSevereNotification/nonSevereNotification.types.ts',
     dest: 'nonSevereNotification.ts',
   },
+  { source: 'notificationEvent/notificationEvent.types.ts', dest: 'notificationEvent.ts' },
+  {
+    source: 'notificationMedication/notificationMedication.types.ts',
+    dest: 'notificationMedication.ts',
+  },
 ];
 
 // notification.types.ts and severeNotification.types.ts are the first mirrored files that import
@@ -58,6 +63,13 @@ const IMPORT_REWRITES = [
     from: /import \{ NotificationType \} from '\.\.\/\.\.\/constants\/notification\.constants';\r?\n/,
     to: '',
   },
+  {
+    // TermSource lives in the same shared constants file as AnswerOption (SPEC FE12b §4 paso 2),
+    // so it gets the same treatment: one canonical home in common.ts, imported from there instead
+    // of from the backend's constants module.
+    from: /import \{ TermSource \} from '\.\.\/\.\.\/constants\/enums\.constants';\r?\n/,
+    to: "import type { TermSource } from './common';\n",
+  },
 ];
 
 // Enums declared in esavi-backend/src/constants/, not in src/types/, so `SYNC_MAP` cannot mirror
@@ -77,6 +89,12 @@ const EXTRA_ENUM_APPENDS = [
     typeName: 'NotificationType',
     dest: 'notification.ts',
     note: 'the only consumer is this file — inlined instead of imported — SPEC FE12a §4 paso 3',
+  },
+  {
+    source: 'enums.constants.ts',
+    typeName: 'TermSource',
+    dest: 'common.ts',
+    note: 'shared home for enums declared alongside AnswerOption — SPEC FE12b §4 paso 2',
   },
 ];
 

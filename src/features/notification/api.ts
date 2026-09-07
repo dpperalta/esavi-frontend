@@ -1,10 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import type { CreateNonSevereNotificationInput } from '@/contracts/nonSevereNotification';
+import type { CreateNotificationEventInput } from '@/contracts/notificationEvent';
 import type { CreateNotificationInput, NotificationType } from '@/contracts/notification';
+import type { CreateNotificationMedicationInput } from '@/contracts/notificationMedication';
 import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
+import type { PaginatedResponse } from '@/contracts/declared/pagination';
 import type { NonSevereNotificationDetail } from '@/contracts/declared/nonSevereNotification';
 import type { NotificationDetail } from '@/contracts/declared/notification';
+import type { NotificationEventDetail } from '@/contracts/declared/notificationEvent';
+import type { NotificationMedicationDetail } from '@/contracts/declared/notificationMedication';
+import type { MeddraSearchResult } from '@/contracts/declared/meddra';
 import type { SevereNotificationDetail } from '@/contracts/declared/severeNotification';
+import type { WhodrugProductSearchResult } from '@/contracts/declared/whodrugProduct';
 import { client } from '@/shared/api/client';
 import { createResource } from '@/shared/api/createResource';
 import { EsaviApiError } from '@/shared/api/types';
@@ -152,5 +159,132 @@ export function useNonSevereNotificationByCase(
       }
     },
     enabled: stageExists && caseId !== undefined && notificationType === 'NON_SEVERE',
+  });
+}
+
+// POST   /api/notification-events            ESAVI-NOTIFEVT-001   USER   create
+// GET    /api/notification-events/case/:id   ESAVI-NOTIFEVT-006   USER   events of the case, in reentry — hand-written below
+// PUT    /api/notification-events/:id        ESAVI-NOTIFEVT-004   ADMIN  update (§10.4 half-applied — SPEC FE12b §3.2)
+// DELETE /api/notification-events/:id        ESAVI-NOTIFEVT-005A  ADMIN  soft delete
+// Out of scope (SPEC FE12b §2): the two 002A/002B listings (the `006` above covers both, entered
+// by caseId), 003 by own PK, 005B/005C (SUPERADMIN, reactivate/purge).
+export const notificationEventResource = createResource<
+  NotificationEventDetail,
+  CreateNotificationEventInput,
+  Partial<CreateNotificationEventInput>
+>({
+  key: 'notificationEvent',
+  path: 'notification-events',
+  idField: 'eventId',
+  // No screen ever toggles inactive rows for a satellite (SPEC FE12b §2: "sin toggle de mostrar
+  // inactivos"), so `useList`/`useListByParent` are never called here either — same case as
+  // `severeNotificationResource` above.
+  inactiveMode: 'serverDecides',
+});
+
+export function notificationEventsByCaseKey(caseId: string) {
+  return ['notificationEvent', 'byCase', caseId] as const;
+}
+
+// ESAVI-NOTIFEVT-006 — the real query of the domain (notificationEvent.service.ts): the client
+// holds `caseId`, not `notificationId`. Returns `{ count, rows }` with no pagination UI over it —
+// every active event of the notification comes back in one page. No `staleTime` (SPEC FE12b
+// §3.4): the three mutations of `notificationEventResource` above invalidate this exact key on
+// every write, and that is the only thing that should ever make it stale.
+export function useNotificationEventsByCase(caseId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: notificationEventsByCaseKey(caseId ?? ''),
+    queryFn: async () => {
+      const response = await client.get<PaginatedResponse<NotificationEventDetail>>(
+        `notification-events/case/${caseId}`,
+      );
+      return response.data;
+    },
+    enabled: enabled && caseId !== undefined,
+  });
+}
+
+// ESAVI-MEDDRA-006 — search against the licensed dictionary, never against `diagnosticTerm`
+// directly: the clinical catalog is only ever read or written by the resolution the service runs
+// on `POST`/`PUT` of `notificationEvent` (SPEC FE12b §3.2, "Qué no se consume"). `term` is the
+// only parameter the backend accepts — `take` and the level flags live in
+// `ESAVI_MEDDRA_SEARCH_CONFIG` and are not open to the client (meddra.validator.ts). `staleTime`
+// is 5 minutes, matching the server's own per-term-and-language cache, because behind this one
+// there is a paid API limited to 60 requests per 15 minutes (SPEC FE12b §3.4).
+export function useMeddraSearch(term: string) {
+  const trimmed = term.trim();
+
+  return useQuery({
+    queryKey: ['meddra', 'search', trimmed],
+    queryFn: async () => {
+      const response = await client.get<MeddraSearchResult>('meddra/search', {
+        params: { term: trimmed },
+      });
+      return response.data;
+    },
+    // Below the validator's three-character minimum the backend answers 400 — the hook never
+    // fires, same reasoning as `useWhodrugProductSearch`'s own floor.
+    enabled: trimmed.length >= 3,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// POST   /api/notification-medications            ESAVI-NOTIFMED-001   USER   create
+// GET    /api/notification-medications/case/:id   ESAVI-NOTIFMED-006   USER   medications of the case, in reentry — hand-written below
+// PUT    /api/notification-medications/:id        ESAVI-NOTIFMED-004   ADMIN  update (§10.4 half-applied)
+// DELETE /api/notification-medications/:id        ESAVI-NOTIFMED-005A  ADMIN  soft delete
+// Same out-of-scope routes as its event sibling above.
+export const notificationMedicationResource = createResource<
+  NotificationMedicationDetail,
+  CreateNotificationMedicationInput,
+  Partial<CreateNotificationMedicationInput>
+>({
+  key: 'notificationMedication',
+  path: 'notification-medications',
+  idField: 'medicationId',
+  inactiveMode: 'serverDecides',
+});
+
+export function notificationMedicationsByCaseKey(caseId: string) {
+  return ['notificationMedication', 'byCase', caseId] as const;
+}
+
+// ESAVI-NOTIFMED-006. Mirrors its event sibling above in every respect.
+export function useNotificationMedicationsByCase(caseId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: notificationMedicationsByCaseKey(caseId ?? ''),
+    queryFn: async () => {
+      const response = await client.get<PaginatedResponse<NotificationMedicationDetail>>(
+        `notification-medications/case/${caseId}`,
+      );
+      return response.data;
+    },
+    enabled: enabled && caseId !== undefined,
+  });
+}
+
+// The `limit` this screen asks for — the caller compares the response's `count` against this same
+// number to derive `moreResultsAvailable` (SPEC FE12b §3.2, §3.7).
+export const WHODRUG_PRODUCT_SEARCH_LIMIT = 20;
+
+// ESAVI-WHODPROD-006 — search against the local WHODrug mirror, never `<EntitySearchSelect>`: the
+// route takes `term`, not `name`/`code`, and returns pairs with no id to open later (SPEC FE12b
+// §6, decisión tomada). `staleTime` is 30 minutes, not MedDRA's 5: this is a query against a local
+// mirror that only changes when a SUPERADMIN runs the `007` (SPEC FE12b §3.4).
+export function useWhodrugProductSearch(term: string) {
+  const trimmed = term.trim();
+
+  return useQuery({
+    queryKey: ['whodrugProduct', 'search', trimmed],
+    queryFn: async () => {
+      const response = await client.get<WhodrugProductSearchResult>('whodrug-products/search', {
+        params: { term: trimmed, limit: WHODRUG_PRODUCT_SEARCH_LIMIT },
+      });
+      return response.data;
+    },
+    // Below the validator's three-character minimum the backend answers 400 — the hook never
+    // fires, mirroring `useHealthFacilitySearch`'s reasoning for its own two-character floor.
+    enabled: trimmed.length >= 3,
+    staleTime: 30 * 60 * 1000,
   });
 }
