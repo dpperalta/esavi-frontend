@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useCountryIsoCode } from '@/features/systemConfig/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -62,7 +63,7 @@ export interface WhodrugTreePickerProps {
   disabled?: boolean;
 }
 
-function toOption(row: VaccineWhodrugTreeOption, t: (key: string, opts?: object) => string): SearchableSelectOption {
+function toOption(row: VaccineWhodrugTreeOption, t: TFunction): SearchableSelectOption {
   return {
     value: row.value ?? NULL_SENTINEL,
     label: row.value ?? t('whodrugTreePicker.nullValue'),
@@ -136,7 +137,7 @@ function LevelSelect({
   );
 }
 
-function InfoRow({ label, value, t }: { label: string; value: string | null; t: (key: string) => string }) {
+function InfoRow({ label, value, t }: { label: string; value: string | null; t: TFunction }) {
   return (
     <div className="flex items-center justify-between gap-2 border-b py-1 text-sm last:border-b-0">
       <span className="text-muted-foreground">{label}</span>

@@ -28,6 +28,7 @@ import {
   useNotificationByCase,
   useNotificationEventsByCase,
   useNotificationMedicationsByCase,
+  useNotificationVaccinesByCase,
   useSevereNotificationByCase,
 } from '@/features/notification/api';
 import {
@@ -148,6 +149,8 @@ const PENDING_FIELD_LABEL_KEYS: Partial<Record<string, string>> = {
   verifiedAny: 'notification.pending.verifiedAny',
   otherSourceDescription: 'notification.pending.otherSourceDescription',
   events: 'notification.pending.atLeastOneEvent',
+  vaccines: 'notificationVaccine.complete.missingVaccine',
+  suspectedVaccine: 'notificationVaccine.complete.missingSuspected',
 };
 
 // Corre `createNotificationCompleteSchema` sobre los valores actuales del formulario en vez de
@@ -228,6 +231,12 @@ function NotificationFormBody({
   // necesita el conteo, no las filas.
   const events = useNotificationEventsByCase(caseId, notificationId !== null);
   const hasAtLeastOneEvent = (events.data?.rows.length ?? 0) > 0;
+  // La misma clave que `<VaccineList>` consulta por su cuenta: los dos obligatorios de proceso
+  // de SPEC FE12c §2 ("al menos una vacuna", "al menos una sospechosa") sólo necesitan las filas
+  // ya cargadas, ninguna petición propia.
+  const vaccines = useNotificationVaccinesByCase(caseId, notificationId !== null);
+  const hasAtLeastOneVaccine = (vaccines.data?.rows.length ?? 0) > 0;
+  const hasAtLeastOneSuspectedVaccine = (vaccines.data?.rows ?? []).some((row) => row.isSuspected);
   // `useCan()` decide aquí sólo qué frase se muestra, nunca si el control existe (§3.5, la línea
   // que §10.4 no quiere que se cruce): mientras `NOTIFMED-005A` siga en ADMIN, un USER no puede
   // borrar las filas y por tanto no puede cambiar la respuesta en absoluto.
@@ -527,6 +536,8 @@ function NotificationFormBody({
       isDeathOutcome,
       pregnancyGateOpen: pregnancyGate !== 'hidden',
       hasAtLeastOneEvent,
+      hasAtLeastOneVaccine,
+      hasAtLeastOneSuspectedVaccine,
     },
     t,
   );
@@ -551,8 +562,15 @@ function NotificationFormBody({
     // diferencia del resto de `pendingFields`, que sólo cambian cuando el formulario se ensucia,
     // éste depende de una consulta que puede resolver después del montaje sin que el usuario
     // haya tocado nada — sin este disparador, `CaseWizardProvider` seguiría leyendo el
-    // `activeStep` de antes de que los eventos cargaran.
-  }, [registerStep, unregisterStep, form.formState.isDirty, hasAtLeastOneEvent]);
+    // `activeStep` de antes de que los eventos (o las vacunas, SPEC FE12c §4 paso 11) cargaran.
+  }, [
+    registerStep,
+    unregisterStep,
+    form.formState.isDirty,
+    hasAtLeastOneEvent,
+    hasAtLeastOneVaccine,
+    hasAtLeastOneSuspectedVaccine,
+  ]);
 
   return (
     <div className="flex flex-col gap-6">

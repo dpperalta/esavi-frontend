@@ -200,6 +200,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -217,6 +219,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse(baseValid);
     expect(result.success).toBe(false);
@@ -231,6 +235,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: true,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -250,6 +256,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse(baseValid);
     expect(result.success).toBe(false);
@@ -266,6 +274,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -283,6 +293,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: true,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -303,6 +315,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: false,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -322,6 +336,72 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
+    });
+    const result = schema.safeParse({
+      ...baseValid,
+      hasPreviousEventHistory: 'NO',
+      hasAllergyToOtherVaccines: 'NO',
+      hasAllergyToMedications: 'NO',
+      hasAllergyToPreviousSameVaccine: 'NO',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  // SPEC FE12c §4 paso 11 — los dos obligatorios de proceso de las vacunas.
+  it('con cero vacunas, lista los dos pendientes (falta vacuna y falta sospechosa)', () => {
+    const schema = createNotificationCompleteSchema({
+      notificationType: 'SEVERE',
+      isDeathOutcome: false,
+      pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: false,
+      hasAtLeastOneSuspectedVaccine: false,
+    });
+    const result = schema.safeParse({
+      ...baseValid,
+      hasPreviousEventHistory: 'NO',
+      hasAllergyToOtherVaccines: 'NO',
+      hasAllergyToMedications: 'NO',
+      hasAllergyToPreviousSameVaccine: 'NO',
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
+    expect(paths).toContain('vaccines');
+    expect(paths).toContain('suspectedVaccine');
+  });
+
+  it('con una vacuna no sospechosa, lista sólo "suspectedVaccine"', () => {
+    const schema = createNotificationCompleteSchema({
+      notificationType: 'SEVERE',
+      isDeathOutcome: false,
+      pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: false,
+    });
+    const result = schema.safeParse({
+      ...baseValid,
+      hasPreviousEventHistory: 'NO',
+      hasAllergyToOtherVaccines: 'NO',
+      hasAllergyToMedications: 'NO',
+      hasAllergyToPreviousSameVaccine: 'NO',
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
+    expect(paths).not.toContain('vaccines');
+    expect(paths).toContain('suspectedVaccine');
+  });
+
+  it('con al menos una vacuna sospechosa, ninguno de los dos aparece entre los pendientes', () => {
+    const schema = createNotificationCompleteSchema({
+      notificationType: 'SEVERE',
+      isDeathOutcome: false,
+      pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,

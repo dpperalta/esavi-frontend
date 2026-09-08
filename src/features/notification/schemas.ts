@@ -200,6 +200,11 @@ export interface NotificationCompleteContext {
   // (`notificationEvent`), así que no hay campo del formulario que comprobar — llega como
   // contexto, igual que los otros dos derivados de arriba.
   hasAtLeastOneEvent: boolean;
+  // SPEC FE12c §2, §4 paso 11: los dos obligatorios de proceso del paso 4 que salen de
+  // `notificationVaccine` — ninguno bloquea «Guardar», los dos sí «Completar etapa». Viven en
+  // otra tabla, igual que `hasAtLeastOneEvent`, así que llegan como contexto.
+  hasAtLeastOneVaccine: boolean;
+  hasAtLeastOneSuspectedVaccine: boolean;
 }
 
 // "Completar etapa" (§3.5): everything `notificationSaveSchema` already checks, plus the
@@ -213,6 +218,8 @@ export function createNotificationCompleteSchema({
   isDeathOutcome,
   pregnancyGateOpen,
   hasAtLeastOneEvent,
+  hasAtLeastOneVaccine,
+  hasAtLeastOneSuspectedVaccine,
 }: NotificationCompleteContext) {
   return notificationBaseSchema.superRefine((data, ctx) => {
     // El primer obligatorio de proceso del paso 4 (§2, §4 paso 12): un ESAVI sin ningún
@@ -220,6 +227,15 @@ export function createNotificationCompleteSchema({
     // «Guardar» — sólo aparece en la lista de «Completar etapa», como el resto de este schema.
     if (!hasAtLeastOneEvent) {
       ctx.addIssue({ code: 'custom', message: 'atLeastOneEvent', path: ['events'] });
+    }
+    // Los dos obligatorios de proceso de las vacunas (SPEC FE12c §2, §4 paso 11): dos `path`
+    // independientes para que puedan listarse los dos a la vez — con cero vacunas, no hay ninguna
+    // sospechosa tampoco, y el usuario necesita ver ambos pendientes, no sólo el primero.
+    if (!hasAtLeastOneVaccine) {
+      ctx.addIssue({ code: 'custom', message: 'missingVaccine', path: ['vaccines'] });
+    }
+    if (!hasAtLeastOneSuspectedVaccine) {
+      ctx.addIssue({ code: 'custom', message: 'missingSuspected', path: ['suspectedVaccine'] });
     }
     if (!data.hasRelevantMedicalHistory) {
       ctx.addIssue({ code: 'custom', message: 'required', path: ['hasRelevantMedicalHistory'] });
