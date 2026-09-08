@@ -1,11 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { setupUser } from '@/test/user';
+import { notificationDiluentsByVaccineKey } from './api';
 import { VaccineList } from './VaccineList';
 
 const server = setupServer();
@@ -27,11 +29,14 @@ beforeEach(() => {
 
 function renderList(notificationId: string | null = NOTIFICATION_ID) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <VaccineList caseId="case-1" notificationId={notificationId} eventDate={null} />
-    </QueryClientProvider>,
-  );
+  return {
+    queryClient,
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <VaccineList caseId="case-1" notificationId={notificationId} eventDate={null} />
+      </QueryClientProvider>,
+    ),
+  };
 }
 
 function vaccineRow(overrides: Partial<Record<string, unknown>> = {}) {
@@ -117,4 +122,55 @@ describe('VaccineList — SPEC FE12c §4 paso 7', () => {
     // `columns`.
     expect(screen.getAllByText('notificationVaccine.badge.suspected').length).toBeGreaterThanOrEqual(2);
   });
+
+  it(
+    'dar de baja una vacuna con dos diluyentes advierte nombrándolos, y sólo invalida la clave de diluyentes de esa vacuna',
+    async () => {
+      let deleteCalls = 0;
+      server.use(
+        http.get('http://localhost:4500/api/notification-vaccines/case/case-1', () =>
+          HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [vaccineRow({})] } }),
+        ),
+        http.get('http://localhost:4500/api/notification-diluents/vaccine/v-1', () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 2,
+              rows: [
+                { diluentId: 'd-1', vaccineId: 'v-1', diluentCatalogId: null, sortOrder: 1, batchNumber: null, expirationDate: null, reconstitutionDate: null, reconstitutionTime: null, diluentName: 'Agua estéril', diluentCode: null, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: null, deletedAt: null, appDetails: [], diluentCatalog: null },
+                { diluentId: 'd-2', vaccineId: 'v-1', diluentCatalogId: null, sortOrder: 2, batchNumber: null, expirationDate: null, reconstitutionDate: null, reconstitutionTime: null, diluentName: 'Suero fisiológico', diluentCode: null, isActive: true, createdAt: '2026-01-01T00:00:00.000Z', updatedAt: null, deletedAt: null, appDetails: [], diluentCatalog: null },
+              ],
+            },
+          }),
+        ),
+        http.delete('http://localhost:4500/api/notification-vaccines/v-1', () => {
+          deleteCalls++;
+          return HttpResponse.json({ ok: true, message: 'ok' });
+        }),
+      );
+
+      const { queryClient } = renderList();
+      const user = setupUser();
+
+      const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar BCG' });
+      await user.click(deleteButton);
+
+      expect(
+        await screen.findByText('notificationVaccine.delete.confirmWithDiluents', { exact: false }),
+      ).toBeInTheDocument();
+      expect(deleteCalls).toBe(0);
+
+      const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+      await user.click(confirmButton);
+
+      await waitFor(() => expect(deleteCalls).toBe(1));
+      await waitFor(() =>
+        expect(
+          queryClient.getQueryState(notificationDiluentsByVaccineKey('v-1'))?.isInvalidated,
+        ).toBe(true),
+      );
+    },
+    30000,
+  );
 });

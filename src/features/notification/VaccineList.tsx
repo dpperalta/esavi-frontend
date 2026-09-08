@@ -1,11 +1,23 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import type { NotificationVaccineDetail } from '@/contracts/declared/notificationVaccine';
 import { EsaviApiError } from '@/shared/api/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
 import { Badge } from '@/shared/components/ui/badge';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
-import { useNotificationVaccinesByCase } from './api';
+import { notificationVaccineResource, notificationDiluentsByVaccineKey, useNotificationDiluentsByVaccine, useNotificationVaccinesByCase } from './api';
 import { VaccineFormDialog } from './VaccineFormDialog';
 
 export interface VaccineListProps {
@@ -20,21 +32,54 @@ export interface VaccineListProps {
   readOnly?: boolean;
 }
 
-// La tercera lista del paso 4 y la única anidada (SPEC FE12c §1). Este spec deja aquí la fase 1
-// del alta/edición (paso 8) — la baja llega en el paso 10 — sobre `<SatelliteList>`, sin saber de
-// diluyentes: la lista anidada vive dentro de `<VaccineFormDialog>`.
+function isRoleForbidden(error: unknown): boolean {
+  return error instanceof EsaviApiError && error.code === 'AUTH_ROLE_FORBIDDEN';
+}
+
+// La tercera lista del paso 4 y la única anidada (SPEC FE12c §1), completa: alta/edición (paso 8),
+// diluyentes en fase 2 (paso 9) y baja con confirmación (paso 10) — sobre `<SatelliteList>`, sin
+// saber de diluyentes más allá de nombrarlos en el diálogo de baja.
 export function VaccineList({ caseId, notificationId, eventDate, readOnly = false }: VaccineListProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const vaccines = useNotificationVaccinesByCase(caseId, notificationId !== null);
+  const deactivate = notificationVaccineResource.useDeactivate();
 
   const [dialog, setDialog] = useState<{ open: boolean; vaccineId: string | null }>({
     open: false,
     vaccineId: null,
   });
+  const [removeTarget, setRemoveTarget] = useState<NotificationVaccineDetail | null>(null);
+  // Se piden sus diluyentes antes de confirmar la baja (§2, §4 paso 10): sin ellos el usuario no
+  // sabe qué está retirando, y el `404` heredado aparecería después sin explicación.
+  const diluentsOfTarget = useNotificationDiluentsByVaccine(removeTarget?.vaccineId, removeTarget !== null);
 
   if (notificationId === null) {
     return null;
   }
+
+  function handleConfirmRemove() {
+    if (!removeTarget) return;
+    const target = removeTarget;
+    deactivate.mutate(target.vaccineId, {
+      onSuccess: () => {
+        // La clave de diluyentes de esa vacuna, junto con la lista — y sólo la de esa vacuna
+        // (SPEC FE12c §3.4, "Qué invalida qué"): sus filas ya no son alcanzables.
+        void queryClient.invalidateQueries({ queryKey: notificationDiluentsByVaccineKey(target.vaccineId) });
+        setRemoveTarget(null);
+      },
+      onError: (error) => {
+        setRemoveTarget(null);
+        if (isRoleForbidden(error)) {
+          toast.error(t('notification.roleForbidden.editDelete'));
+          return;
+        }
+        toast.error(t('common.errors.unexpected'));
+      },
+    });
+  }
+
+  const targetDiluents = diluentsOfTarget.data?.rows ?? [];
 
   const columns: SatelliteListColumn<NotificationVaccineDetail>[] = [
     {
@@ -90,6 +135,7 @@ export function VaccineList({ caseId, notificationId, eventDate, readOnly = fals
         onRetry={() => void vaccines.refetch()}
         onAdd={readOnly ? undefined : () => setDialog({ open: true, vaccineId: null })}
         onEdit={readOnly ? undefined : (row) => setDialog({ open: true, vaccineId: row.vaccineId })}
+        onDelete={readOnly ? undefined : (row) => setRemoveTarget(row)}
       />
 
       <VaccineFormDialog
@@ -100,6 +146,28 @@ export function VaccineList({ caseId, notificationId, eventDate, readOnly = fals
         vaccineId={dialog.vaccineId}
         onOpenChange={(open) => setDialog((prev) => ({ ...prev, open }))}
       />
+
+      <AlertDialog open={removeTarget !== null} onOpenChange={(open) => !open && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('notification.satellites.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {targetDiluents.length > 0
+                ? t('notificationVaccine.delete.confirmWithDiluents', {
+                    name: removeTarget?.vaccineName ?? '',
+                    count: targetDiluents.length,
+                  })
+                : t('notificationVaccine.delete.confirm', { name: removeTarget?.vaccineName ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleConfirmRemove}>
+              {t('notification.satellites.deleteAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
