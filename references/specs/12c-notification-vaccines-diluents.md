@@ -1,6 +1,6 @@
 # SPEC FE12c — Paso 4: vacunas y diluyentes
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE08 (armazón del wizard), SPEC FE10 (paciente y apertura del caso — de ahí sale `eventDate`, y este spec le añade un aviso), SPEC FE12a (la cabecera de la notificación — sin su fila no hay `notificationId` al que colgar nada), SPEC FE12b (de ahí sale `<SatelliteList>`, que este spec consume sin volver a escribirla). Del backend: SPEC F22 (notificationVaccine), SPEC F23 (notificationDiluent) y SPEC F44 (case-workflow).
 > **Fecha:** 2026-09-05
 > **Objetivo:** Las vacunas administradas y sus diluyentes —la tercera lista del paso 4 y la única anidada— con el árbol WHODrug de cinco niveles y las dos coherencias temporales.
