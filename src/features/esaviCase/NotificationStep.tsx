@@ -16,6 +16,7 @@ import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { EventList } from '@/features/notification/EventList';
 import { MedicationList } from '@/features/notification/MedicationList';
+import { VaccineList } from '@/features/notification/VaccineList';
 import {
   nonSevereNotificationByCaseKey,
   nonSevereNotificationResource,
@@ -637,6 +638,7 @@ function NotificationFormBody({
         readOnly={isClosed}
         takesMedication={watchedValues.takesMedication ?? null}
       />
+      <VaccineList caseId={caseId} notificationId={notificationId} eventDate={eventDate} readOnly={isClosed} />
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-foreground">

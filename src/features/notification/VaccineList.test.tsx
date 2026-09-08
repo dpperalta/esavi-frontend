@@ -29,7 +29,7 @@ function renderList(notificationId: string | null = NOTIFICATION_ID) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <VaccineList caseId="case-1" notificationId={notificationId} />
+      <VaccineList caseId="case-1" notificationId={notificationId} eventDate={null} />
     </QueryClientProvider>,
   );
 }
