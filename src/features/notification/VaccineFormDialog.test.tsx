@@ -214,4 +214,57 @@ describe('VaccineFormDialog — SPEC FE12c §4 paso 8', () => {
     },
     60000,
   );
+
+  it('pulsar «Guardar» en la fase 1 habilita los diluyentes sin cerrar el modal', async () => {
+    let vaccinePosted = false;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_ID}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      // Diccionario vacío: el árbol sale deshabilitado, sin necesidad de abrir ningún popover.
+      http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () => treeResponse([])),
+      http.post('http://localhost:4500/api/notification-vaccines', () => {
+        vaccinePosted = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: vaccineRow({ vaccineId: 'v-new', vaccineName: 'Rotavirus' }) });
+      }),
+      http.get('http://localhost:4500/api/notification-diluents/vaccine/v-new', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+
+    const user = setupUser();
+    renderDialog(null);
+
+    expect(await screen.findByText('notificationDiluent.list.needsParent')).toBeInTheDocument();
+
+    const vaccineNameInput = screen.getByLabelText('notificationVaccine.field.vaccineName');
+    await user.type(vaccineNameInput, 'Rotavirus');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(vaccinePosted).toBe(true));
+
+    // El modal sigue abierto sobre la fila recién creada, y la sección se habilitó.
+    expect(screen.getByDisplayValue('Rotavirus')).toBeInTheDocument();
+    expect(screen.queryByText('notificationDiluent.list.needsParent')).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /notificationDiluent\.list\.add/ })).toBeInTheDocument();
+  });
+
+  it('editar una vacuna existente dispara una sola consulta de diluyentes, y sólo la de esa vacuna', async () => {
+    let diluentRequests = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_ID}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [vaccineRow({ vaccineId: 'v-1' })] } }),
+      ),
+      http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () => treeResponse([])),
+      http.get('http://localhost:4500/api/notification-diluents/vaccine/v-1', () => {
+        diluentRequests++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderDialog('v-1');
+
+    expect(await screen.findByRole('button', { name: /notificationDiluent\.list\.add/ })).toBeInTheDocument();
+    expect(diluentRequests).toBe(1);
+  });
 });

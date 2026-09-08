@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -15,6 +16,7 @@ import { FormControl, FormField, FormItem, FormLabel } from '@/shared/components
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { notificationVaccineResource, useNotificationVaccinesByCase } from './api';
+import { DiluentList } from './DiluentList';
 import {
   createNotificationVaccineSchema,
   notificationVaccineErrorFieldMap,
@@ -44,14 +46,18 @@ function isWhodrugNotFound(error: EsaviApiError): boolean {
 interface VaccineFormFieldsProps {
   form: UseFormReturn<NotificationVaccineFormValues>;
   mutationError: EsaviApiError | null;
+  // El id real de la vacuna ya creada — `null` mientras sigue en fase 1 (SPEC FE12c §3.1, §4
+  // paso 9). Nunca el de `defaultValues`: ese no cambia cuando el `POST` de fase 1 responde.
+  savedVaccineId: string | null;
 }
 
 // Separado de `VaccineFormDialog`, misma razón que `EventFormFields`: sus campos no existen
 // mientras `existing` no ha resuelto en modo edición, y no pueden montarse a medio camino de los
 // hooks del diálogo.
-function VaccineFormFields({ form, mutationError }: VaccineFormFieldsProps) {
+function VaccineFormFields({ form, mutationError, savedVaccineId }: VaccineFormFieldsProps) {
   const { t } = useTranslation();
   const vaccineWhodrugId = form.watch('vaccineWhodrugId') ?? null;
+  const vaccinationDate = form.watch('vaccinationDate') ?? null;
 
   // Rellenado al resolverse el árbol, contra la fila del `ESAVI-WHODRUG-003` (§3.5): los tres
   // textos son copia, nunca se vuelven a derivar después.
@@ -261,6 +267,8 @@ function VaccineFormFields({ form, mutationError }: VaccineFormFieldsProps) {
           </FormItem>
         )}
       />
+
+      <DiluentList vaccineId={savedVaccineId} vaccinationDate={vaccinationDate} />
     </>
   );
 }
@@ -278,9 +286,15 @@ export function VaccineFormDialog({
   vaccineId,
 }: VaccineFormDialogProps) {
   const { t } = useTranslation();
-  const isEditing = vaccineId !== null;
+  // El id real una vez responde el `POST` de fase 1 — mientras `vaccineId` (el de alta) siga
+  // `null`, esto es lo único que dice que la fila ya existe y la sección de diluyentes puede
+  // habilitarse, sin esperar a que el llamador reabra el diálogo con un `vaccineId` distinto
+  // (SPEC FE12c §3.1, §4 paso 9).
+  const [createdVaccineId, setCreatedVaccineId] = useState<string | null>(null);
+  const savedVaccineId = vaccineId ?? createdVaccineId;
+  const isEditing = savedVaccineId !== null;
   const vaccinesByCase = useNotificationVaccinesByCase(caseId, open);
-  const existing = vaccinesByCase.data?.rows.find((row) => row.vaccineId === vaccineId) ?? null;
+  const existing = vaccinesByCase.data?.rows.find((row) => row.vaccineId === savedVaccineId) ?? null;
   const create = notificationVaccineResource.useCreate();
   const update = notificationVaccineResource.useUpdate();
   const mutation = isEditing ? update : create;
@@ -290,6 +304,7 @@ export function VaccineFormDialog({
     if (!nextOpen) {
       create.reset();
       update.reset();
+      setCreatedVaccineId(null);
     }
     onOpenChange(nextOpen);
   }
@@ -310,9 +325,9 @@ export function VaccineFormDialog({
       notes: values.notes ?? null,
     };
 
-    if (isEditing && vaccineId) {
+    if (isEditing && savedVaccineId) {
       update.mutate(
-        { id: vaccineId, data: payload },
+        { id: savedVaccineId, data: payload },
         {
           onSuccess: () => {
             toast.success(t('common.toast.updated'));
@@ -324,10 +339,11 @@ export function VaccineFormDialog({
     }
 
     create.mutate({ ...payload, notificationId } as CreateNotificationVaccineInput, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         toast.success(t('common.toast.created'));
-        // La fase 2 (diluyentes, sobre la fila ya creada, sin cerrar el modal) llega en el paso 9.
-        handleOpenChange(false);
+        // Fase 1 → fase 2 (SPEC FE12c §3.1, §4 paso 9): el modal permanece abierto sobre la fila
+        // recién creada y la sección de diluyentes se habilita — no se cierra.
+        setCreatedVaccineId(data.vaccineId);
       },
     });
   }
@@ -346,7 +362,10 @@ export function VaccineFormDialog({
   }
 
   const mutationError = mutation.error instanceof EsaviApiError ? mutation.error : null;
-  const readyToRender = !isEditing || !!existing;
+  // Basado en el `vaccineId` original de alta/edición, no en `savedVaccineId`: una vez que la
+  // fase 1 crea la fila, ya hay datos completos en el formulario y no hace falta esperar a que
+  // la invalidación de la caché la traiga de vuelta para seguir mostrándolo.
+  const readyToRender = vaccineId === null || !!vaccinesByCase.data?.rows.find((row) => row.vaccineId === vaccineId);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -383,7 +402,9 @@ export function VaccineFormDialog({
             submitLabel="common.satelliteList.save"
             cancelLabel="common.satelliteList.cancel"
           >
-            {(form) => <VaccineFormFields form={form} mutationError={mutationError} />}
+            {(form) => (
+              <VaccineFormFields form={form} mutationError={mutationError} savedVaccineId={savedVaccineId} />
+            )}
           </ResourceForm>
         )}
         {!readyToRender && <p className="py-4 text-sm text-muted-foreground">{t('common.loading')}</p>}
