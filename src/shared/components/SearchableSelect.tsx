@@ -126,7 +126,16 @@ export function SearchableSelect({
             {meetsMinLength && !isLoading && options.length > 0 && (
               <CommandGroup>
                 {options.map((option) => (
-                  <CommandItem key={option.value} value={option.value} onSelect={() => handleSelect(option)}>
+                  <CommandItem
+                    key={option.value}
+                    value={option.value}
+                    // Without this, the accessible name concatenates the label and the trailing
+                    // description (e.g. "BrandA 3 coincidencias") — a screen reader or a test
+                    // querying by the plain label would fail to match, the same reasoning
+                    // TermSearchField's `<mark>` needs its own explicit `aria-label` for.
+                    aria-label={option.label}
+                    onSelect={() => handleSelect(option)}
+                  >
                     <span className="flex-1 truncate">{option.label}</span>
                     {option.description && (
                       <span className="text-xs text-muted-foreground">{option.description}</span>
