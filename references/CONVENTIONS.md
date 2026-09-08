@@ -361,6 +361,18 @@ npm run check            # build && lint && i18n:check && test
 
 `npm run check` es la puerta antes de cerrar un cambio, igual que en el backend.
 
+> **`npm run build` no comprueba tipos hoy — es un falso verde (hallazgo del 2026-09-08, SPEC FE12c §4 paso 11).** El `tsconfig.json` de la raíz declara `"files": []` y sólo `"references"` a `tsconfig.app.json`/`tsconfig.node.json` (proyecto compuesto). `tsc --noEmit` **sin `-b`** contra ese archivo raíz no construye las referencias: no comprueba ningún archivo y siempre sale con código `0`, sin importar cuántos errores de tipos existan en `src/`. `vite build` tampoco comprueba tipos — transpila sin verificar. Resultado: el `npm run build`/`npm run check` de este repositorio **nunca ha comprobado tipos**, y ya hay del orden de veinte errores reales acumulados en el árbol (entre otros, `src/shared/components/ResourceForm.tsx`, `src/shared/components/ui/select.tsx`, `src/features/esaviCase/ClassificationStep.tsx`, `src/features/geoLocation/GeoLocationFormDialog.tsx` y varios `*.test.tsx`) que ningún cierre de spec detectó porque el gate documentado nunca los vio.
+>
+> **Mientras `package.json` no se corrija**, la comprobación de tipos real de un cambio es:
+>
+> ```bash
+> npx tsc --noEmit -p tsconfig.app.json
+> ```
+>
+> Antes de dar por cerrado un spec, corre ese comando y filtra a los archivos que tocaste — los errores preexistentes en archivos que no tocaste no son tuyos que arreglar, pero cualquier error nuevo en un archivo que sí tocaste sí lo es. `npx tsc --noEmit` a secas (lo que hoy ejecuta `npm run build`) no sirve para esto: sal siempre con el `-p tsconfig.app.json` explícito.
+>
+> Corregir `package.json` para que `build`/`check` comprueben tipos de verdad es una tarea aparte, deliberadamente no resuelta aquí: arreglarlo de golpe saca a la luz los ~20 errores preexistentes y bloquearía `npm run check` en cualquier rama que no sea la que los arregle.
+
 ---
 
 ## 14. Checklist antes de cerrar
@@ -376,4 +388,4 @@ npm run check            # build && lint && i18n:check && test
 - [ ] Se probó por debajo de `md`: la tabla colapsa a tarjetas y el body no hace scroll horizontal.
 - [ ] Se probó en tema oscuro.
 - [ ] Se probó con un rol bajo (`USER` o `ANALYTICS`), no sólo con `SUPERADMIN`.
-- [ ] `npm run check` pasa.
+- [ ] `npm run check` pasa **y**, además, `npx tsc --noEmit -p tsconfig.app.json` no reporta ningún error nuevo en los archivos tocados (§13: `npm run build`/`check` no comprueban tipos hoy).

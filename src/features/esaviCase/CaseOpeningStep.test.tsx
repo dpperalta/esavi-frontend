@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
@@ -126,6 +126,14 @@ function makeCaseDetail(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function mockVaccines(caseId: string, rows: Array<{ vaccineName: string; vaccinationDate: string | null }>) {
+  server.use(
+    http.get(`http://localhost:4500/api/notification-vaccines/case/${caseId}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: rows.length, rows } }),
+    ),
+  );
+}
+
 function mockEmptyNotifierList(caseId: string) {
   server.use(
     http.get('http://localhost:4500/api/notifiers', ({ request }) => {
@@ -172,6 +180,7 @@ describe('CaseOpeningStep — reentrada (SPEC FE10 §5)', () => {
       ),
     );
     mockEmptyNotifierList(CASE_1);
+    mockVaccines(CASE_1, []);
     let receivedBody: Record<string, unknown> | null = null;
     server.use(
       http.put(`http://localhost:4500/api/esavi-cases/${CASE_1}`, async ({ request }) => {
@@ -401,4 +410,70 @@ describe('CaseOpeningStep — cadena CASE-001 → NOTIFIER-001 (SPEC FE10 §3.2,
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/esavi-cases/new/patient'));
   }, 90000);
+});
+
+describe('CaseOpeningStep — aviso de eventDate contra vacunas (SPEC FE12c §8)', () => {
+  async function renderReentry(onPut: (body: Record<string, unknown>) => void) {
+    signInAs('ADMIN', 50);
+    mockCountryIsoCodeFallback();
+    mockHealthFacilitySearch();
+    server.use(
+      http.get(`http://localhost:4500/api/esavi-cases/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: makeCaseDetail() }),
+      ),
+      http.put(`http://localhost:4500/api/esavi-cases/${CASE_1}`, async ({ request }) => {
+        onPut((await request.json()) as Record<string, unknown>);
+        return HttpResponse.json({ ok: true, message: 'ok', data: makeCaseDetail() });
+      }),
+    );
+    mockEmptyNotifierList(CASE_1);
+
+    const router = createMemoryRouter(
+      [{ path: '/esavi-cases/:id/wizard/case-opening', element: <CaseOpeningStep /> }],
+      { initialEntries: [`/esavi-cases/${CASE_1}/wizard/case-opening`] },
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+    await screen.findByText('ESAVI-2026-0001');
+    return screen.getByLabelText('Fecha del evento');
+  }
+
+  it('con una vacuna del 10 de marzo, poner el 5 de marzo muestra el aviso nombrándola y deja guardar', async () => {
+    const user = setupUser();
+    mockVaccines(CASE_1, [{ vaccineName: 'BCG', vaccinationDate: '2026-03-10' }]);
+    let receivedBody: Record<string, unknown> | null = null;
+    const eventDateInput = await renderReentry((body) => (receivedBody = body));
+
+    fireEvent.change(eventDateInput, { target: { value: '2026-03-05' } });
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Esta fecha deja vacunas con fecha posterior: BCG. Puedes guardar igual.',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(receivedBody).not.toBeNull());
+    expect(receivedBody).toMatchObject({ eventDate: '2026-03-05' });
+  }, 30000);
+
+  it('con la misma vacuna, poner el 10 de marzo no avisa', async () => {
+    mockVaccines(CASE_1, [{ vaccineName: 'BCG', vaccinationDate: '2026-03-10' }]);
+    const eventDateInput = await renderReentry(() => {});
+
+    fireEvent.change(eventDateInput, { target: { value: '2026-03-10' } });
+
+    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+  }, 30000);
+
+  it('sin vacunas cargadas, tampoco avisa', async () => {
+    mockVaccines(CASE_1, []);
+    const eventDateInput = await renderReentry(() => {});
+
+    fireEvent.change(eventDateInput, { target: { value: '2026-03-05' } });
+
+    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+  }, 30000);
 });

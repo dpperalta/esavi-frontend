@@ -618,6 +618,9 @@
       "irreversibilityNotice": "De patiënt kan daarna niet meer worden gewijzigd. Een geval dat tegen de verkeerde persoon is geopend, kan alleen worden gedeactiveerd, en dat vereist een beheerder.",
       "createButton": "Geval aanmaken",
       "continueButton": "Volgende"
+    },
+    "eventDate": {
+      "warnVaccines": "Deze datum laat vaccins met een latere datum: {{names}}. Je kunt toch opslaan."
     }
   },
   "caseWizard": {

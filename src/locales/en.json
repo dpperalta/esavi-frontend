@@ -618,6 +618,9 @@
       "irreversibilityNotice": "The patient cannot be changed afterward. A case opened against the wrong person can only be deactivated, and that requires an administrator.",
       "createButton": "Create case",
       "continueButton": "Next"
+    },
+    "eventDate": {
+      "warnVaccines": "This date leaves vaccines with a later date: {{names}}. You can still save."
     }
   },
   "caseWizard": {

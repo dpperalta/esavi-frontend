@@ -618,6 +618,9 @@
       "irreversibilityNotice": "El paciente no se podrá cambiar después. Un caso abierto contra la persona equivocada sólo puede darse de baja, y eso exige un administrador.",
       "createButton": "Crear caso",
       "continueButton": "Siguiente"
+    },
+    "eventDate": {
+      "warnVaccines": "Esta fecha deja vacunas con fecha posterior: {{names}}. Puedes guardar igual."
     }
   },
   "caseWizard": {
