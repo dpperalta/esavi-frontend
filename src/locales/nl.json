@@ -787,6 +787,11 @@
       "generic": "We konden de classificatie niet opslaan. Probeer het opnieuw."
     }
   },
+  "diluent": {
+    "select": {
+      "empty": "Het verdunningsmiddelenregister heeft geen verdunningsmiddelen in deze omgeving. Typ de naam om deze direct te registreren."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "Beschrijving van het ESAVI",
@@ -939,6 +944,98 @@
       "deleteAction": "Deactiveren",
       "adminRequiredEdit": "Het corrigeren van deze klinische inhoud vereist een beheerder in deze omgeving.",
       "adminRequiredDelete": "Het verwijderen van deze klinische inhoud vereist een beheerder in deze omgeving."
+    },
+    "roleForbidden": {
+      "editDelete": "Het corrigeren of verwijderen van deze klinische inhoud vereist een hogere rol in deze omgeving."
+    }
+  },
+  "notificationVaccine": {
+    "list": {
+      "title": "Vaccins"
+    },
+    "form": {
+      "title": {
+        "create": "Vaccin toevoegen",
+        "edit": "Vaccin bewerken"
+      },
+      "submitCreate": "Opslaan en verdunningsmiddelen toevoegen"
+    },
+    "field": {
+      "whoCode": "WHODrug-code",
+      "vaccineCode": "Vaccincode",
+      "vaccineName": "Vaccin",
+      "isSuspected": "Verdacht vaccin",
+      "vaccinationDate": "Vaccinatiedatum",
+      "vaccinationTime": "Vaccinatietijd",
+      "doseNumber": "Dosisnummer",
+      "batchNumber": "Partijnummer",
+      "expirationDate": "Vervaldatum",
+      "notes": "Opmerkingen"
+    },
+    "help": {
+      "vaccineCode": "Accepteert ook de nationale code, als het vaccin niet in het WHODrug-woordenboek staat."
+    },
+    "badge": {
+      "suspected": "Verdacht"
+    },
+    "error": {
+      "vaccineRequired": "Kies een vaccin uit de WHODrug-boomstructuur of typ de naam voordat je opslaat.",
+      "vaccinationAfterEvent": "De vaccinatiedatum mag niet later zijn dan de datum van het evenement.",
+      "whodrugNotFound": "Deze invoer is verwijderd uit het WHODrug-woordenboek. Kies een andere of typ de naam rechtstreeks."
+    },
+    "delete": {
+      "confirm": "«{{name}}» deactiveren? Deze actie kan hier niet ongedaan worden gemaakt.",
+      "confirmWithDiluents": "«{{name}}» deactiveren? {{count}} al geregistreerde verdunningsmiddel(en) blijven zonder gekoppeld vaccin achter. Deze actie kan hier niet ongedaan worden gemaakt."
+    },
+    "complete": {
+      "missingVaccine": "Minstens één vaccin",
+      "missingSuspected": "Minstens één verdacht vaccin"
+    }
+  },
+  "notificationDiluent": {
+    "list": {
+      "title": "Verdunningsmiddelen",
+      "add": "Verdunningsmiddel toevoegen",
+      "error": "We konden de verdunningsmiddelen niet laden.",
+      "needsParent": "Sla het vaccin op voordat je de verdunningsmiddelen toevoegt."
+    },
+    "field": {
+      "diluentCatalogId": "Verdunningsmiddel",
+      "diluentName": "Naam van het verdunningsmiddel",
+      "diluentCode": "Code van het verdunningsmiddel",
+      "batchNumber": "Partijnummer",
+      "expirationDate": "Vervaldatum",
+      "reconstitutionDate": "Reconstitutiedatum",
+      "reconstitutionTime": "Reconstitutietijd"
+    },
+    "error": {
+      "diluentRequired": "Kies een verdunningsmiddel uit de catalogus of typ de naam voordat je opslaat.",
+      "reconstitutionAfterVaccination": "De reconstitutiedatum mag niet later zijn dan de vaccinatiedatum.",
+      "parentUnavailable": "Dit vaccin is niet meer beschikbaar. Ververs de vaccinlijst."
+    },
+    "delete": {
+      "confirm": "«{{name}}» deactiveren? Deze actie kan hier niet ongedaan worden gemaakt."
+    }
+  },
+  "whodrugTreePicker": {
+    "level": {
+      "abbreviation": "Afkorting",
+      "drugName": "Naam van het medicijn",
+      "maHolders": "Houder van de handelsvergunning",
+      "form": "Farmaceutische vorm",
+      "strength": "Sterkte"
+    },
+    "nullValue": "Niet gespecificeerd",
+    "matchCount": "{{count}} overeenkomsten",
+    "assignAbbreviation": "Alleen de afkorting toewijzen",
+    "change": "Wijzigen",
+    "notImported": "Het WHODrug-woordenboek is niet geïmporteerd in deze omgeving. Typ de naam rechtstreeks.",
+    "noResults": "Geen resultaten.",
+    "noInfo": "Geen gegevens.",
+    "error": "We konden dit niveau van de WHODrug-boomstructuur niet laden.",
+    "info": {
+      "ingredientTranslation": "Ingrediënt",
+      "noDose": "Dosis"
     }
   },
   "home": {

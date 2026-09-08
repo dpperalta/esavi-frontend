@@ -787,6 +787,11 @@
       "generic": "No pudimos guardar la clasificación. Intenta de nuevo."
     }
   },
+  "diluent": {
+    "select": {
+      "empty": "El maestro de diluyentes no tiene diluyentes registrados en este despliegue. Escribe el nombre para registrarlo directamente."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "Descripción del ESAVI",
@@ -939,6 +944,98 @@
       "deleteAction": "Dar de baja",
       "adminRequiredEdit": "Corregir este contenido clínico exige un administrador en este despliegue.",
       "adminRequiredDelete": "Retirar este contenido clínico exige un administrador en este despliegue."
+    },
+    "roleForbidden": {
+      "editDelete": "Corregir o retirar este contenido clínico exige un rol superior en este despliegue."
+    }
+  },
+  "notificationVaccine": {
+    "list": {
+      "title": "Vacunas"
+    },
+    "form": {
+      "title": {
+        "create": "Añadir vacuna",
+        "edit": "Editar vacuna"
+      },
+      "submitCreate": "Guardar y añadir diluyentes"
+    },
+    "field": {
+      "whoCode": "Código WHODrug",
+      "vaccineCode": "Código de la vacuna",
+      "vaccineName": "Vacuna",
+      "isSuspected": "Vacuna sospechosa",
+      "vaccinationDate": "Fecha de vacunación",
+      "vaccinationTime": "Hora de vacunación",
+      "doseNumber": "Número de dosis",
+      "batchNumber": "Número de lote",
+      "expirationDate": "Fecha de caducidad",
+      "notes": "Observaciones"
+    },
+    "help": {
+      "vaccineCode": "Admite también el código nacional, si la vacuna no está en el diccionario WHODrug."
+    },
+    "badge": {
+      "suspected": "Sospechosa"
+    },
+    "error": {
+      "vaccineRequired": "Elige una vacuna del árbol WHODrug o escribe su nombre antes de guardar.",
+      "vaccinationAfterEvent": "La fecha de vacunación no puede ser posterior a la fecha del evento.",
+      "whodrugNotFound": "Esta entrada fue retirada del diccionario WHODrug. Elige otra o escribe el nombre directamente."
+    },
+    "delete": {
+      "confirm": "¿Dar de baja «{{name}}»? Esta acción no se puede deshacer desde aquí.",
+      "confirmWithDiluents": "¿Dar de baja «{{name}}»? Se quedarán sin vacuna asociada {{count}} diluyente(s) ya registrados. Esta acción no se puede deshacer desde aquí."
+    },
+    "complete": {
+      "missingVaccine": "Al menos una vacuna",
+      "missingSuspected": "Al menos una vacuna sospechosa"
+    }
+  },
+  "notificationDiluent": {
+    "list": {
+      "title": "Diluyentes",
+      "add": "Añadir diluyente",
+      "error": "No pudimos cargar los diluyentes.",
+      "needsParent": "Guarda la vacuna antes de añadir sus diluyentes."
+    },
+    "field": {
+      "diluentCatalogId": "Diluyente",
+      "diluentName": "Nombre del diluyente",
+      "diluentCode": "Código del diluyente",
+      "batchNumber": "Número de lote",
+      "expirationDate": "Fecha de caducidad",
+      "reconstitutionDate": "Fecha de reconstitución",
+      "reconstitutionTime": "Hora de reconstitución"
+    },
+    "error": {
+      "diluentRequired": "Elige un diluyente del catálogo o escribe su nombre antes de guardar.",
+      "reconstitutionAfterVaccination": "La fecha de reconstitución no puede ser posterior a la fecha de vacunación.",
+      "parentUnavailable": "Esta vacuna ya no está disponible. Actualiza la lista de vacunas."
+    },
+    "delete": {
+      "confirm": "¿Dar de baja «{{name}}»? Esta acción no se puede deshacer desde aquí."
+    }
+  },
+  "whodrugTreePicker": {
+    "level": {
+      "abbreviation": "Abreviatura",
+      "drugName": "Nombre del medicamento",
+      "maHolders": "Titular de la autorización",
+      "form": "Forma farmacéutica",
+      "strength": "Concentración"
+    },
+    "nullValue": "Sin especificar",
+    "matchCount": "{{count}} coincidencias",
+    "assignAbbreviation": "Asignar sólo la abreviatura",
+    "change": "Cambiar",
+    "notImported": "El diccionario WHODrug no está importado en este despliegue. Escribe el nombre directamente.",
+    "noResults": "Sin resultados.",
+    "noInfo": "Sin dato.",
+    "error": "No pudimos cargar este nivel del árbol WHODrug.",
+    "info": {
+      "ingredientTranslation": "Ingrediente",
+      "noDose": "Dosis"
     }
   },
   "home": {

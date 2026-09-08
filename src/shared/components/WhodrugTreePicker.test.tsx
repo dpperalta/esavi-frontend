@@ -143,7 +143,7 @@ describe('WhodrugTreePicker', () => {
       // "Vacuna de prueba" appears twice once resolved — the summary heading and the drugName
       // row of the info panel — so the wait is on the unambiguous `<Button>` that only exists in
       // the resolved view, not on the repeated text.
-      expect(await screen.findByRole('button', { name: 'whodrugTreePicker.change' }, LONG_WAIT)).toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: 'Cambiar' }, LONG_WAIT)).toBeInTheDocument();
       expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
       expect(onResolve).toHaveBeenCalledWith({
         vaccineWhodrugId: 'vw-1',
@@ -196,9 +196,7 @@ describe('WhodrugTreePicker', () => {
       // __NULL__ al nivel 3 (API-CONTRACT.md §11.2).
       const levelTwoTrigger = (await screen.findAllByRole('combobox', {}, LONG_WAIT))[1];
       await user.click(levelTwoTrigger);
-      // `whodrugTreePicker.nullValue` has no translation yet (i18n keys land in paso 13) — react-i18next
-      // renders the bare key, which is what this asserts against.
-      await user.click(await screen.findByRole('option', { name: /whodrugTreePicker\.nullValue/ }, LONG_WAIT));
+      await user.click(await screen.findByRole('option', { name: 'Sin especificar' }, LONG_WAIT));
 
       // Nivel 3 (maHolders) aparece para BCG + drugName=__NULL__, y el centinela viajó exacto.
       expect(await screen.findAllByRole('combobox', {}, LONG_WAIT)).toHaveLength(3);
@@ -225,7 +223,9 @@ describe('WhodrugTreePicker', () => {
 
     renderPicker();
 
-    expect(await screen.findByText(/whodrugTreePicker\.notImported/, {}, LONG_WAIT)).toBeInTheDocument();
+    expect(
+      await screen.findByText('El diccionario WHODrug no está importado en este despliegue. Escribe el nombre directamente.', {}, LONG_WAIT),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
   });
 });

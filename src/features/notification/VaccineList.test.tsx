@@ -120,7 +120,7 @@ describe('VaccineList — SPEC FE12c §4 paso 7', () => {
     // El distintivo de sospechosa existe (aparece en la columna de escritorio y en la tarjeta),
     // nunca como una cuarta línea de campo dentro de la tarjeta — lo prueba `cardBadge`, no
     // `columns`.
-    expect(screen.getAllByText('notificationVaccine.badge.suspected').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('Sospechosa').length).toBeGreaterThanOrEqual(2);
   });
 
   it(
@@ -157,7 +157,9 @@ describe('VaccineList — SPEC FE12c §4 paso 7', () => {
       await user.click(deleteButton);
 
       expect(
-        await screen.findByText('notificationVaccine.delete.confirmWithDiluents', { exact: false }),
+        await screen.findByText(
+          '¿Dar de baja «BCG»? Se quedarán sin vacuna asociada 2 diluyente(s) ya registrados. Esta acción no se puede deshacer desde aquí.',
+        ),
       ).toBeInTheDocument();
       expect(deleteCalls).toBe(0);
 

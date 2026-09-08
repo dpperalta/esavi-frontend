@@ -202,12 +202,11 @@ describe('VaccineFormDialog — SPEC FE12c §4 paso 8', () => {
 
       await user.click(await screen.findByRole('combobox', {}, LONG_WAIT));
       await user.click(await screen.findByRole('option', { name: /BCG/ }, LONG_WAIT));
-      // Sin traducción todavía (paso 13) — el texto renderizado es la clave cruda.
-      await user.click(await screen.findByRole('button', { name: 'whodrugTreePicker.assignAbbreviation' }));
+      await user.click(await screen.findByRole('button', { name: 'Asignar sólo la abreviatura' }));
 
       expect(screen.getByDisplayValue('BCG')).toBeInTheDocument(); // vaccineName
 
-      await user.click(screen.getByRole('button', { name: 'Guardar' }));
+      await user.click(screen.getByRole('button', { name: 'Guardar y añadir diluyentes' }));
 
       await waitFor(() => expect(requestBody).not.toBeNull());
       expect(requestBody).toMatchObject({ vaccineName: 'BCG', vaccineWhodrugId: null, notificationId: NOTIFICATION_ID });
@@ -235,18 +234,18 @@ describe('VaccineFormDialog — SPEC FE12c §4 paso 8', () => {
     const user = setupUser();
     renderDialog(null);
 
-    expect(await screen.findByText('notificationDiluent.list.needsParent')).toBeInTheDocument();
+    expect(await screen.findByText('Guarda la vacuna antes de añadir sus diluyentes.')).toBeInTheDocument();
 
-    const vaccineNameInput = screen.getByLabelText('notificationVaccine.field.vaccineName');
+    const vaccineNameInput = screen.getByLabelText('Vacuna');
     await user.type(vaccineNameInput, 'Rotavirus');
-    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar y añadir diluyentes' }));
 
     await waitFor(() => expect(vaccinePosted).toBe(true));
 
     // El modal sigue abierto sobre la fila recién creada, y la sección se habilitó.
     expect(screen.getByDisplayValue('Rotavirus')).toBeInTheDocument();
-    expect(screen.queryByText('notificationDiluent.list.needsParent')).not.toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: /notificationDiluent\.list\.add/ })).toBeInTheDocument();
+    expect(screen.queryByText('Guarda la vacuna antes de añadir sus diluyentes.')).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Añadir diluyente' })).toBeInTheDocument();
   });
 
   it('editar una vacuna existente dispara una sola consulta de diluyentes, y sólo la de esa vacuna', async () => {
@@ -264,7 +263,7 @@ describe('VaccineFormDialog — SPEC FE12c §4 paso 8', () => {
 
     renderDialog('v-1');
 
-    expect(await screen.findByRole('button', { name: /notificationDiluent\.list\.add/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Añadir diluyente' })).toBeInTheDocument();
     expect(diluentRequests).toBe(1);
   });
 });

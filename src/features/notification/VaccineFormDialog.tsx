@@ -12,7 +12,7 @@ import { TimeField } from '@/shared/components/TimeField';
 import { WhodrugTreePicker, type WhodrugResolution } from '@/shared/components/WhodrugTreePicker';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
-import { FormControl, FormField, FormItem, FormLabel } from '@/shared/components/ui/form';
+import { FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { notificationVaccineResource, useNotificationVaccinesByCase } from './api';
@@ -125,6 +125,7 @@ function VaccineFormFields({ form, mutationError, savedVaccineId }: VaccineFormF
                 onChange={(event) => field.onChange(event.target.value || null)}
               />
             </FormControl>
+            <FormDescription>{t('notificationVaccine.help.vaccineCode')}</FormDescription>
           </FormItem>
         )}
       />
@@ -399,7 +400,9 @@ export function VaccineFormDialog({
             onUnmappedError={handleUnmappedError}
             isSubmitting={mutation.isPending}
             onCancel={() => handleOpenChange(false)}
-            submitLabel="common.satelliteList.save"
+            // Fase 1 (§7, tabla de riesgos): «Guardar y añadir diluyentes», no «Guardar» — deja
+            // claro que la vacuna queda creada aunque el usuario cierre el modal después.
+            submitLabel={isEditing ? 'common.satelliteList.save' : 'notificationVaccine.form.submitCreate'}
             cancelLabel="common.satelliteList.cancel"
           >
             {(form) => (

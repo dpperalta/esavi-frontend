@@ -37,8 +37,8 @@ describe('DiluentList — SPEC FE12c §4 paso 9', () => {
   it('sin vaccineId, la sección sale deshabilitada con su explicación y no pide nada al servidor', () => {
     renderList(null);
 
-    expect(screen.getByText('notificationDiluent.list.needsParent')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /notificationDiluent\.list\.add/ })).not.toBeInTheDocument();
+    expect(screen.getByText('Guarda la vacuna antes de añadir sus diluyentes.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Añadir diluyente' })).not.toBeInTheDocument();
   });
 
   it('dar de baja un diluyente pide confirmación nombrando la fila y llama al DELETE sólo tras confirmar', async () => {
@@ -85,7 +85,9 @@ describe('DiluentList — SPEC FE12c §4 paso 9', () => {
     const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Agua estéril' });
     await user.click(deleteButton);
 
-    expect(await screen.findByText('notificationDiluent.delete.confirm', { exact: false })).toBeInTheDocument();
+    expect(
+      await screen.findByText('¿Dar de baja «Agua estéril»? Esta acción no se puede deshacer desde aquí.'),
+    ).toBeInTheDocument();
     expect(deleteCalls).toBe(0);
 
     const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
