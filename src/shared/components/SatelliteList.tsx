@@ -36,6 +36,12 @@ export interface SatelliteListProps<T> {
   // "Eliminar" (SPEC FE12b §3.7) — and the delete confirmation dialog the caller opens on
   // `onDelete`.
   getRowLabel: (row: T) => string;
+  // A visual marker on the mobile card that isn't one of its enumerable fields — the "distintivo
+  // visual" of SPEC FE12c §3.7 ("sospechosa" on `<VaccineList>`): a `null` return paints nothing,
+  // same convention as `column.render`. Desktop shows the same thing through an ordinary column
+  // with no `card` group instead — this prop only exists for the card, which unlike the table
+  // doesn't render every column unconditionally.
+  cardBadge?: (row: T) => ReactNode;
   isLoading?: boolean;
   isError?: boolean;
   error?: EsaviApiError | null;
@@ -59,6 +65,7 @@ export function SatelliteList<T>({
   rows,
   idField,
   getRowLabel,
+  cardBadge,
   isLoading = false,
   isError = false,
   error,
@@ -171,6 +178,7 @@ export function SatelliteList<T>({
                 row={row}
                 columns={columns}
                 label={getRowLabel(row)}
+                badge={cardBadge?.(row)}
                 onEdit={onEdit}
                 onDelete={onDelete}
               />
@@ -231,11 +239,12 @@ interface SatelliteListCardProps<T> {
   row: T;
   columns: SatelliteListColumn<T>[];
   label: string;
+  badge?: ReactNode;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
 }
 
-function SatelliteListCard<T>({ row, columns, label, onEdit, onDelete }: SatelliteListCardProps<T>) {
+function SatelliteListCard<T>({ row, columns, label, badge, onEdit, onDelete }: SatelliteListCardProps<T>) {
   const { t } = useTranslation();
   // A column with no value for this row paints no line at all — never a dash or blank filler
   // (SPEC FE12b §3.7 and its acceptance criterion in §5).
@@ -250,6 +259,7 @@ function SatelliteListCard<T>({ row, columns, label, onEdit, onDelete }: Satelli
     <Card>
       <CardContent className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
+          {badge && <div>{badge}</div>}
           {primary.map(({ column, value }) => (
             <div key={column.key} className="font-medium text-foreground">
               {value}
