@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -111,7 +111,7 @@ function vaccineRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function renderDialog(vaccineId: string | null = null) {
+function renderDialog(vaccineId: string | null = null, eventDate: string | null = null) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
@@ -119,7 +119,7 @@ function renderDialog(vaccineId: string | null = null) {
         open
         caseId={CASE_ID}
         notificationId={NOTIFICATION_ID}
-        eventDate={null}
+        eventDate={eventDate}
         vaccineId={vaccineId}
         onOpenChange={() => {}}
       />
@@ -265,5 +265,31 @@ describe('VaccineFormDialog — SPEC FE12c §4 paso 8', () => {
 
     expect(await screen.findByRole('button', { name: 'Añadir diluyente' })).toBeInTheDocument();
     expect(diluentRequests).toBe(1);
+  });
+
+  it('vaccinationDate posterior a eventDate del caso bloquea el guardado con el error de coherencia temporal (§3.5)', async () => {
+    let vaccinePosted = false;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_ID}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () => treeResponse([])),
+      http.post('http://localhost:4500/api/notification-vaccines', () => {
+        vaccinePosted = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: vaccineRow({}) });
+      }),
+    );
+
+    const user = setupUser();
+    renderDialog(null, '2026-03-05');
+
+    await user.type(screen.getByLabelText('Vacuna'), 'Rotavirus');
+    fireEvent.change(screen.getByLabelText('Fecha de vacunación'), { target: { value: '2026-03-10' } });
+    await user.click(screen.getByRole('button', { name: 'Guardar y añadir diluyentes' }));
+
+    expect(
+      await screen.findByText('La fecha de vacunación no puede ser posterior a la fecha del evento.'),
+    ).toBeInTheDocument();
+    expect(vaccinePosted).toBe(false);
   });
 });

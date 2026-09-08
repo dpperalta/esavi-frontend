@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import '@/shared/config/i18n';
@@ -24,11 +24,11 @@ beforeEach(() => {
   tokenStore.setRefreshToken('a-refresh-token');
 });
 
-function renderList(vaccineId: string | null) {
+function renderList(vaccineId: string | null, vaccinationDate: string | null = null) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <DiluentList vaccineId={vaccineId} vaccinationDate={null} />
+      <DiluentList vaccineId={vaccineId} vaccinationDate={vaccinationDate} />
     </QueryClientProvider>,
   );
 }
@@ -94,5 +94,31 @@ describe('DiluentList — SPEC FE12c §4 paso 9', () => {
     await user.click(confirmButton);
 
     await waitFor(() => expect(deleteCalls).toBe(1));
+  });
+
+  it('reconstitutionDate posterior a vaccinationDate bloquea el guardado con el error de coherencia temporal (§3.5)', async () => {
+    let diluentPosted = false;
+    server.use(
+      http.get('http://localhost:4500/api/notification-diluents/vaccine/v-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.post('http://localhost:4500/api/notification-diluents', () => {
+        diluentPosted = true;
+        return HttpResponse.json({ ok: true, message: 'ok' });
+      }),
+    );
+
+    const user = setupUser();
+    renderList('v-1', '2026-03-10');
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir diluyente' }));
+    await user.type(screen.getByLabelText('Nombre del diluyente'), 'Agua estéril');
+    fireEvent.change(screen.getByLabelText('Fecha de reconstitución'), { target: { value: '2026-03-15' } });
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(
+      await screen.findByText('La fecha de reconstitución no puede ser posterior a la fecha de vacunación.'),
+    ).toBeInTheDocument();
+    expect(diluentPosted).toBe(false);
   });
 });
