@@ -936,9 +936,10 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
 
     renderNotificationStep();
 
-    // Se espera a que el formulario esté listo (la ficha grave ya renderizada) antes de afirmar
-    // la ausencia — de lo contrario un falso negativo por el skeleton pasaría el test.
-    await screen.findByText('Ficha de notificación grave');
+    // Se espera a que el formulario esté listo (una bandera de la rama grave ya renderizada) antes
+    // de afirmar la ausencia — de lo contrario un falso negativo por el skeleton pasaría el test.
+    // Desde SPEC FE12e §4 paso 7 las banderas van en línea: ya no hay bloque con título propio.
+    await screen.findByText('¿Tiene antecedentes de eventos previos similares al actual?');
 
     expect(
       screen.queryByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
@@ -962,9 +963,9 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     expect(
       await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).toBeInTheDocument();
-    // Dos marcas (SPEC FE12d §4 paso 7): la ficha grave y `PregnancySection` comparten la misma
-    // compuerta y cada una pinta la suya.
-    expect(screen.getAllByText('Si aplica')).toHaveLength(2);
+    // Una sola marca desde SPEC FE12e §4 paso 7: disuelta la ficha grave, `PregnancySection` es
+    // el único bloque que pinta la compuerta.
+    expect(screen.getAllByText('Si aplica')).toHaveLength(1);
   }, 30000);
 
   it('con paciente femenino en edad fértil, el bloque aparece sin la marca', async () => {
@@ -1019,7 +1020,7 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     expect(
       await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText('Si aplica')).toHaveLength(2);
+    expect(screen.getAllByText('Si aplica')).toHaveLength(1);
   }, 30000);
 
   it('con la fila de configuración ausente, el bloque sale deshabilitado con su explicación y el resto del paso 4 sigue utilizable (SPEC FE12d §4 paso 7)', async () => {

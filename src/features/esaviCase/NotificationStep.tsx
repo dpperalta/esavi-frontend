@@ -76,9 +76,20 @@ import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStor
 import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
 import { PregnancySection } from './PregnancySection';
-import { SevereNotificationFields } from './SevereNotificationFields';
 import { VaccinationBackgroundSection } from './VaccinationBackgroundSection';
 import { VerificationSourceSection } from './VerificationSourceSection';
+
+// The four severe-branch flags of section 1 (SPEC FE12e §3.1), inline since the block that held
+// them was dissolved. They share shape and behaviour, so they render from a list.
+const SEVERE_HISTORY_FLAGS = [
+  { name: 'hasPreviousEventHistory', labelKey: 'notification.severe.hasPreviousEventHistory' },
+  { name: 'hasAllergyToOtherVaccines', labelKey: 'notification.severe.hasAllergyToOtherVaccines' },
+  { name: 'hasAllergyToMedications', labelKey: 'notification.severe.hasAllergyToMedications' },
+  {
+    name: 'hasAllergyToPreviousSameVaccine',
+    labelKey: 'notification.severe.hasAllergyToPreviousSameVaccine',
+  },
+] as const;
 
 function NotificationStepSkeleton() {
   return (
@@ -787,6 +798,27 @@ function NotificationFormBody({
           />
         </div>
 
+        {/* Las cuatro banderas de la ficha grave, en línea entre las dos de la cabecera
+            (SPEC FE12e §3.1 sección 1): el bloque que las agrupaba se disolvió en el paso 7. */}
+        {notificationType === 'SEVERE' &&
+          SEVERE_HISTORY_FLAGS.map(({ name, labelKey }) => (
+            <div key={name} className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
+              <Controller
+                control={form.control}
+                name={name}
+                render={({ field }) => (
+                  <AnswerOptionField
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    ariaLabel={t(labelKey)}
+                    variant="unknown"
+                  />
+                )}
+              />
+            </div>
+          ))}
+
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-foreground">
             {t('notification.fields.takesMedication')}
@@ -818,6 +850,31 @@ function NotificationFormBody({
           )}
         </div>
       </div>
+
+      {/* `severeNotes` cierra la sección de banderas y no el bloque de embarazo (SPEC FE12e §3.1,
+          §6): el embarazo ya tiene su `pregnancyNotes`, y dos campos de notas seguidos en la misma
+          caja son indistinguibles para quien rellena. */}
+      {notificationType === 'SEVERE' && (
+        <Controller
+          control={form.control}
+          name="severeNotes"
+          render={({ field }) => (
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="severeNotification-notes"
+                className="text-sm font-medium text-foreground"
+              >
+                {t('notification.fields.notes')}
+              </label>
+              <Textarea
+                id="severeNotification-notes"
+                value={field.value ?? ''}
+                onChange={(event) => field.onChange(event.target.value || null)}
+              />
+            </div>
+          )}
+        />
+      )}
 
       {/* Sólo existen con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
           `notificationId` no hay padre al que colgar ningún satélite. */}
@@ -965,17 +1022,12 @@ function NotificationFormBody({
         complicationsDerived={hasActiveComplications}
         loadError={pregnancyLoadError}
         onRetryLoad={onRetryPregnancyLoad}
+        showsSevereComplications={notificationType === 'SEVERE'}
+        hasPregnancyComplications={watchedValues.hasPregnancyComplications}
+        pregnancyComplicationsDescription={watchedValues.pregnancyComplicationsDescription}
       />
 
-      {notificationType === 'SEVERE' ? (
-        <SevereNotificationFields
-          control={form.control}
-          pregnancyGate={pregnancyGate}
-          hasPregnancyComplications={watchedValues.hasPregnancyComplications}
-          pregnancyComplicationsDescription={watchedValues.pregnancyComplicationsDescription}
-          complicationsDerived={hasActiveComplications}
-        />
-      ) : (
+      {notificationType === 'NON_SEVERE' && (
         <>
           <VaccinationBackgroundSection
             control={form.control}
