@@ -60,6 +60,7 @@ notification ──┬──> severeNotification            1:1, si es grave
                ├──> notificationEvent      (N)    eventos, con término diagnóstico
                ├──> notificationMedication (N)    medicación concomitante
                ├──> notificationVaccine    (N) ──> notificationDiluent (N)
+               ├──> notificationMedicalHistory (N) antecedentes, con término diagnóstico
                └──> notificationPregnancy   1:1 ──> notificationPregnancyComplication (N)
 ```
 
@@ -73,7 +74,7 @@ Dos nietas: `notificationDiluent` cuelga de **`notificationVaccine`**, no de la 
 
 ## 4. La rama de investigación
 
-`investigation` tiene **diez satélites directos** y **dos nietas**:
+`investigation` tiene **once satélites directos** y **dos nietas**:
 
 ```
 investigation ──┬──> investigationSource               (N)  fuentes de verificación
@@ -85,7 +86,8 @@ investigation ──┬──> investigationSource               (N)  fuentes de
                 ├──> investigationVaccineAdministered  (N)  vacunas con número de dosis
                 ├──> investigationColdChain            1:1  conservación y transporte
                 ├──> investigationAdministrationError  1:1
-                └──> investigationCommunity            1:1
+                ├──> investigationCommunity            1:1
+                └──> investigationDiagnostic           (N)  diagnósticos finales o presuntivos
 ```
 
 `investigation` sólo exige `caseId`: **todo lo demás es nulable**. La tabla está diseñada para llenarse por partes, que es exactamente lo que necesita el wizard.
@@ -96,6 +98,7 @@ Detalles que afectan a la interfaz:
 - `evaluationInstitution` cuelga de `investigationClinicalEvaluation` y **lleva columnas cifradas** (`personName`, `personContact`): el backend descifra fila a fila al listar.
 - `investigationVaccinationContext` tiene **dos claves foráneas contra el mismo catálogo** (`vaccinationMoment`).
 - Varios satélites tienen la primary key **igual** a la foránea y **no tienen `isActive`**: no exponen activación (`005A`/`005B`).
+- `investigationDiagnostic` **no es nieta**: cuelga de la investigación directamente, y no exige la evaluación clínica. Comparte con `notificationEvent`, `notificationMedicalHistory` y `notificationPregnancyComplication` la resolución contra `diagnosticTerm` (`CASE-PROCESS.md` §5.5.6).
 
 ---
 
