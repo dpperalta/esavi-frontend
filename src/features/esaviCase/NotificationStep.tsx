@@ -5,13 +5,16 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AnswerOption } from '@/contracts/common';
 import type { CreateNonSevereNotificationInput } from '@/contracts/nonSevereNotification';
 import type { CreateNotificationInput } from '@/contracts/notification';
+import type { CreateNotificationPregnancyInput } from '@/contracts/notificationPregnancy';
 import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
 import type { NonSevereNotificationDetail } from '@/contracts/declared/nonSevereNotification';
 import type { NotificationDetail } from '@/contracts/declared/notification';
 import type { SevereNotificationDetail } from '@/contracts/declared/severeNotification';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
+import type { NotificationPregnancyDetail } from '@/contracts/declared/notificationPregnancy';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { EventList } from '@/features/notification/EventList';
@@ -21,6 +24,8 @@ import {
   nonSevereNotificationByCaseKey,
   nonSevereNotificationResource,
   notificationByCaseKey,
+  notificationPregnancyByNotificationKey,
+  notificationPregnancyResource,
   notificationResource,
   severeNotificationByCaseKey,
   severeNotificationResource,
@@ -28,16 +33,21 @@ import {
   useNotificationByCase,
   useNotificationEventsByCase,
   useNotificationMedicationsByCase,
+  useNotificationPregnancyByNotification,
+  useNotificationPregnancyComplicationsByPregnancy,
   useNotificationVaccinesByCase,
   useSevereNotificationByCase,
 } from '@/features/notification/api';
 import {
   createNotificationCompleteSchema,
   isDeathDateNotBeforeEventDate,
+  NOTIFPRG_ALREADY_EXISTS,
+  NOTIFPRG_PATIENT_NOT_FEMALE,
+  NOTIFPRG_SEX_CONFIG_MISSING,
   nonSevereNotificationErrorFieldMap,
   notificationErrorFieldMap,
+  notificationPregnancyErrorFieldMap,
   notificationSaveSchema,
-  resolvePregnancyGate,
   severeNotificationErrorFieldMap,
   type NotificationCompleteContext,
   type NotificationFormValues,
@@ -57,10 +67,16 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
+import {
+  PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE,
+  usePregnancyGate,
+} from '@/shared/hooks/usePregnancyGate';
+import { useSystemConfigByCode } from '@/shared/hooks/useSystemConfigByCode';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
 import { NonSevereNotificationFields } from './NonSevereNotificationFields';
+import { PregnancySection } from './PregnancySection';
 import { SevereNotificationFields } from './SevereNotificationFields';
 
 function NotificationStepSkeleton() {
@@ -79,7 +95,9 @@ function NotificationStepSkeleton() {
 // travel explicitly — `null` when the death section is hidden, whatever the form holds when it's
 // visible — so the same `PUT` that moves the outcome away from `DEATH` also clears the three
 // (§3.5 "al ocultarse pone los tres campos a null").
-function buildNotificationPayload(values: NotificationFormValues): Partial<CreateNotificationInput> {
+function buildNotificationPayload(
+  values: NotificationFormValues,
+): Partial<CreateNotificationInput> {
   return {
     esaviDescription: values.esaviDescription.trim(),
     hasRelevantMedicalHistory: values.hasRelevantMedicalHistory ?? null,
@@ -97,7 +115,9 @@ function buildNotificationPayload(values: NotificationFormValues): Partial<Creat
   };
 }
 
-function buildSeverePayload(values: NotificationFormValues): Partial<CreateSevereNotificationInput> {
+function buildSeverePayload(
+  values: NotificationFormValues,
+): Partial<CreateSevereNotificationInput> {
   return {
     hasPreviousEventHistory: values.hasPreviousEventHistory ?? null,
     hasAllergyToOtherVaccines: values.hasAllergyToOtherVaccines ?? null,
@@ -127,6 +147,24 @@ function buildNonSeverePayload(
     verifiedOtherSource: values.verifiedOtherSource ?? null,
     otherSourceDescription: values.otherSourceDescription ?? null,
     notes: values.nonSevereNotes ?? null,
+  };
+}
+
+function buildPregnancyPayload(
+  values: NotificationFormValues,
+): Partial<CreateNotificationPregnancyInput> {
+  return {
+    // El contrato declara `wasPregnantAtVaccination` sin `| null` porque el `001` nunca la acepta
+    // vacía (§3.3) — pero el `004` sí (`notificationPregnancy.service.ts`, "nullable here although
+    // it is required by the 001"), y `Partial<...>` sólo añade `| undefined`, no `| null`. El cast
+    // es a propósito: en tiempo de ejecución el `null` explícito es justo lo que retira una
+    // respuesta dada por error sobre una fila que ya existe (§3.3).
+    wasPregnantAtVaccination: (values.wasPregnantAtVaccination ?? null) as AnswerOption | undefined,
+    wasPregnantAtEsavi: values.wasPregnantAtEsavi ?? null,
+    lastMenstruationDate: values.lastMenstruationDate ?? null,
+    probableDeliveryDate: values.probableDeliveryDate ?? null,
+    hasComplications: values.hasComplications ?? null,
+    notes: values.pregnancyNotes ?? null,
   };
 }
 
@@ -181,13 +219,26 @@ interface NotificationFormBodyProps {
   notification: NotificationDetail | null;
   severeNotification: SevereNotificationDetail | null;
   nonSevereNotification: NonSevereNotificationDetail | null;
+  notificationPregnancy: NotificationPregnancyDetail | null;
   notificationType: 'SEVERE' | 'NON_SEVERE';
   eventDate: string | null;
   pregnancyGate: PregnancyGateState;
+  // `PREGNANCY_FEMALE_SEX_ITEM` sin sembrar (SPEC FE12d §3.4, §3.6) — el bloque se muestra igual,
+  // deshabilitado con su explicación, en vez de desaparecer.
+  pregnancyConfigMissing: boolean;
+  // Sólo para el toast de `NOTIFPRG_001_PATIENT_NOT_FEMALE` (§3.5, §4 paso 8): nombra el sexo que
+  // el paciente tiene registrado. `name` ya llega en el idioma activo (§7.2, "el `catalogItem` que
+  // trae `ESAVI-PATIENT-003`").
+  patientSexName: string | null;
   // Caso cerrado (SPEC FE12b §3.6): las listas de satélites pasan a sólo lectura — sin «Añadir»
   // y sin acciones de fila. El aviso en sí lo pinta `CaseWizardPage` (FE08); esto sólo retira las
   // acciones que ese aviso ya explica que no aplican.
   isClosed: boolean;
+  // El `GET` del bloque de embarazo falló (SPEC FE12d §4 paso 14): `readyToRenderForm` ya lo
+  // espera para no parpadear, pero sin este banner el fallo quedaba en silencio y el bloque se
+  // pintaba vacío como si no hubiera datos que leer.
+  pregnancyLoadError: boolean;
+  onRetryPregnancyLoad: () => void;
 }
 
 // The form itself (SPEC FE12a §3.5, §3.1): only mounted once `NotificationStep` resolved workflow
@@ -198,10 +249,15 @@ function NotificationFormBody({
   notification,
   severeNotification,
   nonSevereNotification,
+  notificationPregnancy,
   notificationType,
   eventDate,
   pregnancyGate,
+  pregnancyConfigMissing,
+  patientSexName,
   isClosed,
+  pregnancyLoadError,
+  onRetryPregnancyLoad,
 }: NotificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -212,6 +268,8 @@ function NotificationFormBody({
   const severeUpdate = severeNotificationResource.useUpdate();
   const nonSevereCreate = nonSevereNotificationResource.useCreate();
   const nonSevereUpdate = nonSevereNotificationResource.useUpdate();
+  const pregnancyCreate = notificationPregnancyResource.useCreate();
+  const pregnancyUpdate = notificationPregnancyResource.useUpdate();
   const outcomeItems = useCatalogItemsByTypeCode('outcome');
 
   // Never in `useState` (SPEC FE12a §3.4, corrigiendo el mismo patrón de FE11 en el paso 2 de
@@ -221,6 +279,7 @@ function NotificationFormBody({
   const notificationId = notification?.notificationId ?? null;
   const severeNotificationId = severeNotification?.notificationId ?? null;
   const nonSevereNotificationId = nonSevereNotification?.notificationId ?? null;
+  const pregnancyId = notificationPregnancy?.pregnancyId ?? null;
 
   // La misma clave que `<MedicationList>` consulta por su cuenta (TanStack Query la comparte, no
   // duplica la petición): aquí sólo hace falta el conteo para bloquear `takesMedication` en la
@@ -237,6 +296,15 @@ function NotificationFormBody({
   const vaccines = useNotificationVaccinesByCase(caseId, notificationId !== null);
   const hasAtLeastOneVaccine = (vaccines.data?.rows.length ?? 0) > 0;
   const hasAtLeastOneSuspectedVaccine = (vaccines.data?.rows ?? []).some((row) => row.isSuspected);
+  // La derivación de §6.5 (SPEC FE12d §4 paso 11): misma clave de caché que
+  // `<PregnancyComplicationList>` lee por su cuenta, sin petición propia. «Derivado en render, no
+  // es estado» (§3.4 tabla) — nada aquí escribe el formulario; `handleValidSubmit` decide el envío
+  // efectivo más abajo.
+  const complications = useNotificationPregnancyComplicationsByPregnancy(
+    pregnancyId ?? undefined,
+    pregnancyId !== null,
+  );
+  const hasActiveComplications = (complications.data?.rows.length ?? 0) > 0;
   // `useCan()` decide aquí sólo qué frase se muestra, nunca si el control existe (§3.5, la línea
   // que §10.4 no quiere que se cruce): mientras `NOTIFMED-005A` siga en ADMIN, un USER no puede
   // borrar las filas y por tanto no puede cambiar la respuesta en absoluto.
@@ -258,9 +326,11 @@ function NotificationFormBody({
     hasAllergyToPreviousSameVaccine: severeNotification?.hasAllergyToPreviousSameVaccine ?? null,
     // Los dos de embarazo llegan en el paso 13, junto con su compuerta.
     hasPregnancyComplications: severeNotification?.hasPregnancyComplications ?? null,
-    pregnancyComplicationsDescription: severeNotification?.pregnancyComplicationsDescription ?? null,
+    pregnancyComplicationsDescription:
+      severeNotification?.pregnancyComplicationsDescription ?? null,
     severeNotes: severeNotification?.notes ?? null,
-    vaccinationHealthFacilityId: nonSevereNotification?.vaccinationHealthFacility?.healthFacilityId ?? null,
+    vaccinationHealthFacilityId:
+      nonSevereNotification?.vaccinationHealthFacility?.healthFacilityId ?? null,
     vaccinationSiteItemId: nonSevereNotification?.vaccinationSite?.catalogItemId ?? null,
     vaccinationCenterAddress: nonSevereNotification?.vaccinationCenterAddress ?? null,
     vaccinationGeoLocationId: nonSevereNotification?.vaccinationGeoLocation?.geoLocationId ?? null,
@@ -272,6 +342,14 @@ function NotificationFormBody({
     verifiedOtherSource: nonSevereNotification?.verifiedOtherSource ?? null,
     otherSourceDescription: nonSevereNotification?.otherSourceDescription ?? null,
     nonSevereNotes: nonSevereNotification?.notes ?? null,
+    // El bloque de embarazo (SPEC FE12d §3.5): sin fila todavía, los seis campos arrancan vacíos —
+    // «Alta (sin fila todavía)» de §3.6, no un estado de error.
+    wasPregnantAtVaccination: notificationPregnancy?.wasPregnantAtVaccination ?? null,
+    wasPregnantAtEsavi: notificationPregnancy?.wasPregnantAtEsavi ?? null,
+    lastMenstruationDate: notificationPregnancy?.lastMenstruationDate ?? null,
+    probableDeliveryDate: notificationPregnancy?.probableDeliveryDate ?? null,
+    hasComplications: notificationPregnancy?.hasComplications ?? null,
+    pregnancyNotes: notificationPregnancy?.notes ?? null,
   };
 
   const form = useForm<NotificationFormValues>({
@@ -303,11 +381,14 @@ function NotificationFormBody({
     }
     // 'restore': gana el borrador sobre los valores de la fila que `defaultValues` ya sembró.
     const draftValues = draft?.values as NotificationFormValues;
-    (Object.entries(draftValues) as [keyof NotificationFormValues, NotificationFormValues[keyof NotificationFormValues]][]).forEach(
-      ([key, value]) => {
-        form.setValue(key, value, { shouldDirty: true });
-      },
-    );
+    (
+      Object.entries(draftValues) as [
+        keyof NotificationFormValues,
+        NotificationFormValues[keyof NotificationFormValues],
+      ][]
+    ).forEach(([key, value]) => {
+      form.setValue(key, value, { shouldDirty: true });
+    });
     toast.info(t('notification.draft.restored'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -323,7 +404,9 @@ function NotificationFormBody({
     if (!hasResolvedDraftRef.current || !form.formState.isDirty) return;
     if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
     draftDebounceRef.current = setTimeout(() => {
-      useDraftsStore.getState().set(caseId, 'notification', watchedValues, baseUpdatedAtRef.current);
+      useDraftsStore
+        .getState()
+        .set(caseId, 'notification', watchedValues, baseUpdatedAtRef.current);
     }, 500);
     return () => {
       if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
@@ -377,7 +460,15 @@ function NotificationFormBody({
   }, [pregnancyGate, form]);
 
   const handleValidSubmit = useCallback(
-    async (values: NotificationFormValues) => {
+    async (rawValues: NotificationFormValues) => {
+      // La derivación de §6.5 se aplica aquí, al envío, no al formulario (§3.4 tabla "derivado en
+      // render, no es estado") — con ≥1 complicación activa, lo que se guarda es `'YES'` en los
+      // dos campos aunque el usuario no los haya tocado, sin que eso dispare un `PUT` propio: viaja
+      // en las fases 2 y 3 de esta misma cadena.
+      const values: NotificationFormValues = hasActiveComplications
+        ? { ...rawValues, hasComplications: 'YES', hasPregnancyComplications: 'YES' }
+        : rawValues;
+
       if (!isDeathDateNotBeforeEventDate(values.deathDate, eventDate)) {
         form.setError('deathDate', {
           type: 'client',
@@ -460,20 +551,20 @@ function NotificationFormBody({
             } as CreateNonSevereNotificationInput);
           }
         }
-        toast.success(t(successToastKey));
-        form.reset(values);
-        // Se borra en cuanto el guardado completo responde correctamente (SPEC FE12a §3.4) — no
-        // antes, para que un fallo de la rama deje el borrador como red de seguridad de lo que
-        // todavía no llegó a guardarse.
-        useDraftsStore.getState().clear(caseId, 'notification');
+        // Sin `toast.success`/`form.reset`/limpiar el borrador todavía (SPEC FE12d §4 paso 8): la
+        // cadena sigue con el bloque de embarazo, y las tres acciones de cierre viven en un único
+        // sitio al final de las tres fases, no una por tabla.
       } catch (err) {
         if (!(err instanceof EsaviApiError)) {
           throw err;
         }
         const alreadyExistsCode =
-          notificationType === 'SEVERE' ? 'SEVNOT_001_ALREADY_EXISTS' : 'NSEVNOT_001_ALREADY_EXISTS';
+          notificationType === 'SEVERE'
+            ? 'SEVNOT_001_ALREADY_EXISTS'
+            : 'NSEVNOT_001_ALREADY_EXISTS';
         // Se trata como éxito (SPEC FE12a §3.5, §6): el `POST` anterior sí llegó, sólo se perdió
-        // la respuesta — no hay nada que reintentar, sólo releer con el `006`.
+        // la respuesta — no hay nada que reintentar en esta fase, sólo releer con el `006` y
+        // continuar la cadena hacia el bloque de embarazo (SPEC FE12d §4 paso 8: sin `return`).
         if (err.code === alreadyExistsCode) {
           await queryClient.invalidateQueries({
             queryKey:
@@ -481,43 +572,117 @@ function NotificationFormBody({
                 ? severeNotificationByCaseKey(caseId)
                 : nonSevereNotificationByCaseKey(caseId),
           });
-          toast.success(t(successToastKey));
-          form.reset(values);
-          useDraftsStore.getState().clear(caseId, 'notification');
-          return;
-        }
-        const notSameTypeCode =
-          notificationType === 'SEVERE'
-            ? 'SEVNOT_001_NOTIFICATION_NOT_SEVERE'
-            : 'NSEVNOT_001_NOTIFICATION_NOT_NON_SEVERE';
-        // La gravedad ya no es la que esta pestaña creía (SPEC FE12a §3.5, §7 riesgo "dos
-        // pestañas"): se invalida workflow y clasificación en vez de reintentar a ciegas.
-        if (err.code === notSameTypeCode) {
-          await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
-          await queryClient.invalidateQueries({ queryKey: ['classification'] });
+        } else {
+          const notSameTypeCode =
+            notificationType === 'SEVERE'
+              ? 'SEVNOT_001_NOTIFICATION_NOT_SEVERE'
+              : 'NSEVNOT_001_NOTIFICATION_NOT_NON_SEVERE';
+          // La gravedad ya no es la que esta pestaña creía (SPEC FE12a §3.5, §7 riesgo "dos
+          // pestañas"): se invalida workflow y clasificación en vez de reintentar a ciegas.
+          if (err.code === notSameTypeCode) {
+            await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
+            await queryClient.invalidateQueries({ queryKey: ['classification'] });
+            toast.error(getErrorMessage(err));
+            return;
+          }
+          const branchFieldMap =
+            notificationType === 'SEVERE'
+              ? severeNotificationErrorFieldMap
+              : nonSevereNotificationErrorFieldMap;
+          const field = branchFieldMap[err.code];
+          if (field) {
+            form.setError(field, { type: 'server', message: err.message });
+            return;
+          }
           toast.error(getErrorMessage(err));
           return;
         }
-        const branchFieldMap =
-          notificationType === 'SEVERE' ? severeNotificationErrorFieldMap : nonSevereNotificationErrorFieldMap;
-        const field = branchFieldMap[err.code];
-        if (field) {
-          form.setError(field, { type: 'server', message: err.message });
+      }
+
+      // Fase 3 — el bloque de embarazo (SPEC FE12d §4 paso 8), con el `resolvedNotificationId` que
+      // ya resolvió la fase 1. Sólo se intenta detrás de la compuerta abierta y con la
+      // configuración sembrada, y — decisión explícita, fuera de lo que dice el spec — únicamente
+      // si ya existe la fila (siempre `004`, responda o no el usuario) o si `wasPregnantAtVaccination`
+      // tiene respuesta, lo único que el `001` exige: un bloque intacto no dispara un `POST` que el
+      // usuario no pidió, mismo criterio que FE12c no encadenó el `POST` de una vacuna sin
+      // identidad tras el de la cabecera.
+      const attemptsPregnancyWrite =
+        pregnancyGate !== 'hidden' &&
+        !pregnancyConfigMissing &&
+        (pregnancyId !== null || values.wasPregnantAtVaccination != null);
+
+      if (attemptsPregnancyWrite) {
+        try {
+          const pregnancyPayload = buildPregnancyPayload(values);
+          if (pregnancyId) {
+            await pregnancyUpdate.mutateAsync({ id: pregnancyId, data: pregnancyPayload });
+          } else {
+            await pregnancyCreate.mutateAsync({
+              ...pregnancyPayload,
+              notificationId: resolvedNotificationId,
+            } as CreateNotificationPregnancyInput);
+          }
+          await queryClient.invalidateQueries({
+            queryKey: notificationPregnancyByNotificationKey(resolvedNotificationId ?? ''),
+          });
+        } catch (err) {
+          if (!(err instanceof EsaviApiError)) {
+            throw err;
+          }
+          // Los tres propios de §3.5 con toast propio — ninguno señala un campo del formulario que
+          // el usuario pueda corregir ahí mismo.
+          if (err.code === NOTIFPRG_PATIENT_NOT_FEMALE) {
+            toast.error(
+              t('notification.pregnancy.error.patientNotFemale', { sex: patientSexName ?? '—' }),
+            );
+            return;
+          }
+          if (err.code === NOTIFPRG_SEX_CONFIG_MISSING) {
+            // Mismo texto que el bloque deshabilitado por configuración (§3.6): no se presenta
+            // como fallo del servidor, es un despliegue sin sembrar.
+            toast.error(t('notification.pregnancy.notConfigured'));
+            return;
+          }
+          if (err.code === NOTIFPRG_ALREADY_EXISTS) {
+            toast.error(t('notification.pregnancy.error.alreadyExists'));
+            return;
+          }
+          const field = notificationPregnancyErrorFieldMap[err.code];
+          if (field) {
+            form.setError(field, { type: 'server', message: err.message });
+            return;
+          }
+          toast.error(getErrorMessage(err));
           return;
         }
-        toast.error(getErrorMessage(err));
       }
+
+      // Fin de la cadena (SPEC FE12a §3.5, extendida por SPEC FE12d §4 paso 8): una sola
+      // confirmación para las tres fases, no una por tabla.
+      toast.success(t(successToastKey));
+      form.reset(values);
+      // Se borra en cuanto el guardado completo responde correctamente (SPEC FE12a §3.4) — no
+      // antes, para que un fallo en cualquier fase deje el borrador como red de seguridad de lo
+      // que todavía no llegó a guardarse.
+      useDraftsStore.getState().clear(caseId, 'notification');
     },
     [
       caseId,
       create,
       eventDate,
       form,
+      hasActiveComplications,
       nonSevereCreate,
       nonSevereNotificationId,
       nonSevereUpdate,
       notificationId,
       notificationType,
+      patientSexName,
+      pregnancyConfigMissing,
+      pregnancyCreate,
+      pregnancyGate,
+      pregnancyId,
+      pregnancyUpdate,
       queryClient,
       severeCreate,
       severeNotificationId,
@@ -527,7 +692,10 @@ function NotificationFormBody({
     ],
   );
 
-  const performSave = useCallback(() => form.handleSubmit(handleValidSubmit)(), [form, handleValidSubmit]);
+  const performSave = useCallback(
+    () => form.handleSubmit(handleValidSubmit)(),
+    [form, handleValidSubmit],
+  );
 
   const pendingFields = computePendingFields(
     watchedValues,
@@ -579,7 +747,10 @@ function NotificationFormBody({
         name="esaviDescription"
         render={({ field, fieldState }) => (
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="notification-esaviDescription" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="notification-esaviDescription"
+              className="text-sm font-medium text-foreground"
+            >
               {t('notification.fields.esaviDescription')}
             </label>
             <Textarea
@@ -656,7 +827,12 @@ function NotificationFormBody({
         readOnly={isClosed}
         takesMedication={watchedValues.takesMedication ?? null}
       />
-      <VaccineList caseId={caseId} notificationId={notificationId} eventDate={eventDate} readOnly={isClosed} />
+      <VaccineList
+        caseId={caseId}
+        notificationId={notificationId}
+        eventDate={eventDate}
+        readOnly={isClosed}
+      />
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-foreground">
@@ -748,7 +924,9 @@ function NotificationFormBody({
         <span className="text-sm font-medium text-foreground">
           {t('notification.fields.requestInvestigation')}
         </span>
-        <p className="text-sm text-muted-foreground">{t('notification.help.requestInvestigation')}</p>
+        <p className="text-sm text-muted-foreground">
+          {t('notification.help.requestInvestigation')}
+        </p>
         <Controller
           control={form.control}
           name="requestInvestigation"
@@ -775,17 +953,33 @@ function NotificationFormBody({
         />
       </div>
 
+      {/* Detrás de la compuerta de `CASE-PROCESS.md` §7.4 (SPEC FE12d §4 paso 7): independiente
+          de la rama, así que va antes de la que corresponda por gravedad. */}
+      <PregnancySection
+        control={form.control}
+        pregnancyGate={pregnancyGate}
+        configMissing={pregnancyConfigMissing}
+        pregnancyId={pregnancyId}
+        isClosed={isClosed}
+        complicationsDerived={hasActiveComplications}
+        loadError={pregnancyLoadError}
+        onRetryLoad={onRetryPregnancyLoad}
+      />
+
       {notificationType === 'SEVERE' ? (
         <SevereNotificationFields
           control={form.control}
           pregnancyGate={pregnancyGate}
           hasPregnancyComplications={watchedValues.hasPregnancyComplications}
           pregnancyComplicationsDescription={watchedValues.pregnancyComplicationsDescription}
+          complicationsDerived={hasActiveComplications}
         />
       ) : (
         <NonSevereNotificationFields
           control={form.control}
-          initialHealthFacilityLabel={nonSevereNotification?.vaccinationHealthFacility?.name ?? null}
+          initialHealthFacilityLabel={
+            nonSevereNotification?.vaccinationHealthFacility?.name ?? null
+          }
           verifiedOtherSource={watchedValues.verifiedOtherSource}
           otherSourceDescription={watchedValues.otherSourceDescription}
         />
@@ -836,8 +1030,16 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       ? ('SEVERE' as const)
       : ('NON_SEVERE' as const)
     : undefined;
-  const severeNotification = useSevereNotificationByCase(caseId, notificationTypeMaybe, stageExists);
-  const nonSevereNotification = useNonSevereNotificationByCase(caseId, notificationTypeMaybe, stageExists);
+  const severeNotification = useSevereNotificationByCase(
+    caseId,
+    notificationTypeMaybe,
+    stageExists,
+  );
+  const nonSevereNotification = useNonSevereNotificationByCase(
+    caseId,
+    notificationTypeMaybe,
+    stageExists,
+  );
   const activeBranch =
     notificationTypeMaybe === 'SEVERE'
       ? severeNotification
@@ -845,16 +1047,27 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
         ? nonSevereNotification
         : null;
 
-  // La compuerta de embarazo (`CASE-PROCESS.md` §7.4): sexo del paciente por `value`, nunca por
-  // `code`/`name` (SPEC F46) — la respuesta de `ESAVI-PATIENT-003` ya trae `sex` resuelto, sin
-  // necesidad de un segundo salto de catálogo. La edad viene ya calculada por `classification`,
-  // nunca reimplementada.
+  // `usePregnancyGate` (SPEC FE12d §4 paso 6) sustituye la resolución en línea que dejó FE12a: la
+  // respuesta de `ESAVI-PATIENT-003` ya trae `sex` resuelto, sin necesidad de un segundo salto de
+  // catálogo, y la edad viene ya calculada por `classification`, nunca reimplementada. `patient`
+  // se sigue leyendo aquí, aparte del hook, sólo para el `readyToRenderForm` de abajo — comparte
+  // caché con la lectura interna del hook, no repite la petición.
   const patientId = esaviCase.data?.patient.patientId;
   const patient = patientResource.useOne(patientId ?? '');
-  const pregnancyGate = resolvePregnancyGate(
-    patient.data?.sex?.value ?? null,
-    classification.data?.age ?? null,
+  const pregnancyGate = usePregnancyGate(caseId);
+
+  // El bloque de embarazo (SPEC FE12d §4 paso 7): sin `notificationId` todavía no hay fila que
+  // leer (§3.6 «Alta, sin fila todavía»), así que el hook se autogobierna con su propio `enabled`
+  // — mismo patrón que `severeNotification`/`nonSevereNotification` de arriba. La fila de
+  // configuración se pide siempre: `useSystemConfigByCode` ya trae su `staleTime` de 30 minutos y
+  // comparte caché con la lectura interna de `usePregnancyGate` (§3.4).
+  const notificationId = notification.data?.notificationId ?? null;
+  const notificationPregnancy = useNotificationPregnancyByNotification(
+    notificationId ?? undefined,
+    notificationId !== null,
   );
+  const femaleSexConfig = useSystemConfigByCode(PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE);
+  const pregnancyConfigMissing = femaleSexConfig.data === null;
 
   const readyToRenderForm =
     !!workflow.data &&
@@ -864,7 +1077,13 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
     // instante después en cuanto se resuelve el sexo real (mismo motivo que `ClassificationStep`
     // espera `readyToResolveAge`, SPEC FE11 §3.6).
     (!!patient.data || patient.isError) &&
-    (!stageExists || (!!notification.data && activeBranch?.data !== undefined));
+    (!stageExists || (!!notification.data && activeBranch?.data !== undefined)) &&
+    // Ídem con el bloque de embarazo: sin `notificationId` no hay nada que esperar (la consulta ni
+    // corre), y con la compuerta cerrada tampoco — sólo espera cuando de verdad hay algo que leer.
+    (notificationId === null ||
+      pregnancyGate === 'hidden' ||
+      notificationPregnancy.data !== undefined ||
+      notificationPregnancy.isError);
 
   // `stages.classification.exists` cuenta también filas desactivadas (`CASE-PROCESS.md` §6.2:
   // "exists no significa utilizable") — el propio `006` de classification filtra por `isActive`
@@ -878,13 +1097,19 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
     classification.error.code === 'CLASSIF_006_NOT_FOUND';
 
   if (classificationInactive) {
-    return <p className="text-sm text-muted-foreground">{t('notification.blocked.classificationInactive')}</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t('notification.blocked.classificationInactive')}
+      </p>
+    );
   }
 
   const loadError = notification.error ?? activeBranch?.error;
   if (notification.isError || activeBranch?.isError) {
     const message =
-      loadError instanceof EsaviApiError ? getErrorMessage(loadError) : t('common.errors.unexpected');
+      loadError instanceof EsaviApiError
+        ? getErrorMessage(loadError)
+        : t('common.errors.unexpected');
     return (
       <div className="flex items-center gap-2">
         <p className="text-sm text-destructive">{message}</p>
@@ -918,10 +1143,15 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       notification={notification.data ?? null}
       severeNotification={severeNotification.data ?? null}
       nonSevereNotification={nonSevereNotification.data ?? null}
+      notificationPregnancy={notificationPregnancy.data ?? null}
       notificationType={notificationType}
       eventDate={esaviCase.data?.eventDate ?? null}
       pregnancyGate={pregnancyGate}
+      pregnancyConfigMissing={pregnancyConfigMissing}
+      patientSexName={patient.data?.sex?.name ?? null}
       isClosed={isClosed}
+      pregnancyLoadError={notificationPregnancy.isError}
+      onRetryPregnancyLoad={() => void notificationPregnancy.refetch()}
     />
   );
 }

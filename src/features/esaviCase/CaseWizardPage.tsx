@@ -127,7 +127,9 @@ export function CaseWizardPage() {
               · Guardar · Siguiente (SPEC FE10 §2) — y no tienen `stage`, así que la barra
               genérica (Guardar · Completar etapa · Siguiente, atada a `useCaseWizard()`) no se
               pinta para ellos. */}
-          {step === 'patient' && <PatientStep patientId={caseDetail.data.patient.patientId} />}
+          {step === 'patient' && (
+            <PatientStep caseId={id} patientId={caseDetail.data.patient.patientId} />
+          )}
           {step === 'case-opening' && <CaseOpeningStep />}
           {step === 'classification' && <ClassificationStep caseId={id} />}
           {step === 'notification' && <NotificationStep caseId={id} />}

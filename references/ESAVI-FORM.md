@@ -15,7 +15,7 @@
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
 | 1 | ¿El evento que va a reportar es un evento grave? (según la clasificación de la OPS/OMS) | isSeriousEvent | classification | - |
-| 2 | Causó la muerte | causedDeath | classification | YES en isSerousEvent |
+| 2 | Causó la muerte | causedDeath | classification | YES en isSeriousEvent |
 | 3 | Genera discapacidad significativa o persistente | causedDisability | classification | YES en isSeriousEvent |
 | 4 | Corresponde a una anomalía congénita | causedCongenitalAnomaly | classification | YES en isSeriousEvent|
 | 5 | Causó muerte fetal | causedFetalDeath | classification | YES en isSeriousEvent |
@@ -30,11 +30,11 @@
 ## Sección 1: Antecedentes de la persona vacunada
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
-| 1 | ¿El paciente presenta antecedentes médicos relevantes? | hasRelevantaMedicalHistory | notification | - |
+| 1 | ¿El paciente presenta antecedentes médicos relevantes? | hasRelevantMedicalHistory | notification | - |
 | 2 | ¿Tiene antecedentes de eventos previos similares al actual? | hasPreviousEventHistory | severeNotification | - |
 | 3 | ¿Tiene antecedentes de reacciones alérgicas a otras vacunas? | hasAllergyToOtherVaccines | severeNotification | - |
 | 4 | ¿Tiene antecedentes de reacciones alérgica a medicamentos? | hasAllergyToMedications | severeNotification | - |
-| 5 | ¿Tiene antecedenets de reacciones alérgicas a dosis previas de la misma vacuna? | hasAllergyToPreviousSameVaccine | severeNotification | - |
+| 5 | ¿Tiene antecedentes de reacciones alérgicas a dosis previas de la misma vacuna? | hasAllergyToPreviousSameVaccine | severeNotification | - |
 | 6 | ¿El paciente estaba tomando algún medicamento cuando se vacunó? | takesMedication | notification | - |
 
 ## Sección 2: Antecedentes médicos (condición: YES en cualquiera del 1 al 5) 
@@ -51,7 +51,7 @@
 | 4 | Vía de administración | administrationRouteItemId | notificationMedication | YES en takesMedication |
 | 5 | Fecha de inicio | startDate | notificationMedication | YES en takesMedication |
 | 6 | Otro (no consta en la lista) | isOtherMedication | notificationMedication  | YES en takesMedication |
-| 7 | Describa el medicamento | OtherMedicationText | notificationMedication | true isOtherMedication |
+| 7 | Describa el medicamento | otherMedicationText | notificationMedication | true isOtherMedication |
 
 ## Sección 4: Datos de embarazo (condición: Sexo Femenino - Edad entre 15 y 49 años)
 | # | Texto en pantalla | variable | Tabla | Condition |
@@ -84,7 +84,7 @@
 | 6 | Lote/número de lote | batchNumber | notificationVaccine | - |
 | 7 | Fecha de expiración | expirationDate | notificationVaccine | - |
 |---|-------------------|----------|----------| ----------|
-| 8 | Nombre del diluyente | diluentCatalogItemId | notificationDiluent | - |
+| 8 | Nombre del diluyente | diluentCatalogId | notificationDiluent | - |
 | 9 | Lote/número de lote | batchNumber | notificationDiluent | - |
 | 10 | Fecha de expiración | expirationDate | notificationDiluent | - |
 | 11 | Fecha de reconstitución | reconstitutionDate | notificationDiluent | - |
@@ -94,14 +94,14 @@
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
 | 1 | Evento Adverso | esaviName | notificationEvent | - |
-| 2 | Principal | isEsaviMain | notificationEvent | - |
+| 2 | Principal | isMainEsavi | notificationEvent | - |
 | 3 | Fecha de inicio | startDate | notificationEvent | - |
 | 4 | Hora de inicio | startTime | notificationEvent | - |
 
 ## Sección 8: Descripción del ESAVI
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
-| 1 | Descipción del ESAVI (signos y síntomas) | esaviDescription | notification | - |
+| 1 | Descripción del ESAVI (signos y síntomas) | esaviDescription | notification | - |
 
 ## Sección 9: Desenlace
 | # | Texto en pantalla | variable | Tabla | Condition |
@@ -110,7 +110,7 @@
 | 2 | Si la persona murió, indique la fecha de la muerte | deathDate | notification | SI outcomeItemId == DEATH  |
 | 3 | ¿Se solicitó una autopsia? | autopsyRequested | notification | SI outcomeItemId == DEATH | 
 | 4 | ¿Fue hecha una autopsia verbal? | verbalAutopsyPerformed | notification | SI outcomeItemId == DEATH |
-| 5 | Investigación requerida | requestedInvestigation | notification | - |
+| 5 | Investigación requerida | requestInvestigation | notification | - |
 
 # Formulario de Notificación No Grave
 
@@ -118,7 +118,7 @@
 
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
-| 1 | ¿El paciente presenta antecedentes médicos relevantes? | hasRelevantaMedicalHistory | notification | - |
+| 1 | ¿El paciente presenta antecedentes médicos relevantes? | hasRelevantMedicalHistory | notification | - |
 | 2 | ¿El paciente estaba tomando algún medicamento cuando se vacunó? | takesMedication | notification | - |
 
 ## Sección 2: Antecedentes médicos (condición: YES en cualquiera del 1 al 5) 
@@ -135,7 +135,7 @@
 | 4 | Vía de administración | administrationRouteItemId | notificationMedication | YES en takesMedication |
 | 5 | Fecha de inicio | startDate | notificationMedication | YES en takesMedication |
 | 6 | Otro (no consta en la lista) | isOtherMedication | notificationMedication  | YES en takesMedication |
-| 7 | Describa el medicamento | OtherMedicationText | notificationMedication | true isOtherMedication |
+| 7 | Describa el medicamento | otherMedicationText | notificationMedication | true isOtherMedication |
 
 ## Sección 4: Datos de embarazo (condición: Sexo Femenino - Edad entre 15 y 49 años)
 | # | Texto en pantalla | variable | Tabla | Condition |
@@ -152,7 +152,7 @@
 | 1 | Sitio de vacunación | vaccinationSiteItemId | nonSevereNotification | - |
 | 2 | Dirección del centro de vacunación | vaccinationCenterAddress | nonSevereNotification | - |
 | 3 | Localidad | vaccinationGeoLocationId | nonSevereNotification | - |
-| 4 | Establecimiento de vacunación | vaccinationHealthFacilityId | - |
+| 4 | Establecimiento de vacunación | vaccinationHealthFacilityId | nonSevereNotification | - |
 
 ## Sección 6: ¿Cómo se verificó la información de la vacunación?
 | # | Texto en pantalla | variable | Tabla | Condition |
@@ -163,7 +163,7 @@
 | 4 | Historias clínicas corroboradas con certificado | verifiedClinicalRecord | nonSevereNotification | - |
 | 5 | No se sabe | verifiedUnknown | nonSevereNotification | - |
 | 6 | Otro | verifiedOtherSource | nonSevereNotification | - |
-| 7 | ¿Cuál | otherSourceDescription | true en verifiedOtherSource | - |
+| 7 | ¿Cuál? | otherSourceDescription | nonSevereNotification | true en verifiedOtherSource |
 
 ## Sección 7:  Selección de vacunas
 | # | Texto en pantalla | variable | Tabla | Condition |
@@ -180,14 +180,14 @@
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
 | 1 | Evento Adverso | esaviName | notificationEvent | - |
-| 2 | Principal | isEsaviMain | notificationEvent | - |
+| 2 | Principal | isMainEsavi | notificationEvent | - |
 | 3 | Fecha de inicio | startDate | notificationEvent | - |
 | 4 | Hora de inicio | startTime | notificationEvent | - |
 
 ## Sección 9: Descripción del ESAVI
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
-| 1 | Descipción del ESAVI (signos y síntomas) | esaviDescription | notification | - |
+| 1 | Descripción del ESAVI (signos y síntomas) | esaviDescription | notification | - |
 
 ## Sección 10: Desenlace
 | # | Texto en pantalla | variable | Tabla | Condition |
@@ -196,7 +196,7 @@
 | 2 | Si la persona murió, indique la fecha de la muerte | deathDate | notification | SI outcomeItemId == DEATH  | *
 | 3 | ¿Se solicitó una autopsia? | autopsyRequested | notification | SI outcomeItemId == DEATH | *
 | 4 | ¿Fue hecha una autopsia verbal? | verbalAutopsyPerformed | notification | SI outcomeItemId == DEATH | *
-| 5 | Investigación requerida | requestedInvestigation | notification | - |
+| 5 | Investigación requerida | requestInvestigation | notification | - |
 
 * Deberían ocultar la opción DEATH (una muerte es un ESAVI Grave, no un No Grave, debería impedir guardar si outcome es DEATH)
 
@@ -210,14 +210,14 @@ Esta ficha sirve de guía para identificar toda la información que se considere
 Subtítulo: Información de investigación
 
 ## Sección 1: Fuentes de información 
-Texto informativo: Indique las fuentes de información consultadas para recopilar la información de las siguiente investigación  (marque todas las que correspondan)
+Texto informativo: Indique las fuentes de información consultadas para recopilar la información de la siguiente investigación (marque todas las que correspondan)
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
 | 1 | Historia clínica | history | investigationSource | - |
-| 2 | Entrevista al vacunado | inverviewVaccinatedPerson | investigationSource | - |
+| 2 | Entrevista al vacunado | interviewVaccinatedPerson | investigationSource | - |
 | 3 | Entrevista al personal de salud | interviewHealthWorker | investigationSource | - |
 | 4 | Registros de vacunación | vaccinationRecord | investigationSource | - |
-| 5 | Informe de autopsia | autopsyRecord | investigaionSource | - |
+| 5 | Informe de autopsia | autopsyRecord | investigationSource | - |
 | 6 | Informe de autopsia verbal | verbalAutopsyRecord | investigationSource | - |
 | 7 | Informe de investigación comunitaria | investigationReport | investigationSource | - |
 | 8 | Otro | other | investigationSource | - |
@@ -232,13 +232,13 @@ Texto informativo: Indique las fuentes de información consultadas para recopila
 | 4 | Fecha de hospitalización | hospitalizationDate | investigation | - |
 | 5 | Fecha de inicio de la investigación | investigationStartDate | investigation | - |
 | 6 | Estado de la persona al momento de la investigación | statusItemId | investigation | - |
-| 6.1 | Si la persona murió, indique la fecha de la muerte | deathDate | investigationAutopsy | DEATH en statusItemId (isDeath se convierte en true |
-| 6.2 | Hora de la muerte | deatTime | investigationAutopsy | DEATH en statusItemId |
+| 6.1 | Si la persona murió, indique la fecha de la muerte | deathDate | investigationAutopsy | DEATH en statusItemId (isDeath se convierte en true) |
+| 6.2 | Hora de la muerte | deathTime | investigationAutopsy | DEATH en statusItemId |
 | 6.3 | Se realizó autopsia | isAutopsyPerformed | investigationAutopsy | DEATH en statusItemId (true isDeath) |
-| 6.4 | Fecha de la autopsia | autopsyDate | investigationAutopsy | ture en isAutopsyPerformed |
-| 6.4 | Registre los resultados de la necropsia | autopsyComments | investigationAutopsy | true en isAutopsyPerformed | 
-| 6.5 | Se ha programado una fecha prevista de la autopsia | isAutopsyScheduled | investigationAutopsy | false en isAutopsyPerformed |
-| 6.6 | Fecha prevista de la autopsia | scheduledAutopsyDate | investigationAutpsy | true en isAutopsyScheduled |
+| 6.4 | Fecha de la autopsia | autopsyDate | investigationAutopsy | true en isAutopsyPerformed |
+| 6.5 | Registre los resultados de la necropsia | autopsyComments | investigationAutopsy | true en isAutopsyPerformed |
+| 6.6 | Se ha programado una fecha prevista de la autopsia | isAutopsyScheduled | investigationAutopsy | false en isAutopsyPerformed |
+| 6.7 | Fecha prevista de la autopsia | scheduledAutopsyDate | investigationAutopsy | true en isAutopsyScheduled |
 
 # Sección A2: Datos del equipo de investigación
 | # | Texto en pantalla | variable | Tabla | Condition |
@@ -251,29 +251,29 @@ Texto informativo: Indique las fuentes de información consultadas para recopila
 ## Sección B: Información pertinente sobre la persona vacunada antes de la inmunización
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
-| 1 | Antecedentes de hospitalización en los 30 días previos a la vacunación actual | hasPriorHospitalizationHistory | investigacionMedicalHistory | - |
-| 2 | Observaciones del antecedente de hospitalización | priorHospitalizationHistoryObservations | investigacionMedicalHistory | YES en hasPriorHospitalizationHistory |
+| 1 | Antecedentes de hospitalización en los 30 días previos a la vacunación actual | hasPriorHospitalizationHistory | investigationMedicalHistory | - |
+| 2 | Observaciones del antecedente de hospitalización | priorHospitalizationObservations | investigationMedicalHistory | YES en hasPriorHospitalizationHistory |
 | 3 | Antecedentes familiares de otra enfermedad (relevantes para un ESAVI) o alergia | hasFamilyHistory | investigationMedicalHistory | - | 
-| 4 | Observaciones de antecedentes familiares | familyHisotryObservations | investigationMedicalHistory | YES en hasFamilyHistory |
+| 4 | Observaciones de antecedentes familiares | familyHistoryObservations | investigationMedicalHistory | YES en hasFamilyHistory |
 
 ## Sección B1: Preguntas para mujeres
-Texto informativo: Principalmente entre 12 y 50 años, o cuando exista sospecha de embarazo
+Texto informativo: Principalmente entre 12 y 49 años, o cuando exista sospecha de embarazo
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
 | 1 | Confirme si la mujer estaba embarazada en el momento de la vacuna | isPregnancyConfirmed | investigationMedicalHistory | Sexo == Femenino, edad entre 12 y 50 años |
 | 2 | Semanas de gestación | gestationalWeeks | investigationMedicalHistory | YES en isPregnancyConfirmed |
-| 3 | ¿Cuál método usó para el cálculo de la edad gestacional | gestationalMethodItemId | investigationMedicalHistory | YES en isPregnancyConfirmed |
+| 3 | ¿Cuál método usó para el cálculo de la edad gestacional | gestationMethodItemId | investigationMedicalHistory | YES en isPregnancyConfirmed |
 | 4 | ¿Se identificó algún factor de riesgo de complicaciones obstétricas graves | hasPregnancyRiskFactor | investigationMedicalHistory | YES en isPregnancyConfirmed | 
 | 5 | Explique cuál fue el factor de riesgo | riskFactorDescription | investigationMedicalHistory | YES en hasPregnancyRiskFactor | 
 | 6 | El parto fue: | birthItemId | investigationMedicalHistory | YES en isPregnancyConfirmed |
 | 7 | El nacimiento fue: | deliveryItemId | investigationMedicalHistory | YES en isPregnancyConfirmed |
 | 8 | Peso al nacer (en gramos) | birthWeightGrams | investigationMedicalHistory | YES en isPregnancyConfirmed |
-| 9 | ¿Cuál fue el desenlace del embarazo? | pregnancyOutcomeItemId | investigationMedicalHistory |  YES en isPregancyConfirmed |
+| 9 | ¿Cuál fue el desenlace del embarazo? | pregnancyOutcomeItemId | investigationMedicalHistory | YES en isPregnancyConfirmed |
 
 ## Sección B2: Afecciones médicas del recién nacido
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
-| 1 | Describa la afección médica del recién nacido | diagnosticTermiId | investigationPregnancyCondition | pregnancyOutcomeItemId == "Nacido vivo con afrección médica al nacer" |
+| 1 | Describa la afección médica del recién nacido | diagnosticTermId | investigationPregnancyCondition | pregnancyOutcomeItemId == "Nacido vivo con afección médica al nacer" |
 
 ## Sección C: Detalles de la primera evaluación clínica del ESAVI
 | # | Texto en pantalla | variable | Tabla | Condition |
@@ -285,32 +285,30 @@ Texto informativo: Principalmente entre 12 y 50 años, o cuando exista sospecha 
 | 4 | Autopsia verbal | sourceVerbalAutopsy | investigationClinicalEvaluation | - |
 | 5 | Otro | sourceOther | investigationClinicalEvaluation | - |
 | 6 | ¿Cuál? | otherDescription | investigationClinicalEvaluation | YES en sourceOther |
-| 7 | ¿La institución en la que fue atendido por primera vez es diferente a la institución en donde recibió el tratamiento definitivo? | evaluationInstitutionTypeItemId | investigationClinicalEvaluation | - |
-| - | ----------------- | - | - - | - |
+| 7 | ¿La institución en la que fue atendido por primera vez es diferente a la institución en donde recibió el tratamiento definitivo? | evaluationInstitutionTypeItemId | evaluationInstitution | - |
 | 7.1 | Nombre de la persona que realizó la atención | personName | evaluationInstitution | DIFFERENT en evaluationInstitutionTypeItemId |
-| 7.2 | Nombre de la institución de antención inicial | evaluationInstitution | healtFacilityId que puebla institutionName | DIFFERENT en evaluationInstitutionTypeItemId |
-| 7. 3 | Contacto de la persona que realizó la atención inicial | personContact | evaluationInstitution | DIFFERENT en evaluationInstitutionTypeItemId |
-| 8 | Nombre e información de contacto de la persona o personas que conoce los detalles clínicmos | clinicalDetailsPersonName | investigationClinicalEvaluation | - |
-| 9 | Si el ESAVI se presentó en un menor de cinto años de edad, ¿hay sospecha de maltrato infantil? | suspectedChildAbuse | investigationClinicalEvaluation | - |
-| 10 | Explique | childAbuseExplanation | true en suspectedChildAbuse |
+| 7.2 | Nombre de la institución de atención inicial | healthFacilityId (y su copia en institutionName) | evaluationInstitution | DIFFERENT en evaluationInstitutionTypeItemId |
+| 7.3 | Contacto de la persona que realizó la atención inicial | personContact | evaluationInstitution | DIFFERENT en evaluationInstitutionTypeItemId |
+| 8 | Nombre e información de contacto de la persona o personas que conocen los detalles clínicos | clinicalDetailsPersonName | investigationClinicalEvaluation | - |
+| 9 | Si el ESAVI se presentó en un menor de cinco años de edad, ¿hay sospecha de maltrato infantil? | suspectedChildAbuse | investigationClinicalEvaluation | - |
+| 10 | Explique | childAbuseExplanation | investigationClinicalEvaluation | true en suspectedChildAbuse |
 | 11 | Si el ESAVI se presentó en una persona adolescente o adulta, ¿hay evidencia de violencia intrafamiliar? | suspectedDomesticViolence | investigationClinicalEvaluation | - |
 | 12 | Explique | domesticViolenceExplanation | investigationClinicalEvaluation | true en suspectedDomesticViolence |
-| 13 | Otros antecedentes sociales relavantes del caso | otherSocialBackground | investigationClinicalEvaluation | - |
+| 13 | Otros antecedentes sociales relevantes del caso | otherSocialBackground | investigationClinicalEvaluation | - |
 | 14 | Signos y síntomas en orden cronológico desde el momento de la vacunación | signsAndSymptoms | investigationClinicalEvaluation | - |
-| 15 | Nombre e información de contracto de la persona o familiares de la persona, con los detalles clínicos | familyClinicalDetails | investigationClinicalEvaluation | - |
-| 16 | Haga un resumen completo de los datos clínicos y paraclínicos del caso, resaltando lo más relevante para el análisis del evento. Por favor, escanee las pruebas físicas del caso y guárdelas organizadamente en su archivo digital | completeClinicalSumary | investigationClinicalEvaluation | - |
+| 15 | Nombre e información de contacto de la persona o familiares de la persona, con los detalles clínicos | familyClinicalDetails | investigationClinicalEvaluation | - |
+| 16 | Haga un resumen completo de los datos clínicos y paraclínicos del caso, resaltando lo más relevante para el análisis del evento. Por favor, escanee las pruebas físicas del caso y guárdelas organizadamente en su archivo digital | completeClinicalSummary | investigationClinicalEvaluation | - |
 | 17 | Diagnóstico final o presuntivo | diagnosticTermId | investigationDiagnostic | Pueden ser N diagnósticos |
 
 ## Sección D: Información relacionada con ESAVI sobre las personas vacunadas en el sitio de vacunación
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
-| 1 | Nombre de la vacuna | vaccineWhodrugId | investigationVaccineAdministration | Pueden ser N vacunas |
-| 2 | Número de dosis administradas | doseNumber | investigationVaccineAdministration | Pueden ser N Vacunas |
-| - | ---- | ---- | ---- | ---- |
-| 3 | Núero de personas vacunadas con el vial de la vacuna involucrada | vaccinatedPerVialCount | investigationVaccinationContext | - |
-| 4 | Especifique las localizaciones | locations | investigationVAccinationContext | - |
-| 5 | ¿Cuándo fue vacunada la persona que tuvo el o los ESAVI | momentItemId | investigationVaccinationContext | - |
-| 6 | ¿En el caso de viales multidosis, se administró la vacuna | multidoseItemId | investigationVaccination Context | - |
+| 1 | Nombre de la vacuna | vaccineWhodrugId | investigationVaccineAdministered | Pueden ser N vacunas |
+| 2 | Número de dosis administradas | doseNumber | investigationVaccineAdministered | Pueden ser N vacunas |
+| 3 | Número de personas vacunadas con el vial de la vacuna involucrada | vaccinatedPerVialCount | investigationVaccinationContext | - |
+| 4 | Especifique las localizaciones | locations | investigationVaccinationContext | - |
+| 5 | ¿Cuándo fue vacunada la persona que tuvo el o los ESAVI? | momentItemId | investigationVaccinationContext | - |
+| 6 | ¿En el caso de viales multidosis, se administró la vacuna? | multidoseItemId | investigationVaccinationContext | - |
 
 ## Sección D1: Conglomerados
 | # | Texto en pantalla | variable | Tabla | Condition |
@@ -318,8 +316,8 @@ Texto informativo: Principalmente entre 12 y 50 años, o cuando exista sospecha 
 | 1 | ¿Es este caso parte de un conglomerado? | isCluster | investigationVaccinationContext | - |
 | 2 | Número de identificación del conglomerado de casos | clusterIdentificationNumber | investigationVaccinationContext | YES en isCluster | 
 | 3 | Si la respuesta es positiva, ¿cuántos casos adicionales se han detectado en el conglomerado? | clusterAdditionalCaseCount | investigationVaccinationContext | YES en isCluster |
-| 4 | ¿Recibieron todos los casos del mismo conglomerado la vacuna del mismo vial? | clusteredUsedSameVial | investigationVaccinationContext | YES en isCluster |
-| 5 | Si no, enumere los viales usados por el conglomerado de casos | clusterSameVialCount | investigationVaccinationContext | NO en clusteredUsedSameVial |
+| 4 | ¿Recibieron todos los casos del mismo conglomerado la vacuna del mismo vial? | clusterUsedSameVial | investigationVaccinationContext | YES en isCluster |
+| 5 | Si no, enumere los viales usados por el conglomerado de casos | clusterSameVialCount | investigationVaccinationContext | NO en clusterUsedSameVial |
 
 ## Sección E1: Cadena de frío y transporte (Cadena de frío)
 Texto informativo: Último sitio de almacenamiento 
@@ -328,10 +326,10 @@ Texto informativo: Último sitio de almacenamiento
 | 1 | ¿Se encuentra monitorizada la temperatura del último refrigerador de almacenamiento con un registro diario a.m. y p.m. de la temperatura? | storageTemperatureMonitored | investigationColdChain | - |
 | 2 | Si marcó "sí", ¿hubo alguna desviación del rango 2°C - 8°C después de que la vacuna se introdujera en el refrigerador? | storageRangeDeviation | investigationColdChain | true en storageTemperatureMonitored |
 | 3 | ¿Se siguió el procedimiento correcto para almacenar las vacunas, los diluyente y las jeringas? | storageProcedureFollowed | investigationColdChain | - |
-| 4 | ¿Había algún otro objeto diferente de las vacunas, del PNI y de los diluyentes en la nevera o el refrigerador | storageOtherObjectsPresent | investigationColdChain | - |
+| 4 | ¿Había algún otro objeto diferente de las vacunas, del PNI y de los diluyentes en la nevera o el refrigerador? | storageOtherObjectPresent | investigationColdChain | - |
 | 5 | ¿Había alguna vacuna parcialmente reconstituida en el refrigerador? | storagePartiallyReconstitutedVaccine | investigationColdChain | - |
-| 6 | ¿Había alguna vacuna que no pudiese usarse (vencida, sin etiqueta o congelada) en el refrigerador | storeVaccineNotUsable | investigationColdChain | - |
-| 7 | ¿Había en el almacén algún diluyente que no pudiese usarse (vencido, sin ser recomendado por el fabricante, roto o sucio)? | storageDiluenteNotUsabe | investigationColdChain | - |
+| 6 | ¿Había alguna vacuna que no pudiese usarse (vencida, sin etiqueta o congelada) en el refrigerador | storageVaccineNotUsable | investigationColdChain | - |
+| 7 | ¿Había en el almacén algún diluyente que no pudiese usarse (vencido, sin ser recomendado por el fabricante, roto o sucio)? | storageDiluentNotUsable | investigationColdChain | - |
 | 8 | Especifique los hallazgos clave, observaciones adicionales o comentario | storageKeyFindings | investigationColdChain | - |
 
 ## Sección E2: Cadena de frío y transporte (Transporte de la vacuna)
@@ -339,18 +337,19 @@ Texto informativo: Último sitio de almacenamiento
 |---|-------------------|----------|----------| ----------|
 | 1 | Tipo de termo o de caja fría usados | transportTypeThermo | investigationColdChain | - |
 | 2 | ¿Se envió el termo o la caja fría el mismo día de la vacunación? | transportSetInThermos | investigationColdChain | - |
-| 3 | ¿Regresó el termo o la caja fría el mismo día de la vacunación? | tranportReturnedInThermos | investigationColdChain | - | 4 | Se usó un paquete frío acondicionado? | transportUsedColdPack | investigationColdChain | - |
+| 3 | ¿Regresó el termo o la caja fría el mismo día de la vacunación? | transportReturnedInThermos | investigationColdChain | - |
+| 4 | Se usó un paquete frío acondicionado? | transportUsedColdPack | investigationColdChain | - |
 | 5 | Especifique los hallazgos clave o las observaciones adicionales o los comentarios | transportKeyFindings | investigationColdChain | - |
 
 ## Sección F: Prácticas de inmunización en los lugares donde se usó la vacuna en cuestión (a través de entrevistas u observaciones de prácticas en el sitio de vacunación)
 Texto informativo: Jeringas y agujas
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
-| 1 | ¿se usaron jeringas autodesactivables (AD) | usedAutoDisableSyringes | investigationAdministrationError | - |
+| 1 | ¿Se usaron jeringas autodesactivables (AD)? | usedAutoDisableSyringes | investigationAdministrationError | - |
 | 1.1 | Vidrio | usedGlassSyringes | investigationAdministrationError | NO en usedAutoDisableSyringes |
-| 1.2 | Desechables | usedDisposableSyringes | investigationAdministrationError | NO en usedAutodisableSyringes |
-| 1.3 | Desechables recicladas | usedRecycledDisposableSyringes | investigationAdministrationError | No en usedAutoDisableSyringes |
-| 1.4 | Otras | usedOtherSyringes | investigationAdministrationError | NO en useAutoDisableSyringes |
+| 1.2 | Desechables | usedDisposableSyringes | investigationAdministrationError | NO en usedAutoDisableSyringes |
+| 1.3 | Desechables recicladas | usedRecycledDisposableSyringes | investigationAdministrationError | NO en usedAutoDisableSyringes |
+| 1.4 | Otras | usedOtherSyringes | investigationAdministrationError | NO en usedAutoDisableSyringes |
 | 1.5 | ¿Cuáles? | otherSyringesDescription | investigationAdministrationError | true en usedOtherSyringes |
 | 2 | Especifique los hallazgos clave, observaciones adicionales o comentarios | syringesKeyFindings | investigationAdministrationError | - |
 
@@ -395,3 +394,47 @@ Texto informativo: Investigación comunitaria(por favor, visite la localidad y e
 | # | Texto en pantalla | variable | Tabla | Condition |
 |---|-------------------|----------|----------| ----------|
 | 1 | Otras constataciones, observaciones y comentarios | notes | investigation | - |
+
+# Formulario de Clasificación Final
+## Sección 1: Orden A: Importancia
+| # | Texto en pantalla | variable | Tabla | Condition |
+|---|-------------------|----------|----------| ----------|
+| 1 | Importancia A | importanceAItemId | finalClassification | - |
+
+## Sección 1A: Importancia A: Con asociación causal congruente con la vacuna
+| # | Texto en pantalla | variable | Tabla | Condition |
+|---|-------------------|----------|----------| ----------|
+| 1 | A1. Evento relacionado con la vacuna o cualquiera de sus componentes | aIsRelatedToVaccineProduct | finalClassification | - |
+| 2 | A2. Evento relacionado con una desviación de calidad del producto biológico o la vacuna | aIsRelatedToQualityDeviation | finalClassification | - |
+
+## Sección 1B: A. Con asociación causal congruente con el proceso de vacunación
+| # | Texto en pantalla | variable | Tabla | Condition |
+|---|-------------------|----------|----------| ----------|
+| 1 | A3. Evento relacionado con un error programático | aIsRelatedToProgrammaticError | finalClassification | - |
+| 2 | A4. Evento por estrés que tuvo lugar inmediatamente antes, durante o inmediatamente después del proceso de vacunación | aIsRelatedToStress | finalClassification | - |  
+
+## Sección 2: Orden B: Importancia
+| # | Texto en pantalla | variable | Tabla | Condition |
+|---|-------------------|----------|----------| ----------|
+| 1 | Importancia B | importanceBItemId | finalClassification | - |
+
+## Sección 2A: Indeterminado
+| # | Texto en pantalla | variable | Tabla | Condition |
+|---|-------------------|----------|----------| ----------|
+| 1 | B1. La relación temporal es congruente, pero no hay evidencia definitiva suficiente sobre una relación causal con la vacuna (puede ser un evento recientemente asociado a la vacuna) | bIsConsistentTemporalRelation | finalClassification | - |
+| 2 | B2. Factores determinantes para la clasificación muestran tendencias conflictivas a favor y en contra de una asociación causal con la vacunación | bHasDeterminantFactor | finalClassification | - |
+
+## Sección 3: Orden C: Importancia
+| # | Texto en pantalla | variable | Tabla | Condition |
+|---|-------------------|----------|----------| ----------|
+| 1 | Importancia C | importanceCItemId | finalClassification | - |
+
+## Sección 3A: Sin asociación causal congruente con la vacuna o el proceso de vacunación
+| # | Texto en pantalla | variable | Tabla | Condition |
+|---|-------------------|----------|----------| ----------|
+| 1 | C. Una enfermedad subyacente o emergente o una afección causada por exposición a algo distinto que la vacuna o el proceso de vacunación | cHasCoincidentCause | finalClassification | - |
+
+## Sección 4: Orden D: No clasificable
+| # | Texto en pantalla | variable | Tabla | Condition |
+|---|-------------------|----------|----------| ----------|
+| 1 | Especificar la información adicional requerida para clasificar el caso en situaciones en las que se identifiquen eventos falsos y se haya iniciado el análisis de causalidad, estos se incluirán en esta categoría | dIsUnclassifiable | finalClassification | - |

@@ -823,7 +823,71 @@
       "pregnancyComplicationsDescription": "Describe las complicaciones del embarazo"
     },
     "pregnancy": {
-      "ifApplicable": "Si aplica"
+      "sectionTitle": "Embarazo",
+      "ifApplicable": "Si aplica",
+      "notConfigured": "El registro de embarazo no está configurado en este despliegue. Pídelo a un administrador.",
+      "field": {
+        "wasPregnantAtVaccination": "¿Estaba embarazada al momento de la vacunación?",
+        "wasPregnantAtEsavi": "¿Estaba embarazada al momento del ESAVI?",
+        "lastMenstruationDate": "Fecha de la última menstruación",
+        "probableDeliveryDate": "Fecha probable de parto",
+        "hasComplications": "¿El embarazo tiene complicaciones registradas?",
+        "notes": "Notas"
+      },
+      "error": {
+        "deliveryDateOutOfRange": "Entre la última menstruación y la fecha probable de parto tiene que haber entre 266 y 294 días.",
+        "patientNotFemale": "El paciente tiene registrado el sexo «{{sex}}»: el bloque de embarazo exige un paciente femenino. Corrígelo en el paso 1 si es un error de captura.",
+        "alreadyExists": "Ya existe un bloque de embarazo retirado para esta notificación. Reactivarlo exige un superadministrador; no se puede crear uno nuevo.",
+        "load": "No pudimos cargar el bloque de embarazo."
+      },
+      "derived": {
+        "hasComplications": "Hay al menos una complicación registrada: se responde «Sí» automáticamente."
+      },
+      "help": {
+        "probableDeliveryDateSuggested": "Sugerida a partir de la última menstruación (+280 días). Puedes editarla."
+      },
+      "gate": {
+        "blockedTitle": "Hay datos de embarazo cargados",
+        "blocked": {
+          "sex": "No se puede guardar este cambio de sexo: el paciente tiene datos de embarazo registrados en el paso 4. Vacía primero el bloque de embarazo.",
+          "age": "No se puede guardar este cambio: dejaría al paciente fuera del rango de edad del embarazo, y tiene datos de embarazo registrados en el paso 4. Vacía primero el bloque de embarazo.",
+          "complications": "Hay {{count}} complicación(es) activa(s) registradas. Retíralas una a una antes de poder vaciar el bloque.",
+          "complicationsNeedsAdmin": "Hay {{count}} complicación(es) activa(s) registradas. Sólo un administrador puede retirarlas antes de poder vaciar el bloque."
+        },
+        "clearBlock": "Vaciar el bloque de embarazo",
+        "cleared": "El bloque de embarazo se vació. Ya puedes guardar el cambio."
+      },
+      "complications": {
+        "sectionTitle": "Complicaciones",
+        "needsParent": "Guarda el bloque de embarazo antes de añadir complicaciones.",
+        "field": {
+          "complicationName": "Complicación",
+          "complicationCode": "Código",
+          "complicationTypeItemId": "Tipo de complicación",
+          "notes": "Notas"
+        },
+        "validation": {
+          "complicationNameRequired": "Escribe la complicación antes de guardar."
+        },
+        "form": {
+          "createTitle": "Añadir complicación",
+          "editTitle": "Editar complicación"
+        },
+        "meddraUnavailable": "El buscador de términos no está disponible ahora mismo; puedes escribirlo tal cual.",
+        "diagtermNotImported": "El diccionario de esta fuente no está importado en este despliegue.",
+        "keepAsFreeText": "Guardar como texto libre",
+        "error": {
+          "load": "No pudimos cargar las complicaciones.",
+          "alreadyExists": "Ya existe una complicación de ese tipo con el mismo término registrada para este embarazo.",
+          "typeCatalogEmpty": "No hay tipos de complicación configurados en este despliegue: sin al menos uno, no se puede registrar ninguna."
+        },
+        "delete": {
+          "confirm": "¿Eliminar la complicación «{{name}}»? Esta acción no se puede deshacer desde aquí."
+        },
+        "roleForbidden": {
+          "delete": "Retirar una complicación exige un administrador en este despliegue."
+        }
+      }
     },
     "nonSevere": {
       "sectionTitle": "Ficha de notificación no grave",

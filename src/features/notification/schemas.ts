@@ -6,17 +6,23 @@ import type { CreateNotificationInput, NotificationType } from '@/contracts/noti
 import type { CreateNotificationMedicationInput } from '@/contracts/notificationMedication';
 import type { CreateNotificationDiluentInput } from '@/contracts/notificationDiluent';
 import type { CreateNotificationVaccineInput } from '@/contracts/notificationVaccine';
+import type { CreateNotificationPregnancyInput } from '@/contracts/notificationPregnancy';
+import type { CreateNotificationPregnancyComplicationInput } from '@/contracts/notificationPregnancyComplication';
 import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
-// One `useForm` for the three tables (SPEC FE12a §3.5) — the header's own `notes` and the two
-// branches' each need their own free-text field, so the branch ones carry a prefix instead of
-// colliding on the same RHF path. `caseId`, `notificationType` and `isActive` are derived and
-// never editable (§3.5): they are not fields of this type at all, same reasoning as `caseId` in
-// `ClassificationFormValues`.
+// One `useForm` for the four tables (SPEC FE12a §3.5, extendido por SPEC FE12d §3.4 "no tiene
+// formulario propio") — el `notes` de la cabecera y el de cada rama/bloque necesitan su propio
+// campo de texto libre, así que los tres que no son la cabecera llevan un prefijo en vez de
+// colisionar en el mismo path de RHF. `caseId`, `notificationType` y `isActive` son derivados y
+// nunca editables (§3.5): no son campos de este tipo, mismo motivo que `caseId` en
+// `ClassificationFormValues`. `wasPregnantAtVaccination` se redeclara como `AnswerOption | null`
+// (nunca `undefined`, igual que el resto de las `answerOption` del formulario) en vez de heredar
+// la obligatoriedad del alta — la asimetría entre `001` y `004` la resuelve el payload al guardar
+// (paso 8), no el tipo del formulario.
 export type NotificationFormValues = Omit<
   CreateNotificationInput,
   'caseId' | 'notificationType' | 'isActive'
@@ -25,6 +31,9 @@ export type NotificationFormValues = Omit<
     severeNotes?: CreateSevereNotificationInput['notes'];
   } & Omit<CreateNonSevereNotificationInput, 'notificationId' | 'notes'> & {
     nonSevereNotes?: CreateNonSevereNotificationInput['notes'];
+  } & Omit<CreateNotificationPregnancyInput, 'notificationId' | 'isActive' | 'wasPregnantAtVaccination' | 'notes'> & {
+    wasPregnantAtVaccination?: AnswerOption | null;
+    pregnancyNotes?: CreateNotificationPregnancyInput['notes'];
   };
 
 // Every field optional/nullable except `esaviDescription` — "sin él no hay fila que crear"
@@ -65,12 +74,32 @@ const notificationBaseSchema = z.object({
   verifiedOtherSource: z.boolean().nullable().optional(),
   otherSourceDescription: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   nonSevereNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  // El bloque de embarazo (SPEC FE12d §3.5): igual que `hasPregnancyComplications` de la rama
+  // grave, la base no exige `wasPregnantAtVaccination` — la obligatoriedad del alta es del `001`,
+  // no de «Guardar» (§3.5, "el único requisito es `esaviDescription`"), y la reactividad del rango
+  // de Naegele va en el `superRefine` de `notificationSaveSchema`, no aquí.
+  wasPregnantAtVaccination: answerOptionSchema.nullable().optional(),
+  wasPregnantAtEsavi: answerOptionSchema.nullable().optional(),
+  lastMenstruationDate: z.string().regex(isoDateRegex).nullable().optional(),
+  probableDeliveryDate: z.string().regex(isoDateRegex).nullable().optional(),
+  hasComplications: answerOptionSchema.nullable().optional(),
+  pregnancyNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
 });
 
 // "Guardar" (§3.5): the only requirement is `esaviDescription`. Attached as the form's resolver —
 // everything else is free to travel or not, `CaseWizardActionBar`'s pending-fields list is what
-// tells the user what is still missing for "Completar etapa", not a blocked save button.
-export const notificationSaveSchema = notificationBaseSchema;
+// tells the user what is still missing for "Completar etapa", not a blocked save button. El
+// `superRefine` es lo que hace reactivo el rango de Naegele (SPEC FE12d §3.5, "se revalida en
+// cuanto se toca cualquiera de los dos campos, no al enviar"): con `mode: 'onTouched'` y
+// `reValidateMode: 'onChange'` en el `useForm` de `NotificationStep`, este resolver corre en cada
+// cambio de cualquiera de los dos campos, sin esperar a "Guardar". `isGestationRangeCoherent`
+// vive más abajo en este archivo (paso 5) — la declaración de función se iza, así que el orden no
+// importa aquí.
+export const notificationSaveSchema = notificationBaseSchema.superRefine((data, ctx) => {
+  if (!isGestationRangeCoherent(data.lastMenstruationDate, data.probableDeliveryDate)) {
+    ctx.addIssue({ code: 'custom', message: 'deliveryDateOutOfRange', path: ['probableDeliveryDate'] });
+  }
+});
 
 // Never called, only type-checked — same technique as `_assertSchemaMatchesContract` in
 // `features/classification/schemas.ts`.
@@ -122,27 +151,35 @@ const PREGNANCY_MAX_AGE = 49;
 export type PregnancyGateState = 'hidden' | 'visible' | 'visibleIfApplicable';
 
 // La compuerta de embarazo (`CASE-PROCESS.md` §7.4, citada por SPEC FE12a §3.5, §6 "Los
-// catálogos y la edad"). Comparar siempre por `sex.value`, nunca por `code`/`name` (SPEC F46) —
-// se recodifican por país y `value` es lo único congelado. La edad viene ya calculada por
-// `classification` (`resolveAgeAtEvent` en el backend): CASE-PROCESS.md §7.4 prohíbe
-// expresamente reimplementar la aritmética de calendario aquí.
+// catálogos y la edad", y revisada por SPEC FE12d §3.5, §4 paso 6 — la extracción a
+// `usePregnancyGate` en `shared/hooks/`). La edad viene ya calculada por `classification`
+// (`resolveAgeAtEvent` en el backend): CASE-PROCESS.md §7.4 prohíbe expresamente reimplementar la
+// aritmética de calendario aquí.
 //
 // «Se oculta cuando conste que no aplica, no se muestra sólo cuando conste que aplica» — dos
-// exclusiones independientes (sexo `MALE`, o edad conocida y fuera de 15–49), y fuera de esos dos
-// casos el bloque se muestra. Se marca «Si aplica» cuando se muestra sin poder confirmarlo: sexo
-// desconocido/sin informar, o edad incalculable por falta de `birthDate`.
+// exclusiones independientes (sexo masculino, o edad conocida y fuera de 15–49), y fuera de esos
+// dos casos el bloque se muestra. Se marca «Si aplica» cuando se muestra sin poder confirmarlo:
+// sexo desconocido/sin informar, o edad incalculable por falta de `birthDate`.
+//
+// `isMale` e `isFemaleConfirmed` llegan resueltos por `usePregnancyGate`, no como el `sex.value`
+// crudo: la detección de `FEMALE` compara contra el `catalogItemId` de `PREGNANCY_FEMALE_SEX_ITEM`
+// cuando esa fila de configuración existe (SPEC FE12d §3.5, "lo que compara `ESAVI-NOTIFPRG-001`,
+// no `value === 'FEMALE'`") y sólo cae a `value === 'FEMALE'` si no está sembrada. `isMale` sigue
+// por `value` en los dos casos: no hay un ítem de configuración equivalente para el sexo
+// masculino, y el `001` tampoco lo comprueba — ocultar por `MALE` es una cortesía de la interfaz.
 export function resolvePregnancyGate(
-  sexValue: string | null | undefined,
+  isMale: boolean,
+  isFemaleConfirmed: boolean,
   age: number | null | undefined,
 ): PregnancyGateState {
   const ageKnown = age !== null && age !== undefined;
   const ageInRange = ageKnown && age >= PREGNANCY_MIN_AGE && age <= PREGNANCY_MAX_AGE;
   const ageOutOfRange = ageKnown && !ageInRange;
 
-  if (sexValue === 'MALE' || ageOutOfRange) {
+  if (isMale || ageOutOfRange) {
     return 'hidden';
   }
-  if (sexValue === 'FEMALE' && ageInRange) {
+  if (isFemaleConfirmed && ageInRange) {
     return 'visible';
   }
   return 'visibleIfApplicable';
@@ -355,6 +392,23 @@ export const nonSevereNotificationErrorFieldMap: Partial<Record<string, keyof No
   NSEVNOT_001_GEOLOCATION_NOT_FOUND: 'vaccinationGeoLocationId',
   NSEVNOT_004_GEOLOCATION_NOT_FOUND: 'vaccinationGeoLocationId',
 };
+
+// SPEC FE12d §3.5 "Códigos de error mapeados" — sólo el rango va a un campo. Los otros tres
+// propios del bloque (`PATIENT_NOT_FEMALE`, `SEX_CONFIG_MISSING`, `ALREADY_EXISTS`) llevan toast
+// propio en vez de `form.setError` (paso 8): ninguno señala un campo del formulario que el usuario
+// pueda corregir ahí mismo — el primero se corrige en el paso 1 del asistente, el segundo es un
+// despliegue sin configurar, y el tercero exige un `SUPERADMIN` — así que se cablean por código
+// exacto en `NotificationStep`, no aquí.
+export const notificationPregnancyErrorFieldMap: Partial<Record<string, keyof NotificationFormValues>> = {
+  NOTIFPRG_001_DELIVERY_DATE_OUT_OF_RANGE: 'probableDeliveryDate',
+  NOTIFPRG_004_DELIVERY_DATE_OUT_OF_RANGE: 'probableDeliveryDate',
+};
+
+// Los tres códigos de toast propio de arriba, con nombre — para que `NotificationStep` los
+// compare por constante y no por cadena repetida a mano.
+export const NOTIFPRG_PATIENT_NOT_FEMALE = 'NOTIFPRG_001_PATIENT_NOT_FEMALE';
+export const NOTIFPRG_SEX_CONFIG_MISSING = 'NOTIFPRG_001_SEX_CONFIG_MISSING';
+export const NOTIFPRG_ALREADY_EXISTS = 'NOTIFPRG_001_ALREADY_EXISTS';
 
 // ---------------------------------------------------------------------------------------------
 // SPEC FE12b §3.5 — el evento y la medicación concomitante. Dos modales, dos `useForm` propios,
@@ -645,4 +699,129 @@ export const notificationDiluentErrorFieldMap: Partial<Record<string, keyof Noti
   NOTIFDIL_004_RECONSTITUTION_AFTER_VACCINATION: 'reconstitutionDate',
   NOTIFDIL_001_CATALOG_NOT_FOUND: 'diluentCatalogId',
   NOTIFDIL_004_CATALOG_NOT_FOUND: 'diluentCatalogId',
+};
+
+// ---------------------------------------------------------------------------------------------
+// SPEC FE12d §3.5 — el bloque de embarazo, encadenado al `useForm` de `NotificationStep` como la
+// cabecera y las dos ramas (§3.4: "no tiene formulario propio"), y su lista anidada de
+// complicaciones, con su propio modal — igual que eventos y medicación en FE12b.
+// ---------------------------------------------------------------------------------------------
+
+// Naegele's rule: 266 a 294 días inclusive entre `lastMenstruationDate` y `probableDeliveryDate`
+// (`CASE-PROCESS.md` §7.4 cita `SPEC FE12d`). Misma aritmética que
+// `assertGestationRangeIsCoherent` en esavi-backend/src/services/notificationPregnancy.service.ts
+// — las dos fechas se leen como medianoche UTC para que la diferencia sea un número entero de
+// días de calendario, inmune al DST. Los límites viven aquí, con nombre, por el mismo motivo que
+// en el backend: son valores clínicos que alguien va a querer ajustar.
+export const GESTATION_MIN_DAYS = 266;
+export const GESTATION_MAX_DAYS = 294;
+
+// `null` cuando falta una de las dos fechas — un embarazo con sólo una fecha conocida es un
+// registro legítimo (§3.5) y no hay nada que comparar todavía.
+export function computeGestationDays(
+  lastMenstruationDate: string | null | undefined,
+  probableDeliveryDate: string | null | undefined,
+): number | null {
+  if (!lastMenstruationDate || !probableDeliveryDate) return null;
+  const start = Date.parse(`${lastMenstruationDate.slice(0, 10)}T00:00:00Z`);
+  const end = Date.parse(`${probableDeliveryDate.slice(0, 10)}T00:00:00Z`);
+  return (end - start) / 86400000;
+}
+
+// Un solo mensaje cubre también el parto anterior a la menstruación (días negativos caen fuera
+// del rango igual que cualquier otro valor fuera de 266–294), igual que hace el backend.
+export function isGestationRangeCoherent(
+  lastMenstruationDate: string | null | undefined,
+  probableDeliveryDate: string | null | undefined,
+): boolean {
+  const days = computeGestationDays(lastMenstruationDate, probableDeliveryDate);
+  if (days === null) return true;
+  return days >= GESTATION_MIN_DAYS && days <= GESTATION_MAX_DAYS;
+}
+
+// El campo del formulario nunca es `undefined` (§3.4: los `answerOption` sin responder se
+// modelan con `null`, igual que el resto de `NotificationFormValues` — ver `defaultValues` de
+// `NotificationStep`), así que la asimetría entre alta y edición no puede expresarse acortando
+// `CreateNotificationPregnancyInput` con `Omit`: hay que redeclarar el campo.
+export type NotificationPregnancyFormValues = Omit<
+  CreateNotificationPregnancyInput,
+  'notificationId' | 'isActive' | 'wasPregnantAtVaccination'
+> & {
+  wasPregnantAtVaccination: AnswerOption | null;
+};
+
+const notificationPregnancySharedFields = {
+  wasPregnantAtEsavi: answerOptionSchema.nullable().optional(),
+  lastMenstruationDate: z.string().regex(isoDateRegex).nullable().optional(),
+  probableDeliveryDate: z.string().regex(isoDateRegex).nullable().optional(),
+  // Derivado y bloqueado con ≥1 complicación activa (§6.5, cableado en el paso 11) — el schema no
+  // lo trata distinto de una `answerOption` cualquiera: lo que lo bloquea es la UI, no una regla
+  // de Zod, porque el valor que viaja en el `PUT` es exactamente el que el usuario ve en pantalla.
+  hasComplications: answerOptionSchema.nullable().optional(),
+  notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+};
+
+// Alta (`ESAVI-NOTIFPRG-001`): `wasPregnantAtVaccination` es la única `answerOption` obligatoria
+// de todo el proceso (§3.3, §3.5) — cualquiera de los cinco valores vale, no sólo `'YES'`: exigir
+// `'YES'` convertiría la tabla en un registro de embarazos confirmados y perdería el caso que más
+// importa, vacunar a alguien cuyo embarazo se ignoraba.
+export const notificationPregnancyCreateSchema = z
+  .object({
+    wasPregnantAtVaccination: answerOptionSchema,
+    ...notificationPregnancySharedFields,
+  })
+  .superRefine((data, ctx) => {
+    if (!isGestationRangeCoherent(data.lastMenstruationDate, data.probableDeliveryDate)) {
+      ctx.addIssue({ code: 'custom', message: 'deliveryDateOutOfRange', path: ['probableDeliveryDate'] });
+    }
+  });
+
+// Edición (`ESAVI-NOTIFPRG-004`): la asimetría con el alta es deliberada (§3.3) — retirar una
+// respuesta dada por error es legítimo sobre una fila que ya existe; crearla sin responder, no.
+export const notificationPregnancyUpdateSchema = z
+  .object({
+    wasPregnantAtVaccination: answerOptionSchema.nullable().optional(),
+    ...notificationPregnancySharedFields,
+  })
+  .superRefine((data, ctx) => {
+    if (!isGestationRangeCoherent(data.lastMenstruationDate, data.probableDeliveryDate)) {
+      ctx.addIssue({ code: 'custom', message: 'deliveryDateOutOfRange', path: ['probableDeliveryDate'] });
+    }
+  });
+
+// `source` viaja al crear/actualizar y nunca vuelve en la respuesta (§3.3): el único campo del
+// tipo que no es columna, igual que en `notificationEvent`. `diagnosticTermId` y
+// `complicationRawName` son derivados — la resolución los escribe — y por eso no están aquí.
+export type NotificationPregnancyComplicationFormValues = Omit<
+  CreateNotificationPregnancyComplicationInput,
+  'pregnancyId' | 'isActive'
+>;
+
+// Los dos obligatorios de §3.5: `complicationTypeItemId` (el DDL lo admite nulo, el validador lo
+// exige) y `complicationName` (lo que escribió el notificador, nunca vacío). Sin variante de
+// edición: a diferencia de `wasPregnantAtVaccination`, el `004` no admite un `null` explícito en
+// ninguno de los dos — corregir es mandar el valor correcto, nunca borrarlo (§3.3) — y el
+// formulario del modal siempre viaja con el objeto completo (§3.5: "se envía el objeto completo
+// en el `PUT`"), así que un único schema basta para las dos operaciones.
+export const notificationPregnancyComplicationSchema = z.object({
+  complicationName: z.string().trim().min(1).max(500),
+  complicationCode: z.preprocess(emptyToUndefined, z.string().trim().max(100).nullable().optional()),
+  complicationTypeItemId: z.string().uuid(),
+  source: z.enum(TERM_SOURCES).optional(),
+  notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+});
+
+// SPEC FE12d §3.5 "Códigos de error mapeados" — el 404 de `DIAGTERM_NOT_FOUND` no está aquí,
+// mismo motivo que en `notificationEventErrorFieldMap`: tiene comportamiento propio (el buscador
+// ofrece guardar como texto libre), no un campo que señalar. El sufijo del 404 del tipo es el que
+// el servicio realmente usa (`notificationPregnancyComplication.service.ts`,
+// `assertComplicationTypeIsValid`) — `COMPLICATION_TYPE_NOT_FOUND`, no el `TYPE_NOT_FOUND` que
+// podría suponerse.
+export const notificationPregnancyComplicationErrorFieldMap: Partial<
+  Record<string, keyof NotificationPregnancyComplicationFormValues>
+> = {
+  PREGCOMP_001_ALREADY_EXISTS: 'complicationName',
+  PREGCOMP_004_ALREADY_EXISTS: 'complicationName',
+  PREGCOMP_001_COMPLICATION_TYPE_NOT_FOUND: 'complicationTypeItemId',
+  PREGCOMP_004_COMPLICATION_TYPE_NOT_FOUND: 'complicationTypeItemId',
 };

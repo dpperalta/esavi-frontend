@@ -7,6 +7,7 @@ import { useCurrentUser } from '@/features/auth/api';
 import { NotifierFormDialog } from '@/features/notifier/NotifierFormDialog';
 import { NotifierList } from '@/features/notifier/NotifierList';
 import { useNotificationVaccinesByCase } from '@/features/notification/api';
+import { PregnancyBlockDialog } from '@/features/notification/PregnancyBlockDialog';
 import { useCountryIsoCode } from '@/features/systemConfig/api';
 import { useUserGeoCoverage } from '@/features/userGeoLocation/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -19,6 +20,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { ROLE_LEVELS, getEffectiveLevel } from '@/shared/config/roles';
+import { usePregnancyBlockGuard } from '@/shared/hooks/usePregnancyBlockGuard';
 import { esaviCaseResource } from './api';
 import { HealthFacilitySelect } from './HealthFacilitySelect';
 import { caseOpeningErrorFieldMap, createEsaviCaseOpeningSchema, type CaseOpeningFormValues } from './schemas';
@@ -48,6 +50,10 @@ export function CaseOpeningStep() {
   // SPEC FE12c §8: warns, never blocks — the backend doesn't validate `eventDate` against
   // vaccines, so the client isn't stricter than the server.
   const vaccines = useNotificationVaccinesByCase(effectiveCaseId ?? undefined, isEditing);
+  // El segundo de los dos controles cruzados sobre `eventDate` (SPEC FE12d §4 paso 13, §8): éste
+  // bloquea, el de arriba sólo avisa — no se funden en un solo diálogo.
+  const pregnancyGuard = usePregnancyBlockGuard(isEditing ? effectiveCaseId : undefined);
+  const [pregnancyBlockOpen, setPregnancyBlockOpen] = useState(false);
 
   const { data: user } = useCurrentUser();
   // El mismo umbral que `resolveUserGeoScopeIds` en el backend (SPEC FE10 §1C, §6): sólo se
@@ -71,6 +77,14 @@ export function CaseOpeningStep() {
 
   function handleSubmit(values: CaseOpeningFormValues) {
     if (isEditing && effectiveCaseId) {
+      // El bloqueo de §4 paso 13 (CASE-PROCESS.md §7.4): un `eventDate` que deje la edad fuera de
+      // 15–49 con datos de embarazo cargados no se guarda. Se evalúa contra el valor a punto de
+      // enviarse, igual que `PatientFormDialog` — un `eventDate` sin tocar nunca cierra una
+      // compuerta que ya estaba abierta con ese mismo valor.
+      if (pregnancyGuard.hasPregnancyData && pregnancyGuard.wouldCloseGate({ eventDate: values.eventDate })) {
+        setPregnancyBlockOpen(true);
+        return;
+      }
       update.mutate(
         { id: effectiveCaseId, data: values },
         { onSuccess: () => toast.success(t('common.toast.updated')) },
@@ -105,6 +119,13 @@ export function CaseOpeningStep() {
       return;
     }
     toast.error(getErrorMessage(error));
+  }
+
+  function handleClearPregnancyBlock() {
+    pregnancyGuard.clearBlock(() => {
+      toast.success(t('notification.pregnancy.gate.cleared'));
+      setPregnancyBlockOpen(false);
+    });
   }
 
   function handleContinue() {
@@ -168,7 +189,7 @@ export function CaseOpeningStep() {
         error={mutationError}
         errorFieldMap={caseOpeningErrorFieldMap}
         onUnmappedError={handleUnmappedError}
-        isSubmitting={mutation.isPending}
+        isSubmitting={mutation.isPending || (isEditing && !pregnancyGuard.isReady)}
         submitLabel={isEditing ? 'common.actions.save' : 'esaviCase.opening.createButton'}
       >
         {(form) => (
@@ -313,6 +334,17 @@ export function CaseOpeningStep() {
             onOpenChange={setNotifierDialogOpen}
           />
         </>
+      )}
+
+      {isEditing && (
+        <PregnancyBlockDialog
+          open={pregnancyBlockOpen}
+          onOpenChange={setPregnancyBlockOpen}
+          reason="age"
+          activeComplicationsCount={pregnancyGuard.activeComplicationsCount}
+          onClear={handleClearPregnancyBlock}
+          isClearing={pregnancyGuard.isClearing}
+        />
       )}
     </div>
   );

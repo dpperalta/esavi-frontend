@@ -823,7 +823,71 @@
       "pregnancyComplicationsDescription": "Describe the pregnancy complications"
     },
     "pregnancy": {
-      "ifApplicable": "If applicable"
+      "sectionTitle": "Pregnancy",
+      "ifApplicable": "If applicable",
+      "notConfigured": "Pregnancy tracking is not configured in this deployment. Ask an administrator.",
+      "field": {
+        "wasPregnantAtVaccination": "Was she pregnant at the time of vaccination?",
+        "wasPregnantAtEsavi": "Was she pregnant at the time of the ESAVI?",
+        "lastMenstruationDate": "Last menstruation date",
+        "probableDeliveryDate": "Probable delivery date",
+        "hasComplications": "Does the pregnancy have registered complications?",
+        "notes": "Notes"
+      },
+      "error": {
+        "deliveryDateOutOfRange": "There must be between 266 and 294 days between the last menstruation and the probable delivery date.",
+        "patientNotFemale": "The patient's registered sex is «{{sex}}»: the pregnancy block requires a female patient. Fix it in step 1 if this was a capture mistake.",
+        "alreadyExists": "A withdrawn pregnancy block already exists for this notification. Reactivating it requires a superadmin; a new one cannot be created.",
+        "load": "We couldn't load the pregnancy block."
+      },
+      "derived": {
+        "hasComplications": "At least one complication is registered: this is automatically answered «Yes»."
+      },
+      "help": {
+        "probableDeliveryDateSuggested": "Suggested from the last menstruation (+280 days). You can edit it."
+      },
+      "gate": {
+        "blockedTitle": "There is pregnancy data on file",
+        "blocked": {
+          "sex": "This sex change cannot be saved: the patient has pregnancy data recorded in step 4. Clear the pregnancy block first.",
+          "age": "This change cannot be saved: it would leave the patient outside the pregnancy age range, and the patient has pregnancy data recorded in step 4. Clear the pregnancy block first.",
+          "complications": "There are {{count}} active complication(s) recorded. Remove them one by one before the block can be cleared.",
+          "complicationsNeedsAdmin": "There are {{count}} active complication(s) recorded. Only an administrator can remove them before the block can be cleared."
+        },
+        "clearBlock": "Clear the pregnancy block",
+        "cleared": "The pregnancy block was cleared. You can now save the change."
+      },
+      "complications": {
+        "sectionTitle": "Complications",
+        "needsParent": "Save the pregnancy block before adding complications.",
+        "field": {
+          "complicationName": "Complication",
+          "complicationCode": "Code",
+          "complicationTypeItemId": "Complication type",
+          "notes": "Notes"
+        },
+        "validation": {
+          "complicationNameRequired": "Write the complication before saving."
+        },
+        "form": {
+          "createTitle": "Add complication",
+          "editTitle": "Edit complication"
+        },
+        "meddraUnavailable": "The term search is not available right now; you can type it as is.",
+        "diagtermNotImported": "This source's dictionary is not imported in this deployment.",
+        "keepAsFreeText": "Save as free text",
+        "error": {
+          "load": "We could not load the complications.",
+          "alreadyExists": "A complication of that type with the same term is already registered for this pregnancy.",
+          "typeCatalogEmpty": "No complication types are configured in this deployment: without at least one, none can be registered."
+        },
+        "delete": {
+          "confirm": "Delete the complication «{{name}}»? This action cannot be undone from here."
+        },
+        "roleForbidden": {
+          "delete": "Removing a complication requires an administrator in this deployment."
+        }
+      }
     },
     "nonSevere": {
       "sectionTitle": "Non-severe notification record",

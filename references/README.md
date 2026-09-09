@@ -1,15 +1,16 @@
 # references/
 
-Todo lo que hay que tener claro antes de escribir una línea del frontend. Seis documentos, cada uno con un propósito distinto.
+Todo lo que hay que tener claro antes de escribir una línea del frontend. Siete documentos, cada uno con un propósito distinto.
 
 | Documento | Qué responde | Cuándo se lee |
 |---|---|---|
 | **[CONVENTIONS.md](./CONVENTIONS.md)** | Cómo se escribe el código: nomenclatura, artefactos, capas, checklist | **Siempre**, antes de tocar `src/` |
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Qué construimos y con qué decisiones ya tomadas | Antes de empezar, y cada vez que aparezca una duda de diseño |
 | **[API-CONTRACT.md](./API-CONTRACT.md)** | Cómo se habla con el backend: envelope, auth, paginación, idioma, auditoría | Al escribir `client.ts` y `createResource.ts` |
-| **[API-ROUTES.md](./API-ROUTES.md)** | Las 333 rutas con su rol mínimo y su código de operación | Al construir cada pantalla |
+| **[API-ROUTES.md](./API-ROUTES.md)** | Las 354 rutas con su rol mínimo y su código de operación | Al construir cada pantalla |
 | **[DOMAIN-MODEL.md](./DOMAIN-MODEL.md)** | Qué entidades existen y cómo se conectan | Al diseñar formularios y decidir el orden de los pasos |
 | **[CASE-PROCESS.md](./CASE-PROCESS.md)** | Las reglas del recorrido del caso: seis pasos, cuatro fases, qué habilita y qué bloquea cada acción | Al redactar e implementar cualquier spec del wizard (`FE08`–`FE14`) |
+| **[ESAVI-FORM.md](./ESAVI-FORM.md)** | Qué se ve en pantalla: las secciones de los cuatro formularios, en su orden, con el texto exacto de cada pregunta | Al redactar cualquier spec que produzca pantalla del expediente |
 
 ## Origen de los datos
 
@@ -23,6 +24,17 @@ Ninguno de estos documentos es una interpretación libre: todos salen de fuentes
 | `DOMAIN-MODEL.md` | `src/models/associations/*.ts`, `esaviapp.sql` |
 | `CASE-PROCESS.md` | `esaviapp.sql`, `src/services/*.service.ts`, `src/validators/*.validator.ts`, `references/functional/specs/`, y `references/external/` para los componentes de WHODrug y MedDRA |
 | `ARCHITECTURE.md` | Decisiones de diseño de este proyecto, contrastadas contra el backend |
+| `ESAVI-FORM.md` | El formulario ESAVI en producción, transcrito sección por sección; los nombres de columna, repasados contra `esaviapp.sql` |
+
+## `ESAVI-FORM.md` — hasta dónde manda
+
+Es el único documento de `references/` que describe **pantallas**: la partición en secciones, su orden y el texto literal de cada pregunta, tal como los conoce quien hoy llena el formulario en papel. Ahí es autoridad, y ningún spec debería inventarse una etiqueta que ese documento ya tiene escrita.
+
+Fuera de eso no manda, y conviene tenerlo presente porque es fácil leerlo como un inventario técnico:
+
+- **Las reglas siguen siendo de `CASE-PROCESS.md`.** Cuando una condición del formulario contradice al validador del backend, gana el validador. Cuando no la contradice sino que la añade —una sección que aparece sólo si tal respuesta es afirmativa—, es una compuerta de cliente y hay que darle su reverso: qué pasa con las filas ya guardadas si la respuesta cambia.
+- **Ausente del formulario no significa inexistente.** Hay columnas implementadas que ninguna sección pregunta —`notification.notes` es la más visible— y columnas del DDL que el formulario todavía no recoge (`investigationMedicalHistory.wasBreastfed`, `investigationVaccinationContext.vaccinatedPerBatchCount`, `investigationColdChain.transportUsedThermos`, el par `isOtherEsavi`/`otherDescription` de `notificationEvent`). Ninguna de las dos listas se toca por lo que el formulario calle.
+- **El orden es una propuesta con mucho peso, no una orden.** Refleja cómo se recoge el dato en la consulta, y por eso vale; pero donde ya hemos mejorado el comportamiento —compuertas que bloquean en vez de avisar, derivaciones que evitan estados incoherentes— la mejora se conserva y el orden se adapta a ella.
 
 ## Regenerar el inventario de rutas
 
@@ -38,7 +50,7 @@ Luego se sustituye la sección «Rutas por entidad» de `API-ROUTES.md` por el c
 
 El script lee `ROUTE_RULES` del test de roles del backend, que es la matriz canónica de la §9 de `CONVENTIONS.md`: **una ruta que no está ahí no está protegida por la suite**, así que también sirve como aviso de endpoints sin cubrir.
 
-Y por eso mismo no basta con regenerar: el script sólo ve lo que el test declara. Para saber si el backend añadió una ruta **sin** darla de alta en `ROUTE_RULES` —que es el caso que dejaría un endpoint fuera de este inventario y sin cobertura— hay que cruzar la matriz contra los routers reales de `esavi-backend/src/routes/`. Cruce del 2026-09-03: las 333 filas cubren todo lo registrado salvo las cinco rutas abiertas de autenticación, `GET /api/health` y `POST /api/seed/admin`, las siete documentadas en la cabecera de `API-ROUTES.md`.
+Y por eso mismo no basta con regenerar: el script sólo ve lo que el test declara. Para saber si el backend añadió una ruta **sin** darla de alta en `ROUTE_RULES` —que es el caso que dejaría un endpoint fuera de este inventario y sin cobertura— hay que cruzar la matriz contra los routers reales de `esavi-backend/src/routes/`. Cruce del 2026-09-08: las 354 filas cubren todo lo registrado salvo las cinco rutas abiertas de autenticación, `GET /api/health` y `POST /api/seed/admin`, las siete documentadas en la cabecera de `API-ROUTES.md`.
 
 ## Documentos del backend que conviene tener a mano
 

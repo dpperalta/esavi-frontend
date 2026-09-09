@@ -1,6 +1,6 @@
 # SPEC FE12d — Paso 4: embarazo y complicaciones
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE08 (armazón del wizard), SPEC FE10 (paciente y apertura del caso — de ahí salen `sexItemId`, `birthDate` y `eventDate`, y este spec les añade un bloqueo), SPEC FE11 (la edad calculada por el backend, que la compuerta lee y no recalcula), SPEC FE12a (la cabecera y la rama — sin su fila no hay `notificationId`, y de ella sale `hasPregnancyComplications`, que este spec convierte en derivado; también la compuerta de §7.4 y `useCatalogItemsByTypeCode`), SPEC FE12b (de ahí salen `<SatelliteList>` y `<MeddraSearchField>`, que este spec consume sin volver a escribirlas). Del backend: SPEC F25 (notificationPregnancy), SPEC F27 (notificationPregnancyComplication), SPEC F15 (diagnosticTerm y su resolución), SPEC F55 (búsqueda de términos MedDRA) y SPEC F26 (systemConfig).
 > **Fecha:** 2026-09-05
 > **Objetivo:** El bloque de embarazo del paso 4 —formulario 1:1 y su lista anidada de complicaciones— detrás de la compuerta de §7.4, con el rango de Naegele y las dos declaraciones de complicaciones derivadas de las filas.
@@ -9,7 +9,9 @@
 
 ## 1. Por qué existe este spec
 
-**Es el último de los tres specs en que se partió el paso 4** (`CASE-PROCESS.md` §9, decidido el 2026-09-04). El corte es `FE12b` (eventos y medicación) → `FE12c` (vacunas y diluyentes) → **`FE12d`**, y va al final por un motivo concreto: **es el único bloqueado además por datos**. Sin la fila `systemConfig` `PREGNANCY_FEMALE_SEX_ITEM` (§10.6), `ESAVI-NOTIFPRG-001` responde `500` en cada intento y el bloque entero es inservible. Aislarlo impide que ese bloqueo arrastre a los otros dos.
+**Es el último de los tres specs en que se partió el paso 4** (`CASE-PROCESS.md` §9, decidido el 2026-09-04). El corte es `FE12b` (eventos y medicación) → `FE12c` (vacunas y diluyentes) → **`FE12d`**, y fue al final por un motivo concreto: **era el único bloqueado además por datos**. Sin la fila `systemConfig` `PREGNANCY_FEMALE_SEX_ITEM` (§10.6), `ESAVI-NOTIFPRG-001` responde `500` en cada intento y el bloque entero es inservible. Aislarlo impidió que ese bloqueo arrastrara a los otros dos.
+
+> **El bloqueo se levantó el 2026-09-08**: la fila está sembrada (`CASE-PROCESS.md` §10.6). **Nada del diseño de este spec cambia por eso.** El pre-vuelo con `ESAVI-SYSCONF-006` y el mapeo del `500` siguen enteros: el valor es una clave ajena de una base concreta, así que el modo de fallo se repite en cada despliegue nuevo, y una pantalla que da por presente lo que se siembra a mano es una pantalla que se rompe en la primera instalación. Lo que cambia es que ahora el camino feliz se puede probar contra el backend real.
 
 **Es el lado cliente de dos specs del backend** —SPEC F25 y SPEC F27— y de tres reglas que no viven en ninguno de los dos:
 
@@ -48,7 +50,7 @@
 **Fuera de alcance (otros specs):**
 
 - **El bloque de embarazo del paso 5** — `investigationMedicalHistory.isPregnancyConfirmed` y sus nueve columnas, e `investigationPregnancyCondition`. Están detrás de **esta misma compuerta**, anidados bajo una segunda propia, y usan la variante `full` de `<AnswerOptionField>`. Es FE13, y consume la compuerta que este spec deja cerrada sin volver a escribirla.
-- **Sembrar `PREGNANCY_FEMALE_SEX_ITEM`.** Es §10.6, dependencia del otro repositorio. Este spec detecta su ausencia y la explica; no la resuelve, y **no se bloquea por ella**: todo lo demás del paso 4 sigue funcionando.
+- **Sembrar `PREGNANCY_FEMALE_SEX_ITEM`.** Es §10.6, dependencia del otro repositorio, **ya resuelta en desarrollo el 2026-09-08**. Este spec detecta su ausencia y la explica —para el siguiente despliegue—; no la siembra, y **no se bloquea por ella**.
 - **Reactivar una fila de embarazo retirada.** `NOTIFPRG-005B` es SUPERADMIN y no entra en el asistente. Se explica y se deriva a un administrador.
 - **Dar de baja la fila de embarazo.** `NOTIFPRG-005A` existe y **este spec no lo consume nunca**, por la restricción `UNIQUE` que no filtra por `deletedAt`.
 - **Reactivaciones y purgas de complicaciones.** Los `005B` y `005C` son SUPERADMIN.

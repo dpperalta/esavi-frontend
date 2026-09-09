@@ -823,7 +823,71 @@
       "pregnancyComplicationsDescription": "Beschrijf de zwangerschapscomplicaties"
     },
     "pregnancy": {
-      "ifApplicable": "Indien van toepassing"
+      "sectionTitle": "Zwangerschap",
+      "ifApplicable": "Indien van toepassing",
+      "notConfigured": "Zwangerschapsregistratie is niet geconfigureerd in deze implementatie. Vraag het aan een beheerder.",
+      "field": {
+        "wasPregnantAtVaccination": "Was zij zwanger op het moment van vaccinatie?",
+        "wasPregnantAtEsavi": "Was zij zwanger op het moment van het ESAVI?",
+        "lastMenstruationDate": "Datum van de laatste menstruatie",
+        "probableDeliveryDate": "Vermoedelijke bevallingsdatum",
+        "hasComplications": "Heeft de zwangerschap geregistreerde complicaties?",
+        "notes": "Notities"
+      },
+      "error": {
+        "deliveryDateOutOfRange": "Tussen de laatste menstruatie en de vermoedelijke bevallingsdatum moeten 266 tot 294 dagen liggen.",
+        "patientNotFemale": "Het geregistreerde geslacht van de patiënt is «{{sex}}»: het zwangerschapsblok vereist een vrouwelijke patiënt. Corrigeer dit in stap 1 als dit een invoerfout was.",
+        "alreadyExists": "Er bestaat al een ingetrokken zwangerschapsblok voor deze melding. Het opnieuw activeren vereist een superbeheerder; er kan geen nieuw blok worden aangemaakt.",
+        "load": "We konden het zwangerschapsblok niet laden."
+      },
+      "derived": {
+        "hasComplications": "Er is minstens één complicatie geregistreerd: dit wordt automatisch beantwoord met «Ja»."
+      },
+      "help": {
+        "probableDeliveryDateSuggested": "Voorgesteld op basis van de laatste menstruatie (+280 dagen). Je kunt dit aanpassen."
+      },
+      "gate": {
+        "blockedTitle": "Er zijn zwangerschapsgegevens geregistreerd",
+        "blocked": {
+          "sex": "Deze wijziging van geslacht kan niet worden opgeslagen: de patiënt heeft zwangerschapsgegevens geregistreerd in stap 4. Leeg eerst het zwangerschapsblok.",
+          "age": "Deze wijziging kan niet worden opgeslagen: de patiënt zou buiten de leeftijdsrange voor zwangerschap vallen, en heeft zwangerschapsgegevens geregistreerd in stap 4. Leeg eerst het zwangerschapsblok.",
+          "complications": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Verwijder ze één voor één voordat het blok geleegd kan worden.",
+          "complicationsNeedsAdmin": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Alleen een beheerder kan ze verwijderen voordat het blok geleegd kan worden."
+        },
+        "clearBlock": "Zwangerschapsblok leegmaken",
+        "cleared": "Het zwangerschapsblok is geleegd. Je kunt de wijziging nu opslaan."
+      },
+      "complications": {
+        "sectionTitle": "Complicaties",
+        "needsParent": "Sla het zwangerschapsblok op voordat je complicaties toevoegt.",
+        "field": {
+          "complicationName": "Complicatie",
+          "complicationCode": "Code",
+          "complicationTypeItemId": "Type complicatie",
+          "notes": "Notities"
+        },
+        "validation": {
+          "complicationNameRequired": "Schrijf de complicatie voordat je opslaat."
+        },
+        "form": {
+          "createTitle": "Complicatie toevoegen",
+          "editTitle": "Complicatie bewerken"
+        },
+        "meddraUnavailable": "De termenzoeker is nu niet beschikbaar; je kunt het zo typen.",
+        "diagtermNotImported": "Het woordenboek van deze bron is niet geïmporteerd in deze implementatie.",
+        "keepAsFreeText": "Opslaan als vrije tekst",
+        "error": {
+          "load": "We konden de complicaties niet laden.",
+          "alreadyExists": "Er is al een complicatie van dat type met dezelfde term geregistreerd voor deze zwangerschap.",
+          "typeCatalogEmpty": "Er zijn geen complicatietypes geconfigureerd in deze implementatie: zonder minstens één kan er geen worden geregistreerd."
+        },
+        "delete": {
+          "confirm": "De complicatie «{{name}}» verwijderen? Deze actie kan hier niet ongedaan worden gemaakt."
+        },
+        "roleForbidden": {
+          "delete": "Het verwijderen van een complicatie vereist een beheerder in deze implementatie."
+        }
+      }
     },
     "nonSevere": {
       "sectionTitle": "Niet-ernstige meldingsfiche",

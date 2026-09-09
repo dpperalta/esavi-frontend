@@ -1,7 +1,8 @@
 # El proceso de registro de un caso ESAVI
 
 > **Fuentes:** `esavi-backend/esaviapp.sql` (DDL), `esavi-backend/src/services/*.service.ts`, `esavi-backend/src/validators/*.validator.ts`, `esavi-backend/references/functional/specs/` — y, para los dos componentes de §5.4b, los plugins DHIS2 en producción de `references/external/who-drug/` y `references/external/meddra/`
-> **Fecha:** 2026-09-03 · **Estado:** **completo** — los seis pasos recorridos columna a columna. Lo que queda abierto son las seis peticiones de §10, que no dependen de este repositorio
+> **Fecha:** 2026-09-08 · **Estado:** **completo** — los seis pasos recorridos columna a columna. Lo que queda abierto son las seis peticiones de §10, que no dependen de este repositorio
+> **Actualización del 2026-09-08:** dos tablas nuevas del backend, incorporadas columna a columna contra su validador y su servicio — `notificationMedicalHistory` (SPEC F57, séptimo satélite del paso 4, §5.4b) e `investigationDiagnostic` (SPEC F58, tercera lista del paso 5, §5.5.6). Ninguna cambia una regla existente: las dos añaden un bloque
 
 Las reglas del recorrido que va del paciente al expediente cerrado. **No describe pantallas**: cada spec `FE08`–`FE14` diseña la suya y **cita** este documento en lugar de copiarlo. Una condición escrita en cuatro sitios está desactualizada en tres.
 
@@ -9,7 +10,7 @@ Las reglas del recorrido que va del paciente al expediente cerrado. **No describ
 
 ## Estado
 
-**El documento está completo.** §1 a §10, y **§5 recorrido entero** — los seis pasos, 27 tablas y unas 320 columnas contrastadas una a una contra su validador y su servicio del backend.
+**El documento está completo.** §1 a §10, y **§5 recorrido entero** — los seis pasos, 29 tablas y unas 334 columnas contrastadas una a una contra su validador y su servicio del backend.
 
 **No queda ninguna sesión de redacción pendiente.** Lo que sigue es escribir los specs `FE08`–`FE14` (§9), y ninguno reabre esto: lo citan.
 
@@ -19,7 +20,7 @@ Las reglas del recorrido que va del paciente al expediente cerrado. **No describ
 |---|---|
 | Cuatro entidades del paso 4 exigen ADMIN para escribir | **§10.4** — pedido. El paso 5 entero escribe como `USER`, y eso lo refuerza. **Bloquea `FE12b`** |
 | `pharmaceuticalForm`, `administrationRoute` y `diluentCatalog` sin sembrar | **§10.5** — precondición de datos |
-| `PREGNANCY_FEMALE_SEX_ITEM` sin sembrar | **§10.6** — sin ella, el bloque de embarazo da `500` |
+| `PREGNANCY_FEMALE_SEX_ITEM` sin sembrar | **§10.6** — **resuelto el 2026-09-08**: sembrada. Deja de bloquear `FE12d` |
 | Fila `systemConfig` con el código de país | **§10.1** — decidida, con respaldo en `.env` |
 | `ESAVI-NOTIFIER-005A` debe admitir USER | **§10.2** — pedido |
 | Comprobación de `CLOSED` en los cuatro `PUT` de fase | **§10.3** — pedido |
@@ -45,8 +46,8 @@ El wizard tiene **seis pasos**. El backend conoce **cuatro fases** (`CaseWorkflo
 | 1. Paciente | — | `patient` |
 | 2. Apertura del caso | — (aquí **nace** el workflow) | `esaviCase` + `caseWorkflow` + `notifier` |
 | 3. Clasificación inicial | `CLASSIFICATION` | `classification` |
-| 4. Notificación | `NOTIFICATION` | `notification` + rama + 6 satélites |
-| 5. Investigación | `INVESTIGATION` | `investigation` + 8 satélites 1:1 + 2 listas + 2 nietas |
+| 4. Notificación | `NOTIFICATION` | `notification` + rama + 7 satélites |
+| 5. Investigación | `INVESTIGATION` | `investigation` + 8 satélites 1:1 + 3 listas + 2 nietas |
 | 6. Clasificación final | `FINAL_CLASSIFICATION` | `finalClassification` |
 
 Los pasos 1 y 2 no tienen fase porque ocurren **antes de que exista el `caseWorkflow`**: la fila nace dentro de la transacción de `ESAVI-CASE-001`. Hasta ese momento no hay expediente que gobernar.
@@ -84,7 +85,7 @@ esaviCase ─────┬─→ caseWorkflow  misma transacción, ESAVI-CASE-
    ↓ caseId
 classification · notification · investigation · finalClassification
    ↓                ↓                ↓
-   —          rama + 6 satélites   8 sat. 1:1 + 2 listas + 2 nietas
+   —          rama + 7 satélites   8 sat. 1:1 + 3 listas + 2 nietas
 ```
 
 **Consecuencias que afectan al wizard:**
@@ -633,11 +634,13 @@ Ni `severeNotification` ni `nonSevereNotification` tienen `005A` ni `005B`. Sól
 
 ### 5.4b Paso 4 — Satélites de la notificación · **cerrado**
 
-**Tablas:** `notificationEvent` (13), `notificationVaccine` (14) → `notificationDiluent` (10), `notificationMedication` (11), `notificationPregnancy` (8) → `notificationPregnancyComplication` (8). Sesenta y cuatro columnas y dos niveles de anidamiento.
+**Tablas:** `notificationEvent` (13), `notificationVaccine` (14) → `notificationDiluent` (10), `notificationMedication` (11), `notificationPregnancy` (8) → `notificationPregnancyComplication` (8), `notificationMedicalHistory` (6). Setenta columnas y dos niveles de anidamiento.
 
-**Endpoints:** `ESAVI-NOTIFEVT-001/-002A/-003/-004/-005A/-006`, `ESAVI-NOTIFVAC-*` y `ESAVI-NOTIFMED-*` con la misma forma, `ESAVI-NOTIFDIL-001/-002A/-003/-004/-005A` (sin `006`), `ESAVI-NOTIFPRG-001/-003/-004/-006` y `ESAVI-PREGCOMP-001/-002A/-003/-004/-005A`.
+**Endpoints:** `ESAVI-NOTIFEVT-001/-002A/-003/-004/-005A/-006`, `ESAVI-NOTIFVAC-*` y `ESAVI-NOTIFMED-*` con la misma forma, `ESAVI-NOTIFDIL-001/-002A/-003/-004/-005A` (sin `006`), `ESAVI-NOTIFPRG-001/-003/-004/-006`, `ESAVI-PREGCOMP-001/-002A/-003/-004/-005A` y `ESAVI-MEDHIST-001/-002A/-002B/-003/-004/-005A/-005B/-005C/-006`.
 
-#### Lo primero, porque condiciona todo lo demás: cuatro de las seis exigen ADMIN
+> **`notificationMedicalHistory` entró el 2026-09-08** (SPEC F57 del backend) y es el séptimo satélite. Se lee con lo que ya dice esta sección: es la tercera tabla del paso 4 que resuelve contra el catálogo clínico, con las mismas tres ramas de `notificationEvent`. Su bloque propio está al final, tras las complicaciones del embarazo.
+
+#### Lo primero, porque condiciona todo lo demás: cuatro de las siete exigen ADMIN
 
 **Estado tras regenerar `API-ROUTES.md` el 2026-09-05.** La petición de §10.4 se atendió **sólo en el alta**:
 
@@ -649,27 +652,30 @@ Ni `severeNotification` ni `nonSevereNotification` tienen `005A` ni `005B`. Sól
 | `notificationMedication` | ✅ USER | **ADMIN** | **ADMIN** |
 | `notificationPregnancy` | USER | USER | ADMIN |
 | `notificationPregnancyComplication` | USER | USER | ADMIN |
+| `notificationMedicalHistory` | USER | USER | ADMIN |
 
 La cabecera del paso 4 y sus dos ramas son **USER** (`NOTIFCN-001/-004`, `SEVNOT`, `NSEVNOT`), y desde el 2026-09-04 también lo es **crear** los cuatro satélites clínicos. Lo que sigue vedado a quien notifica es **corregir y retirar** lo que acaba de escribir.
 
+**Y el satélite que llegó después nace con el reparto correcto.** `MEDHIST` es del 2026-09-08 y escribe como `USER` en el `001` **y** en el `004`, igual que las dos del embarazo. Son ya tres satélites del paso 4 en los que quien notifica puede corregir lo que escribió, frente a cuatro en los que no: §10.4 deja de describir «la política del paso 4» para describir a cuatro specs concretos.
+
 **El resultado intermedio es peor que el punto de partida, y por eso se deja dicho.** Antes la asimetría era coherente —un USER no tocaba el contenido clínico—; ahora puede crear una fila mal y no puede arreglarla. Nada explica que registrar qué vacuna causó el evento sea de USER y corregir una errata de ADMIN.
 
-**El diseño de `FE12b` sigue asumiendo que las seis escrituras son `USER`** (§10.4): no se replica en el cliente una restricción que está a medio retirar. Lo que cambia mientras tanto es el texto del aviso —distinto para corregir y para retirar—, no el diseño.
+**El diseño de `FE12b` sigue asumiendo que las siete escrituras son `USER`** (§10.4): no se replica en el cliente una restricción que está a medio retirar. Lo que cambia mientras tanto es el texto del aviso —distinto para corregir y para retirar—, no el diseño.
 
 #### `sortOrder` no se envía nunca, y no se reordena desde la pantalla
 
-Las cinco tablas con `sortOrder` lo reciben de un disparador —`TRG_<tabla>_setSortOrder`, bajo cerrojo consultivo— que asigna `MAX + 1` dentro del mismo padre. Ningún validador lo declara y **ningún servicio lo escribe en el `004`**: enviarlo no da 400, se descarta en silencio.
+Las seis tablas con `sortOrder` lo reciben de un disparador —`TRG_<tabla>_setSortOrder`, bajo cerrojo consultivo— que asigna `MAX + 1` dentro del mismo padre. Ningún validador lo declara y **ningún servicio lo escribe en el `004`**: enviarlo no da 400, se descarta en silencio.
 
 Consecuencia para la pantalla: **el orden de la lista es el de creación y no se puede cambiar**. No hay endpoint que reordene, y un índice único parcial por padre (`UQ_<tabla>_parent_sortOrder`, sólo sobre filas no borradas) haría fallar cualquier intento de escribirlo a mano. Si el funcional pide arrastrar filas, es una petición al otro repositorio, no un `PUT`.
 
-#### El patrón de pantalla: cuatro listas, un formulario 1:1 y una lista anidada
+#### El patrón de pantalla: cinco listas, un formulario 1:1 y una lista anidada
 
 Todas siguen el patrón canónico de §5.0 —lista con «Añadir», alta y edición en modal— con dos desviaciones que sí hay que documentar:
 
 | Bloque | Forma |
 |---|---|
-| Eventos, vacunas, medicación | Lista + modal, contra la notificación |
-| Diluyentes | **Lista anidada dentro del modal de su vacuna.** Cuelgan de `vaccineId`, no de la notificación: no hay lista de diluyentes del caso, y `NOTIFDIL` es la única de las seis **sin `006` por caso** |
+| Eventos, vacunas, medicación, antecedentes | Lista + modal, contra la notificación |
+| Diluyentes | **Lista anidada dentro del modal de su vacuna.** Cuelgan de `vaccineId`, no de la notificación: no hay lista de diluyentes del caso, y `NOTIFDIL` es la única de las siete **sin `006` por caso** |
 | Embarazo | **No es lista: es un formulario 1:1** con la notificación |
 | Complicaciones del embarazo | Lista + modal **dentro del bloque de embarazo**, contra `pregnancyId` |
 
@@ -679,7 +685,7 @@ Un diluyente no existe sin vacuna y una complicación no existe sin la fila de e
 
 #### `notificationEvent` — columna por columna
 
-Los diagnósticos del ESAVI. Son **N**, y es la única de las seis que acuña términos en el catálogo clínico.
+Los diagnósticos del ESAVI. Son **N**, y es la primera de las tres tablas del paso 4 que acuñan términos en el catálogo clínico — las otras dos son `notificationPregnancyComplication` y `notificationMedicalHistory`, con la misma resolución.
 
 | Columna | ¿Se pide? | Regla verificada |
 |---|---|---|
@@ -697,7 +703,7 @@ Los diagnósticos del ESAVI. Son **N**, y es la única de las seis que acuña t�
 | `otherDescription` | Condicional | ≤500 |
 | `notes` | Sí | Texto libre |
 
-**`source` es un campo aceptado que no es columna.** Vale `MEDDRA`, `WHODRUG`, `LOCAL` u `OTHER`, decide qué rama de la resolución se toma y se descarta después. Lo mismo en `PREGCOMP-001/-004`.
+**`source` es un campo aceptado que no es columna.** Vale `MEDDRA`, `WHODRUG`, `LOCAL` u `OTHER`, decide qué rama de la resolución se toma y se descarta después. Lo mismo en `PREGCOMP-001/-004` y en `MEDHIST-001/-004`.
 
 ##### La resolución del término: tres ramas y tres derivadas
 
@@ -794,7 +800,7 @@ Y el resto de lo que el usuario vio al elegir —titular, forma, potencia, ingre
 
 #### `notificationDiluent` — columna por columna
 
-Cuelga de la **vacuna**, no de la notificación. Diez columnas, **ninguna obligatoria en el DDL** —ni siquiera un booleano con defecto—, y **sin `notes`**: es la única de las seis que no lo tiene.
+Cuelga de la **vacuna**, no de la notificación. Diez columnas, **ninguna obligatoria en el DDL** —ni siquiera un booleano con defecto—, y **sin `notes`**: es la única de las siete que no lo tiene.
 
 | Columna | ¿Se pide? | Regla verificada |
 |---|---|---|
@@ -931,6 +937,41 @@ Cuelga de la fila de embarazo. Son **N**, y comparte con `notificationEvent` la 
 
 ---
 
+#### `notificationMedicalHistory` — columna por columna
+
+Los antecedentes médicos del paciente tal como los declara **quien notifica**: las comorbilidades y la historia previa que el notificador conoce en ese momento. Son **N**, cuelgan de la notificación, y es la tabla más estrecha de las siete — seis columnas, de las que sólo dos se piden.
+
+> **El nombre colisiona con una tabla del paso 5 y no es el mismo dato.** `investigationMedicalHistory` (§5.5.3) es un **cuestionario 1:1** de banderas `answerOption` —hospitalización previa, antecedentes familiares, el bloque de embarazo entero— sobre la investigación. Ésta es una **lista de términos diagnósticos** sobre la notificación. No se derivan la una de la otra, no se sincronizan, y **ninguna de las dos es la fuente de la otra**: son dos momentos distintos del expediente contados por dos personas distintas. Que compartan la mitad del nombre es lo único que tienen en común, y es exactamente la clase de parecido que produce un spec equivocado.
+
+| Columna | ¿Se pide? | Regla verificada |
+|---|---|---|
+| `medicalHistoryId` | No | PK generada |
+| `notificationId` | No | Del contexto. **Inmutable en el `004`**: no lo declara ningún validador y el servicio lo descarta sin dar 400 |
+| `diagnosticTermId` | **No — derivado** | Lo devuelve la resolución. **Ningún validador lo declara**: es la única puerta al término y el cliente no la abre |
+| `historyRaw` | **No — derivado** | Lo que escribió el notificador, y **sólo si difiere** del nombre del maestro |
+| `sortOrder` | No | Disparador `TRG_notificationMedicalHistory_setSortOrder`, `MAX + 1` por notificación |
+| `notes` | Sí | Texto libre, anulable |
+
+**`historyName`, `historyCode` y `source` son campos aceptados que no son columnas de esta tabla.** Es el mismo desajuste de `notificationPregnancyComplication`: alimentan la resolución y desaparecen. `historyName` es **obligatorio** (≤500, `trim`, no vacío) y `historyCode` opcional (≤100), que es lo que dispara la resolución.
+
+**La resolución es la de `notificationEvent`, con las mismas tres ramas** — sin código no hay término y el nombre queda como texto libre; código sin `source` o con `LOCAL` acuña en `diagnosticTerm`; código con fuente externa busca el par `(source, code)` y **nunca crea**, con `404 MEDHIST_00X_DIAGTERM_NOT_FOUND` si el diccionario no está importado. La regla de `source` de §5.4b —`MEDDRA` cuando venga del buscador, `LOCAL` explícito cuando se escriba a mano— **se aplica aquí igual**, y por la misma razón.
+
+**No hay nombre canónico guardado, como en `PREGCOMP`.** La tabla tiene una sola columna de texto, así que **lo que se muestra es `historyRaw ?? diagnosticTerm.name`** y no hay un tercer campo que lo resuelva. `historyRaw` en `null` significa que el notificador escribió exactamente el nombre del maestro.
+
+**Y de ahí sale la regla del formulario al editar, que el servicio ya protege y el cliente no debe deshacer.** La respuesta del `GET` **no trae `historyName`**: trae `historyRaw` y `diagnosticTerm` por separado. Un `PUT` que reenvía la respuesta entera llega **sin la clave**, y el servicio cae en el nombre efectivo almacenado — que es lo que impide que el texto del notificador se sobrescriba con un eco del `GET`. En el campo editable se muestra el nombre efectivo; se envía `historyName` **sólo cuando el usuario lo cambia**.
+
+**Guarda de duplicados:** `diagnosticTermId` no se repite entre los antecedentes **activos** de la misma notificación → `409 MEDHIST_00X_ALREADY_EXISTS`. Corre **después** de la resolución —dos códigos distintos pueden resolver al mismo término— y sólo si el término tiene valor: dos antecedentes de texto libre son registros distintos por definición. Como en `PREGCOMP`, mira sólo filas activas, así que desactivar y volver a cargar es el camino de corrección.
+
+**La asimetría del `004` es la de `PREGCOMP`:** `historyName` es opcional pero **no anulable** — un `null` explícito da 400, porque borraría el único texto que identifica el antecedente y dejaría una fila que el `001` habría rechazado. `notes` sí es anulable.
+
+**Ciclo de vida completo, a diferencia de los otros satélites del paso 4:** tiene `005A` (ADMIN), `005B` (**SUPERADMIN**) y `005C` (SUPERADMIN, purga física — la tabla está fuera del cerrojo `preventPhysicalDelete`). Retirar un antecedente es de ADMIN y **reactivarlo es de SUPERADMIN**: es el mismo desajuste de §10.2 repetido, y la pantalla no ofrece «reactivar» a quien no puede.
+
+**El `006` es el que usa el asistente.** `GET /api/notification-medical-histories/case/:caseId` devuelve `{ count, rows }` recorriendo caso → notificación → antecedentes, y distingue los dos eslabones rotos con códigos distintos: `404 MEDHIST_006_CASE_NOT_FOUND` y `404 MEDHIST_006_NOTIFICATION_NOT_FOUND`. Una notificación **sin antecedentes responde 200 con una página vacía**, nunca 404. No hay variante admin: quien necesite los retirados entra por el `002B` con el `notificationId` que este mismo endpoint devuelve en cada fila.
+
+**Una notificación retirada responde `404` en las tres lecturas**, no una lista vacía — decir «no tiene antecedentes» a quien simplemente no puede verlos sería una mentira distinta. Sólo quien ve inactivos (hoy SUPERADMIN) la atraviesa.
+
+---
+
 #### Los dos componentes propios
 
 **Los dos ya existen, y no aquí.** `references/external/who-drug/capture-plugin/` y `references/external/meddra/capture-plugin/` son los plugins DHIS2 en producción, y **el comportamiento que replicamos es el suyo** — no una interpretación nuestra del endpoint. Lo que cambia es de dónde salen los datos: allí, un backend externo alcanzado por una *route* de DHIS2; aquí, `ESAVI-WHODRUG-006A`…`E` y `ESAVI-MEDDRA-006`.
@@ -1037,10 +1078,10 @@ En los cuatro el campo **degrada a texto libre sin código**, que es un registro
 
 | Condición | Regla |
 |---|---|
-| Rol para escribir | **Crear es USER en las seis** desde el 2026-09-04; **corregir y retirar siguen en ADMIN** en eventos, vacunas, diluyentes y medicación. Bloqueo abierto a medias en §10.4 |
-| Orden de creación | Notificación → vacuna → diluyente; notificación → embarazo → complicación. El id del padre vuelve en la respuesta |
+| Rol para escribir | **Crear es USER en las siete** desde el 2026-09-04; **corregir y retirar siguen en ADMIN** en eventos, vacunas, diluyentes y medicación. Bloqueo abierto a medias en §10.4 |
+| Orden de creación | Notificación → vacuna → diluyente; notificación → embarazo → complicación. Antecedentes y eventos cuelgan de la notificación directamente. El id del padre vuelve en la respuesta |
 | `sortOrder` | Nunca se envía; el orden es el de creación y no se reordena |
-| Bloqueantes de guardado | `esaviName` (evento), `medicationName` (medicación), `complicationTypeItemId` y `complicationName` (complicación), `wasPregnantAtVaccination` en el `001` (embarazo) |
+| Bloqueantes de guardado | `esaviName` (evento), `medicationName` (medicación), `complicationTypeItemId` y `complicationName` (complicación), `wasPregnantAtVaccination` en el `001` (embarazo), `historyName` (antecedente) |
 | Contenido mínimo | Vacuna: `vaccineWhodrugId` **o** `vaccineName`. Diluyente: `diluentCatalogId` **o** `diluentName` |
 | Coherencia temporal | `vaccinationDate ≤ eventDate`; `reconstitutionDate ≤ vaccinationDate`. Mismo día válido; sin regla si falta una fecha |
 | Rango gestacional | 266–294 días entre menstruación y parto probable, inclusive |
@@ -1052,12 +1093,15 @@ En los cuatro el campo **degrada a texto libre sin código**, que es un registro
 | Fin del árbol WHODrug | Una opción con `matchCount === 1` resuelve el id en cualquier nivel; `count === total` colapsa el nivel. Después, `ESAVI-WHODRUG-003` para la fila entera |
 | Fila de embarazo | **Se limpia con `PUT`, nunca con `DELETE`.** El `UNIQUE` no filtra por `deletedAt` y volver atrás exige SUPERADMIN |
 | Duplicado de complicación | `(término, tipo)` no se repite entre las **activas** del mismo embarazo |
+| Duplicado de antecedente | El **término solo** no se repite entre los **activos** de la misma notificación. Dos textos libres nunca chocan |
+| Nombre del antecedente | Se muestra `historyRaw ?? diagnosticTerm.name`. El `GET` no trae `historyName`: **sólo se envía si el usuario lo cambia** |
+| Reactivar un antecedente | `MEDHIST-005B` es **SUPERADMIN** mientras que su `005A` es ADMIN. No se ofrece a quien no puede |
 | Variantes de `answerOption` | Las tres de `notificationPregnancy` usan `unknown` (§7.1) |
 | Catálogos sin sembrar | `pharmaceuticalForm`, `administrationRoute` y `diluentCatalog`. El formulario aguanta el catálogo vacío (§10.5) |
 
 ### 5.5 Paso 5 — Investigación · **cerrado**
 
-Trece entidades, unas 160 columnas, cinco sesiones. §5.5.0 fija el mapa y §5.5.1 a §5.5.5 lo recorren entero.
+Catorce entidades, unas 168 columnas, seis sesiones. §5.5.0 fija el mapa y §5.5.1 a §5.5.6 lo recorren entero.
 
 **Los cinco hallazgos que ninguna otra parte del documento tenía**, y que son la razón de leer el servicio y no la tabla:
 
@@ -1069,9 +1113,9 @@ Trece entidades, unas 160 columnas, cinco sesiones. §5.5.0 fija el mapa y §5.5
 | **Dos compuertas que se leen al revés**: el `'NO'` del vial exige el contador, y el `'NO'` de las jeringas abre el bloque | §5.5.4, §5.5.5 |
 | `investigationCovidHistory` está en el DDL y **es obsoleta** | §5.5.0, §10.7 |
 
-#### 5.5.0 El mapa: catorce tablas, cuatro formas, y una que no existe
+#### 5.5.0 El mapa: quince tablas, cuatro formas, y una que no existe
 
-El paso 5 es el bloque más grande del expediente: **una cabecera y trece satélites**, unas 160 columnas. Antes de mirar una sola columna hay que ver la forma, porque de ella sale todo lo demás.
+El paso 5 es el bloque más grande del expediente: **una cabecera y catorce satélites**, unas 168 columnas. Antes de mirar una sola columna hay que ver la forma, porque de ella sale todo lo demás.
 
 **Cuatro formas, no trece casos distintos:**
 
@@ -1079,7 +1123,7 @@ El paso 5 es el bloque más grande del expediente: **una cabecera y trece satél
 |---|---|---|
 | **Cabecera** | 1 | `investigation`. PK propia, 1:1 con el caso vía `UQ_investigation_case` |
 | **Satélite 1:1** | 8 | **PK = FK**: su clave primaria *es* `investigationId`. Sin `isActive` |
-| **Satélite N** | 2 | PK propia + `investigationId`, con `sortOrder` |
+| **Satélite N** | 3 | PK propia + `investigationId`, con `sortOrder` |
 | **Nieta** | 2 | Cuelgan de un satélite 1:1, **no de la investigación** |
 
 Y la lista completa, con lo que decide cada una:
@@ -1097,6 +1141,7 @@ Y la lista completa, con lo que decide cada una:
 | `investigationCommunity` | 1:1 | 11 | `INVCOMM` | `investigation` |
 | `investigationTeamMember` | N | 7 | `INVTEAM` | `investigation` |
 | `investigationVaccineAdministered` | N | 5 | `INVVACAD` | `investigation` |
+| `investigationDiagnostic` | N | 8 | `INVDIAG` | `investigation` |
 | `investigationPregnancyCondition` | **Nieta** | 5 | `INVPREG` | **`investigationMedicalHistory`** |
 | `evaluationInstitution` | **Nieta** | 8 | `EVALINST` | **`investigationClinicalEvaluation`** |
 | `investigationCovidHistory` | — | 11 | **ninguno** | **Obsoleta.** Sin endpoints y sin bloque en el asistente — ver abajo |
@@ -1123,11 +1168,11 @@ Y hay un detalle que lo hace más estricto que en el paso 4: como la PK es el `i
 
 ##### Las escrituras del paso 5 son todas `USER`, y eso refuerza §10.4
 
-Las trece entidades implementadas tienen `POST` y `PUT` en **`USER`**. Ni una en ADMIN.
+Las catorce entidades implementadas tienen `POST` y `PUT` en **`USER`**. Ni una en ADMIN. `investigationDiagnostic`, que llegó el 2026-09-08, nace con el mismo reparto: no es una convención vieja que nadie revisa, es la que se sigue aplicando.
 
-**Es la prueba que le faltaba a §10.4.** Trece entidades del paso 5 escriben como `USER`; ocho del paso 4 también; y sólo cuatro del paso 4 —`NOTIFEVT`, `NOTIFVAC`, `NOTIFDIL`, `NOTIFMED`— piden ADMIN. No es una política de seguridad graduada por sensibilidad del dato: la investigación es más sensible que la lista de vacunas administradas, y va en `USER`. Es la deriva de cuatro specs de CRUD que eligieron rol por su cuenta, y §10.4 lo pide corregido con este dato a favor.
+**Es la prueba que le faltaba a §10.4.** Catorce entidades del paso 5 escriben como `USER`; nueve del paso 4 también; y sólo cuatro del paso 4 —`NOTIFEVT`, `NOTIFVAC`, `NOTIFDIL`, `NOTIFMED`— piden ADMIN. No es una política de seguridad graduada por sensibilidad del dato: la investigación es más sensible que la lista de vacunas administradas, y va en `USER`. Es la deriva de cuatro specs de CRUD que eligieron rol por su cuenta, y §10.4 lo pide corregido con este dato a favor.
 
-Los `005A` sí son ADMIN en las cuatro entidades con identidad propia, y los `005B` reparten entre ADMIN y SUPERADMIN sin criterio visible. Es el mismo problema de §10.2 —se puede añadir y no quitar lo recién añadido— repetido cuatro veces; se acumula a la misma petición.
+Los `005A` sí son ADMIN en las cinco entidades con identidad propia, y los `005B` reparten entre ADMIN y SUPERADMIN sin criterio visible — `INVDIAG-005B` es ADMIN, mientras que el `MEDHIST-005B` del paso 4, con el mismo contrato, es SUPERADMIN. Es el mismo problema de §10.2 —se puede añadir y no quitar lo recién añadido— repetido cinco veces; se acumula a la misma petición.
 
 ##### `investigationCovidHistory` está en la base, no tiene API, y **es obsoleta**
 
@@ -1135,7 +1180,9 @@ Los `005A` sí son ADMIN en las cuatro entidades con identidad propia, y los `00
 
 **Preguntado y respondido (§10.7): es una tabla que el modelo dejó atrás.** No es una entidad pendiente, nadie le debe endpoints, y **no hay bloque de COVID en el asistente** — ni ahora ni previsto.
 
-**Entonces las trece entidades implementadas son *todo* el paso 5.** No queda una decimocuarta esperando, y el reparto de abajo está completo.
+**Entonces las catorce entidades implementadas son *todo* el paso 5.** No queda una decimoquinta esperando en el DDL, y el reparto de abajo está completo.
+
+> **Matiz que la actualización del 2026-09-08 obliga a añadir, y que no invalida el aviso anterior.** `investigationDiagnostic` no estaba en este mapa cuando se escribió, y no porque se pasara por alto: **la tabla no existía**. Llegó con el DDL y la API a la vez (SPEC F58). Eso es lo contrario de `investigationCovidHistory` —esquema sin API, y abandonado— y la distinción se mantiene: una tabla sin endpoints no se implementa, y una tabla que llega **con** ellos es un bloque nuevo del asistente. Lo que este mapa no puede prometer es que el backend haya terminado de crecer.
 
 > **Y es el aviso que este mapa tenía que dejar por escrito.** Una tabla en el esquema no es una obligación de implementarla. Leer el DDL como si fuera la especificación habría metido un bloque de once campos en el paso 5, más una petición de endpoints y de tres catálogos en §10, por un vestigio. La única forma de distinguir «pendiente» de «abandonada» era preguntar.
 
@@ -1150,6 +1197,7 @@ Se agrupa por afinidad clínica, no por tamaño: las secciones que el investigad
 | ✅ | **§5.5.3 — El paciente** | `investigationMedicalHistory` + `investigationPregnancyCondition`, `investigationClinicalEvaluation` + `evaluationInstitution` | 46 |
 | ✅ | **§5.5.4 — El acto de vacunación** | `investigationVaccinationContext`, `investigationVaccineAdministered`, `investigationColdChain` | 33 |
 | ✅ | **§5.5.5 — El error y la comunidad** | `investigationAdministrationError`, `investigationCommunity` | 38 |
+| ✅ | **§5.5.6 — El diagnóstico** | `investigationDiagnostic` | 8 |
 
 Las dos nietas van **en la misma sesión que su madre**, por lo de arriba: separarlas es lo que hace que el orden de creación se olvide.
 
@@ -1927,6 +1975,77 @@ Ya no es «todavía no ha salido». El motivo quedó visible en §5.5.4 y aquí 
 | Precarga del marcador | Desde el `geoLocation` de residencia, **marcado como aproximado** hasta que se arrastre |
 | Variantes de `answerOption` | Las trece usan `unknown`. **`noAnswer` no se implementa** (§7.1) |
 
+---
+
+#### 5.5.6 El diagnóstico · **cerrado**
+
+**Tabla:** `investigationDiagnostic` (8, N) · **Endpoints:** `ESAVI-INVDIAG-001/-002A/-002B/-003/-004/-005A/-005B/-005C/-006`
+
+Los **diagnósticos finales o presuntivos** a los que llega la investigación. Es la tercera lista del paso 5 y la más tardía del expediente: llegó con SPEC F58 del backend el 2026-09-08.
+
+**Es la contrapartida de `notificationEvent`, y la distancia entre las dos es el sentido del paso 5.** El paso 4 registra lo que el notificador *vio* —los eventos del ESAVI, tal como se presentaron—; esta tabla registra a qué *concluyó* el investigador. Nada las ata en la base: no hay FK entre ellas, ningún servicio las compara, y el asistente no precarga una desde la otra. Un diagnóstico que contradice el evento notificado es un registro legítimo, y es justamente el que la vigilancia necesita ver.
+
+##### Columna por columna
+
+| Columna | ¿Se pide? | Regla verificada |
+|---|---|---|
+| `diagnosticId` | No | PK generada |
+| `investigationId` | No | Del contexto. **Inmutable en el `004`**: se descarta en silencio, sin 400 |
+| `diagnosticTermId` | **No — derivado** | Lo devuelve la resolución. Ningún validador lo declara |
+| `diagnosticRaw` | **No — derivado** | Lo que escribió el investigador, y **sólo si difiere** del nombre del maestro |
+| `diagnosticDate` | Sí | `date`, anulable. **Una sola regla: no futura** → `400`. Ver abajo |
+| `diagnosticTypeItemId` | Sí | `<CatalogSelect typeCode="diagnosticType">`, **3 ítems sembrados**. Anulable |
+| `sortOrder` | No | Disparador `TRG_investigationDiagnostic_setSortOrder`, `MAX + 1` por investigación |
+| `notes` | Sí | Texto libre, anulable |
+
+**`diagnosticName`, `diagnosticCode` y `source` son campos aceptados que no son columnas**, exactamente como en `MEDHIST` y `PREGCOMP`. `diagnosticName` es **obligatorio** (≤500), `diagnosticCode` opcional (≤100) y es lo que dispara la resolución.
+
+**La resolución es la misma de §5.4b, ramas incluidas**, con `404 INVDIAG_00X_DIAGTERM_NOT_FOUND` para una fuente externa sin importar. Lo que se muestra es **`diagnosticRaw ?? diagnosticTerm.name`**, el `GET` no trae `diagnosticName`, y `diagnosticName` se envía **sólo si el usuario cambia el texto** — la misma trampa cerrada y por la misma razón.
+
+##### El tipo de diagnóstico: tres ítems, y la ausencia significa algo
+
+`diagnosticType` está **sembrado en `esaviapp.sql`** con `PRESUMPTIVE`, `CONFIRMED` y `DIFFERENTIAL`. No es una dependencia de §10.5: el desplegable tiene contenido desde el primer despliegue.
+
+**No hay valor por defecto, y es deliberado.** A diferencia de `investigation.statusItemId`, un tipo ausente se guarda como `null`, porque «presuntivo» y «sin declarar» **no son lo mismo**. El formulario no preselecciona ninguno.
+
+La guarda del servidor tiene las tres condiciones habituales —el ítem existe, está activo y su `catalogType` es `diagnosticType`— y las tres fallan con el mismo `400 INVDIAG_00X_INVALID_DIAGNOSTIC_TYPE`. Corre **sólo si el valor cambia**: reenviar el tipo almacenado no consulta nada, y un `null` explícito no pasa por ella porque borrar el tipo es legítimo.
+
+##### La fecha, y las tres reglas que **no** existen
+
+`diagnosticDate` se comprueba contra una sola cosa: **no puede ser futura**. Y eso vive únicamente en el validador —un `CHECK` sobre `current_date` no es inmutable y Postgres lo rechaza—, así que la base no lo respalda.
+
+**No se cruza contra `investigation.investigationStartDate`, ni contra `investigation.hospitalizationDate`, ni contra `esaviCase.eventDate`.** Es una decisión declarada del backend, no un olvido: un diagnóstico anterior al inicio de la investigación es normal —se diagnosticó en el hospital antes de que nadie investigara— y una regla cruzada rechazaría capturas correctas. **El cliente tampoco las inventa.**
+
+##### Duplicados: sobre el término solo, nunca sobre el par
+
+`diagnosticTermId` no se repite entre los diagnósticos **activos** de la misma investigación → `409 INVDIAG_00X_ALREADY_EXISTS`.
+
+**Y va sobre el término solo, no sobre `(término, tipo)`** — ahí se separa de `PREGCOMP`, y el motivo es clínico: dos filas vivas con el mismo término y distinto tipo no son dos hechos, son el mismo hecho contado dos veces. **Cuando un diagnóstico presuntivo se confirma, lo que corresponde es un `004` sobre la fila que ya existe**, que además es la operación que deja el rastro en `appDetails`. Añadir una fila «confirmada» junto a la «presuntiva» da `409`, y es la respuesta correcta.
+
+Como siempre, corre después de la resolución y sólo si el término tiene valor: dos diagnósticos de texto libre son registros distintos.
+
+##### Ciclo de vida y lecturas
+
+Tiene los tres: `005A` (ADMIN), `005B` (**ADMIN**, no SUPERADMIN) y `005C` (SUPERADMIN, purga real). Es la única entidad del expediente en la que **retirar y reactivar cuestan el mismo rol** — el reparto que §10.2 pide para todas.
+
+**La visibilidad se hereda de la investigación**, y es una condición de consulta, no una comprobación aparte: un diagnóstico que cuelga de una investigación retirada **no vuelve**, en ninguna de las lecturas.
+
+El `006` —`GET /api/investigation-diagnostics/case/:caseId`— es el que usa el asistente: sube del caso a la investigación por `UQ_investigation_case` y baja a los diagnósticos, devolviendo `{ count, rows }`. Distingue los dos eslabones: `404 INVDIAG_006_CASE_NOT_FOUND` y `404 INVDIAG_006_INVESTIGATION_NOT_FOUND`. **Y esa diferencia importa en pantalla**: el primero es un caso que no existe; el segundo, un caso al que todavía hay que crearle la investigación — dos acciones distintas del usuario. Una investigación sin diagnósticos responde **200 con página vacía**. No hay variante admin del `006`: los retirados se ven por el `002B`, con el `investigationId` que cada fila trae.
+
+##### Condiciones
+
+| Condición | Regla |
+|---|---|
+| Rol para escribir | `001` y `004` en **USER**; `005A` y `005B` en **ADMIN**; `005C` en SUPERADMIN |
+| Orden de creación | Investigación → diagnóstico. La investigación debe existir **y estar activa**; su `statusItemId` no se mira |
+| Precondición que **no** existe | No exige `investigationClinicalEvaluation`, ni su existencia ni su estado. **No es una nieta** (§5.5.0): cuelga de `investigation` directamente |
+| Bloqueante de guardado | `diagnosticName`. Opcional pero **no anulable** en el `004` |
+| Fecha | No futura, y **nada más**. Sin cruces con la investigación ni con el caso |
+| Tipo de diagnóstico | Tres ítems sembrados, **sin defecto**. Ausente ≠ presuntivo |
+| Duplicado | El **término solo** entre los **activos** de la investigación. Confirmar un presuntivo es un `004`, no un alta |
+| Nombre | Se muestra `diagnosticRaw ?? diagnosticTerm.name`; se envía `diagnosticName` **sólo si el usuario lo cambia** |
+| `sortOrder` | Nunca se envía. Orden de creación, sin reordenar |
+| Herencia de visibilidad | Investigación retirada → el diagnóstico no aparece en ninguna lectura |
 
 ### 5.6 Paso 6 — Clasificación final y cierre · **cerrado**
 
@@ -2289,7 +2408,9 @@ La edad es el dato que más falta en la práctica, y ése es justo el motivo de 
 
 «Si aplica» es una clave i18n como cualquier otra —`es`, `en`, `nl`—, no un literal.
 
-> **La compuerta puede cerrarse desde otro paso.** Depende de `patient.sexItemId`, `patient.birthDate` y `esaviCase.eventDate`, los tres editables en los pasos 1 y 2. Corregir el sexo a `MALE`, o una fecha de nacimiento que deje la edad fuera del rango, oculta un bloque de embarazo que ya estaba lleno — y por §7.3, ocultar limpia. **Ese borrado se avisa**, nunca se hace en silencio: el usuario está editando el paciente y no tiene por qué saber que está borrando la notificación.
+> **La compuerta puede cerrarse desde otro paso.** Depende de `patient.sexItemId`, `patient.birthDate` y `esaviCase.eventDate`, los tres editables en los pasos 1 y 2. Corregir el sexo a `MALE`, o una fecha de nacimiento —o una fecha del evento— que deje la edad fuera del rango, cerraría la compuerta sobre un bloque de embarazo que ya estaba lleno.
+>
+> **Decidido (revisado por `SPEC FE12d`): mientras haya datos de embarazo, ese cambio no se puede guardar.** No hay borrado que avisar porque no hay borrado. Las **dos exclusiones bloquean por igual** —el sexo y la edad—, y el bloqueo **no depende del rol**: si dependiera, un `USER` produciría exactamente el dato incoherente que a un `ADMIN` se le impide producir. Lo que cambia por rol es el texto, que nombra la salida. El diálogo dice qué hay cargado, cuántas complicaciones quedan y quién puede retirarlas, y ofrece **vaciar el bloque de embarazo** con una sola escritura (`ESAVI-NOTIFPRG-004`, nunca un `DELETE`: `UQ_notificationPregnancy_notification` no filtra por `deletedAt`). Primero se vacía, viéndolo; después se corrige al paciente. Es la misma forma que §7.3 aplica a `takesMedication`.
 
 ---
 
@@ -2332,13 +2453,13 @@ Pedirlos es el error más fácil de cometer, porque están en el DDL como cualqu
 | **FE10** — Pasos 1 y 2 | Paciente y apertura del caso. Los dos juntos porque son los únicos que ocurren **sin `caseId`** | §5.1, §5.2 |
 | **FE11** — Paso 3 | Clasificación inicial. Fija la gravedad, que manda sobre todo lo demás | §5.3, §6.1 |
 | **FE12a** — Paso 4, cabecera y rama | `notification`, `severeNotification`, `nonSevereNotification`. 33 columnas y la regla de fallecimiento | §5.4, §6.1, §7 |
-| **FE12b** — Paso 4, eventos y medicación | `notificationEvent` (13 col.) y `notificationMedication` (11). La resolución del término, las dos reglas de «otro» y la compuerta de `takesMedication`. Deja `<SatelliteList>`, `<MeddraSearchField>` y `<TimeField>`. **Bloqueado por §10.4** | §5.4b, §7.3 |
+| **FE12b** — Paso 4, eventos, medicación y antecedentes | `notificationEvent` (13 col.), `notificationMedication` (11) y `notificationMedicalHistory` (6). La resolución del término, las dos reglas de «otro» y la compuerta de `takesMedication`. Deja `<SatelliteList>`, `<MeddraSearchField>` y `<TimeField>`. **Bloqueado por §10.4** | §5.4b, §7.3 |
 | **FE12c** — Paso 4, vacunas y diluyentes | `notificationVaccine` (14) y `notificationDiluent` (10). El árbol de cinco niveles, los tres textos copiados y las dos coherencias temporales. Deja `<WhodrugTreePicker>` y `<SearchableSelect>`. **Bloqueado por §10.4** | §5.4b |
 | **FE12d** — Paso 4, embarazo y complicaciones | `notificationPregnancy` (8) y `notificationPregnancyComplication` (8). La compuerta de §7.4, el rango de Naegele y la derivación de §6.5. **Bloqueado además por §10.6** | §5.4b, §6.5, §7.4 |
-| **FE13a…d** — Paso 5 | Investigación: cabecera, 8 satélites 1:1, 2 listas y 2 nietas. **Se parte en cuatro**, con el reparto de §5.5.0. Sin bloque de COVID (§10.7) | §5.5, §7 |
+| **FE13a…d** — Paso 5 | Investigación: cabecera, 8 satélites 1:1, 3 listas y 2 nietas. **Se parte en cuatro**, con el reparto de §5.5.0; los diagnósticos de §5.5.6 van con `FE13d`, que es el bloque de conclusión. Sin bloque de COVID (§10.7) | §5.5, §7 |
 | **FE14** — Paso 6 | Clasificación final y cierre, con las cuatro precondiciones de §4.4 | §5.6, §4.4 |
 
-**Por qué `FE12b` se partió en tres, decidido el 2026-09-04.** El paso 4 tenía dos specs y ahora tiene cuatro. Los seis satélites juntos son 64 columnas, dos niveles de anidamiento y **cuatro primitivas nuevas** —`<SatelliteList>`, `<WhodrugTreePicker>`, `<MeddraSearchField>` y `<SearchableSelect>`—, más de lo que `FE12a` abarcó con 33 columnas y dieciséis pasos. El corte no es arbitrario: `<SatelliteList>` nace en `FE12b` y los otros dos la consumen; el árbol WHODrug de cinco niveles es un spec entero por sí mismo; y el embarazo es lo único bloqueado además por datos (§10.6), así que aislarlo impide que su bloqueo arrastre a los otros dos. Los tres se implementan en orden y cada uno deja el paso 4 utilizable.
+**Por qué `FE12b` se partió en tres, decidido el 2026-09-04.** El paso 4 tenía dos specs y ahora tiene cuatro. Los siete satélites juntos son 70 columnas, dos niveles de anidamiento y **cuatro primitivas nuevas** —`<SatelliteList>`, `<WhodrugTreePicker>`, `<MeddraSearchField>` y `<SearchableSelect>`—, más de lo que `FE12a` abarcó con 33 columnas y dieciséis pasos. El corte no es arbitrario: `<SatelliteList>` nace en `FE12b` y los otros dos la consumen; el árbol WHODrug de cinco niveles es un spec entero por sí mismo; y el embarazo es lo único bloqueado además por datos (§10.6), así que aislarlo impide que su bloqueo arrastre a los otros dos. Los tres se implementan en orden y cada uno deja el paso 4 utilizable.
 
 **Por qué `FE09` va segundo y no último.** Con `FE08` y `FE09` las dos opciones del menú están vivas y un expediente es reanudable de punta a punta, aunque los pasos todavía no guarden nada: todo lo que venga después es rellenar formularios contra un armazón que ya funciona. Dejar el listado para el final significa hacer seis specs de formulario sin poder probarlos como los va a usar la gente.
 
@@ -2348,12 +2469,12 @@ Pedirlos es el error más fácil de cometer, porque están en el DDL como cualqu
 
 | Pieza | Quién la necesita primero |
 |---|---|
-| `<EntitySearchSelect>` | FE10 (unidad de salud) y FE12b (términos diagnósticos) |
+| `<EntitySearchSelect>` | FE10 (unidad de salud) y FE12b (términos diagnósticos, en eventos y en antecedentes) |
 | `<WhodrugTreePicker>` | **FE12c** — sin él no hay selector de vacuna. Contrato en §5.4b |
 | `<MeddraSearchField>` | **FE12b**. Contrato en §5.4b |
 | `<AnswerOptionField>` | FE12a. Luego **FE12d** y las cuatro de FE13 |
 | `<DateField>`, `<TimeField>` | FE10 el primero; **FE12b** los dos |
-| `<SatelliteList>` | **FE12b la escribe**; FE12c y FE12d la consumen. Cuatro veces en el paso 4, diez en FE13 |
+| `<SatelliteList>` | **FE12b la escribe**; FE12c y FE12d la consumen. Cinco veces en el paso 4, once en FE13 |
 | `<SearchableSelect>` | **FE12c**, con el árbol WHODrug |
 | `<NumberField>` con rango | FE13c (contadores del conglomerado) y FE13d |
 | `<MapPointPicker>` | **FE13d, y sólo ahí** |
@@ -2406,7 +2527,7 @@ Ver §6.3. La regla de §4.5 —un expediente cerrado no se edita, y sólo un AD
 
 **Petición:** rechazar la escritura sobre un caso `CLOSED` en `ESAVI-CLASSIF-004`, `ESAVI-NOTIFCN-004`, `ESAVI-INVESTGN-004` y `ESAVI-FINCLASS-004`, con un `409` por operación y la misma forma que ya usa `CASEFLOW_012_CASE_CLOSED` — el precedente existe y no hay que inventar semántica.
 
-Alcance a decidir por el backend, no por aquí: si la comprobación cubre también los satélites (`notificationEvent`, `notificationVaccine`, los catorce de la investigación…), que son la mayor parte de las escrituras reales de un expediente. Cubrir sólo los cuatro `004` deja la puerta entornada.
+Alcance a decidir por el backend, no por aquí: si la comprobación cubre también los satélites (`notificationEvent`, `notificationVaccine`, los quince de la investigación…), que son la mayor parte de las escrituras reales de un expediente. Cubrir sólo los cuatro `004` deja la puerta entornada.
 
 ### 10.4 Cuatro satélites del paso 4 exigen ADMIN para escribir · **resuelto a medias el 2026-09-04**
 
@@ -2437,11 +2558,13 @@ Alcance a decidir por el backend, no por aquí: si la comprobación cubre tambi�
 
 Las dos últimas son el mismo caso que §10.2: se puede añadir y no se puede quitar lo recién añadido por error. **Las cuatro primeras son distintas y peores** — no es una asimetría, es que el contenido clínico del paso 4 le está vedado a quien notifica.
 
-**Y no es una decisión deliberada del backend**, sino la deriva de que cada spec de CRUD (F16, F21, F22, F23) eligió sus roles por su cuenta. La prueba es que sus vecinas directas —la cabecera `ESAVI-NOTIFCN-001/-004`, y las dos ramas `SEVNOT` y `NSEVNOT`— son `USER`, igual que `NOTIFPRG` y `PREGCOMP` en el mismo paso. Ocho entidades del paso 4, y sólo cuatro piden ADMIN.
+**Y no es una decisión deliberada del backend**, sino la deriva de que cada spec de CRUD (F16, F21, F22, F23) eligió sus roles por su cuenta. La prueba es que sus vecinas directas —la cabecera `ESAVI-NOTIFCN-001/-004`, y las dos ramas `SEVNOT` y `NSEVNOT`— son `USER`, igual que `NOTIFPRG` y `PREGCOMP` en el mismo paso. Nueve entidades del paso 4, y sólo cuatro piden ADMIN.
 
-**El paso 5 lo confirma: sus trece entidades escriben como `USER`, sin excepción** (§5.5.0). Si hubiera una política graduada por sensibilidad del dato, la investigación clínica —antecedentes, sospecha de maltrato, error de administración— estaría por encima de la lista de vacunas administradas, y va en `USER`. No hay tal política; hay cuatro specs que eligieron distinto.
+**Y el argumento nuevo del 2026-09-08, que es el más limpio de todos:** `notificationMedicalHistory` (SPEC F57) es un satélite del paso 4 escrito **después** de esta petición, con el mismo contrato que los cuatro bloqueados —lista contra la notificación, resolución contra el catálogo clínico— y sus `001` y `004` son **`USER`**. Un spec redactado hoy, para el mismo paso y el mismo tipo de dato, no eligió ADMIN. Eso descarta la última lectura benévola de la asimetría: no queda una política que los cuatro estén respetando y `MEDHIST` incumpliendo.
 
-**Y el mismo problema en los `005A`**, que son ADMIN en las cuatro entidades del paso 5 con identidad propia (`INVTEAM`, `INVVACAD`, `INVPREG`, `EVALINST`). Es §10.2 otra vez: se puede añadir y no quitar lo recién añadido por error. Se acumula a esta misma petición.
+**El paso 5 lo confirma: sus catorce entidades escriben como `USER`, sin excepción** (§5.5.0), la decimocuarta —`investigationDiagnostic`, del 2026-09-08— incluida. Si hubiera una política graduada por sensibilidad del dato, la investigación clínica —antecedentes, sospecha de maltrato, error de administración— estaría por encima de la lista de vacunas administradas, y va en `USER`. No hay tal política; hay cuatro specs que eligieron distinto.
+
+**Y el mismo problema en los `005A`**, que son ADMIN en las cinco entidades del paso 5 con identidad propia (`INVTEAM`, `INVVACAD`, `INVPREG`, `EVALINST`, `INVDIAG`) y en el `MEDHIST-005A` del paso 4 — cuyo `005B`, además, es SUPERADMIN mientras el de `INVDIAG` es ADMIN. Es §10.2 otra vez: se puede añadir y no quitar lo recién añadido por error. Se acumula a esta misma petición.
 
 **Petición:** bajar a `USER` el rol mínimo de las escrituras listadas arriba en `ROUTE_RULES`. Los `002B` (listados con inactivas) y los `005B`/`005C` se quedan como están. Al hacerlo, `API-ROUTES.md` se regenera (`references/README.md`).
 
@@ -2467,9 +2590,11 @@ Las tres FK son nullables, así que **nada bloquea el registro**: la medicación
 
 **Lo que hace el cliente mientras tanto:** `<CatalogSelect>` con cero ítems se muestra deshabilitado y con su explicación, nunca como un desplegable vacío sin más. Es comportamiento general de la primitiva, no un parche del paso 4 — la investigación va a repetir el caso.
 
-### 10.6 Fila `systemConfig` `PREGNANCY_FEMALE_SEX_ITEM` · **pendiente de datos**
+### 10.6 Fila `systemConfig` `PREGNANCY_FEMALE_SEX_ITEM` · **resuelta el 2026-09-08**
 
-Sin ella, `ESAVI-NOTIFPRG-001` responde **`500 NOTIFPRG_001_SEX_CONFIG_MISSING` en cada intento** y el bloque de embarazo entero es inservible (§5.4b).
+**Ya está sembrada** en el despliegue de desarrollo, con `value` = `5c437689-df4d-4b5f-b3e0-c05800d2d923`. El bloque de embarazo deja de ser inservible y `FE12d` deja de estar bloqueado por datos.
+
+Lo que sigue abajo no se borra porque **sigue siendo cierto de cualquier otro despliegue**: el valor es una clave ajena de una base concreta, así que cada instalación necesita la suya y el modo de fallo se repite entero. Sin la fila, `ESAVI-NOTIFPRG-001` responde **`500 NOTIFPRG_001_SEX_CONFIG_MISSING` en cada intento** y el bloque de embarazo entero es inservible (§5.4b) — por eso `FE12d` mantiene su pre-vuelo con `ESAVI-SYSCONF-006` en vez de darla por presente.
 
 | Campo | Valor |
 |---|---|
@@ -2496,7 +2621,7 @@ Es la segunda fila de configuración que este proceso necesita, junto a la de §
 | Para | Regla |
 |---|---|
 | El paso 5 | **No hay bloque de COVID en el asistente**, ni ahora ni previsto. §5.5.0 no vuelve a mencionarla salvo como nota |
-| El reparto de §5.5.0 | Las trece entidades implementadas son **todo** el paso 5. No queda una decimocuarta esperando |
+| El reparto de §5.5.0 | Las catorce entidades implementadas son **todo** el paso 5. No queda una decimoquinta esperando **en el DDL de hoy** — `investigationDiagnostic` no esperaba en el esquema, llegó con su API (§5.5.6) |
 | Quien lea el DDL | La tabla está y no significa nada. **Se documenta como obsoleta** para que nadie la implemente por inercia sólo porque aparece en `esaviapp.sql` |
 | Sus tres catálogos | **No entran en §10.5.** Sembrarlos no serviría para nada |
 

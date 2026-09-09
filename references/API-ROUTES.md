@@ -1,8 +1,13 @@
 # Inventario de rutas del backend
 
 > **Fuente:** `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES`
-> **Generado:** 2026-09-05 · **336 rutas** en **44 grupos**
-> **Verificado:** 2026-09-03 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Generado:** 2026-09-08 · **354 rutas** en **46 grupos**
+> **Verificado:** 2026-09-08 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Cambios de la regeneración del 2026-09-08:** dos grupos nuevos, nueve rutas cada uno, ambos satélites con el mismo contrato (`001`, `002A`/`002B` por padre, `003`, `004`, `005A`/`005B`/`005C`, y un `006` que resuelve por caso):
+> - **`MEDHIST`** — `/api/notification-medical-histories`: los antecedentes médicos del paciente en la **notificación**. Escritura en `USER` (`001`/`004`), baja en `ADMIN`, reactivación en `SUPERADMIN`
+> - **`INVDIAG`** — `/api/investigation-diagnostics`: los diagnósticos finales o presuntivos de la **investigación**. Escritura en `USER` (`001`/`004`), baja en `ADMIN`, reactivación también en `ADMIN`
+>
+> El `006` de ambos (`GET .../case/:id`) es el atajo del wizard: resuelve el satélite desde el id del caso sin pasar por el de la notificación o la investigación.
 > **Cambios de la regeneración del 2026-09-05:** grupo **`WHODPROD`** nuevo con tres rutas (SPEC F56 del backend, espejo del estándar WHODrug y buscador de medicación concomitante). Y **§10.4 de `CASE-PROCESS.md` aplicada a medias**: los cuatro `001` de `NOTIFEVT`, `NOTIFVAC`, `NOTIFDIL` y `NOTIFMED` bajaron a `USER`, pero sus `004` y `005A` **siguen en `ADMIN`**; `ESAVI-NOTIFIER-005A` (§10.2) sí bajó a `USER`
 > **Regenerar:** ver `README.md` de este directorio
 
@@ -298,6 +303,20 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/investigation-communities/:id` | USER | `ESAVI-INVCOMM-003` |
 | `PUT` | `/api/investigation-communities/:id` | USER | `ESAVI-INVCOMM-004` |
 
+### INVDIAG
+
+| Método | Ruta | Rol mínimo | Código |
+|---|---|---|---|
+| `POST` | `/api/investigation-diagnostics` | USER | `ESAVI-INVDIAG-001` |
+| `GET` | `/api/investigation-diagnostics/case/:id` | USER | `ESAVI-INVDIAG-006` |
+| `GET` | `/api/investigation-diagnostics/admin/investigation/:id` | ADMIN | `ESAVI-INVDIAG-002B` |
+| `GET` | `/api/investigation-diagnostics/investigation/:id` | USER | `ESAVI-INVDIAG-002A` |
+| `DELETE` | `/api/investigation-diagnostics/purge/:id` | SUPERADMIN | `ESAVI-INVDIAG-005C` |
+| `PATCH` | `/api/investigation-diagnostics/activate/:id` | ADMIN | `ESAVI-INVDIAG-005B` |
+| `GET` | `/api/investigation-diagnostics/:id` | USER | `ESAVI-INVDIAG-003` |
+| `PUT` | `/api/investigation-diagnostics/:id` | USER | `ESAVI-INVDIAG-004` |
+| `DELETE` | `/api/investigation-diagnostics/:id` | ADMIN | `ESAVI-INVDIAG-005A` |
+
 ### INVESTGN
 
 | Método | Ruta | Rol mínimo | Código |
@@ -394,6 +413,20 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
 | `GET` | `/api/meddra/search` | USER | `ESAVI-MEDDRA-006` |
+
+### MEDHIST
+
+| Método | Ruta | Rol mínimo | Código |
+|---|---|---|---|
+| `POST` | `/api/notification-medical-histories` | USER | `ESAVI-MEDHIST-001` |
+| `GET` | `/api/notification-medical-histories/case/:id` | USER | `ESAVI-MEDHIST-006` |
+| `GET` | `/api/notification-medical-histories/admin/notification/:id` | ADMIN | `ESAVI-MEDHIST-002B` |
+| `GET` | `/api/notification-medical-histories/notification/:id` | USER | `ESAVI-MEDHIST-002A` |
+| `DELETE` | `/api/notification-medical-histories/purge/:id` | SUPERADMIN | `ESAVI-MEDHIST-005C` |
+| `PATCH` | `/api/notification-medical-histories/activate/:id` | SUPERADMIN | `ESAVI-MEDHIST-005B` |
+| `GET` | `/api/notification-medical-histories/:id` | USER | `ESAVI-MEDHIST-003` |
+| `PUT` | `/api/notification-medical-histories/:id` | USER | `ESAVI-MEDHIST-004` |
+| `DELETE` | `/api/notification-medical-histories/:id` | ADMIN | `ESAVI-MEDHIST-005A` |
 
 ### NOTIFCN
 

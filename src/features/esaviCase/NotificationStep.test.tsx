@@ -5,13 +5,28 @@ import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { useDraftsStore } from '@/shared/stores/draftsStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
 import { NotificationStep } from './NotificationStep';
+
+// Ningún test de este archivo monta `<Toaster>` (sonner necesita el tema resuelto vía
+// `preferencesStore`) — para el mapeo de errores propios del bloque de embarazo (SPEC FE12d §4
+// paso 8) hace falta el texto exacto del toast, así que se sustituye `sonner` por el mismo espía
+// que ya usa `PregnancyComplicationList.test.tsx`.
+const toastError = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    error: (...args: unknown[]) => toastError(...args),
+    success: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}));
 
 const server = setupServer();
 
@@ -26,9 +41,54 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+// `usePregnancyGate` (SPEC FE12d §4 paso 6) pide `ESAVI-SYSCONF-006` en cada montaje del paso, no
+// sólo en los tests de la compuerta — sin este respaldo, `onUnhandledRequest: 'error'' tumbaría el
+// resto de la suite. `404` es "no sembrada", el mismo caso que el resto de este archivo ya
+// asumía cuando comparaba sólo contra `sex.value`; los tests que necesitan la fila sembrada la
+// declaran aparte con `mockFemaleSexItemConfig`.
+function mockFemaleSexItemConfigNotSeeded() {
+  server.use(
+    http.get('http://localhost:4500/api/system-configs/code/PREGNANCY_FEMALE_SEX_ITEM', () =>
+      HttpResponse.json(
+        { ok: false, message: 'not found', code: 'SYSCONF_006_NOT_FOUND' },
+        { status: 404 },
+      ),
+    ),
+  );
+}
+
+function mockFemaleSexItemConfig(catalogItemId: string) {
+  server.use(
+    http.get('http://localhost:4500/api/system-configs/code/PREGNANCY_FEMALE_SEX_ITEM', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          systemConfigId: 'sc-pregnancy-female-sex-item',
+          code: 'PREGNANCY_FEMALE_SEX_ITEM',
+          name: 'Ítem de sexo femenino',
+          description: null,
+          value: catalogItemId,
+          valueType: 'string',
+          scope: 'GLOBAL',
+          isEncrypted: false,
+          isEditable: true,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      }),
+    ),
+  );
+}
+
 beforeEach(() => {
   localStorage.clear();
   useDraftsStore.setState({ drafts: {} });
+  mockFemaleSexItemConfigNotSeeded();
+  toastError.mockClear();
 });
 
 // Sin `outcome` sembrado entre los tipos: `<CatalogSelect typeCode="outcome">` cae en su rama
@@ -902,7 +962,9 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     expect(
       await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Si aplica')).toBeInTheDocument();
+    // Dos marcas (SPEC FE12d §4 paso 7): la ficha grave y `PregnancySection` comparten la misma
+    // compuerta y cada una pinta la suya.
+    expect(screen.getAllByText('Si aplica')).toHaveLength(2);
   }, 30000);
 
   it('con paciente femenino en edad fértil, el bloque aparece sin la marca', async () => {
@@ -919,6 +981,72 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
       await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).toBeInTheDocument();
     expect(screen.queryByText('Si aplica')).not.toBeInTheDocument();
+  }, 30000);
+
+  it('con la fila de configuración sembrada y el catalogItemId del paciente igual al suyo, sigue visible sin la marca (SPEC FE12d §3.5, §4 paso 6)', async () => {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    renderNotificationStep();
+
+    expect(
+      await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Si aplica')).not.toBeInTheDocument();
+  }, 30000);
+
+  it('con la fila de configuración apuntando a un ítem distinto del que lleva value === FEMALE, la compuerta sigue al servidor y marca «Si aplica» (SPEC FE12d §3.5, §7.2)', async () => {
+    mockCaseDetail();
+    // El paciente lleva `sex.value === 'FEMALE'` pero la fila de configuración apunta a otro
+    // `catalogItemId` — el despliegue desalineado de §7.2. La comparación por `catalogItemId`
+    // (lo que compara `ESAVI-NOTIFPRG-001`) ya no confirma «femenino», así que el bloque se
+    // muestra pero sin la certeza de «Visible, normal» — evita el `400 PATIENT_NOT_FEMALE` sobre
+    // un bloque que antes se mostraba abierto sin reservas.
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-OTHER-ITEM');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    renderNotificationStep();
+
+    expect(
+      await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByText('Si aplica')).toHaveLength(2);
+  }, 30000);
+
+  it('con la fila de configuración ausente, el bloque sale deshabilitado con su explicación y el resto del paso 4 sigue utilizable (SPEC FE12d §4 paso 7)', async () => {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    // Sin `mockFemaleSexItemConfig`: el `beforeEach` ya deja la fila en «no sembrada» (404).
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    renderNotificationStep();
+
+    expect(
+      await screen.findByText(
+        'El registro de embarazo no está configurado en este despliegue. Pídelo a un administrador.',
+      ),
+    ).toBeInTheDocument();
+    const wasPregnantField = screen.getByRole('combobox', {
+      name: '¿Estaba embarazada al momento de la vacunación?',
+    });
+    expect(wasPregnantField).toBeDisabled();
+
+    // El resto del paso 4 sigue utilizable: la descripción del ESAVI se puede escribir y guardar
+    // funciona con normalidad, sin que el bloque deshabilitado lo bloquee.
+    const description = screen.getByLabelText('Descripción del ESAVI');
+    expect(description).toBeEnabled();
   }, 30000);
 });
 
@@ -1588,4 +1716,608 @@ describe('NotificationStep — los dos satélites conviven en el mismo paso (SPE
     // Y el evento sigue ahí: crear la medicación no desplazó ni ocultó la lista de eventos.
     expect(screen.getAllByText('Fiebre alta').length).toBeGreaterThan(0);
   }, 120000);
+});
+
+describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC FE12d §4 paso 8)', () => {
+  it('con wasPregnantAtVaccination respondido, el guardado encadena el 001 del bloque de embarazo', async () => {
+    const user = setupUser();
+    const workflowCalls = { count: 0 };
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockWorkflow(workflowCalls);
+    mockSevereNotificationBranch();
+
+    let pregnancyPostCalls = 0;
+    let lastPregnancyPostBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+      http.post('http://localhost:4500/api/notification-pregnancies', async ({ request }) => {
+        pregnancyPostCalls++;
+        lastPregnancyPostBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(
+          {
+            ok: true,
+            message: 'ok',
+            data: {
+              pregnancyId: 'pregnancy-1',
+              notificationId: NOTIFICATION_1,
+              wasPregnantAtVaccination: lastPregnancyPostBody.wasPregnantAtVaccination,
+              wasPregnantAtEsavi: null,
+              lastMenstruationDate: null,
+              probableDeliveryDate: null,
+              hasComplications: null,
+              notes: null,
+              isActive: true,
+              createdAt: '2026-01-02T00:00:00.000Z',
+              updatedAt: null,
+              deletedAt: null,
+              appDetails: [],
+            },
+          },
+          { status: 201 },
+        );
+      }),
+    );
+
+    renderNotificationStep();
+
+    const description = await screen.findByLabelText('Descripción del ESAVI');
+    await user.type(description, 'Reacción local en el sitio de aplicación');
+
+    await user.click(
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'No' }));
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(pregnancyPostCalls).toBe(1));
+    expect(lastPregnancyPostBody).toMatchObject({
+      notificationId: NOTIFICATION_1,
+      wasPregnantAtVaccination: 'NO',
+    });
+  }, 30000);
+
+  it('con el bloque de embarazo intacto, el guardado no dispara el 001 de embarazo (decisión de este paso, no del spec)', async () => {
+    const user = setupUser();
+    const workflowCalls = { count: 0 };
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockWorkflow(workflowCalls);
+    mockSevereNotificationBranch();
+
+    let pregnancyPostCalls = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+      http.post('http://localhost:4500/api/notification-pregnancies', () => {
+        pregnancyPostCalls++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: {} }, { status: 201 });
+      }),
+    );
+
+    renderNotificationStep();
+
+    const description = await screen.findByLabelText('Descripción del ESAVI');
+    await user.type(description, 'Reacción local en el sitio de aplicación');
+
+    // La compuerta está abierta (paciente femenino, 30 años) — confirmado por la presencia del
+    // campo, sin tocarlo.
+    await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' });
+
+    const initialWorkflowCalls = workflowCalls.count;
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(workflowCalls.count).toBeGreaterThan(initialWorkflowCalls));
+    expect(pregnancyPostCalls).toBe(0);
+  }, 30000);
+});
+
+const PREGNANCY_1 = 'pregnancy-1';
+
+// Reentrada con las dos ramas y el bloque de embarazo ya creados, más una complicación activa —
+// el escenario que dispara la derivación de §6.5. Devuelve los cuerpos capturados de los dos
+// `PUT` para que cada test compruebe lo que de verdad viaja al guardar.
+function mockDerivationScenario(complicationCount: 0 | 1) {
+  let severePutBody: Record<string, unknown> | null = null;
+  let pregnancyPutBody: Record<string, unknown> | null = null;
+  server.use(
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+    ),
+    http.put(`http://localhost:4500/api/notifications/${NOTIFICATION_1}`, async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      return HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: NOTIFICATION_1,
+          notificationType: 'SEVERE',
+          esaviDescription: body.esaviDescription,
+          hasRelevantMedicalHistory: body.hasRelevantMedicalHistory ?? null,
+          takesMedication: body.takesMedication ?? null,
+          requestInvestigation: body.requestInvestigation ?? false,
+          deathDate: null,
+          autopsyRequested: null,
+          verbalAutopsyPerformed: null,
+          notes: body.notes ?? null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: '2026-01-03T00:00:00.000Z',
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+          outcome: null,
+        },
+      });
+    }),
+    http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: SEVERE_NOTIFICATION_1,
+          hasPreviousEventHistory: null,
+          hasAllergyToOtherVaccines: null,
+          hasAllergyToMedications: null,
+          hasAllergyToPreviousSameVaccine: null,
+          hasPregnancyComplications: null,
+          pregnancyComplicationsDescription: null,
+          notes: null,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          notification: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: 'Reacción local en el sitio de aplicación',
+            isActive: true,
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+          },
+        },
+      }),
+    ),
+    http.put(`http://localhost:4500/api/severe-notifications/${SEVERE_NOTIFICATION_1}`, async ({ request }) => {
+      severePutBody = (await request.json()) as Record<string, unknown>;
+      return HttpResponse.json({ ok: true, message: 'ok', data: { notificationId: SEVERE_NOTIFICATION_1 } });
+    }),
+    http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          pregnancyId: PREGNANCY_1,
+          notificationId: NOTIFICATION_1,
+          wasPregnantAtVaccination: 'YES',
+          wasPregnantAtEsavi: null,
+          lastMenstruationDate: null,
+          probableDeliveryDate: null,
+          // La incoherencia de §6.5 en su propia base: `'NO'` con una fila cargada — dura lo que
+          // tarda el próximo clic en «Guardar».
+          hasComplications: 'NO',
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      }),
+    ),
+    http.put(`http://localhost:4500/api/notification-pregnancies/${PREGNANCY_1}`, async ({ request }) => {
+      pregnancyPutBody = (await request.json()) as Record<string, unknown>;
+      return HttpResponse.json({ ok: true, message: 'ok', data: { pregnancyId: PREGNANCY_1 } });
+    }),
+    http.get(`http://localhost:4500/api/notification-pregnancy-complications/pregnancy/${PREGNANCY_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          count: complicationCount,
+          rows:
+            complicationCount === 1
+              ? [
+                  {
+                    complicationId: 'complication-1',
+                    pregnancyId: PREGNANCY_1,
+                    diagnosticTermId: null,
+                    complicationTypeItemId: 'complication-type-1',
+                    complicationRawName: 'Preeclampsia',
+                    sortOrder: 1,
+                    notes: null,
+                    isActive: true,
+                    createdAt: '2026-01-02T00:00:00.000Z',
+                    updatedAt: null,
+                    deletedAt: null,
+                    appDetails: [],
+                    diagnosticTerm: null,
+                    complicationType: null,
+                  },
+                ]
+              : [],
+        },
+      }),
+    ),
+  );
+  return {
+    getSeverePutBody: () => severePutBody,
+    getPregnancyPutBody: () => pregnancyPutBody,
+  };
+}
+
+describe('NotificationStep — el GET del bloque de embarazo falla (SPEC FE12d §4 paso 14)', () => {
+  it('muestra un banner de error con reintento, en vez de pintar el bloque vacío en silencio', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockNotificationDetail();
+
+    let pregnancyGetCalls = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+      ),
+      http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: SEVERE_NOTIFICATION_1,
+            hasPreviousEventHistory: null,
+            hasAllergyToOtherVaccines: null,
+            hasAllergyToMedications: null,
+            hasAllergyToPreviousSameVaccine: null,
+            hasPregnancyComplications: null,
+            pregnancyComplicationsDescription: null,
+            notes: null,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            notification: {
+              notificationId: NOTIFICATION_1,
+              notificationType: 'SEVERE',
+              esaviDescription: 'Reacción local en el sitio de aplicación',
+              isActive: true,
+              case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+            },
+          },
+        }),
+      ),
+      http.get(`http://localhost:4500/api/notification-events/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get(`http://localhost:4500/api/notification-medications/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () => {
+        pregnancyGetCalls++;
+        if (pregnancyGetCalls === 1) {
+          return HttpResponse.json(
+            { ok: false, message: 'error inesperado', code: 'UNKNOWN_ERROR' },
+            { status: 500 },
+          );
+        }
+        return HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        );
+      }),
+    );
+
+    renderNotificationStep();
+
+    await screen.findByLabelText('Descripción del ESAVI');
+    expect(await screen.findByText('No pudimos cargar el bloque de embarazo.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }));
+
+    await waitFor(() => expect(pregnancyGetCalls).toBe(2));
+    await waitFor(() =>
+      expect(screen.queryByText('No pudimos cargar el bloque de embarazo.')).not.toBeInTheDocument(),
+    );
+    // El 404 de reintento resuelve como «sin fila todavía» (§3.6), así que los campos del bloque
+    // vuelven a aparecer en vez de quedarse en el banner.
+    expect(
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+    ).toBeInTheDocument();
+  }, 30000);
+});
+
+describe('NotificationStep — la derivación de §6.5 (SPEC FE12d §4 paso 11)', () => {
+  it('con ≥1 complicación activa, los dos campos se muestran «Sí» bloqueados y así viajan en el guardado normal, sin PUT propio', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockNotificationDetail();
+    const { getSeverePutBody, getPregnancyPutBody } = mockDerivationScenario(1);
+
+    renderNotificationStep();
+
+    const pregnancyField = await screen.findByRole('combobox', {
+      name: '¿El embarazo tiene complicaciones registradas?',
+    });
+    const severeField = await screen.findByRole('combobox', {
+      name: '¿Tuvo complicaciones el embarazo?',
+    });
+
+    // Bloqueados en «Sí», con la explicación compartida por los dos campos (§3.8) — ningún PUT se
+    // ha disparado todavía por esto solo, sólo la lectura de las tres consultas.
+    await waitFor(() => expect(pregnancyField).toHaveTextContent('Sí'));
+    expect(severeField).toHaveTextContent('Sí');
+    expect(pregnancyField).toBeDisabled();
+    expect(severeField).toBeDisabled();
+    expect(
+      screen.getAllByText('Hay al menos una complicación registrada: se responde «Sí» automáticamente.'),
+    ).toHaveLength(2);
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(getSeverePutBody()).not.toBeNull());
+    expect(getSeverePutBody()).toMatchObject({ hasPregnancyComplications: 'YES' });
+    await waitFor(() => expect(getPregnancyPutBody()).not.toBeNull());
+    expect(getPregnancyPutBody()).toMatchObject({ hasComplications: 'YES' });
+  }, 30000);
+
+  it('sin ninguna complicación activa, los dos campos vuelven a ser editables sin recargar', async () => {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockNotificationDetail();
+    mockDerivationScenario(0);
+
+    renderNotificationStep();
+
+    const pregnancyField = await screen.findByRole('combobox', {
+      name: '¿El embarazo tiene complicaciones registradas?',
+    });
+    const severeField = await screen.findByRole('combobox', {
+      name: '¿Tuvo complicaciones el embarazo?',
+    });
+
+    await waitFor(() => expect(pregnancyField).toBeEnabled());
+    expect(severeField).toBeEnabled();
+    expect(
+      screen.queryByText('Hay al menos una complicación registrada: se responde «Sí» automáticamente.'),
+    ).not.toBeInTheDocument();
+  }, 30000);
+});
+
+describe('NotificationStep — mapeo de errores propios del bloque de embarazo (SPEC FE12d §4 paso 8, §3.5)', () => {
+  function renderReadyToSubmit() {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockNotificationDetail();
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+      ),
+      http.put(`http://localhost:4500/api/notifications/${NOTIFICATION_1}`, async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: body.esaviDescription,
+            hasRelevantMedicalHistory: null,
+            takesMedication: null,
+            requestInvestigation: false,
+            deathDate: null,
+            autopsyRequested: null,
+            verbalAutopsyPerformed: null,
+            notes: null,
+            isActive: true,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: '2026-01-03T00:00:00.000Z',
+            deletedAt: null,
+            appDetails: [],
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+            outcome: null,
+          },
+        });
+      }),
+    );
+    mockSevereNotificationBranch();
+    renderNotificationStep();
+  }
+
+  it('un 400 NOTIFPRG_001_PATIENT_NOT_FEMALE muestra el toast propio con el sexo registrado', async () => {
+    const user = setupUser();
+    renderReadyToSubmit();
+
+    server.use(
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+      http.post('http://localhost:4500/api/notification-pregnancies', () =>
+        HttpResponse.json(
+          { ok: false, message: 'el paciente no es femenino', code: 'NOTIFPRG_001_PATIENT_NOT_FEMALE' },
+          { status: 400 },
+        ),
+      ),
+    );
+
+    await user.click(
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'No' }));
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
+    expect(toastError).toHaveBeenCalledWith(
+      'El paciente tiene registrado el sexo «FEMALE»: el bloque de embarazo exige un paciente femenino. Corrígelo en el paso 1 si es un error de captura.',
+    );
+  }, 30000);
+
+  it('un 500 NOTIFPRG_001_SEX_CONFIG_MISSING se presenta con el mismo texto del bloque deshabilitado, no como fallo del servidor', async () => {
+    const user = setupUser();
+    renderReadyToSubmit();
+
+    server.use(
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+      http.post('http://localhost:4500/api/notification-pregnancies', () =>
+        HttpResponse.json(
+          { ok: false, message: 'no configurado', code: 'NOTIFPRG_001_SEX_CONFIG_MISSING' },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    await user.click(
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'No' }));
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
+    expect(toastError).toHaveBeenCalledWith(
+      'El registro de embarazo no está configurado en este despliegue. Pídelo a un administrador.',
+    );
+  }, 30000);
+
+  it('un 409 NOTIFPRG_001_ALREADY_EXISTS muestra el aviso del SUPERADMIN y no reintenta ni ofrece crear otro bloque', async () => {
+    const user = setupUser();
+    renderReadyToSubmit();
+
+    let pregnancyPostCalls = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+      http.post('http://localhost:4500/api/notification-pregnancies', () => {
+        pregnancyPostCalls++;
+        return HttpResponse.json(
+          { ok: false, message: 'ya existe', code: 'NOTIFPRG_001_ALREADY_EXISTS' },
+          { status: 409 },
+        );
+      }),
+    );
+
+    await user.click(
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'No' }));
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
+    expect(toastError).toHaveBeenCalledWith(
+      'Ya existe un bloque de embarazo retirado para esta notificación. Reactivarlo exige un superadministrador; no se puede crear uno nuevo.',
+    );
+    expect(pregnancyPostCalls).toBe(1);
+    // Ni reintento automático (un solo `POST`) ni un botón que ofrezca crear otro bloque.
+    expect(screen.queryByRole('button', { name: /crear otro/i })).not.toBeInTheDocument();
+  }, 30000);
+});
+
+describe('NotificationStep — la sugerencia de la fecha de parto (SPEC FE12d §4 paso 12)', () => {
+  function renderOpenGate() {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockWorkflow({ count: 0 });
+    renderNotificationStep();
+  }
+
+  it('con el campo de parto vacío, informar la menstruación lo rellena a +280 días', async () => {
+    renderOpenGate();
+
+    const menstruationInput = await screen.findByLabelText('Fecha de la última menstruación');
+    fireEvent.change(menstruationInput, { target: { value: '2026-01-01' } });
+
+    const deliveryInput = await screen.findByLabelText('Fecha probable de parto');
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-10-08'));
+  }, 30000);
+
+  it('si el campo de parto conserva exactamente la sugerencia anterior, cambiar la menstruación la sustituye', async () => {
+    renderOpenGate();
+
+    const menstruationInput = await screen.findByLabelText('Fecha de la última menstruación');
+    const deliveryInput = await screen.findByLabelText('Fecha probable de parto');
+
+    fireEvent.change(menstruationInput, { target: { value: '2026-01-01' } });
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-10-08'));
+
+    fireEvent.change(menstruationInput, { target: { value: '2026-02-01' } });
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-11-08'));
+  }, 30000);
+
+  it('con el campo de parto tecleado a mano, cambiar la menstruación no lo toca', async () => {
+    renderOpenGate();
+
+    const menstruationInput = await screen.findByLabelText('Fecha de la última menstruación');
+    const deliveryInput = await screen.findByLabelText('Fecha probable de parto');
+
+    fireEvent.change(menstruationInput, { target: { value: '2026-01-01' } });
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-10-08'));
+
+    // El usuario teclea una fecha propia, distinta de la sugerencia — deja de conservarla.
+    fireEvent.change(deliveryInput, { target: { value: '2026-12-25' } });
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-12-25'));
+
+    fireEvent.change(menstruationInput, { target: { value: '2026-02-01' } });
+    // Ninguna nueva sugerencia sustituye lo tecleado a mano — se le da tiempo al efecto a no
+    // disparar antes de confirmar que el valor sigue siendo el mismo.
+    await waitFor(() => expect(menstruationInput).toHaveValue('2026-02-01'));
+    expect(deliveryInput).toHaveValue('2026-12-25');
+  }, 30000);
 });

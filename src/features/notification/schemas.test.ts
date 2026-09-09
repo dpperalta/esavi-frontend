@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  computeGestationDays,
   createNotificationCompleteSchema,
   createNotificationDiluentSchema,
   createNotificationVaccineSchema,
@@ -8,6 +9,7 @@ import {
   hasVaccineIdentity,
   isDeathDateNotBeforeEventDate,
   isDeathFieldsRequirementMet,
+  isGestationRangeCoherent,
   isMedicationCodeClearedWhenOther,
   isOtherEsaviCodeConflictAbsent,
   isOtherEsaviDescriptionCoherent,
@@ -18,37 +20,39 @@ import {
   isVaccinationNotAfterEventDate,
   notificationEventSchema,
   notificationMedicationSchema,
+  notificationPregnancyComplicationSchema,
+  notificationPregnancyCreateSchema,
+  notificationPregnancyUpdateSchema,
   notificationSaveSchema,
   resolvePregnancyGate,
 } from './schemas';
 
-describe('resolvePregnancyGate — CASE-PROCESS.md §7.4', () => {
-  it('MALE, cualquier edad: oculto', () => {
-    expect(resolvePregnancyGate('MALE', 25)).toBe('hidden');
-    expect(resolvePregnancyGate('MALE', null)).toBe('hidden');
+describe('resolvePregnancyGate — CASE-PROCESS.md §7.4 (SPEC FE12d §3.5, §4 paso 6)', () => {
+  it('isMale, cualquier edad: oculto', () => {
+    expect(resolvePregnancyGate(true, false, 25)).toBe('hidden');
+    expect(resolvePregnancyGate(true, false, null)).toBe('hidden');
   });
 
   it('cualquier sexo, edad conocida fuera de 15-49: oculto', () => {
-    expect(resolvePregnancyGate('FEMALE', 14)).toBe('hidden');
-    expect(resolvePregnancyGate('FEMALE', 50)).toBe('hidden');
-    expect(resolvePregnancyGate('UNKNOWN', 10)).toBe('hidden');
+    expect(resolvePregnancyGate(false, true, 14)).toBe('hidden');
+    expect(resolvePregnancyGate(false, true, 50)).toBe('hidden');
+    expect(resolvePregnancyGate(false, false, 10)).toBe('hidden');
   });
 
-  it('FEMALE, edad 15-49: visible, normal', () => {
-    expect(resolvePregnancyGate('FEMALE', 15)).toBe('visible');
-    expect(resolvePregnancyGate('FEMALE', 49)).toBe('visible');
-    expect(resolvePregnancyGate('FEMALE', 30)).toBe('visible');
+  it('isFemaleConfirmed, edad 15-49: visible, normal', () => {
+    expect(resolvePregnancyGate(false, true, 15)).toBe('visible');
+    expect(resolvePregnancyGate(false, true, 49)).toBe('visible');
+    expect(resolvePregnancyGate(false, true, 30)).toBe('visible');
   });
 
-  it('FEMALE, edad desconocida: visible, «Si aplica»', () => {
-    expect(resolvePregnancyGate('FEMALE', null)).toBe('visibleIfApplicable');
-    expect(resolvePregnancyGate('FEMALE', undefined)).toBe('visibleIfApplicable');
+  it('isFemaleConfirmed, edad desconocida: visible, «Si aplica»', () => {
+    expect(resolvePregnancyGate(false, true, null)).toBe('visibleIfApplicable');
+    expect(resolvePregnancyGate(false, true, undefined)).toBe('visibleIfApplicable');
   });
 
-  it('UNKNOWN o sin informar, 15-49 o desconocida: visible, «Si aplica»', () => {
-    expect(resolvePregnancyGate('UNKNOWN', 30)).toBe('visibleIfApplicable');
-    expect(resolvePregnancyGate(null, 30)).toBe('visibleIfApplicable');
-    expect(resolvePregnancyGate(null, null)).toBe('visibleIfApplicable');
+  it('ni isMale ni isFemaleConfirmed (desconocido o sin informar), 15-49 o desconocida: visible, «Si aplica»', () => {
+    expect(resolvePregnancyGate(false, false, 30)).toBe('visibleIfApplicable');
+    expect(resolvePregnancyGate(false, false, null)).toBe('visibleIfApplicable');
   });
 });
 
@@ -635,5 +639,98 @@ describe('notificationDiluentSchema', () => {
     expect(result.success).toBe(false);
     const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'reconstitutionDate');
     expect(issue).toBeTruthy();
+  });
+});
+
+describe('computeGestationDays / isGestationRangeCoherent — Naegele (SPEC FE12d §3.5)', () => {
+  it('sin una de las dos fechas, no hay nada que comparar', () => {
+    expect(computeGestationDays(null, '2026-09-24')).toBeNull();
+    expect(computeGestationDays('2026-01-01', undefined)).toBeNull();
+    expect(isGestationRangeCoherent(null, '2026-09-24')).toBe(true);
+    expect(isGestationRangeCoherent('2026-01-01', null)).toBe(true);
+  });
+
+  it('266 y 294 días, ambos límites inclusive: coherente', () => {
+    expect(computeGestationDays('2026-01-01', '2026-09-24')).toBe(266);
+    expect(isGestationRangeCoherent('2026-01-01', '2026-09-24')).toBe(true);
+
+    expect(computeGestationDays('2026-01-01', '2026-10-22')).toBe(294);
+    expect(isGestationRangeCoherent('2026-01-01', '2026-10-22')).toBe(true);
+  });
+
+  it('265 y 295 días, uno a cada lado del límite: incoherente', () => {
+    expect(computeGestationDays('2026-01-01', '2026-09-23')).toBe(265);
+    expect(isGestationRangeCoherent('2026-01-01', '2026-09-23')).toBe(false);
+
+    expect(computeGestationDays('2026-01-01', '2026-10-23')).toBe(295);
+    expect(isGestationRangeCoherent('2026-01-01', '2026-10-23')).toBe(false);
+  });
+
+  it('el parto anterior a la menstruación cae fuera del rango con el mismo error', () => {
+    expect(isGestationRangeCoherent('2026-09-24', '2026-01-01')).toBe(false);
+  });
+});
+
+describe('notificationPregnancyCreateSchema / notificationPregnancyUpdateSchema (SPEC FE12d §3.5)', () => {
+  it('el alta rechaza wasPregnantAtVaccination ausente', () => {
+    const result = notificationPregnancyCreateSchema.safeParse({});
+    expect(result.success).toBe(false);
+    const issue =
+      !result.success && result.error.issues.find((i) => i.path[0] === 'wasPregnantAtVaccination');
+    expect(issue).toBeTruthy();
+  });
+
+  it('el alta acepta cualquiera de los cinco valores, no sólo YES', () => {
+    expect(
+      notificationPregnancyCreateSchema.safeParse({ wasPregnantAtVaccination: 'NO' }).success,
+    ).toBe(true);
+    expect(
+      notificationPregnancyCreateSchema.safeParse({ wasPregnantAtVaccination: 'UNKNOWN' }).success,
+    ).toBe(true);
+  });
+
+  it('la edición admite wasPregnantAtVaccination en null — retirar una respuesta dada por error', () => {
+    const result = notificationPregnancyUpdateSchema.safeParse({ wasPregnantAtVaccination: null });
+    expect(result.success).toBe(true);
+  });
+
+  it('las dos variantes rechazan un rango gestacional fuera de 266–294 días', () => {
+    const invalidRange = {
+      wasPregnantAtVaccination: 'YES' as const,
+      lastMenstruationDate: '2026-01-01',
+      probableDeliveryDate: '2026-09-23',
+    };
+    const create = notificationPregnancyCreateSchema.safeParse(invalidRange);
+    expect(create.success).toBe(false);
+    const createIssue =
+      !create.success && create.error.issues.find((i) => i.path[0] === 'probableDeliveryDate');
+    expect(createIssue).toBeTruthy();
+
+    const update = notificationPregnancyUpdateSchema.safeParse(invalidRange);
+    expect(update.success).toBe(false);
+  });
+
+  it('sin ninguna de las dos fechas de gestación, ninguna variante rechaza el resto', () => {
+    expect(notificationPregnancyCreateSchema.safeParse({ wasPregnantAtVaccination: 'NO' }).success).toBe(
+      true,
+    );
+  });
+});
+
+describe('notificationPregnancyComplicationSchema (SPEC FE12d §3.5)', () => {
+  it('exige complicationTypeItemId y complicationName', () => {
+    const result = notificationPregnancyComplicationSchema.safeParse({});
+    expect(result.success).toBe(false);
+    const paths = !result.success && result.error.issues.map((i) => i.path[0]);
+    expect(paths).toContain('complicationTypeItemId');
+    expect(paths).toContain('complicationName');
+  });
+
+  it('con los dos obligatorios presentes, pasa sin complicationCode ni source', () => {
+    const result = notificationPregnancyComplicationSchema.safeParse({
+      complicationName: 'Preeclampsia',
+      complicationTypeItemId: '11111111-1111-4111-8111-111111111111',
+    });
+    expect(result.success).toBe(true);
   });
 });
