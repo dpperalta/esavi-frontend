@@ -75,9 +75,10 @@ import { useSystemConfigByCode } from '@/shared/hooks/useSystemConfigByCode';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
-import { NonSevereNotificationFields } from './NonSevereNotificationFields';
 import { PregnancySection } from './PregnancySection';
 import { SevereNotificationFields } from './SevereNotificationFields';
+import { VaccinationBackgroundSection } from './VaccinationBackgroundSection';
+import { VerificationSourceSection } from './VerificationSourceSection';
 
 function NotificationStepSkeleton() {
   return (
@@ -975,14 +976,19 @@ function NotificationFormBody({
           complicationsDerived={hasActiveComplications}
         />
       ) : (
-        <NonSevereNotificationFields
-          control={form.control}
-          initialHealthFacilityLabel={
-            nonSevereNotification?.vaccinationHealthFacility?.name ?? null
-          }
-          verifiedOtherSource={watchedValues.verifiedOtherSource}
-          otherSourceDescription={watchedValues.otherSourceDescription}
-        />
+        <>
+          <VaccinationBackgroundSection
+            control={form.control}
+            initialHealthFacilityLabel={
+              nonSevereNotification?.vaccinationHealthFacility?.name ?? null
+            }
+          />
+          <VerificationSourceSection
+            control={form.control}
+            verifiedOtherSource={watchedValues.verifiedOtherSource}
+            otherSourceDescription={watchedValues.otherSourceDescription}
+          />
+        </>
       )}
 
       <Controller
