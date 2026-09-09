@@ -797,11 +797,11 @@
   },
   "notification": {
     "fields": {
-      "esaviDescription": "Beschrijving van het ESAVI",
-      "hasRelevantMedicalHistory": "Relevante medische voorgeschiedenis?",
-      "takesMedication": "Gebruikt medicatie?",
+      "esaviDescription": "Beschrijving van het AEFI (klachten en symptomen)",
+      "hasRelevantMedicalHistory": "Heeft de patiënt relevante medische voorgeschiedenis?",
+      "takesMedication": "Gebruikte de patiënt medicatie toen die werd gevaccineerd?",
       "outcomeItemId": "Uitkomst",
-      "requestInvestigation": "Onderzoek aanvragen?",
+      "requestInvestigation": "Onderzoek vereist",
       "notes": "Opmerkingen"
     },
     "help": {
@@ -809,29 +809,29 @@
     },
     "death": {
       "sectionTitle": "Overlijden",
-      "deathDate": "Overlijdensdatum",
+      "deathDate": "Als de persoon is overleden, geef de datum van overlijden",
       "autopsyRequested": "Is er een autopsie aangevraagd?",
       "verbalAutopsyPerformed": "Is er een verbale autopsie uitgevoerd?"
     },
     "severe": {
       "sectionTitle": "Ernstige meldingsfiche",
-      "hasPreviousEventHistory": "Voorgeschiedenis van een eerdere gebeurtenis?",
-      "hasAllergyToOtherVaccines": "Allergie voor andere vaccins?",
-      "hasAllergyToMedications": "Allergie voor medicatie?",
-      "hasAllergyToPreviousSameVaccine": "Allergie voor een eerdere dosis van hetzelfde vaccin?",
+      "hasPreviousEventHistory": "Zijn er eerdere voorvallen geweest die lijken op het huidige?",
+      "hasAllergyToOtherVaccines": "Zijn er allergische reacties op andere vaccins geweest?",
+      "hasAllergyToMedications": "Zijn er allergische reacties op medicatie geweest?",
+      "hasAllergyToPreviousSameVaccine": "Zijn er allergische reacties op eerdere doses van hetzelfde vaccin geweest?",
       "hasPregnancyComplications": "Waren er zwangerschapscomplicaties?",
-      "pregnancyComplicationsDescription": "Beschrijf de zwangerschapscomplicaties"
+      "pregnancyComplicationsDescription": "Beschrijf de complicaties (geef een chronologisch overzicht van de klinische voorgeschiedenis rond de huidige zwangerschapscomplicatie)"
     },
     "pregnancy": {
-      "sectionTitle": "Zwangerschap",
+      "sectionTitle": "Zwangerschapsgegevens",
       "ifApplicable": "Indien van toepassing",
       "notConfigured": "Zwangerschapsregistratie is niet geconfigureerd in deze implementatie. Vraag het aan een beheerder.",
       "field": {
         "wasPregnantAtVaccination": "Was zij zwanger op het moment van vaccinatie?",
         "wasPregnantAtEsavi": "Was zij zwanger op het moment van het ESAVI?",
         "lastMenstruationDate": "Datum van de laatste menstruatie",
-        "probableDeliveryDate": "Vermoedelijke bevallingsdatum",
-        "hasComplications": "Heeft de zwangerschap geregistreerde complicaties?",
+        "probableDeliveryDate": "Noteer de vermoedelijke bevallingsdatum of de geboortedatum",
+        "hasComplications": "Waren er complicaties tijdens de zwangerschap, de bevalling of het kraambed, of neonatale complicaties of aangeboren afwijkingen?",
         "notes": "Notities"
       },
       "error": {
@@ -894,15 +894,15 @@
       "vaccinationHealthFacilityId": "Vaccinatie-instelling",
       "vaccinationSiteItemId": "Vaccinatieplaats",
       "vaccinationCenterAddress": "Adres van het vaccinatiecentrum",
-      "vaccinationGeoLocationId": "Locatie van de vaccinatie",
+      "vaccinationGeoLocationId": "Plaats",
       "verificationLegend": "Verificatiebronnen",
-      "verifiedPhysicalDocument": "Fysiek document",
-      "verifiedElectronicRecord": "Elektronisch dossier",
-      "verifiedVerbalReport": "Mondeling verslag",
-      "verifiedClinicalRecord": "Klinisch dossier",
+      "verifiedPhysicalDocument": "Fysiek register/certificaat",
+      "verifiedElectronicRecord": "Elektronisch register/certificaat",
+      "verifiedVerbalReport": "Mondelinge verklaring van de patiënt",
+      "verifiedClinicalRecord": "Medische dossiers bevestigd met een certificaat",
       "verifiedUnknown": "Onbekend",
-      "verifiedOtherSource": "Andere bron",
-      "otherSourceDescription": "Beschrijf de andere bron"
+      "verifiedOtherSource": "Anders",
+      "otherSourceDescription": "Welke?"
     },
     "validation": {
       "esaviDescriptionRequired": "Beschrijf het ESAVI voordat je opslaat.",
@@ -947,11 +947,11 @@
     "events": {
       "sectionTitle": "Gebeurtenissen",
       "fields": {
-        "esaviName": "AEFI-diagnose",
+        "esaviName": "Bijwerking",
         "esaviCode": "Code",
         "isOtherEsavi": "Andere gebeurtenis (niet in de catalogus)",
         "otherDescription": "Beschrijf de gebeurtenis",
-        "isMainEsavi": "Belangrijkste gebeurtenis",
+        "isMainEsavi": "Belangrijkste",
         "startDate": "Startdatum",
         "startTime": "Starttijd",
         "notes": "Opmerkingen"
@@ -983,8 +983,8 @@
         "pharmaceuticalFormItemId": "Farmaceutische vorm",
         "administrationRouteItemId": "Toedieningsweg",
         "startDate": "Startdatum",
-        "isOtherMedication": "Andere medicatie (niet in de catalogus)",
-        "otherMedicationText": "Beschrijf de medicatie"
+        "isOtherMedication": "Anders (staat niet in de lijst)",
+        "otherMedicationText": "Beschrijf het medicijn"
       },
       "fromCatalog": "Uit de medicatiecatalogus.",
       "notInCatalog": "Geen medicatie komt overeen; mogelijk niet in de catalogus van deze omgeving. Je kunt het zo intypen.",
@@ -1030,12 +1030,12 @@
     "field": {
       "whoCode": "WHODrug-code",
       "vaccineCode": "Vaccincode",
-      "vaccineName": "Vaccin",
+      "vaccineName": "Naam van het vaccin",
       "isSuspected": "Verdacht vaccin",
       "vaccinationDate": "Vaccinatiedatum",
       "vaccinationTime": "Vaccinatietijd",
-      "doseNumber": "Dosisnummer",
-      "batchNumber": "Partijnummer",
+      "doseNumber": "Dosis van het vaccin",
+      "batchNumber": "Batch-/lotnummer",
       "expirationDate": "Vervaldatum",
       "notes": "Opmerkingen"
     },
@@ -1067,13 +1067,14 @@
       "needsParent": "Sla het vaccin op voordat je de verdunningsmiddelen toevoegt."
     },
     "field": {
-      "diluentCatalogId": "Verdunningsmiddel",
-      "diluentName": "Naam van het verdunningsmiddel",
+      "diluentCatalogId": "Naam van het oplosmiddel",
+      "diluentName": "Beschrijf het oplosmiddel",
       "diluentCode": "Code van het verdunningsmiddel",
-      "batchNumber": "Partijnummer",
+      "batchNumber": "Batch-/lotnummer",
       "expirationDate": "Vervaldatum",
       "reconstitutionDate": "Reconstitutiedatum",
-      "reconstitutionTime": "Reconstitutietijd"
+      "reconstitutionTime": "Reconstitutietijd",
+      "isOtherDiluent": "Anders (staat niet in de lijst)"
     },
     "error": {
       "diluentRequired": "Kies een verdunningsmiddel uit de catalogus of typ de naam voordat je opslaat.",
