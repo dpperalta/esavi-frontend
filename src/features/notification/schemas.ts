@@ -6,6 +6,8 @@ import type { CreateNotificationInput, NotificationType } from '@/contracts/noti
 import type { CreateNotificationMedicationInput } from '@/contracts/notificationMedication';
 import type { CreateNotificationDiluentInput } from '@/contracts/notificationDiluent';
 import type { CreateNotificationVaccineInput } from '@/contracts/notificationVaccine';
+import type { CreateNotificationPregnancyInput } from '@/contracts/notificationPregnancy';
+import type { CreateNotificationPregnancyComplicationInput } from '@/contracts/notificationPregnancyComplication';
 import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -646,3 +648,113 @@ export const notificationDiluentErrorFieldMap: Partial<Record<string, keyof Noti
   NOTIFDIL_001_CATALOG_NOT_FOUND: 'diluentCatalogId',
   NOTIFDIL_004_CATALOG_NOT_FOUND: 'diluentCatalogId',
 };
+
+// ---------------------------------------------------------------------------------------------
+// SPEC FE12d §3.5 — el bloque de embarazo, encadenado al `useForm` de `NotificationStep` como la
+// cabecera y las dos ramas (§3.4: "no tiene formulario propio"), y su lista anidada de
+// complicaciones, con su propio modal — igual que eventos y medicación en FE12b.
+// ---------------------------------------------------------------------------------------------
+
+// Naegele's rule: 266 a 294 días inclusive entre `lastMenstruationDate` y `probableDeliveryDate`
+// (`CASE-PROCESS.md` §7.4 cita `SPEC FE12d`). Misma aritmética que
+// `assertGestationRangeIsCoherent` en esavi-backend/src/services/notificationPregnancy.service.ts
+// — las dos fechas se leen como medianoche UTC para que la diferencia sea un número entero de
+// días de calendario, inmune al DST. Los límites viven aquí, con nombre, por el mismo motivo que
+// en el backend: son valores clínicos que alguien va a querer ajustar.
+export const GESTATION_MIN_DAYS = 266;
+export const GESTATION_MAX_DAYS = 294;
+
+// `null` cuando falta una de las dos fechas — un embarazo con sólo una fecha conocida es un
+// registro legítimo (§3.5) y no hay nada que comparar todavía.
+export function computeGestationDays(
+  lastMenstruationDate: string | null | undefined,
+  probableDeliveryDate: string | null | undefined,
+): number | null {
+  if (!lastMenstruationDate || !probableDeliveryDate) return null;
+  const start = Date.parse(`${lastMenstruationDate.slice(0, 10)}T00:00:00Z`);
+  const end = Date.parse(`${probableDeliveryDate.slice(0, 10)}T00:00:00Z`);
+  return (end - start) / 86400000;
+}
+
+// Un solo mensaje cubre también el parto anterior a la menstruación (días negativos caen fuera
+// del rango igual que cualquier otro valor fuera de 266–294), igual que hace el backend.
+export function isGestationRangeCoherent(
+  lastMenstruationDate: string | null | undefined,
+  probableDeliveryDate: string | null | undefined,
+): boolean {
+  const days = computeGestationDays(lastMenstruationDate, probableDeliveryDate);
+  if (days === null) return true;
+  return days >= GESTATION_MIN_DAYS && days <= GESTATION_MAX_DAYS;
+}
+
+// El campo del formulario nunca es `undefined` (§3.4: los `answerOption` sin responder se
+// modelan con `null`, igual que el resto de `NotificationFormValues` — ver `defaultValues` de
+// `NotificationStep`), así que la asimetría entre alta y edición no puede expresarse acortando
+// `CreateNotificationPregnancyInput` con `Omit`: hay que redeclarar el campo.
+export type NotificationPregnancyFormValues = Omit<
+  CreateNotificationPregnancyInput,
+  'notificationId' | 'isActive' | 'wasPregnantAtVaccination'
+> & {
+  wasPregnantAtVaccination: AnswerOption | null;
+};
+
+const notificationPregnancySharedFields = {
+  wasPregnantAtEsavi: answerOptionSchema.nullable().optional(),
+  lastMenstruationDate: z.string().regex(isoDateRegex).nullable().optional(),
+  probableDeliveryDate: z.string().regex(isoDateRegex).nullable().optional(),
+  // Derivado y bloqueado con ≥1 complicación activa (§6.5, cableado en el paso 11) — el schema no
+  // lo trata distinto de una `answerOption` cualquiera: lo que lo bloquea es la UI, no una regla
+  // de Zod, porque el valor que viaja en el `PUT` es exactamente el que el usuario ve en pantalla.
+  hasComplications: answerOptionSchema.nullable().optional(),
+  notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+};
+
+// Alta (`ESAVI-NOTIFPRG-001`): `wasPregnantAtVaccination` es la única `answerOption` obligatoria
+// de todo el proceso (§3.3, §3.5) — cualquiera de los cinco valores vale, no sólo `'YES'`: exigir
+// `'YES'` convertiría la tabla en un registro de embarazos confirmados y perdería el caso que más
+// importa, vacunar a alguien cuyo embarazo se ignoraba.
+export const notificationPregnancyCreateSchema = z
+  .object({
+    wasPregnantAtVaccination: answerOptionSchema,
+    ...notificationPregnancySharedFields,
+  })
+  .superRefine((data, ctx) => {
+    if (!isGestationRangeCoherent(data.lastMenstruationDate, data.probableDeliveryDate)) {
+      ctx.addIssue({ code: 'custom', message: 'deliveryDateOutOfRange', path: ['probableDeliveryDate'] });
+    }
+  });
+
+// Edición (`ESAVI-NOTIFPRG-004`): la asimetría con el alta es deliberada (§3.3) — retirar una
+// respuesta dada por error es legítimo sobre una fila que ya existe; crearla sin responder, no.
+export const notificationPregnancyUpdateSchema = z
+  .object({
+    wasPregnantAtVaccination: answerOptionSchema.nullable().optional(),
+    ...notificationPregnancySharedFields,
+  })
+  .superRefine((data, ctx) => {
+    if (!isGestationRangeCoherent(data.lastMenstruationDate, data.probableDeliveryDate)) {
+      ctx.addIssue({ code: 'custom', message: 'deliveryDateOutOfRange', path: ['probableDeliveryDate'] });
+    }
+  });
+
+// `source` viaja al crear/actualizar y nunca vuelve en la respuesta (§3.3): el único campo del
+// tipo que no es columna, igual que en `notificationEvent`. `diagnosticTermId` y
+// `complicationRawName` son derivados — la resolución los escribe — y por eso no están aquí.
+export type NotificationPregnancyComplicationFormValues = Omit<
+  CreateNotificationPregnancyComplicationInput,
+  'pregnancyId' | 'isActive'
+>;
+
+// Los dos obligatorios de §3.5: `complicationTypeItemId` (el DDL lo admite nulo, el validador lo
+// exige) y `complicationName` (lo que escribió el notificador, nunca vacío). Sin variante de
+// edición: a diferencia de `wasPregnantAtVaccination`, el `004` no admite un `null` explícito en
+// ninguno de los dos — corregir es mandar el valor correcto, nunca borrarlo (§3.3) — y el
+// formulario del modal siempre viaja con el objeto completo (§3.5: "se envía el objeto completo
+// en el `PUT`"), así que un único schema basta para las dos operaciones.
+export const notificationPregnancyComplicationSchema = z.object({
+  complicationName: z.string().trim().min(1).max(500),
+  complicationCode: z.preprocess(emptyToUndefined, z.string().trim().max(100).nullable().optional()),
+  complicationTypeItemId: z.string().uuid(),
+  source: z.enum(TERM_SOURCES).optional(),
+  notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+});
