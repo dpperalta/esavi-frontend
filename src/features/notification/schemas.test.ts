@@ -27,33 +27,32 @@ import {
   resolvePregnancyGate,
 } from './schemas';
 
-describe('resolvePregnancyGate — CASE-PROCESS.md §7.4', () => {
-  it('MALE, cualquier edad: oculto', () => {
-    expect(resolvePregnancyGate('MALE', 25)).toBe('hidden');
-    expect(resolvePregnancyGate('MALE', null)).toBe('hidden');
+describe('resolvePregnancyGate — CASE-PROCESS.md §7.4 (SPEC FE12d §3.5, §4 paso 6)', () => {
+  it('isMale, cualquier edad: oculto', () => {
+    expect(resolvePregnancyGate(true, false, 25)).toBe('hidden');
+    expect(resolvePregnancyGate(true, false, null)).toBe('hidden');
   });
 
   it('cualquier sexo, edad conocida fuera de 15-49: oculto', () => {
-    expect(resolvePregnancyGate('FEMALE', 14)).toBe('hidden');
-    expect(resolvePregnancyGate('FEMALE', 50)).toBe('hidden');
-    expect(resolvePregnancyGate('UNKNOWN', 10)).toBe('hidden');
+    expect(resolvePregnancyGate(false, true, 14)).toBe('hidden');
+    expect(resolvePregnancyGate(false, true, 50)).toBe('hidden');
+    expect(resolvePregnancyGate(false, false, 10)).toBe('hidden');
   });
 
-  it('FEMALE, edad 15-49: visible, normal', () => {
-    expect(resolvePregnancyGate('FEMALE', 15)).toBe('visible');
-    expect(resolvePregnancyGate('FEMALE', 49)).toBe('visible');
-    expect(resolvePregnancyGate('FEMALE', 30)).toBe('visible');
+  it('isFemaleConfirmed, edad 15-49: visible, normal', () => {
+    expect(resolvePregnancyGate(false, true, 15)).toBe('visible');
+    expect(resolvePregnancyGate(false, true, 49)).toBe('visible');
+    expect(resolvePregnancyGate(false, true, 30)).toBe('visible');
   });
 
-  it('FEMALE, edad desconocida: visible, «Si aplica»', () => {
-    expect(resolvePregnancyGate('FEMALE', null)).toBe('visibleIfApplicable');
-    expect(resolvePregnancyGate('FEMALE', undefined)).toBe('visibleIfApplicable');
+  it('isFemaleConfirmed, edad desconocida: visible, «Si aplica»', () => {
+    expect(resolvePregnancyGate(false, true, null)).toBe('visibleIfApplicable');
+    expect(resolvePregnancyGate(false, true, undefined)).toBe('visibleIfApplicable');
   });
 
-  it('UNKNOWN o sin informar, 15-49 o desconocida: visible, «Si aplica»', () => {
-    expect(resolvePregnancyGate('UNKNOWN', 30)).toBe('visibleIfApplicable');
-    expect(resolvePregnancyGate(null, 30)).toBe('visibleIfApplicable');
-    expect(resolvePregnancyGate(null, null)).toBe('visibleIfApplicable');
+  it('ni isMale ni isFemaleConfirmed (desconocido o sin informar), 15-49 o desconocida: visible, «Si aplica»', () => {
+    expect(resolvePregnancyGate(false, false, 30)).toBe('visibleIfApplicable');
+    expect(resolvePregnancyGate(false, false, null)).toBe('visibleIfApplicable');
   });
 });
 

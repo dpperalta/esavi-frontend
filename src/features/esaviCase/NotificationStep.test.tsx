@@ -26,9 +26,53 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+// `usePregnancyGate` (SPEC FE12d §4 paso 6) pide `ESAVI-SYSCONF-006` en cada montaje del paso, no
+// sólo en los tests de la compuerta — sin este respaldo, `onUnhandledRequest: 'error'' tumbaría el
+// resto de la suite. `404` es "no sembrada", el mismo caso que el resto de este archivo ya
+// asumía cuando comparaba sólo contra `sex.value`; los tests que necesitan la fila sembrada la
+// declaran aparte con `mockFemaleSexItemConfig`.
+function mockFemaleSexItemConfigNotSeeded() {
+  server.use(
+    http.get('http://localhost:4500/api/system-configs/code/PREGNANCY_FEMALE_SEX_ITEM', () =>
+      HttpResponse.json(
+        { ok: false, message: 'not found', code: 'SYSCONF_006_NOT_FOUND' },
+        { status: 404 },
+      ),
+    ),
+  );
+}
+
+function mockFemaleSexItemConfig(catalogItemId: string) {
+  server.use(
+    http.get('http://localhost:4500/api/system-configs/code/PREGNANCY_FEMALE_SEX_ITEM', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          systemConfigId: 'sc-pregnancy-female-sex-item',
+          code: 'PREGNANCY_FEMALE_SEX_ITEM',
+          name: 'Ítem de sexo femenino',
+          description: null,
+          value: catalogItemId,
+          valueType: 'string',
+          scope: 'GLOBAL',
+          isEncrypted: false,
+          isEditable: true,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      }),
+    ),
+  );
+}
+
 beforeEach(() => {
   localStorage.clear();
   useDraftsStore.setState({ drafts: {} });
+  mockFemaleSexItemConfigNotSeeded();
 });
 
 // Sin `outcome` sembrado entre los tipos: `<CatalogSelect typeCode="outcome">` cae en su rama
@@ -919,6 +963,45 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
       await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).toBeInTheDocument();
     expect(screen.queryByText('Si aplica')).not.toBeInTheDocument();
+  }, 30000);
+
+  it('con la fila de configuración sembrada y el catalogItemId del paciente igual al suyo, sigue visible sin la marca (SPEC FE12d §3.5, §4 paso 6)', async () => {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    renderNotificationStep();
+
+    expect(
+      await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Si aplica')).not.toBeInTheDocument();
+  }, 30000);
+
+  it('con la fila de configuración apuntando a un ítem distinto del que lleva value === FEMALE, la compuerta sigue al servidor y marca «Si aplica» (SPEC FE12d §3.5, §7.2)', async () => {
+    mockCaseDetail();
+    // El paciente lleva `sex.value === 'FEMALE'` pero la fila de configuración apunta a otro
+    // `catalogItemId` — el despliegue desalineado de §7.2. La comparación por `catalogItemId`
+    // (lo que compara `ESAVI-NOTIFPRG-001`) ya no confirma «femenino», así que el bloque se
+    // muestra pero sin la certeza de «Visible, normal» — evita el `400 PATIENT_NOT_FEMALE` sobre
+    // un bloque que antes se mostraba abierto sin reservas.
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-OTHER-ITEM');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    const workflowCalls = { count: 0 };
+    mockWorkflow(workflowCalls);
+
+    renderNotificationStep();
+
+    expect(
+      await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Si aplica')).toBeInTheDocument();
   }, 30000);
 });
 

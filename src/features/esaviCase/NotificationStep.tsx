@@ -37,7 +37,6 @@ import {
   nonSevereNotificationErrorFieldMap,
   notificationErrorFieldMap,
   notificationSaveSchema,
-  resolvePregnancyGate,
   severeNotificationErrorFieldMap,
   type NotificationCompleteContext,
   type NotificationFormValues,
@@ -57,6 +56,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
+import { usePregnancyGate } from '@/shared/hooks/usePregnancyGate';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
@@ -845,16 +845,14 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
         ? nonSevereNotification
         : null;
 
-  // La compuerta de embarazo (`CASE-PROCESS.md` §7.4): sexo del paciente por `value`, nunca por
-  // `code`/`name` (SPEC F46) — la respuesta de `ESAVI-PATIENT-003` ya trae `sex` resuelto, sin
-  // necesidad de un segundo salto de catálogo. La edad viene ya calculada por `classification`,
-  // nunca reimplementada.
+  // `usePregnancyGate` (SPEC FE12d §4 paso 6) sustituye la resolución en línea que dejó FE12a: la
+  // respuesta de `ESAVI-PATIENT-003` ya trae `sex` resuelto, sin necesidad de un segundo salto de
+  // catálogo, y la edad viene ya calculada por `classification`, nunca reimplementada. `patient`
+  // se sigue leyendo aquí, aparte del hook, sólo para el `readyToRenderForm` de abajo — comparte
+  // caché con la lectura interna del hook, no repite la petición.
   const patientId = esaviCase.data?.patient.patientId;
   const patient = patientResource.useOne(patientId ?? '');
-  const pregnancyGate = resolvePregnancyGate(
-    patient.data?.sex?.value ?? null,
-    classification.data?.age ?? null,
-  );
+  const pregnancyGate = usePregnancyGate(caseId);
 
   const readyToRenderForm =
     !!workflow.data &&
