@@ -5,6 +5,8 @@ import type { CreateNotificationInput, NotificationType } from '@/contracts/noti
 import type { CreateNotificationMedicationInput } from '@/contracts/notificationMedication';
 import type { CreateNotificationDiluentInput } from '@/contracts/notificationDiluent';
 import type { CreateNotificationVaccineInput } from '@/contracts/notificationVaccine';
+import type { CreateNotificationPregnancyInput } from '@/contracts/notificationPregnancy';
+import type { CreateNotificationPregnancyComplicationInput } from '@/contracts/notificationPregnancyComplication';
 import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
 import type { PaginatedResponse } from '@/contracts/declared/pagination';
 import type { NonSevereNotificationDetail } from '@/contracts/declared/nonSevereNotification';
@@ -13,6 +15,8 @@ import type { NotificationDiluentDetail } from '@/contracts/declared/notificatio
 import type { NotificationEventDetail } from '@/contracts/declared/notificationEvent';
 import type { NotificationMedicationDetail } from '@/contracts/declared/notificationMedication';
 import type { NotificationVaccineDetail } from '@/contracts/declared/notificationVaccine';
+import type { NotificationPregnancyDetail } from '@/contracts/declared/notificationPregnancy';
+import type { NotificationPregnancyComplicationDetail } from '@/contracts/declared/notificationPregnancyComplication';
 import type { MeddraSearchResult } from '@/contracts/declared/meddra';
 import type { SevereNotificationDetail } from '@/contracts/declared/severeNotification';
 import type { WhodrugProductSearchResult } from '@/contracts/declared/whodrugProduct';
@@ -335,6 +339,96 @@ export function useNotificationDiluentsByVaccine(vaccineId: string | undefined, 
       return response.data;
     },
     enabled: enabled && vaccineId !== undefined,
+  });
+}
+
+// POST   /api/notification-pregnancies                   ESAVI-NOTIFPRG-001  USER  create
+// GET    /api/notification-pregnancies/notification/:id  ESAVI-NOTIFPRG-006  USER  the block, in reentry — hand-written below
+// PUT    /api/notification-pregnancies/:id                ESAVI-NOTIFPRG-004  USER  update and clear (SPEC FE12d §2, §8)
+// Out of scope (SPEC FE12d §2, §3.2): `005A` — never called, `UQ_notificationPregnancy_notification`
+// does not filter by `deletedAt` so a retired row still occupies the slot and only a SUPERADMIN
+// (`005B`) can bring it back; clearing the block is a `004`, never a `DELETE`. Also out: `003` (the
+// `006` above covers reentry) and `005B`/`005C` (SUPERADMIN).
+export const notificationPregnancyResource = createResource<
+  NotificationPregnancyDetail,
+  CreateNotificationPregnancyInput,
+  Partial<CreateNotificationPregnancyInput>
+>({
+  key: 'notificationPregnancy',
+  path: 'notification-pregnancies',
+  idField: 'pregnancyId',
+  inactiveMode: 'serverDecides',
+});
+
+export function notificationPregnancyByNotificationKey(notificationId: string) {
+  return ['notificationPregnancy', 'byNotification', notificationId] as const;
+}
+
+// ESAVI-NOTIFPRG-006 — by `notificationId`, not by `caseId`: the only one of the six satellites of
+// the step read this way (SPEC FE12d §3.2). Two distinct 404 codes exist on the backend
+// (`NOTIFPRG_006_NOTIFICATION_NOT_FOUND` is a dead end, `NOTIFPRG_006_NOT_FOUND` means "this
+// notification has no pregnancy yet"); only the second resolves to `null` — "confirmed, no row
+// yet" — the same reasoning `useSevereNotificationByCase` uses above.
+export function useNotificationPregnancyByNotification(
+  notificationId: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: notificationPregnancyByNotificationKey(notificationId ?? ''),
+    queryFn: async () => {
+      try {
+        const response = await client.get<NotificationPregnancyDetail>(
+          `notification-pregnancies/notification/${notificationId}`,
+        );
+        return response.data;
+      } catch (err) {
+        if (err instanceof EsaviApiError && err.code === 'NOTIFPRG_006_NOT_FOUND') {
+          return null;
+        }
+        throw err;
+      }
+    },
+    enabled: enabled && notificationId !== undefined,
+  });
+}
+
+// POST   /api/notification-pregnancy-complications                ESAVI-PREGCOMP-001   USER   create
+// GET    /api/notification-pregnancy-complications/pregnancy/:id  ESAVI-PREGCOMP-002A  USER   complications of the pregnancy, in reentry — hand-written below
+// PUT    /api/notification-pregnancy-complications/:id            ESAVI-PREGCOMP-004   USER   update
+// DELETE /api/notification-pregnancy-complications/:id            ESAVI-PREGCOMP-005A  ADMIN  soft delete — §10.4, the one write this spec re-requests
+// Out of scope (SPEC FE12d §3.2): `002B` (ADMIN, includes inactive — the wizard shows none), `003`
+// (the `002A` above covers reentry), `005B`/`005C` (SUPERADMIN).
+export const notificationPregnancyComplicationResource = createResource<
+  NotificationPregnancyComplicationDetail,
+  CreateNotificationPregnancyComplicationInput,
+  Partial<CreateNotificationPregnancyComplicationInput>
+>({
+  key: 'notificationPregnancyComplication',
+  path: 'notification-pregnancy-complications',
+  idField: 'complicationId',
+  inactiveMode: 'serverDecides',
+});
+
+export function notificationPregnancyComplicationsByPregnancyKey(pregnancyId: string) {
+  return ['notificationPregnancyComplication', 'byPregnancy', pregnancyId] as const;
+}
+
+// ESAVI-PREGCOMP-002A. `enabled` follows the parent having a `pregnancyId` (SPEC FE12d §3.4,
+// "fase 2"): the list stays disabled until `notificationPregnancyResource`'s `001` returns one, no
+// `staleTime` — the three mutations of the resource above invalidate this exact key on every write.
+export function useNotificationPregnancyComplicationsByPregnancy(
+  pregnancyId: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: notificationPregnancyComplicationsByPregnancyKey(pregnancyId ?? ''),
+    queryFn: async () => {
+      const response = await client.get<PaginatedResponse<NotificationPregnancyComplicationDetail>>(
+        `notification-pregnancy-complications/pregnancy/${pregnancyId}`,
+      );
+      return response.data;
+    },
+    enabled: enabled && pregnancyId !== undefined,
   });
 }
 
