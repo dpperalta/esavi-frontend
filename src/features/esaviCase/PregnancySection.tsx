@@ -20,6 +20,10 @@ export interface PregnancySectionProps {
   // Expediente cerrado (§3.6, mismo criterio que las listas de FE12b/FE12c): sin «Añadir» y sin
   // acciones de fila, aquí ni en la lista de complicaciones.
   isClosed: boolean;
+  // La derivación de §6.5: hay ≥1 complicación activa. «Derivado en render, no es estado» — el
+  // campo se muestra en `'YES'` bloqueado, pero nada escribe ese valor en el formulario; quien
+  // guarda decide el envío efectivo (SPEC FE12d §4 paso 11, §3.4 tabla).
+  complicationsDerived: boolean;
 }
 
 // El bloque de embarazo (SPEC FE12d §4 paso 7), encadenado al `useForm` de `NotificationStep`
@@ -34,6 +38,7 @@ export function PregnancySection({
   configMissing,
   pregnancyId,
   isClosed,
+  complicationsDerived,
 }: PregnancySectionProps) {
   const { t } = useTranslation();
 
@@ -160,14 +165,19 @@ export function PregnancySection({
           name="hasComplications"
           render={({ field }) => (
             <AnswerOptionField
-              value={field.value ?? null}
+              value={complicationsDerived ? 'YES' : (field.value ?? null)}
               onChange={field.onChange}
               ariaLabel={t('notification.pregnancy.field.hasComplications')}
               variant="unknown"
-              disabled={configMissing}
+              disabled={configMissing || complicationsDerived}
             />
           )}
         />
+        {/* §6.5: no basta con deshabilitar el control — sin el texto, un campo gris es
+            indistinguible de un fallo (§3.7). */}
+        {complicationsDerived && (
+          <p className="text-sm text-muted-foreground">{t('notification.pregnancy.derived.hasComplications')}</p>
+        )}
       </div>
 
       <Controller

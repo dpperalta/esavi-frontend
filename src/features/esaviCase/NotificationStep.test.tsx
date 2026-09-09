@@ -1788,3 +1788,202 @@ describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC F
     expect(pregnancyPostCalls).toBe(0);
   }, 30000);
 });
+
+const PREGNANCY_1 = 'pregnancy-1';
+
+// Reentrada con las dos ramas y el bloque de embarazo ya creados, más una complicación activa —
+// el escenario que dispara la derivación de §6.5. Devuelve los cuerpos capturados de los dos
+// `PUT` para que cada test compruebe lo que de verdad viaja al guardar.
+function mockDerivationScenario(complicationCount: 0 | 1) {
+  let severePutBody: Record<string, unknown> | null = null;
+  let pregnancyPutBody: Record<string, unknown> | null = null;
+  server.use(
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+    ),
+    http.put(`http://localhost:4500/api/notifications/${NOTIFICATION_1}`, async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      return HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: NOTIFICATION_1,
+          notificationType: 'SEVERE',
+          esaviDescription: body.esaviDescription,
+          hasRelevantMedicalHistory: body.hasRelevantMedicalHistory ?? null,
+          takesMedication: body.takesMedication ?? null,
+          requestInvestigation: body.requestInvestigation ?? false,
+          deathDate: null,
+          autopsyRequested: null,
+          verbalAutopsyPerformed: null,
+          notes: body.notes ?? null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: '2026-01-03T00:00:00.000Z',
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+          outcome: null,
+        },
+      });
+    }),
+    http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: SEVERE_NOTIFICATION_1,
+          hasPreviousEventHistory: null,
+          hasAllergyToOtherVaccines: null,
+          hasAllergyToMedications: null,
+          hasAllergyToPreviousSameVaccine: null,
+          hasPregnancyComplications: null,
+          pregnancyComplicationsDescription: null,
+          notes: null,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          notification: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: 'Reacción local en el sitio de aplicación',
+            isActive: true,
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+          },
+        },
+      }),
+    ),
+    http.put(`http://localhost:4500/api/severe-notifications/${SEVERE_NOTIFICATION_1}`, async ({ request }) => {
+      severePutBody = (await request.json()) as Record<string, unknown>;
+      return HttpResponse.json({ ok: true, message: 'ok', data: { notificationId: SEVERE_NOTIFICATION_1 } });
+    }),
+    http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          pregnancyId: PREGNANCY_1,
+          notificationId: NOTIFICATION_1,
+          wasPregnantAtVaccination: 'YES',
+          wasPregnantAtEsavi: null,
+          lastMenstruationDate: null,
+          probableDeliveryDate: null,
+          // La incoherencia de §6.5 en su propia base: `'NO'` con una fila cargada — dura lo que
+          // tarda el próximo clic en «Guardar».
+          hasComplications: 'NO',
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      }),
+    ),
+    http.put(`http://localhost:4500/api/notification-pregnancies/${PREGNANCY_1}`, async ({ request }) => {
+      pregnancyPutBody = (await request.json()) as Record<string, unknown>;
+      return HttpResponse.json({ ok: true, message: 'ok', data: { pregnancyId: PREGNANCY_1 } });
+    }),
+    http.get(`http://localhost:4500/api/notification-pregnancy-complications/pregnancy/${PREGNANCY_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          count: complicationCount,
+          rows:
+            complicationCount === 1
+              ? [
+                  {
+                    complicationId: 'complication-1',
+                    pregnancyId: PREGNANCY_1,
+                    diagnosticTermId: null,
+                    complicationTypeItemId: 'complication-type-1',
+                    complicationRawName: 'Preeclampsia',
+                    sortOrder: 1,
+                    notes: null,
+                    isActive: true,
+                    createdAt: '2026-01-02T00:00:00.000Z',
+                    updatedAt: null,
+                    deletedAt: null,
+                    appDetails: [],
+                    diagnosticTerm: null,
+                    complicationType: null,
+                  },
+                ]
+              : [],
+        },
+      }),
+    ),
+  );
+  return {
+    getSeverePutBody: () => severePutBody,
+    getPregnancyPutBody: () => pregnancyPutBody,
+  };
+}
+
+describe('NotificationStep — la derivación de §6.5 (SPEC FE12d §4 paso 11)', () => {
+  it('con ≥1 complicación activa, los dos campos se muestran «Sí» bloqueados y así viajan en el guardado normal, sin PUT propio', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockNotificationDetail();
+    const { getSeverePutBody, getPregnancyPutBody } = mockDerivationScenario(1);
+
+    renderNotificationStep();
+
+    const pregnancyField = await screen.findByRole('combobox', {
+      name: '¿El embarazo tiene complicaciones registradas?',
+    });
+    const severeField = await screen.findByRole('combobox', {
+      name: '¿Tuvo complicaciones el embarazo?',
+    });
+
+    // Bloqueados en «Sí», con la explicación compartida por los dos campos (§3.8) — ningún PUT se
+    // ha disparado todavía por esto solo, sólo la lectura de las tres consultas.
+    await waitFor(() => expect(pregnancyField).toHaveTextContent('Sí'));
+    expect(severeField).toHaveTextContent('Sí');
+    expect(pregnancyField).toBeDisabled();
+    expect(severeField).toBeDisabled();
+    expect(
+      screen.getAllByText('Hay al menos una complicación registrada: se responde «Sí» automáticamente.'),
+    ).toHaveLength(2);
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(getSeverePutBody()).not.toBeNull());
+    expect(getSeverePutBody()).toMatchObject({ hasPregnancyComplications: 'YES' });
+    await waitFor(() => expect(getPregnancyPutBody()).not.toBeNull());
+    expect(getPregnancyPutBody()).toMatchObject({ hasComplications: 'YES' });
+  }, 30000);
+
+  it('sin ninguna complicación activa, los dos campos vuelven a ser editables sin recargar', async () => {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockNotificationDetail();
+    mockDerivationScenario(0);
+
+    renderNotificationStep();
+
+    const pregnancyField = await screen.findByRole('combobox', {
+      name: '¿El embarazo tiene complicaciones registradas?',
+    });
+    const severeField = await screen.findByRole('combobox', {
+      name: '¿Tuvo complicaciones el embarazo?',
+    });
+
+    await waitFor(() => expect(pregnancyField).toBeEnabled());
+    expect(severeField).toBeEnabled();
+    expect(
+      screen.queryByText('Hay al menos una complicación registrada: se responde «Sí» automáticamente.'),
+    ).not.toBeInTheDocument();
+  }, 30000);
+});

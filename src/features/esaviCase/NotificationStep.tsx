@@ -34,6 +34,7 @@ import {
   useNotificationEventsByCase,
   useNotificationMedicationsByCase,
   useNotificationPregnancyByNotification,
+  useNotificationPregnancyComplicationsByPregnancy,
   useNotificationVaccinesByCase,
   useSevereNotificationByCase,
 } from '@/features/notification/api';
@@ -279,6 +280,15 @@ function NotificationFormBody({
   const vaccines = useNotificationVaccinesByCase(caseId, notificationId !== null);
   const hasAtLeastOneVaccine = (vaccines.data?.rows.length ?? 0) > 0;
   const hasAtLeastOneSuspectedVaccine = (vaccines.data?.rows ?? []).some((row) => row.isSuspected);
+  // La derivación de §6.5 (SPEC FE12d §4 paso 11): misma clave de caché que
+  // `<PregnancyComplicationList>` lee por su cuenta, sin petición propia. «Derivado en render, no
+  // es estado» (§3.4 tabla) — nada aquí escribe el formulario; `handleValidSubmit` decide el envío
+  // efectivo más abajo.
+  const complications = useNotificationPregnancyComplicationsByPregnancy(
+    pregnancyId ?? undefined,
+    pregnancyId !== null,
+  );
+  const hasActiveComplications = (complications.data?.rows.length ?? 0) > 0;
   // `useCan()` decide aquí sólo qué frase se muestra, nunca si el control existe (§3.5, la línea
   // que §10.4 no quiere que se cruce): mientras `NOTIFMED-005A` siga en ADMIN, un USER no puede
   // borrar las filas y por tanto no puede cambiar la respuesta en absoluto.
@@ -427,7 +437,15 @@ function NotificationFormBody({
   }, [pregnancyGate, form]);
 
   const handleValidSubmit = useCallback(
-    async (values: NotificationFormValues) => {
+    async (rawValues: NotificationFormValues) => {
+      // La derivación de §6.5 se aplica aquí, al envío, no al formulario (§3.4 tabla "derivado en
+      // render, no es estado") — con ≥1 complicación activa, lo que se guarda es `'YES'` en los
+      // dos campos aunque el usuario no los haya tocado, sin que eso dispare un `PUT` propio: viaja
+      // en las fases 2 y 3 de esta misma cadena.
+      const values: NotificationFormValues = hasActiveComplications
+        ? { ...rawValues, hasComplications: 'YES', hasPregnancyComplications: 'YES' }
+        : rawValues;
+
       if (!isDeathDateNotBeforeEventDate(values.deathDate, eventDate)) {
         form.setError('deathDate', {
           type: 'client',
@@ -624,6 +642,7 @@ function NotificationFormBody({
       create,
       eventDate,
       form,
+      hasActiveComplications,
       nonSevereCreate,
       nonSevereNotificationId,
       nonSevereUpdate,
@@ -900,6 +919,7 @@ function NotificationFormBody({
         configMissing={pregnancyConfigMissing}
         pregnancyId={pregnancyId}
         isClosed={isClosed}
+        complicationsDerived={hasActiveComplications}
       />
 
       {notificationType === 'SEVERE' ? (
@@ -908,6 +928,7 @@ function NotificationFormBody({
           pregnancyGate={pregnancyGate}
           hasPregnancyComplications={watchedValues.hasPregnancyComplications}
           pregnancyComplicationsDescription={watchedValues.pregnancyComplicationsDescription}
+          complicationsDerived={hasActiveComplications}
         />
       ) : (
         <NonSevereNotificationFields

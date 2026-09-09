@@ -13,6 +13,9 @@ export interface SevereNotificationFieldsProps {
   pregnancyGate: PregnancyGateState;
   hasPregnancyComplications: 'YES' | 'NO' | 'UNKNOWN' | 'NOT_APPLICABLE' | 'NO_ANSWER' | null | undefined;
   pregnancyComplicationsDescription: string | null | undefined;
+  // La derivación de §6.5, mitad de la ficha grave (SPEC FE12d §4 paso 11): «derivado en render,
+  // no es estado» — bloquea el campo en `'YES'` sin escribirlo en el formulario.
+  complicationsDerived: boolean;
 }
 
 // La ficha grave (SPEC FE12a §3.5), extraída para no inflar `NotificationStep.tsx`. Los dos
@@ -24,11 +27,13 @@ export function SevereNotificationFields({
   pregnancyGate,
   hasPregnancyComplications,
   pregnancyComplicationsDescription,
+  complicationsDerived,
 }: SevereNotificationFieldsProps) {
   const { t } = useTranslation();
-  const showsPregnancyDescription = hasPregnancyComplications === 'YES';
+  const effectiveHasPregnancyComplications = complicationsDerived ? 'YES' : hasPregnancyComplications;
+  const showsPregnancyDescription = effectiveHasPregnancyComplications === 'YES';
   const pregnancyDescriptionCoherent = isPregnancyDescriptionRequirementMet(
-    hasPregnancyComplications,
+    effectiveHasPregnancyComplications,
     pregnancyComplicationsDescription,
   );
 
@@ -123,13 +128,19 @@ export function SevereNotificationFields({
             name="hasPregnancyComplications"
             render={({ field }) => (
               <AnswerOptionField
-                value={field.value ?? null}
+                value={complicationsDerived ? 'YES' : (field.value ?? null)}
                 onChange={field.onChange}
                 ariaLabel={t('notification.severe.hasPregnancyComplications')}
                 variant="unknown"
+                disabled={complicationsDerived}
               />
             )}
           />
+          {/* §6.5: mismo texto que el bloque de embarazo, compartido entre las dos mitades de la
+              derivación (§3.8 "compartida por los dos campos"). */}
+          {complicationsDerived && (
+            <p className="text-sm text-muted-foreground">{t('notification.pregnancy.derived.hasComplications')}</p>
+          )}
 
           {/* Visible sólo con hasPregnancyComplications === 'YES' (SPEC FE12a §3.5, §7) — mismo
               motivo de aria-live que las otras dos secciones condicionales. */}

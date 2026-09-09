@@ -839,6 +839,9 @@
         "patientNotFemale": "Het geregistreerde geslacht van de patiënt is «{{sex}}»: het zwangerschapsblok vereist een vrouwelijke patiënt. Corrigeer dit in stap 1 als dit een invoerfout was.",
         "alreadyExists": "Er bestaat al een ingetrokken zwangerschapsblok voor deze melding. Het opnieuw activeren vereist een superbeheerder; er kan geen nieuw blok worden aangemaakt."
       },
+      "derived": {
+        "hasComplications": "Er is minstens één complicatie geregistreerd: dit wordt automatisch beantwoord met «Ja»."
+      },
       "complications": {
         "sectionTitle": "Complicaties",
         "needsParent": "Sla het zwangerschapsblok op voordat je complicaties toevoegt.",

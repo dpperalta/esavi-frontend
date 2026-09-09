@@ -839,6 +839,9 @@
         "patientNotFemale": "The patient's registered sex is «{{sex}}»: the pregnancy block requires a female patient. Fix it in step 1 if this was a capture mistake.",
         "alreadyExists": "A withdrawn pregnancy block already exists for this notification. Reactivating it requires a superadmin; a new one cannot be created."
       },
+      "derived": {
+        "hasComplications": "At least one complication is registered: this is automatically answered «Yes»."
+      },
       "complications": {
         "sectionTitle": "Complications",
         "needsParent": "Save the pregnancy block before adding complications.",

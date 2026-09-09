@@ -839,6 +839,9 @@
         "patientNotFemale": "El paciente tiene registrado el sexo «{{sex}}»: el bloque de embarazo exige un paciente femenino. Corrígelo en el paso 1 si es un error de captura.",
         "alreadyExists": "Ya existe un bloque de embarazo retirado para esta notificación. Reactivarlo exige un superadministrador; no se puede crear uno nuevo."
       },
+      "derived": {
+        "hasComplications": "Hay al menos una complicación registrada: se responde «Sí» automáticamente."
+      },
       "complications": {
         "sectionTitle": "Complicaciones",
         "needsParent": "Guarda el bloque de embarazo antes de añadir complicaciones.",
