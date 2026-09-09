@@ -95,7 +95,11 @@ export function SearchableSelect({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    // `modal` here (Radix defaults Popover to false) registers this content as an allowed target
+    // of the ancestor Dialog's scroll lock — without it, the Dialog's `react-remove-scroll` treats
+    // the popover's portaled content as outside its own subtree and swallows every wheel event
+    // over it, leaving only scrollbar-thumb dragging working (radix-ui/primitives#1159).
+    <Popover open={open} onOpenChange={setOpen} modal>
       <PopoverTrigger asChild>
         <Button
           type="button"

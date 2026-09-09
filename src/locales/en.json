@@ -66,6 +66,9 @@
       "placeholder": "HH:MM",
       "invalid": "The time is not valid. Use the HH:MM format."
     },
+    "numberField": {
+      "invalid": "The number is not valid."
+    },
     "satelliteList": {
       "add": "Add",
       "edit": "Edit {{name}}",

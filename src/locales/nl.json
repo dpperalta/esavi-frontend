@@ -66,6 +66,9 @@
       "placeholder": "UU:MM",
       "invalid": "De tijd is niet geldig. Gebruik het formaat UU:MM."
     },
+    "numberField": {
+      "invalid": "Het getal is niet geldig."
+    },
     "satelliteList": {
       "add": "Toevoegen",
       "edit": "{{name}} bewerken",
