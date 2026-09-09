@@ -898,6 +898,8 @@ function NotificationFormBody({
         control={form.control}
         pregnancyGate={pregnancyGate}
         configMissing={pregnancyConfigMissing}
+        pregnancyId={pregnancyId}
+        isClosed={isClosed}
       />
 
       {notificationType === 'SEVERE' ? (

@@ -1,6 +1,7 @@
 import { Controller, type Control } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { NotificationFormValues, PregnancyGateState } from '@/features/notification/schemas';
+import { PregnancyComplicationList } from '@/features/notification/PregnancyComplicationList';
 import { AnswerOptionField } from '@/shared/components/AnswerOptionField';
 import { DateField } from '@/shared/components/DateField';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -12,14 +13,28 @@ export interface PregnancySectionProps {
   // sembrada», no un error (SPEC FE12d §3.4, §3.6). El bloque se muestra igual: se deshabilita con
   // su explicación en vez de desaparecer, porque el resto del paso 4 sigue funcionando entero.
   configMissing: boolean;
+  // `null` mientras el `001` no ha respondido — la lista de complicaciones se pinta deshabilitada
+  // con su propia explicación (SPEC FE12d §3.6, §4 paso 9), sin esperar a que el bloque completo
+  // desaparezca.
+  pregnancyId: string | null;
+  // Expediente cerrado (§3.6, mismo criterio que las listas de FE12b/FE12c): sin «Añadir» y sin
+  // acciones de fila, aquí ni en la lista de complicaciones.
+  isClosed: boolean;
 }
 
 // El bloque de embarazo (SPEC FE12d §4 paso 7), encadenado al `useForm` de `NotificationStep`
 // como la cabecera y las dos ramas (§3.4: "no tiene formulario propio"). `pregnancyGate ===
 // 'hidden'` no pinta ni siquiera el contenedor — mismo criterio que `SevereNotificationFields`
-// con la compuerta (SPEC FE12a §5). Sin complicaciones y sin escritura todavía: eso es el paso 9
-// (la lista) y el paso 8 (el guardado encadenado) de este spec.
-export function PregnancySection({ control, pregnancyGate, configMissing }: PregnancySectionProps) {
+// con la compuerta (SPEC FE12a §5). La lista de complicaciones (paso 9) cuelga del mismo bloque,
+// deshabilitada hasta que exista `pregnancyId` — el guardado encadenado (paso 8) es lo único que
+// la escribe.
+export function PregnancySection({
+  control,
+  pregnancyGate,
+  configMissing,
+  pregnancyId,
+  isClosed,
+}: PregnancySectionProps) {
   const { t } = useTranslation();
 
   if (pregnancyGate === 'hidden') {
@@ -172,6 +187,8 @@ export function PregnancySection({ control, pregnancyGate, configMissing }: Preg
           </div>
         )}
       />
+
+      <PregnancyComplicationList pregnancyId={pregnancyId} readOnly={isClosed} />
     </div>
   );
 }

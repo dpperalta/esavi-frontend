@@ -838,6 +838,37 @@
         "deliveryDateOutOfRange": "Entre la última menstruación y la fecha probable de parto tiene que haber entre 266 y 294 días.",
         "patientNotFemale": "El paciente tiene registrado el sexo «{{sex}}»: el bloque de embarazo exige un paciente femenino. Corrígelo en el paso 1 si es un error de captura.",
         "alreadyExists": "Ya existe un bloque de embarazo retirado para esta notificación. Reactivarlo exige un superadministrador; no se puede crear uno nuevo."
+      },
+      "complications": {
+        "sectionTitle": "Complicaciones",
+        "needsParent": "Guarda el bloque de embarazo antes de añadir complicaciones.",
+        "field": {
+          "complicationName": "Complicación",
+          "complicationCode": "Código",
+          "complicationTypeItemId": "Tipo de complicación",
+          "notes": "Notas"
+        },
+        "validation": {
+          "complicationNameRequired": "Escribe la complicación antes de guardar."
+        },
+        "form": {
+          "createTitle": "Añadir complicación",
+          "editTitle": "Editar complicación"
+        },
+        "meddraUnavailable": "El buscador de términos no está disponible ahora mismo; puedes escribirlo tal cual.",
+        "diagtermNotImported": "El diccionario de esta fuente no está importado en este despliegue.",
+        "keepAsFreeText": "Guardar como texto libre",
+        "error": {
+          "load": "No pudimos cargar las complicaciones.",
+          "alreadyExists": "Ya existe una complicación de ese tipo con el mismo término registrada para este embarazo.",
+          "typeCatalogEmpty": "No hay tipos de complicación configurados en este despliegue: sin al menos uno, no se puede registrar ninguna."
+        },
+        "delete": {
+          "confirm": "¿Eliminar la complicación «{{name}}»? Esta acción no se puede deshacer desde aquí."
+        },
+        "roleForbidden": {
+          "delete": "Retirar una complicación exige un administrador en este despliegue."
+        }
       }
     },
     "nonSevere": {

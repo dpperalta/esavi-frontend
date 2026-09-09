@@ -838,6 +838,37 @@
         "deliveryDateOutOfRange": "There must be between 266 and 294 days between the last menstruation and the probable delivery date.",
         "patientNotFemale": "The patient's registered sex is «{{sex}}»: the pregnancy block requires a female patient. Fix it in step 1 if this was a capture mistake.",
         "alreadyExists": "A withdrawn pregnancy block already exists for this notification. Reactivating it requires a superadmin; a new one cannot be created."
+      },
+      "complications": {
+        "sectionTitle": "Complications",
+        "needsParent": "Save the pregnancy block before adding complications.",
+        "field": {
+          "complicationName": "Complication",
+          "complicationCode": "Code",
+          "complicationTypeItemId": "Complication type",
+          "notes": "Notes"
+        },
+        "validation": {
+          "complicationNameRequired": "Write the complication before saving."
+        },
+        "form": {
+          "createTitle": "Add complication",
+          "editTitle": "Edit complication"
+        },
+        "meddraUnavailable": "The term search is not available right now; you can type it as is.",
+        "diagtermNotImported": "This source's dictionary is not imported in this deployment.",
+        "keepAsFreeText": "Save as free text",
+        "error": {
+          "load": "We could not load the complications.",
+          "alreadyExists": "A complication of that type with the same term is already registered for this pregnancy.",
+          "typeCatalogEmpty": "No complication types are configured in this deployment: without at least one, none can be registered."
+        },
+        "delete": {
+          "confirm": "Delete the complication «{{name}}»? This action cannot be undone from here."
+        },
+        "roleForbidden": {
+          "delete": "Removing a complication requires an administrator in this deployment."
+        }
       }
     },
     "nonSevere": {

@@ -810,3 +810,18 @@ export const notificationPregnancyComplicationSchema = z.object({
   source: z.enum(TERM_SOURCES).optional(),
   notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
 });
+
+// SPEC FE12d §3.5 "Códigos de error mapeados" — el 404 de `DIAGTERM_NOT_FOUND` no está aquí,
+// mismo motivo que en `notificationEventErrorFieldMap`: tiene comportamiento propio (el buscador
+// ofrece guardar como texto libre), no un campo que señalar. El sufijo del 404 del tipo es el que
+// el servicio realmente usa (`notificationPregnancyComplication.service.ts`,
+// `assertComplicationTypeIsValid`) — `COMPLICATION_TYPE_NOT_FOUND`, no el `TYPE_NOT_FOUND` que
+// podría suponerse.
+export const notificationPregnancyComplicationErrorFieldMap: Partial<
+  Record<string, keyof NotificationPregnancyComplicationFormValues>
+> = {
+  PREGCOMP_001_ALREADY_EXISTS: 'complicationName',
+  PREGCOMP_004_ALREADY_EXISTS: 'complicationName',
+  PREGCOMP_001_COMPLICATION_TYPE_NOT_FOUND: 'complicationTypeItemId',
+  PREGCOMP_004_COMPLICATION_TYPE_NOT_FOUND: 'complicationTypeItemId',
+};

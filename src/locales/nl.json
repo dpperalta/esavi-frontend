@@ -838,6 +838,37 @@
         "deliveryDateOutOfRange": "Tussen de laatste menstruatie en de vermoedelijke bevallingsdatum moeten 266 tot 294 dagen liggen.",
         "patientNotFemale": "Het geregistreerde geslacht van de patiënt is «{{sex}}»: het zwangerschapsblok vereist een vrouwelijke patiënt. Corrigeer dit in stap 1 als dit een invoerfout was.",
         "alreadyExists": "Er bestaat al een ingetrokken zwangerschapsblok voor deze melding. Het opnieuw activeren vereist een superbeheerder; er kan geen nieuw blok worden aangemaakt."
+      },
+      "complications": {
+        "sectionTitle": "Complicaties",
+        "needsParent": "Sla het zwangerschapsblok op voordat je complicaties toevoegt.",
+        "field": {
+          "complicationName": "Complicatie",
+          "complicationCode": "Code",
+          "complicationTypeItemId": "Type complicatie",
+          "notes": "Notities"
+        },
+        "validation": {
+          "complicationNameRequired": "Schrijf de complicatie voordat je opslaat."
+        },
+        "form": {
+          "createTitle": "Complicatie toevoegen",
+          "editTitle": "Complicatie bewerken"
+        },
+        "meddraUnavailable": "De termenzoeker is nu niet beschikbaar; je kunt het zo typen.",
+        "diagtermNotImported": "Het woordenboek van deze bron is niet geïmporteerd in deze implementatie.",
+        "keepAsFreeText": "Opslaan als vrije tekst",
+        "error": {
+          "load": "We konden de complicaties niet laden.",
+          "alreadyExists": "Er is al een complicatie van dat type met dezelfde term geregistreerd voor deze zwangerschap.",
+          "typeCatalogEmpty": "Er zijn geen complicatietypes geconfigureerd in deze implementatie: zonder minstens één kan er geen worden geregistreerd."
+        },
+        "delete": {
+          "confirm": "De complicatie «{{name}}» verwijderen? Deze actie kan hier niet ongedaan worden gemaakt."
+        },
+        "roleForbidden": {
+          "delete": "Het verwijderen van een complicatie vereist een beheerder in deze implementatie."
+        }
       }
     },
     "nonSevere": {
