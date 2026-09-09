@@ -842,6 +842,9 @@
       "derived": {
         "hasComplications": "Hay al menos una complicación registrada: se responde «Sí» automáticamente."
       },
+      "help": {
+        "probableDeliveryDateSuggested": "Sugerida a partir de la última menstruación (+280 días). Puedes editarla."
+      },
       "complications": {
         "sectionTitle": "Complicaciones",
         "needsParent": "Guarda el bloque de embarazo antes de añadir complicaciones.",

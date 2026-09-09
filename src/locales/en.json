@@ -842,6 +842,9 @@
       "derived": {
         "hasComplications": "At least one complication is registered: this is automatically answered «Yes»."
       },
+      "help": {
+        "probableDeliveryDateSuggested": "Suggested from the last menstruation (+280 days). You can edit it."
+      },
       "complications": {
         "sectionTitle": "Complications",
         "needsParent": "Save the pregnancy block before adding complications.",

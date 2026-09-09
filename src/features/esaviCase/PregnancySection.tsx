@@ -1,4 +1,6 @@
-import { Controller, type Control } from 'react-hook-form';
+import { useRef } from 'react';
+import { addDays, format } from 'date-fns';
+import { Controller, useController, type Control } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import type { NotificationFormValues, PregnancyGateState } from '@/features/notification/schemas';
 import { PregnancyComplicationList } from '@/features/notification/PregnancyComplicationList';
@@ -41,6 +43,33 @@ export function PregnancySection({
   complicationsDerived,
 }: PregnancySectionProps) {
   const { t } = useTranslation();
+
+  // `useController`, no `Controller`, para las dos fechas (SPEC FE12d §3.5, §4 paso 12): la
+  // sugerencia de parto necesita leer y escribir `probableDeliveryDate` desde el propio
+  // `onChange` de `lastMenstruationDate`, algo que un `render` prop aislado no permite sin
+  // levantar el `useForm` entero a esta sección — que el spec (§3.4 "no tiene formulario propio")
+  // descarta.
+  const lastMenstruationField = useController({ control, name: 'lastMenstruationDate' });
+  const probableDeliveryField = useController({ control, name: 'probableDeliveryDate' });
+
+  // La última fecha de parto sugerida (§3.4 tabla, "excepción razonada"): no es un dato del
+  // servidor ni del formulario, es la memoria de qué escribió este mismo componente — sin ella no
+  // se puede distinguir «el usuario conserva mi sugerencia» de «el usuario tecleó justo esa
+  // fecha», que es lo que decide la regla de tres casos de §3.5.
+  const lastSuggestionRef = useRef<string | null>(null);
+
+  function handleLastMenstruationChange(next: string | null) {
+    lastMenstruationField.field.onChange(next);
+    if (!next) return;
+    // `+280 días`, no un cálculo en firme (§3.5): esconder la tolerancia de ±14 días que el
+    // backend acepta sería mentirle al usuario sobre la precisión de la fecha.
+    const suggested = format(addDays(new Date(`${next}T00:00:00`), 280), 'yyyy-MM-dd');
+    const currentDelivery = probableDeliveryField.field.value ?? null;
+    if (currentDelivery === null || currentDelivery === lastSuggestionRef.current) {
+      probableDeliveryField.field.onChange(suggested);
+      lastSuggestionRef.current = suggested;
+    }
+  }
 
   if (pregnancyGate === 'hidden') {
     return null;
@@ -107,53 +136,45 @@ export function PregnancySection({
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Controller
-          control={control}
-          name="lastMenstruationDate"
-          render={({ field }) => (
-            <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-foreground">
-                {t('notification.pregnancy.field.lastMenstruationDate')}
-              </span>
-              <DateField
-                value={field.value ?? null}
-                onChange={field.onChange}
-                ariaLabel={t('notification.pregnancy.field.lastMenstruationDate')}
-                allowFuture={false}
-                disabled={configMissing}
-              />
-            </div>
-          )}
-        />
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-foreground">
+            {t('notification.pregnancy.field.lastMenstruationDate')}
+          </span>
+          <DateField
+            value={lastMenstruationField.field.value ?? null}
+            onChange={handleLastMenstruationChange}
+            ariaLabel={t('notification.pregnancy.field.lastMenstruationDate')}
+            allowFuture={false}
+            disabled={configMissing}
+          />
+        </div>
 
         {/* Futura permitida (§3.5) — una gestación en curso tiene el parto por delante. El error
             del rango de Naegele se anuncia con una región viva al aparecer (§3.7): se produce al
-            tocar una fecha, no al enviar. */}
-        <Controller
-          control={control}
-          name="probableDeliveryDate"
-          render={({ field, fieldState }) => (
-            <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-foreground">
-                {t('notification.pregnancy.field.probableDeliveryDate')}
-              </span>
-              <DateField
-                value={field.value ?? null}
-                onChange={field.onChange}
-                ariaLabel={t('notification.pregnancy.field.probableDeliveryDate')}
-                allowFuture
-                disabled={configMissing}
-              />
-              <div aria-live="polite">
-                {fieldState.error && (
-                  <p role="alert" className="text-sm text-destructive">
-                    {t('notification.pregnancy.error.deliveryDateOutOfRange')}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-        />
+            tocar una fecha, no al enviar — ya reactivo desde el paso 7, el `superRefine` de
+            `notificationSaveSchema` corre en cada cambio con `reValidateMode: 'onChange'`. */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-foreground">
+            {t('notification.pregnancy.field.probableDeliveryDate')}
+          </span>
+          <DateField
+            value={probableDeliveryField.field.value ?? null}
+            onChange={probableDeliveryField.field.onChange}
+            ariaLabel={t('notification.pregnancy.field.probableDeliveryDate')}
+            allowFuture
+            disabled={configMissing}
+          />
+          <p className="text-xs text-muted-foreground">
+            {t('notification.pregnancy.help.probableDeliveryDateSuggested')}
+          </p>
+          <div aria-live="polite">
+            {probableDeliveryField.fieldState.error && (
+              <p role="alert" className="text-sm text-destructive">
+                {t('notification.pregnancy.error.deliveryDateOutOfRange')}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">

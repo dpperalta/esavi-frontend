@@ -1987,3 +1987,58 @@ describe('NotificationStep — la derivación de §6.5 (SPEC FE12d §4 paso 11)'
     ).not.toBeInTheDocument();
   }, 30000);
 });
+
+describe('NotificationStep — la sugerencia de la fecha de parto (SPEC FE12d §4 paso 12)', () => {
+  function renderOpenGate() {
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockWorkflow({ count: 0 });
+    renderNotificationStep();
+  }
+
+  it('con el campo de parto vacío, informar la menstruación lo rellena a +280 días', async () => {
+    renderOpenGate();
+
+    const menstruationInput = await screen.findByLabelText('Fecha de la última menstruación');
+    fireEvent.change(menstruationInput, { target: { value: '2026-01-01' } });
+
+    const deliveryInput = await screen.findByLabelText('Fecha probable de parto');
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-10-08'));
+  }, 30000);
+
+  it('si el campo de parto conserva exactamente la sugerencia anterior, cambiar la menstruación la sustituye', async () => {
+    renderOpenGate();
+
+    const menstruationInput = await screen.findByLabelText('Fecha de la última menstruación');
+    const deliveryInput = await screen.findByLabelText('Fecha probable de parto');
+
+    fireEvent.change(menstruationInput, { target: { value: '2026-01-01' } });
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-10-08'));
+
+    fireEvent.change(menstruationInput, { target: { value: '2026-02-01' } });
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-11-08'));
+  }, 30000);
+
+  it('con el campo de parto tecleado a mano, cambiar la menstruación no lo toca', async () => {
+    renderOpenGate();
+
+    const menstruationInput = await screen.findByLabelText('Fecha de la última menstruación');
+    const deliveryInput = await screen.findByLabelText('Fecha probable de parto');
+
+    fireEvent.change(menstruationInput, { target: { value: '2026-01-01' } });
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-10-08'));
+
+    // El usuario teclea una fecha propia, distinta de la sugerencia — deja de conservarla.
+    fireEvent.change(deliveryInput, { target: { value: '2026-12-25' } });
+    await waitFor(() => expect(deliveryInput).toHaveValue('2026-12-25'));
+
+    fireEvent.change(menstruationInput, { target: { value: '2026-02-01' } });
+    // Ninguna nueva sugerencia sustituye lo tecleado a mano — se le da tiempo al efecto a no
+    // disparar antes de confirmar que el valor sigue siendo el mismo.
+    await waitFor(() => expect(menstruationInput).toHaveValue('2026-02-01'));
+    expect(deliveryInput).toHaveValue('2026-12-25');
+  }, 30000);
+});

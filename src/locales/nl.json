@@ -842,6 +842,9 @@
       "derived": {
         "hasComplications": "Er is minstens één complicatie geregistreerd: dit wordt automatisch beantwoord met «Ja»."
       },
+      "help": {
+        "probableDeliveryDateSuggested": "Voorgesteld op basis van de laatste menstruatie (+280 dagen). Je kunt dit aanpassen."
+      },
       "complications": {
         "sectionTitle": "Complicaties",
         "needsParent": "Sla het zwangerschapsblok op voordat je complicaties toevoegt.",
