@@ -14,11 +14,15 @@ const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
-// One `useForm` for the three tables (SPEC FE12a §3.5) — the header's own `notes` and the two
-// branches' each need their own free-text field, so the branch ones carry a prefix instead of
-// colliding on the same RHF path. `caseId`, `notificationType` and `isActive` are derived and
-// never editable (§3.5): they are not fields of this type at all, same reasoning as `caseId` in
-// `ClassificationFormValues`.
+// One `useForm` for the four tables (SPEC FE12a §3.5, extendido por SPEC FE12d §3.4 "no tiene
+// formulario propio") — el `notes` de la cabecera y el de cada rama/bloque necesitan su propio
+// campo de texto libre, así que los tres que no son la cabecera llevan un prefijo en vez de
+// colisionar en el mismo path de RHF. `caseId`, `notificationType` y `isActive` son derivados y
+// nunca editables (§3.5): no son campos de este tipo, mismo motivo que `caseId` en
+// `ClassificationFormValues`. `wasPregnantAtVaccination` se redeclara como `AnswerOption | null`
+// (nunca `undefined`, igual que el resto de las `answerOption` del formulario) en vez de heredar
+// la obligatoriedad del alta — la asimetría entre `001` y `004` la resuelve el payload al guardar
+// (paso 8), no el tipo del formulario.
 export type NotificationFormValues = Omit<
   CreateNotificationInput,
   'caseId' | 'notificationType' | 'isActive'
@@ -27,6 +31,9 @@ export type NotificationFormValues = Omit<
     severeNotes?: CreateSevereNotificationInput['notes'];
   } & Omit<CreateNonSevereNotificationInput, 'notificationId' | 'notes'> & {
     nonSevereNotes?: CreateNonSevereNotificationInput['notes'];
+  } & Omit<CreateNotificationPregnancyInput, 'notificationId' | 'isActive' | 'wasPregnantAtVaccination' | 'notes'> & {
+    wasPregnantAtVaccination?: AnswerOption | null;
+    pregnancyNotes?: CreateNotificationPregnancyInput['notes'];
   };
 
 // Every field optional/nullable except `esaviDescription` — "sin él no hay fila que crear"
@@ -67,12 +74,32 @@ const notificationBaseSchema = z.object({
   verifiedOtherSource: z.boolean().nullable().optional(),
   otherSourceDescription: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   nonSevereNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  // El bloque de embarazo (SPEC FE12d §3.5): igual que `hasPregnancyComplications` de la rama
+  // grave, la base no exige `wasPregnantAtVaccination` — la obligatoriedad del alta es del `001`,
+  // no de «Guardar» (§3.5, "el único requisito es `esaviDescription`"), y la reactividad del rango
+  // de Naegele va en el `superRefine` de `notificationSaveSchema`, no aquí.
+  wasPregnantAtVaccination: answerOptionSchema.nullable().optional(),
+  wasPregnantAtEsavi: answerOptionSchema.nullable().optional(),
+  lastMenstruationDate: z.string().regex(isoDateRegex).nullable().optional(),
+  probableDeliveryDate: z.string().regex(isoDateRegex).nullable().optional(),
+  hasComplications: answerOptionSchema.nullable().optional(),
+  pregnancyNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
 });
 
 // "Guardar" (§3.5): the only requirement is `esaviDescription`. Attached as the form's resolver —
 // everything else is free to travel or not, `CaseWizardActionBar`'s pending-fields list is what
-// tells the user what is still missing for "Completar etapa", not a blocked save button.
-export const notificationSaveSchema = notificationBaseSchema;
+// tells the user what is still missing for "Completar etapa", not a blocked save button. El
+// `superRefine` es lo que hace reactivo el rango de Naegele (SPEC FE12d §3.5, "se revalida en
+// cuanto se toca cualquiera de los dos campos, no al enviar"): con `mode: 'onTouched'` y
+// `reValidateMode: 'onChange'` en el `useForm` de `NotificationStep`, este resolver corre en cada
+// cambio de cualquiera de los dos campos, sin esperar a "Guardar". `isGestationRangeCoherent`
+// vive más abajo en este archivo (paso 5) — la declaración de función se iza, así que el orden no
+// importa aquí.
+export const notificationSaveSchema = notificationBaseSchema.superRefine((data, ctx) => {
+  if (!isGestationRangeCoherent(data.lastMenstruationDate, data.probableDeliveryDate)) {
+    ctx.addIssue({ code: 'custom', message: 'deliveryDateOutOfRange', path: ['probableDeliveryDate'] });
+  }
+});
 
 // Never called, only type-checked — same technique as `_assertSchemaMatchesContract` in
 // `features/classification/schemas.ts`.

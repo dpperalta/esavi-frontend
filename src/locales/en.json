@@ -823,7 +823,20 @@
       "pregnancyComplicationsDescription": "Describe the pregnancy complications"
     },
     "pregnancy": {
-      "ifApplicable": "If applicable"
+      "sectionTitle": "Pregnancy",
+      "ifApplicable": "If applicable",
+      "notConfigured": "Pregnancy tracking is not configured in this deployment. Ask an administrator.",
+      "field": {
+        "wasPregnantAtVaccination": "Was she pregnant at the time of vaccination?",
+        "wasPregnantAtEsavi": "Was she pregnant at the time of the ESAVI?",
+        "lastMenstruationDate": "Last menstruation date",
+        "probableDeliveryDate": "Probable delivery date",
+        "hasComplications": "Does the pregnancy have registered complications?",
+        "notes": "Notes"
+      },
+      "error": {
+        "deliveryDateOutOfRange": "There must be between 266 and 294 days between the last menstruation and the probable delivery date."
+      }
     },
     "nonSevere": {
       "sectionTitle": "Non-severe notification record",

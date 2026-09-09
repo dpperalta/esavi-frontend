@@ -823,7 +823,20 @@
       "pregnancyComplicationsDescription": "Describe las complicaciones del embarazo"
     },
     "pregnancy": {
-      "ifApplicable": "Si aplica"
+      "sectionTitle": "Embarazo",
+      "ifApplicable": "Si aplica",
+      "notConfigured": "El registro de embarazo no está configurado en este despliegue. Pídelo a un administrador.",
+      "field": {
+        "wasPregnantAtVaccination": "¿Estaba embarazada al momento de la vacunación?",
+        "wasPregnantAtEsavi": "¿Estaba embarazada al momento del ESAVI?",
+        "lastMenstruationDate": "Fecha de la última menstruación",
+        "probableDeliveryDate": "Fecha probable de parto",
+        "hasComplications": "¿El embarazo tiene complicaciones registradas?",
+        "notes": "Notas"
+      },
+      "error": {
+        "deliveryDateOutOfRange": "Entre la última menstruación y la fecha probable de parto tiene que haber entre 266 y 294 días."
+      }
     },
     "nonSevere": {
       "sectionTitle": "Ficha de notificación no grave",

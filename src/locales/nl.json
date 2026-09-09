@@ -823,7 +823,20 @@
       "pregnancyComplicationsDescription": "Beschrijf de zwangerschapscomplicaties"
     },
     "pregnancy": {
-      "ifApplicable": "Indien van toepassing"
+      "sectionTitle": "Zwangerschap",
+      "ifApplicable": "Indien van toepassing",
+      "notConfigured": "Zwangerschapsregistratie is niet geconfigureerd in deze implementatie. Vraag het aan een beheerder.",
+      "field": {
+        "wasPregnantAtVaccination": "Was zij zwanger op het moment van vaccinatie?",
+        "wasPregnantAtEsavi": "Was zij zwanger op het moment van het ESAVI?",
+        "lastMenstruationDate": "Datum van de laatste menstruatie",
+        "probableDeliveryDate": "Vermoedelijke bevallingsdatum",
+        "hasComplications": "Heeft de zwangerschap geregistreerde complicaties?",
+        "notes": "Notities"
+      },
+      "error": {
+        "deliveryDateOutOfRange": "Tussen de laatste menstruatie en de vermoedelijke bevallingsdatum moeten 266 tot 294 dagen liggen."
+      }
     },
     "nonSevere": {
       "sectionTitle": "Niet-ernstige meldingsfiche",

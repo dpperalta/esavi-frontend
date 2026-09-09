@@ -12,6 +12,7 @@ import type { NonSevereNotificationDetail } from '@/contracts/declared/nonSevere
 import type { NotificationDetail } from '@/contracts/declared/notification';
 import type { SevereNotificationDetail } from '@/contracts/declared/severeNotification';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
+import type { NotificationPregnancyDetail } from '@/contracts/declared/notificationPregnancy';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { EventList } from '@/features/notification/EventList';
@@ -28,6 +29,7 @@ import {
   useNotificationByCase,
   useNotificationEventsByCase,
   useNotificationMedicationsByCase,
+  useNotificationPregnancyByNotification,
   useNotificationVaccinesByCase,
   useSevereNotificationByCase,
 } from '@/features/notification/api';
@@ -56,11 +58,13 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
-import { usePregnancyGate } from '@/shared/hooks/usePregnancyGate';
+import { PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE, usePregnancyGate } from '@/shared/hooks/usePregnancyGate';
+import { useSystemConfigByCode } from '@/shared/hooks/useSystemConfigByCode';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
 import { NonSevereNotificationFields } from './NonSevereNotificationFields';
+import { PregnancySection } from './PregnancySection';
 import { SevereNotificationFields } from './SevereNotificationFields';
 
 function NotificationStepSkeleton() {
@@ -181,9 +185,13 @@ interface NotificationFormBodyProps {
   notification: NotificationDetail | null;
   severeNotification: SevereNotificationDetail | null;
   nonSevereNotification: NonSevereNotificationDetail | null;
+  notificationPregnancy: NotificationPregnancyDetail | null;
   notificationType: 'SEVERE' | 'NON_SEVERE';
   eventDate: string | null;
   pregnancyGate: PregnancyGateState;
+  // `PREGNANCY_FEMALE_SEX_ITEM` sin sembrar (SPEC FE12d §3.4, §3.6) — el bloque se muestra igual,
+  // deshabilitado con su explicación, en vez de desaparecer.
+  pregnancyConfigMissing: boolean;
   // Caso cerrado (SPEC FE12b §3.6): las listas de satélites pasan a sólo lectura — sin «Añadir»
   // y sin acciones de fila. El aviso en sí lo pinta `CaseWizardPage` (FE08); esto sólo retira las
   // acciones que ese aviso ya explica que no aplican.
@@ -198,9 +206,11 @@ function NotificationFormBody({
   notification,
   severeNotification,
   nonSevereNotification,
+  notificationPregnancy,
   notificationType,
   eventDate,
   pregnancyGate,
+  pregnancyConfigMissing,
   isClosed,
 }: NotificationFormBodyProps) {
   const { t } = useTranslation();
@@ -272,6 +282,14 @@ function NotificationFormBody({
     verifiedOtherSource: nonSevereNotification?.verifiedOtherSource ?? null,
     otherSourceDescription: nonSevereNotification?.otherSourceDescription ?? null,
     nonSevereNotes: nonSevereNotification?.notes ?? null,
+    // El bloque de embarazo (SPEC FE12d §3.5): sin fila todavía, los seis campos arrancan vacíos —
+    // «Alta (sin fila todavía)» de §3.6, no un estado de error.
+    wasPregnantAtVaccination: notificationPregnancy?.wasPregnantAtVaccination ?? null,
+    wasPregnantAtEsavi: notificationPregnancy?.wasPregnantAtEsavi ?? null,
+    lastMenstruationDate: notificationPregnancy?.lastMenstruationDate ?? null,
+    probableDeliveryDate: notificationPregnancy?.probableDeliveryDate ?? null,
+    hasComplications: notificationPregnancy?.hasComplications ?? null,
+    pregnancyNotes: notificationPregnancy?.notes ?? null,
   };
 
   const form = useForm<NotificationFormValues>({
@@ -775,6 +793,14 @@ function NotificationFormBody({
         />
       </div>
 
+      {/* Detrás de la compuerta de `CASE-PROCESS.md` §7.4 (SPEC FE12d §4 paso 7): independiente
+          de la rama, así que va antes de la que corresponda por gravedad. */}
+      <PregnancySection
+        control={form.control}
+        pregnancyGate={pregnancyGate}
+        configMissing={pregnancyConfigMissing}
+      />
+
       {notificationType === 'SEVERE' ? (
         <SevereNotificationFields
           control={form.control}
@@ -854,6 +880,19 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
   const patient = patientResource.useOne(patientId ?? '');
   const pregnancyGate = usePregnancyGate(caseId);
 
+  // El bloque de embarazo (SPEC FE12d §4 paso 7): sin `notificationId` todavía no hay fila que
+  // leer (§3.6 «Alta, sin fila todavía»), así que el hook se autogobierna con su propio `enabled`
+  // — mismo patrón que `severeNotification`/`nonSevereNotification` de arriba. La fila de
+  // configuración se pide siempre: `useSystemConfigByCode` ya trae su `staleTime` de 30 minutos y
+  // comparte caché con la lectura interna de `usePregnancyGate` (§3.4).
+  const notificationId = notification.data?.notificationId ?? null;
+  const notificationPregnancy = useNotificationPregnancyByNotification(
+    notificationId ?? undefined,
+    notificationId !== null,
+  );
+  const femaleSexConfig = useSystemConfigByCode(PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE);
+  const pregnancyConfigMissing = femaleSexConfig.data === null;
+
   const readyToRenderForm =
     !!workflow.data &&
     !!esaviCase.data &&
@@ -862,7 +901,13 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
     // instante después en cuanto se resuelve el sexo real (mismo motivo que `ClassificationStep`
     // espera `readyToResolveAge`, SPEC FE11 §3.6).
     (!!patient.data || patient.isError) &&
-    (!stageExists || (!!notification.data && activeBranch?.data !== undefined));
+    (!stageExists || (!!notification.data && activeBranch?.data !== undefined)) &&
+    // Ídem con el bloque de embarazo: sin `notificationId` no hay nada que esperar (la consulta ni
+    // corre), y con la compuerta cerrada tampoco — sólo espera cuando de verdad hay algo que leer.
+    (notificationId === null ||
+      pregnancyGate === 'hidden' ||
+      notificationPregnancy.data !== undefined ||
+      notificationPregnancy.isError);
 
   // `stages.classification.exists` cuenta también filas desactivadas (`CASE-PROCESS.md` §6.2:
   // "exists no significa utilizable") — el propio `006` de classification filtra por `isActive`
@@ -916,9 +961,11 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       notification={notification.data ?? null}
       severeNotification={severeNotification.data ?? null}
       nonSevereNotification={nonSevereNotification.data ?? null}
+      notificationPregnancy={notificationPregnancy.data ?? null}
       notificationType={notificationType}
       eventDate={esaviCase.data?.eventDate ?? null}
       pregnancyGate={pregnancyGate}
+      pregnancyConfigMissing={pregnancyConfigMissing}
       isClosed={isClosed}
     />
   );

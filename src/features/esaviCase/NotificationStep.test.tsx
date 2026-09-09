@@ -946,7 +946,9 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     expect(
       await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Si aplica')).toBeInTheDocument();
+    // Dos marcas (SPEC FE12d §4 paso 7): la ficha grave y `PregnancySection` comparten la misma
+    // compuerta y cada una pinta la suya.
+    expect(screen.getAllByText('Si aplica')).toHaveLength(2);
   }, 30000);
 
   it('con paciente femenino en edad fértil, el bloque aparece sin la marca', async () => {
@@ -1001,7 +1003,7 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     expect(
       await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Si aplica')).toBeInTheDocument();
+    expect(screen.getAllByText('Si aplica')).toHaveLength(2);
   }, 30000);
 });
 

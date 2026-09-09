@@ -5,7 +5,10 @@ import { resolvePregnancyGate, type PregnancyGateState } from '@/features/notifi
 import { patientResource } from '@/features/patient/api';
 import { useSystemConfigByCode } from '@/shared/hooks/useSystemConfigByCode';
 
-const PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE = 'PREGNANCY_FEMALE_SEX_ITEM';
+// Exportada para que `NotificationStep`/`PregnancySection` (SPEC FE12d §4 paso 7) puedan pedir la
+// misma fila y decidir el estado «deshabilitado por configuración» (§3.6) sin duplicar el string
+// ni la petición — TanStack Query comparte la caché por `queryKey`.
+export const PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE = 'PREGNANCY_FEMALE_SEX_ITEM';
 
 // CASE-PROCESS.md §7.4, la compuerta de embarazo — extraída de la implementación en línea que
 // FE12a dejó en `NotificationStep` (SPEC FE12d §4 paso 6, §8: "se sustituye por
