@@ -3,12 +3,16 @@ import type { CreateNonSevereNotificationInput } from '@/contracts/nonSevereNoti
 import type { CreateNotificationEventInput } from '@/contracts/notificationEvent';
 import type { CreateNotificationInput, NotificationType } from '@/contracts/notification';
 import type { CreateNotificationMedicationInput } from '@/contracts/notificationMedication';
+import type { CreateNotificationDiluentInput } from '@/contracts/notificationDiluent';
+import type { CreateNotificationVaccineInput } from '@/contracts/notificationVaccine';
 import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
 import type { PaginatedResponse } from '@/contracts/declared/pagination';
 import type { NonSevereNotificationDetail } from '@/contracts/declared/nonSevereNotification';
 import type { NotificationDetail } from '@/contracts/declared/notification';
+import type { NotificationDiluentDetail } from '@/contracts/declared/notificationDiluent';
 import type { NotificationEventDetail } from '@/contracts/declared/notificationEvent';
 import type { NotificationMedicationDetail } from '@/contracts/declared/notificationMedication';
+import type { NotificationVaccineDetail } from '@/contracts/declared/notificationVaccine';
 import type { MeddraSearchResult } from '@/contracts/declared/meddra';
 import type { SevereNotificationDetail } from '@/contracts/declared/severeNotification';
 import type { WhodrugProductSearchResult } from '@/contracts/declared/whodrugProduct';
@@ -260,6 +264,77 @@ export function useNotificationMedicationsByCase(caseId: string | undefined, ena
       return response.data;
     },
     enabled: enabled && caseId !== undefined,
+  });
+}
+
+// POST   /api/notification-vaccines          ESAVI-NOTIFVAC-001   USER   create
+// GET    /api/notification-vaccines/case/:id ESAVI-NOTIFVAC-006   USER   vaccines of the case, in reentry — hand-written below
+// PUT    /api/notification-vaccines/:id      ESAVI-NOTIFVAC-004   ADMIN  update (§10.4 half-applied, SPEC FE12c §3.2)
+// DELETE /api/notification-vaccines/:id      ESAVI-NOTIFVAC-005A  ADMIN  soft delete
+// Same out-of-scope routes as its event and medication siblings above (002A/002B, 003, 005B/005C).
+export const notificationVaccineResource = createResource<
+  NotificationVaccineDetail,
+  CreateNotificationVaccineInput,
+  Partial<CreateNotificationVaccineInput>
+>({
+  key: 'notificationVaccine',
+  path: 'notification-vaccines',
+  idField: 'vaccineId',
+  inactiveMode: 'serverDecides',
+});
+
+export function notificationVaccinesByCaseKey(caseId: string) {
+  return ['notificationVaccine', 'byCase', caseId] as const;
+}
+
+// ESAVI-NOTIFVAC-006. Mirrors its event and medication siblings above in every respect — no
+// `staleTime`: expediente data invalidates on every write, never ages on its own (SPEC FE12c §3.4).
+export function useNotificationVaccinesByCase(caseId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: notificationVaccinesByCaseKey(caseId ?? ''),
+    queryFn: async () => {
+      const response = await client.get<PaginatedResponse<NotificationVaccineDetail>>(
+        `notification-vaccines/case/${caseId}`,
+      );
+      return response.data;
+    },
+    enabled: enabled && caseId !== undefined,
+  });
+}
+
+// POST   /api/notification-diluents             ESAVI-NOTIFDIL-001   USER   create
+// GET    /api/notification-diluents/vaccine/:id ESAVI-NOTIFDIL-002A  USER   diluents of one vaccine — hand-written below
+// PUT    /api/notification-diluents/:id         ESAVI-NOTIFDIL-004   ADMIN  update (§10.4 half-applied)
+// DELETE /api/notification-diluents/:id         ESAVI-NOTIFDIL-005A  ADMIN  soft delete
+// `NOTIFDIL` is the only one of the six satellites with no `006` by case (SPEC FE12c §1): it reads
+// by `vaccineId`, one vaccine at a time, and 002A is its only listing — there is no admin variant.
+export const notificationDiluentResource = createResource<
+  NotificationDiluentDetail,
+  CreateNotificationDiluentInput,
+  Partial<CreateNotificationDiluentInput>
+>({
+  key: 'notificationDiluent',
+  path: 'notification-diluents',
+  idField: 'diluentId',
+  inactiveMode: 'serverDecides',
+});
+
+export function notificationDiluentsByVaccineKey(vaccineId: string) {
+  return ['notificationDiluent', 'byVaccine', vaccineId] as const;
+}
+
+// ESAVI-NOTIFDIL-002A — read only while the modal of that vaccine is open (`enabled`), lazily and
+// one vaccine at a time (SPEC FE12c §3.4): there is no case-wide listing to prefetch instead.
+export function useNotificationDiluentsByVaccine(vaccineId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: notificationDiluentsByVaccineKey(vaccineId ?? ''),
+    queryFn: async () => {
+      const response = await client.get<PaginatedResponse<NotificationDiluentDetail>>(
+        `notification-diluents/vaccine/${vaccineId}`,
+      );
+      return response.data;
+    },
+    enabled: enabled && vaccineId !== undefined,
   });
 }
 

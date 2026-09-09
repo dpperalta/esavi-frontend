@@ -4,6 +4,8 @@ import type { CreateNonSevereNotificationInput } from '@/contracts/nonSevereNoti
 import type { CreateNotificationEventInput } from '@/contracts/notificationEvent';
 import type { CreateNotificationInput, NotificationType } from '@/contracts/notification';
 import type { CreateNotificationMedicationInput } from '@/contracts/notificationMedication';
+import type { CreateNotificationDiluentInput } from '@/contracts/notificationDiluent';
+import type { CreateNotificationVaccineInput } from '@/contracts/notificationVaccine';
 import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
@@ -198,6 +200,11 @@ export interface NotificationCompleteContext {
   // (`notificationEvent`), así que no hay campo del formulario que comprobar — llega como
   // contexto, igual que los otros dos derivados de arriba.
   hasAtLeastOneEvent: boolean;
+  // SPEC FE12c §2, §4 paso 11: los dos obligatorios de proceso del paso 4 que salen de
+  // `notificationVaccine` — ninguno bloquea «Guardar», los dos sí «Completar etapa». Viven en
+  // otra tabla, igual que `hasAtLeastOneEvent`, así que llegan como contexto.
+  hasAtLeastOneVaccine: boolean;
+  hasAtLeastOneSuspectedVaccine: boolean;
 }
 
 // "Completar etapa" (§3.5): everything `notificationSaveSchema` already checks, plus the
@@ -211,6 +218,8 @@ export function createNotificationCompleteSchema({
   isDeathOutcome,
   pregnancyGateOpen,
   hasAtLeastOneEvent,
+  hasAtLeastOneVaccine,
+  hasAtLeastOneSuspectedVaccine,
 }: NotificationCompleteContext) {
   return notificationBaseSchema.superRefine((data, ctx) => {
     // El primer obligatorio de proceso del paso 4 (§2, §4 paso 12): un ESAVI sin ningún
@@ -218,6 +227,15 @@ export function createNotificationCompleteSchema({
     // «Guardar» — sólo aparece en la lista de «Completar etapa», como el resto de este schema.
     if (!hasAtLeastOneEvent) {
       ctx.addIssue({ code: 'custom', message: 'atLeastOneEvent', path: ['events'] });
+    }
+    // Los dos obligatorios de proceso de las vacunas (SPEC FE12c §2, §4 paso 11): dos `path`
+    // independientes para que puedan listarse los dos a la vez — con cero vacunas, no hay ninguna
+    // sospechosa tampoco, y el usuario necesita ver ambos pendientes, no sólo el primero.
+    if (!hasAtLeastOneVaccine) {
+      ctx.addIssue({ code: 'custom', message: 'missingVaccine', path: ['vaccines'] });
+    }
+    if (!hasAtLeastOneSuspectedVaccine) {
+      ctx.addIssue({ code: 'custom', message: 'missingSuspected', path: ['suspectedVaccine'] });
     }
     if (!data.hasRelevantMedicalHistory) {
       ctx.addIssue({ code: 'custom', message: 'required', path: ['hasRelevantMedicalHistory'] });
@@ -482,4 +500,149 @@ export const notificationMedicationErrorFieldMap: Partial<
   NOTIFMED_004_OTHER_TEXT_REQUIRED: 'otherMedicationText',
   NOTIFMED_001_OTHER_TEXT_NOT_ALLOWED: 'isOtherMedication',
   NOTIFMED_004_OTHER_TEXT_NOT_ALLOWED: 'isOtherMedication',
+};
+
+// ---------------------------------------------------------------------------------------------
+// SPEC FE12c §3.5 — la vacuna y su lista anidada de diluyentes. Las dos guardas de contenido
+// mínimo se evalúan sobre el estado resultante (§3.5: "un `PUT` que borra el nombre de una fila
+// sin código falla en el cliente antes de llegar al `400`"), y las dos coherencias temporales
+// entran como contexto — `eventDate` y `vaccinationDate` — en vez de leerse de una caché dentro
+// del schema, igual que `isDeathDateNotBeforeEventDate` recibe `eventDate` por parámetro arriba.
+// ---------------------------------------------------------------------------------------------
+
+// «Vacuna» — `vaccineWhodrugId` o `vaccineName`, nunca ninguno de los dos vacío a la vez
+// (`NOTIFVAC_00X_VACCINE_REQUIRED`, esavi-backend/src/services/notificationVaccine.service.ts).
+export function hasVaccineIdentity(
+  vaccineWhodrugId: string | null | undefined,
+  vaccineName: string | null | undefined,
+): boolean {
+  if (vaccineWhodrugId) return true;
+  return (vaccineName ?? '').trim().length > 0;
+}
+
+// `vaccinationDate` no posterior a `eventDate` (`NOTIFVAC_00X_VACCINATION_AFTER_EVENT`). El mismo
+// día es válido — una reacción inmediata se registra con la fecha de la vacunación — y ninguna de
+// las dos partes bloquea si falta la otra, igual que `isDeathDateNotBeforeEventDate`. Comparación
+// lexicográfica sobre `YYYY-MM-DD`, sin recortar a los primeros diez caracteres porque el campo ya
+// llega en ese formato (`<DateField>`), a diferencia del backend que sí lo recorta por si acaso.
+export function isVaccinationNotAfterEventDate(
+  vaccinationDate: string | null | undefined,
+  eventDate: string | null | undefined,
+): boolean {
+  if (!vaccinationDate || !eventDate) return true;
+  return vaccinationDate <= eventDate;
+}
+
+export type NotificationVaccineFormValues = Omit<
+  CreateNotificationVaccineInput,
+  'notificationId' | 'isActive'
+>;
+
+export interface NotificationVaccineContext {
+  // El `eventDate` del caso (`ESAVI-CASE-003`, FE09/FE10) — no un campo de este formulario, así
+  // que llega como contexto y no como clave de `NotificationVaccineFormValues`.
+  eventDate: string | null | undefined;
+}
+
+// `whoCode` viaja en el formulario pero nunca lo escribe el usuario (§3.5: "se muestra por
+// análisis, no por captura") — sólo lo rellena la resolución del árbol.
+export function createNotificationVaccineSchema({ eventDate }: NotificationVaccineContext) {
+  return z
+    .object({
+      vaccineWhodrugId: z.string().uuid().nullable().optional(),
+      isSuspected: z.boolean().optional(),
+      whoCode: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
+      vaccineCode: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
+      vaccineName: z.preprocess(emptyToUndefined, z.string().trim().max(500).nullable().optional()),
+      vaccinationDate: z.string().regex(isoDateRegex).nullable().optional(),
+      vaccinationTime: z.preprocess(emptyToUndefined, z.string().regex(timeRegex).nullable().optional()),
+      // Entero >= 0, sin techo (§3.5: a diferencia de los nueve contadores con techo de `smallint`
+      // de `ARCHITECTURE.md` §4.3, esta columna no lo tiene).
+      doseNumber: z.number().int().min(0).nullable().optional(),
+      batchNumber: z.preprocess(emptyToUndefined, z.string().trim().max(100).nullable().optional()),
+      expirationDate: z.string().regex(isoDateRegex).nullable().optional(),
+      notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    })
+    .superRefine((data, ctx) => {
+      if (!hasVaccineIdentity(data.vaccineWhodrugId, data.vaccineName)) {
+        ctx.addIssue({ code: 'custom', message: 'vaccineRequired', path: ['vaccineName'] });
+      }
+      if (!isVaccinationNotAfterEventDate(data.vaccinationDate, eventDate)) {
+        ctx.addIssue({ code: 'custom', message: 'vaccinationAfterEvent', path: ['vaccinationDate'] });
+      }
+    });
+}
+
+// SPEC FE12c §3.5 "Códigos de error mapeados". `NOTIFVAC_00X_WHODRUG_NOT_FOUND` no está aquí: va
+// al `<WhodrugTreePicker>`, no a un campo del formulario (cableado en el paso 9).
+export const notificationVaccineErrorFieldMap: Partial<Record<string, keyof NotificationVaccineFormValues>> = {
+  NOTIFVAC_001_VACCINE_REQUIRED: 'vaccineName',
+  NOTIFVAC_004_VACCINE_REQUIRED: 'vaccineName',
+  NOTIFVAC_001_VACCINATION_AFTER_EVENT: 'vaccinationDate',
+  NOTIFVAC_004_VACCINATION_AFTER_EVENT: 'vaccinationDate',
+};
+
+// «Diluyente» — espejo exacto de `hasVaccineIdentity`, sobre `diluentCatalogId`/`diluentName`
+// (`NOTIFDIL_00X_DILUENT_REQUIRED`).
+export function hasDiluentIdentity(
+  diluentCatalogId: string | null | undefined,
+  diluentName: string | null | undefined,
+): boolean {
+  if (diluentCatalogId) return true;
+  return (diluentName ?? '').trim().length > 0;
+}
+
+// `reconstitutionDate` no posterior a `vaccinationDate` de su vacuna
+// (`NOTIFDIL_00X_RECONSTITUTION_AFTER_VACCINATION`). Sólo fechas, nunca horas — igual que el
+// servicio, que compara sobre columnas `date` sin recortar ninguna hora que no existe.
+export function isReconstitutionNotAfterVaccination(
+  reconstitutionDate: string | null | undefined,
+  vaccinationDate: string | null | undefined,
+): boolean {
+  if (!reconstitutionDate || !vaccinationDate) return true;
+  return reconstitutionDate <= vaccinationDate;
+}
+
+export type NotificationDiluentFormValues = Omit<CreateNotificationDiluentInput, 'vaccineId' | 'isActive'>;
+
+export interface NotificationDiluentContext {
+  // `vaccinationDate` de la fila de `notificationVaccine` a la que cuelga este diluyente — no un
+  // campo de este formulario.
+  vaccinationDate: string | null | undefined;
+}
+
+// Sin `notes`: la única de las seis satélites sin ese campo (§3.3), y el formulario no lo inventa.
+export function createNotificationDiluentSchema({ vaccinationDate }: NotificationDiluentContext) {
+  return z
+    .object({
+      diluentCatalogId: z.string().uuid().nullable().optional(),
+      // Más ancho que el `batchNumber` de la vacuna (250 contra 100, §3.5).
+      batchNumber: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
+      expirationDate: z.string().regex(isoDateRegex).nullable().optional(),
+      reconstitutionDate: z.string().regex(isoDateRegex).nullable().optional(),
+      // No entra en ninguna comparación (§3.5) — se declara igual que cualquier otra hora.
+      reconstitutionTime: z.preprocess(emptyToUndefined, z.string().regex(timeRegex).nullable().optional()),
+      diluentName: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
+      diluentCode: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
+    })
+    .superRefine((data, ctx) => {
+      if (!hasDiluentIdentity(data.diluentCatalogId, data.diluentName)) {
+        ctx.addIssue({ code: 'custom', message: 'diluentRequired', path: ['diluentName'] });
+      }
+      if (!isReconstitutionNotAfterVaccination(data.reconstitutionDate, vaccinationDate)) {
+        ctx.addIssue({ code: 'custom', message: 'reconstitutionAfterVaccination', path: ['reconstitutionDate'] });
+      }
+    });
+}
+
+// SPEC FE12c §3.5. El código real del backend es `CATALOG_NOT_FOUND`
+// (esavi-backend/src/services/notificationDiluent.service.ts), no `DILUENT_NOT_FOUND` como cita
+// la prosa del spec — se mapea el código estable, no la paráfrasis.
+export const notificationDiluentErrorFieldMap: Partial<Record<string, keyof NotificationDiluentFormValues>> = {
+  NOTIFDIL_001_DILUENT_REQUIRED: 'diluentName',
+  NOTIFDIL_004_DILUENT_REQUIRED: 'diluentName',
+  NOTIFDIL_001_RECONSTITUTION_AFTER_VACCINATION: 'reconstitutionDate',
+  NOTIFDIL_004_RECONSTITUTION_AFTER_VACCINATION: 'reconstitutionDate',
+  NOTIFDIL_001_CATALOG_NOT_FOUND: 'diluentCatalogId',
+  NOTIFDIL_004_CATALOG_NOT_FOUND: 'diluentCatalogId',
 };

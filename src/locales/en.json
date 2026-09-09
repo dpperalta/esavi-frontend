@@ -66,6 +66,9 @@
       "placeholder": "HH:MM",
       "invalid": "The time is not valid. Use the HH:MM format."
     },
+    "numberField": {
+      "invalid": "The number is not valid."
+    },
     "satelliteList": {
       "add": "Add",
       "edit": "Edit {{name}}",
@@ -618,6 +621,9 @@
       "irreversibilityNotice": "The patient cannot be changed afterward. A case opened against the wrong person can only be deactivated, and that requires an administrator.",
       "createButton": "Create case",
       "continueButton": "Next"
+    },
+    "eventDate": {
+      "warnVaccines": "This date leaves vaccines with a later date: {{names}}. You can still save."
     }
   },
   "caseWizard": {
@@ -784,6 +790,11 @@
       "generic": "We couldn't save the classification. Try again."
     }
   },
+  "diluent": {
+    "select": {
+      "empty": "The diluent master has no diluents registered in this deployment. Type the name to register it directly."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "ESAVI description",
@@ -936,6 +947,98 @@
       "deleteAction": "Deactivate",
       "adminRequiredEdit": "Correcting this clinical content requires an administrator in this deployment.",
       "adminRequiredDelete": "Removing this clinical content requires an administrator in this deployment."
+    },
+    "roleForbidden": {
+      "editDelete": "Correcting or removing this clinical content requires a higher role in this deployment."
+    }
+  },
+  "notificationVaccine": {
+    "list": {
+      "title": "Vaccines"
+    },
+    "form": {
+      "title": {
+        "create": "Add vaccine",
+        "edit": "Edit vaccine"
+      },
+      "submitCreate": "Save and add diluents"
+    },
+    "field": {
+      "whoCode": "WHODrug code",
+      "vaccineCode": "Vaccine code",
+      "vaccineName": "Vaccine",
+      "isSuspected": "Suspected vaccine",
+      "vaccinationDate": "Vaccination date",
+      "vaccinationTime": "Vaccination time",
+      "doseNumber": "Dose number",
+      "batchNumber": "Batch number",
+      "expirationDate": "Expiration date",
+      "notes": "Notes"
+    },
+    "help": {
+      "vaccineCode": "Also accepts the national code, if the vaccine isn't in the WHODrug dictionary."
+    },
+    "badge": {
+      "suspected": "Suspected"
+    },
+    "error": {
+      "vaccineRequired": "Choose a vaccine from the WHODrug tree or type its name before saving.",
+      "vaccinationAfterEvent": "The vaccination date can't be later than the event date.",
+      "whodrugNotFound": "This entry was removed from the WHODrug dictionary. Choose another one or type the name directly."
+    },
+    "delete": {
+      "confirm": "Deactivate «{{name}}»? This action can't be undone from here.",
+      "confirmWithDiluents": "Deactivate «{{name}}»? {{count}} diluent(s) already registered will be left without an associated vaccine. This action can't be undone from here."
+    },
+    "complete": {
+      "missingVaccine": "At least one vaccine",
+      "missingSuspected": "At least one suspected vaccine"
+    }
+  },
+  "notificationDiluent": {
+    "list": {
+      "title": "Diluents",
+      "add": "Add diluent",
+      "error": "We couldn't load the diluents.",
+      "needsParent": "Save the vaccine before adding its diluents."
+    },
+    "field": {
+      "diluentCatalogId": "Diluent",
+      "diluentName": "Diluent name",
+      "diluentCode": "Diluent code",
+      "batchNumber": "Batch number",
+      "expirationDate": "Expiration date",
+      "reconstitutionDate": "Reconstitution date",
+      "reconstitutionTime": "Reconstitution time"
+    },
+    "error": {
+      "diluentRequired": "Choose a diluent from the catalog or type its name before saving.",
+      "reconstitutionAfterVaccination": "The reconstitution date can't be later than the vaccination date.",
+      "parentUnavailable": "This vaccine is no longer available. Refresh the vaccine list."
+    },
+    "delete": {
+      "confirm": "Deactivate «{{name}}»? This action can't be undone from here."
+    }
+  },
+  "whodrugTreePicker": {
+    "level": {
+      "abbreviation": "Abbreviation",
+      "drugName": "Drug name",
+      "maHolders": "Marketing authorization holder",
+      "form": "Pharmaceutical form",
+      "strength": "Strength"
+    },
+    "nullValue": "Unspecified",
+    "matchCount": "{{count}} matches",
+    "assignAbbreviation": "Assign only the abbreviation",
+    "change": "Change",
+    "notImported": "The WHODrug dictionary is not imported in this deployment. Type the name directly.",
+    "noResults": "No results.",
+    "noInfo": "No data.",
+    "error": "We couldn't load this level of the WHODrug tree.",
+    "info": {
+      "ingredientTranslation": "Ingredient",
+      "noDose": "Dose"
     }
   },
   "home": {

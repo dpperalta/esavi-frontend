@@ -6,6 +6,7 @@ import type { CreateEsaviCaseInput } from '@/contracts/esaviCase';
 import { useCurrentUser } from '@/features/auth/api';
 import { NotifierFormDialog } from '@/features/notifier/NotifierFormDialog';
 import { NotifierList } from '@/features/notifier/NotifierList';
+import { useNotificationVaccinesByCase } from '@/features/notification/api';
 import { useCountryIsoCode } from '@/features/systemConfig/api';
 import { useUserGeoCoverage } from '@/features/userGeoLocation/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -44,6 +45,9 @@ export function CaseOpeningStep() {
   const isEditing = !!effectiveCaseId;
 
   const existingCase = esaviCaseResource.useOne(effectiveCaseId ?? '');
+  // SPEC FE12c §8: warns, never blocks — the backend doesn't validate `eventDate` against
+  // vaccines, so the client isn't stricter than the server.
+  const vaccines = useNotificationVaccinesByCase(effectiveCaseId ?? undefined, isEditing);
 
   const { data: user } = useCurrentUser();
   // El mismo umbral que `resolveUserGeoScopeIds` en el backend (SPEC FE10 §1C, §6): sólo se
@@ -210,26 +214,43 @@ export function CaseOpeningStep() {
             <FormField
               control={form.control}
               name="eventDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('esaviCase.opening.fields.eventDate')}</FormLabel>
-                  <FormControl>
-                    <DateField
-                      value={field.value ?? null}
-                      onChange={field.onChange}
-                      ariaLabel={t('esaviCase.opening.fields.eventDate')}
-                      allowFuture={false}
-                    />
-                  </FormControl>
-                  {form.formState.errors.eventDate ? (
-                    <p role="alert" className="text-sm text-destructive">
-                      {t('esaviCase.opening.errors.eventDateAfterReportDate')}
-                    </p>
-                  ) : (
-                    <FormMessage />
-                  )}
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const laterVaccines = field.value
+                  ? (vaccines.data?.rows ?? []).filter(
+                      (row) => !!row.vaccinationDate && row.vaccinationDate > field.value!,
+                    )
+                  : [];
+                return (
+                  <FormItem>
+                    <FormLabel>{t('esaviCase.opening.fields.eventDate')}</FormLabel>
+                    <FormControl>
+                      <DateField
+                        value={field.value ?? null}
+                        onChange={field.onChange}
+                        ariaLabel={t('esaviCase.opening.fields.eventDate')}
+                        allowFuture={false}
+                      />
+                    </FormControl>
+                    {form.formState.errors.eventDate ? (
+                      <p role="alert" className="text-sm text-destructive">
+                        {t('esaviCase.opening.errors.eventDateAfterReportDate')}
+                      </p>
+                    ) : (
+                      <FormMessage />
+                    )}
+                    {laterVaccines.length > 0 && (
+                      <p
+                        role="status"
+                        className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning"
+                      >
+                        {t('esaviCase.eventDate.warnVaccines', {
+                          names: laterVaccines.map((row) => row.vaccineName).join(', '),
+                        })}
+                      </p>
+                    )}
+                  </FormItem>
+                );
+              }}
             />
             <FormField
               control={form.control}

@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   createNotificationCompleteSchema,
+  createNotificationDiluentSchema,
+  createNotificationVaccineSchema,
   hasAnyVerificationSource,
+  hasDiluentIdentity,
+  hasVaccineIdentity,
   isDeathDateNotBeforeEventDate,
   isDeathFieldsRequirementMet,
   isMedicationCodeClearedWhenOther,
@@ -10,6 +14,8 @@ import {
   isOtherMedicationTextCoherent,
   isOtherSourceDescriptionRequirementMet,
   isPregnancyDescriptionRequirementMet,
+  isReconstitutionNotAfterVaccination,
+  isVaccinationNotAfterEventDate,
   notificationEventSchema,
   notificationMedicationSchema,
   notificationSaveSchema,
@@ -194,6 +200,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -211,6 +219,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse(baseValid);
     expect(result.success).toBe(false);
@@ -225,6 +235,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: true,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -244,6 +256,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse(baseValid);
     expect(result.success).toBe(false);
@@ -260,6 +274,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -277,6 +293,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: true,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -297,6 +315,8 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: false,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -316,6 +336,72 @@ describe('createNotificationCompleteSchema — "Completar etapa" (SPEC FE12a §3
       isDeathOutcome: false,
       pregnancyGateOpen: false,
       hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
+    });
+    const result = schema.safeParse({
+      ...baseValid,
+      hasPreviousEventHistory: 'NO',
+      hasAllergyToOtherVaccines: 'NO',
+      hasAllergyToMedications: 'NO',
+      hasAllergyToPreviousSameVaccine: 'NO',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  // SPEC FE12c §4 paso 11 — los dos obligatorios de proceso de las vacunas.
+  it('con cero vacunas, lista los dos pendientes (falta vacuna y falta sospechosa)', () => {
+    const schema = createNotificationCompleteSchema({
+      notificationType: 'SEVERE',
+      isDeathOutcome: false,
+      pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: false,
+      hasAtLeastOneSuspectedVaccine: false,
+    });
+    const result = schema.safeParse({
+      ...baseValid,
+      hasPreviousEventHistory: 'NO',
+      hasAllergyToOtherVaccines: 'NO',
+      hasAllergyToMedications: 'NO',
+      hasAllergyToPreviousSameVaccine: 'NO',
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
+    expect(paths).toContain('vaccines');
+    expect(paths).toContain('suspectedVaccine');
+  });
+
+  it('con una vacuna no sospechosa, lista sólo "suspectedVaccine"', () => {
+    const schema = createNotificationCompleteSchema({
+      notificationType: 'SEVERE',
+      isDeathOutcome: false,
+      pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: false,
+    });
+    const result = schema.safeParse({
+      ...baseValid,
+      hasPreviousEventHistory: 'NO',
+      hasAllergyToOtherVaccines: 'NO',
+      hasAllergyToMedications: 'NO',
+      hasAllergyToPreviousSameVaccine: 'NO',
+    });
+    expect(result.success).toBe(false);
+    const paths = result.success ? [] : result.error.issues.map((issue) => issue.path[0]);
+    expect(paths).not.toContain('vaccines');
+    expect(paths).toContain('suspectedVaccine');
+  });
+
+  it('con al menos una vacuna sospechosa, ninguno de los dos aparece entre los pendientes', () => {
+    const schema = createNotificationCompleteSchema({
+      notificationType: 'SEVERE',
+      isDeathOutcome: false,
+      pregnancyGateOpen: false,
+      hasAtLeastOneEvent: true,
+      hasAtLeastOneVaccine: true,
+      hasAtLeastOneSuspectedVaccine: true,
     });
     const result = schema.safeParse({
       ...baseValid,
@@ -443,5 +529,111 @@ describe('notificationMedicationSchema', () => {
       medicationCode: 'PAR001',
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe('hasVaccineIdentity — SPEC FE12c §3.5', () => {
+  it('con vaccineWhodrugId, vaccineName vacío no es un problema', () => {
+    expect(hasVaccineIdentity('vw-1', null)).toBe(true);
+    expect(hasVaccineIdentity('vw-1', '')).toBe(true);
+  });
+
+  it('sin vaccineWhodrugId, exige vaccineName no vacío', () => {
+    expect(hasVaccineIdentity(null, 'BCG')).toBe(true);
+    expect(hasVaccineIdentity(null, '')).toBe(false);
+    expect(hasVaccineIdentity(null, '   ')).toBe(false);
+    expect(hasVaccineIdentity(null, null)).toBe(false);
+  });
+});
+
+describe('isVaccinationNotAfterEventDate — SPEC FE12c §3.5', () => {
+  it('el mismo día es válido', () => {
+    expect(isVaccinationNotAfterEventDate('2026-03-10', '2026-03-10')).toBe(true);
+  });
+
+  it('un día después falla', () => {
+    expect(isVaccinationNotAfterEventDate('2026-03-11', '2026-03-10')).toBe(false);
+  });
+
+  it('sin una de las dos fechas, no hay nada que comparar', () => {
+    expect(isVaccinationNotAfterEventDate(null, '2026-03-10')).toBe(true);
+    expect(isVaccinationNotAfterEventDate('2026-03-10', null)).toBe(true);
+  });
+});
+
+describe('notificationVaccineSchema — la guarda de contenido mínimo se evalúa sobre el estado resultante', () => {
+  it('borrar vaccineName de una fila sin FK falla', () => {
+    const schema = createNotificationVaccineSchema({ eventDate: null });
+    const result = schema.safeParse({ vaccineWhodrugId: null, vaccineName: '' });
+    expect(result.success).toBe(false);
+    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'vaccineName');
+    expect(issue).toBeTruthy();
+  });
+
+  it('vaccinationDate igual a eventDate pasa; un día después falla', () => {
+    const schema = createNotificationVaccineSchema({ eventDate: '2026-03-10' });
+
+    expect(
+      schema.safeParse({ vaccineName: 'BCG', vaccinationDate: '2026-03-10' }).success,
+    ).toBe(true);
+
+    const late = schema.safeParse({ vaccineName: 'BCG', vaccinationDate: '2026-03-11' });
+    expect(late.success).toBe(false);
+    const issue = !late.success && late.error.issues.find((i) => i.path[0] === 'vaccinationDate');
+    expect(issue).toBeTruthy();
+  });
+
+  it('con vaccineWhodrugId y sin vaccineName, la guarda de contenido mínimo se satisface igual', () => {
+    const schema = createNotificationVaccineSchema({ eventDate: null });
+    expect(schema.safeParse({ vaccineWhodrugId: '11111111-1111-4111-8111-111111111111' }).success).toBe(
+      true,
+    );
+  });
+});
+
+describe('hasDiluentIdentity — SPEC FE12c §3.5', () => {
+  it('sin diluentCatalogId, exige diluentName no vacío', () => {
+    expect(hasDiluentIdentity(null, '')).toBe(false);
+    expect(hasDiluentIdentity(null, 'Agua estéril')).toBe(true);
+  });
+});
+
+describe('isReconstitutionNotAfterVaccination — sólo fechas, nunca horas', () => {
+  it('el mismo día es válido aunque la hora sea posterior', () => {
+    // La regla compara `YYYY-MM-DD`: la hora no forma parte de ninguna de las dos columnas que
+    // entran aquí (§3.5 — `reconstitutionTime` no entra en ninguna comparación).
+    expect(isReconstitutionNotAfterVaccination('2026-03-10', '2026-03-10')).toBe(true);
+  });
+
+  it('un día después falla', () => {
+    expect(isReconstitutionNotAfterVaccination('2026-03-11', '2026-03-10')).toBe(false);
+  });
+});
+
+describe('notificationDiluentSchema', () => {
+  it('borrar diluentName de una fila sin diluentCatalogId falla', () => {
+    const schema = createNotificationDiluentSchema({ vaccinationDate: null });
+    const result = schema.safeParse({ diluentCatalogId: null, diluentName: '' });
+    expect(result.success).toBe(false);
+    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'diluentName');
+    expect(issue).toBeTruthy();
+  });
+
+  it('reconstitutionDate el mismo día que vaccinationDate se guarda aunque la hora sea posterior', () => {
+    const schema = createNotificationDiluentSchema({ vaccinationDate: '2026-03-10' });
+    const result = schema.safeParse({
+      diluentName: 'Agua estéril',
+      reconstitutionDate: '2026-03-10',
+      reconstitutionTime: '23:59',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('reconstitutionDate un día después de vaccinationDate falla', () => {
+    const schema = createNotificationDiluentSchema({ vaccinationDate: '2026-03-10' });
+    const result = schema.safeParse({ diluentName: 'Agua estéril', reconstitutionDate: '2026-03-11' });
+    expect(result.success).toBe(false);
+    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'reconstitutionDate');
+    expect(issue).toBeTruthy();
   });
 });
