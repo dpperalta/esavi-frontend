@@ -6,6 +6,7 @@ import type { NotificationFormValues, PregnancyGateState } from '@/features/noti
 import { PregnancyComplicationList } from '@/features/notification/PregnancyComplicationList';
 import { AnswerOptionField } from '@/shared/components/AnswerOptionField';
 import { DateField } from '@/shared/components/DateField';
+import { Button } from '@/shared/components/ui/button';
 import { Textarea } from '@/shared/components/ui/textarea';
 
 export interface PregnancySectionProps {
@@ -26,6 +27,11 @@ export interface PregnancySectionProps {
   // campo se muestra en `'YES'` bloqueado, pero nada escribe ese valor en el formulario; quien
   // guarda decide el envío efectivo (SPEC FE12d §4 paso 11, §3.4 tabla).
   complicationsDerived: boolean;
+  // El `GET` del bloque falló (SPEC FE12d §4 paso 14, §3.8 `notification.pregnancy.error.load`):
+  // `readyToRenderForm` ya esperaba este estado sin mostrarlo — el bloque se pintaba vacío, como
+  // si de verdad no hubiera datos, en vez de avisar que la lectura falló.
+  loadError: boolean;
+  onRetryLoad: () => void;
 }
 
 // El bloque de embarazo (SPEC FE12d §4 paso 7), encadenado al `useForm` de `NotificationStep`
@@ -41,6 +47,8 @@ export function PregnancySection({
   pregnancyId,
   isClosed,
   complicationsDerived,
+  loadError,
+  onRetryLoad,
 }: PregnancySectionProps) {
   const { t } = useTranslation();
 
@@ -81,143 +89,164 @@ export function PregnancySection({
         {/* Texto, no un icono ni un color (§3.7) — un lector de pantalla tiene que anunciarla
             junto al título, porque cambia el significado de todo lo que hay debajo. */}
         {pregnancyGate === 'visibleIfApplicable' && (
-          <span className="text-xs text-muted-foreground">{t('notification.pregnancy.ifApplicable')}</span>
+          <span className="text-xs text-muted-foreground">
+            {t('notification.pregnancy.ifApplicable')}
+          </span>
         )}
-        <span className="text-sm font-medium text-foreground">{t('notification.pregnancy.sectionTitle')}</span>
+        <span className="text-sm font-medium text-foreground">
+          {t('notification.pregnancy.sectionTitle')}
+        </span>
       </div>
 
-      {/* La configuración ausente no es un error del usuario (§3.6): el resto del paso 4 sigue
-          funcionando entero, así que se explica en el propio bloque, con `aria-describedby` en
-          cada control (§3.7) en vez de sólo deshabilitarlo. */}
-      {configMissing && (
-        <p id="pregnancy-notConfigured" role="alert" className="text-sm text-muted-foreground">
-          {t('notification.pregnancy.notConfigured')}
-        </p>
+      {loadError && (
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-6 text-center">
+          <p role="alert" className="text-sm text-destructive">
+            {t('notification.pregnancy.error.load')}
+          </p>
+          <Button type="button" variant="outline" size="sm" onClick={onRetryLoad}>
+            {t('common.table.retry')}
+          </Button>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-foreground">
-            {t('notification.pregnancy.field.wasPregnantAtVaccination')}
-          </span>
-          <Controller
-            control={control}
-            name="wasPregnantAtVaccination"
-            render={({ field }) => (
-              <AnswerOptionField
-                value={field.value ?? null}
-                onChange={field.onChange}
-                ariaLabel={t('notification.pregnancy.field.wasPregnantAtVaccination')}
-                variant="unknown"
+      {!loadError && (
+        <>
+          {/* La configuración ausente no es un error del usuario (§3.6): el resto del paso 4 sigue
+              funcionando entero, así que se explica en el propio bloque, con `aria-describedby` en
+              cada control (§3.7) en vez de sólo deshabilitarlo. */}
+          {configMissing && (
+            <p id="pregnancy-notConfigured" role="alert" className="text-sm text-muted-foreground">
+              {t('notification.pregnancy.notConfigured')}
+            </p>
+          )}
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.pregnancy.field.wasPregnantAtVaccination')}
+              </span>
+              <Controller
+                control={control}
+                name="wasPregnantAtVaccination"
+                render={({ field }) => (
+                  <AnswerOptionField
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    ariaLabel={t('notification.pregnancy.field.wasPregnantAtVaccination')}
+                    variant="unknown"
+                    disabled={configMissing}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.pregnancy.field.wasPregnantAtEsavi')}
+              </span>
+              <Controller
+                control={control}
+                name="wasPregnantAtEsavi"
+                render={({ field }) => (
+                  <AnswerOptionField
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    ariaLabel={t('notification.pregnancy.field.wasPregnantAtEsavi')}
+                    variant="unknown"
+                    disabled={configMissing}
+                  />
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.pregnancy.field.lastMenstruationDate')}
+              </span>
+              <DateField
+                value={lastMenstruationField.field.value ?? null}
+                onChange={handleLastMenstruationChange}
+                ariaLabel={t('notification.pregnancy.field.lastMenstruationDate')}
+                allowFuture={false}
                 disabled={configMissing}
               />
-            )}
-          />
-        </div>
+            </div>
 
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-foreground">
-            {t('notification.pregnancy.field.wasPregnantAtEsavi')}
-          </span>
-          <Controller
-            control={control}
-            name="wasPregnantAtEsavi"
-            render={({ field }) => (
-              <AnswerOptionField
-                value={field.value ?? null}
-                onChange={field.onChange}
-                ariaLabel={t('notification.pregnancy.field.wasPregnantAtEsavi')}
-                variant="unknown"
-                disabled={configMissing}
-              />
-            )}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-foreground">
-            {t('notification.pregnancy.field.lastMenstruationDate')}
-          </span>
-          <DateField
-            value={lastMenstruationField.field.value ?? null}
-            onChange={handleLastMenstruationChange}
-            ariaLabel={t('notification.pregnancy.field.lastMenstruationDate')}
-            allowFuture={false}
-            disabled={configMissing}
-          />
-        </div>
-
-        {/* Futura permitida (§3.5) — una gestación en curso tiene el parto por delante. El error
+            {/* Futura permitida (§3.5) — una gestación en curso tiene el parto por delante. El error
             del rango de Naegele se anuncia con una región viva al aparecer (§3.7): se produce al
             tocar una fecha, no al enviar — ya reactivo desde el paso 7, el `superRefine` de
             `notificationSaveSchema` corre en cada cambio con `reValidateMode: 'onChange'`. */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-foreground">
-            {t('notification.pregnancy.field.probableDeliveryDate')}
-          </span>
-          <DateField
-            value={probableDeliveryField.field.value ?? null}
-            onChange={probableDeliveryField.field.onChange}
-            ariaLabel={t('notification.pregnancy.field.probableDeliveryDate')}
-            allowFuture
-            disabled={configMissing}
-          />
-          <p className="text-xs text-muted-foreground">
-            {t('notification.pregnancy.help.probableDeliveryDateSuggested')}
-          </p>
-          <div aria-live="polite">
-            {probableDeliveryField.fieldState.error && (
-              <p role="alert" className="text-sm text-destructive">
-                {t('notification.pregnancy.error.deliveryDateOutOfRange')}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.pregnancy.field.probableDeliveryDate')}
+              </span>
+              <DateField
+                value={probableDeliveryField.field.value ?? null}
+                onChange={probableDeliveryField.field.onChange}
+                ariaLabel={t('notification.pregnancy.field.probableDeliveryDate')}
+                allowFuture
+                disabled={configMissing}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('notification.pregnancy.help.probableDeliveryDateSuggested')}
+              </p>
+              <div aria-live="polite">
+                {probableDeliveryField.fieldState.error && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {t('notification.pregnancy.error.deliveryDateOutOfRange')}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-foreground">
+              {t('notification.pregnancy.field.hasComplications')}
+            </span>
+            <Controller
+              control={control}
+              name="hasComplications"
+              render={({ field }) => (
+                <AnswerOptionField
+                  value={complicationsDerived ? 'YES' : (field.value ?? null)}
+                  onChange={field.onChange}
+                  ariaLabel={t('notification.pregnancy.field.hasComplications')}
+                  variant="unknown"
+                  disabled={configMissing || complicationsDerived}
+                />
+              )}
+            />
+            {/* §6.5: no basta con deshabilitar el control — sin el texto, un campo gris es
+            indistinguible de un fallo (§3.7). */}
+            {complicationsDerived && (
+              <p className="text-sm text-muted-foreground">
+                {t('notification.pregnancy.derived.hasComplications')}
               </p>
             )}
           </div>
-        </div>
-      </div>
 
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-foreground">
-          {t('notification.pregnancy.field.hasComplications')}
-        </span>
-        <Controller
-          control={control}
-          name="hasComplications"
-          render={({ field }) => (
-            <AnswerOptionField
-              value={complicationsDerived ? 'YES' : (field.value ?? null)}
-              onChange={field.onChange}
-              ariaLabel={t('notification.pregnancy.field.hasComplications')}
-              variant="unknown"
-              disabled={configMissing || complicationsDerived}
-            />
-          )}
-        />
-        {/* §6.5: no basta con deshabilitar el control — sin el texto, un campo gris es
-            indistinguible de un fallo (§3.7). */}
-        {complicationsDerived && (
-          <p className="text-sm text-muted-foreground">{t('notification.pregnancy.derived.hasComplications')}</p>
-        )}
-      </div>
-
-      <Controller
-        control={control}
-        name="pregnancyNotes"
-        render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="pregnancy-notes" className="text-sm font-medium text-foreground">
-              {t('notification.pregnancy.field.notes')}
-            </label>
-            <Textarea
-              id="pregnancy-notes"
-              value={field.value ?? ''}
-              onChange={(event) => field.onChange(event.target.value || null)}
-              disabled={configMissing}
-            />
-          </div>
-        )}
-      />
+          <Controller
+            control={control}
+            name="pregnancyNotes"
+            render={({ field }) => (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="pregnancy-notes" className="text-sm font-medium text-foreground">
+                  {t('notification.pregnancy.field.notes')}
+                </label>
+                <Textarea
+                  id="pregnancy-notes"
+                  value={field.value ?? ''}
+                  onChange={(event) => field.onChange(event.target.value || null)}
+                  disabled={configMissing}
+                />
+              </div>
+            )}
+          />
+        </>
+      )}
 
       <PregnancyComplicationList pregnancyId={pregnancyId} readOnly={isClosed} />
     </div>

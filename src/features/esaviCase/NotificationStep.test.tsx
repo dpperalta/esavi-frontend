@@ -1922,6 +1922,91 @@ function mockDerivationScenario(complicationCount: 0 | 1) {
   };
 }
 
+describe('NotificationStep — el GET del bloque de embarazo falla (SPEC FE12d §4 paso 14)', () => {
+  it('muestra un banner de error con reintento, en vez de pintar el bloque vacío en silencio', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockNotificationDetail();
+
+    let pregnancyGetCalls = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+      ),
+      http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            notificationId: SEVERE_NOTIFICATION_1,
+            hasPreviousEventHistory: null,
+            hasAllergyToOtherVaccines: null,
+            hasAllergyToMedications: null,
+            hasAllergyToPreviousSameVaccine: null,
+            hasPregnancyComplications: null,
+            pregnancyComplicationsDescription: null,
+            notes: null,
+            createdAt: '2026-01-02T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            notification: {
+              notificationId: NOTIFICATION_1,
+              notificationType: 'SEVERE',
+              esaviDescription: 'Reacción local en el sitio de aplicación',
+              isActive: true,
+              case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+            },
+          },
+        }),
+      ),
+      http.get(`http://localhost:4500/api/notification-events/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get(`http://localhost:4500/api/notification-medications/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () => {
+        pregnancyGetCalls++;
+        if (pregnancyGetCalls === 1) {
+          return HttpResponse.json(
+            { ok: false, message: 'error inesperado', code: 'UNKNOWN_ERROR' },
+            { status: 500 },
+          );
+        }
+        return HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        );
+      }),
+    );
+
+    renderNotificationStep();
+
+    await screen.findByLabelText('Descripción del ESAVI');
+    expect(await screen.findByText('No pudimos cargar el bloque de embarazo.')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Reintentar' }));
+
+    await waitFor(() => expect(pregnancyGetCalls).toBe(2));
+    await waitFor(() =>
+      expect(screen.queryByText('No pudimos cargar el bloque de embarazo.')).not.toBeInTheDocument(),
+    );
+    // El 404 de reintento resuelve como «sin fila todavía» (§3.6), así que los campos del bloque
+    // vuelven a aparecer en vez de quedarse en el banner.
+    expect(
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+    ).toBeInTheDocument();
+  }, 30000);
+});
+
 describe('NotificationStep — la derivación de §6.5 (SPEC FE12d §4 paso 11)', () => {
   it('con ≥1 complicación activa, los dos campos se muestran «Sí» bloqueados y así viajan en el guardado normal, sin PUT propio', async () => {
     const user = setupUser();

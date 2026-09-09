@@ -837,7 +837,8 @@
       "error": {
         "deliveryDateOutOfRange": "Tussen de laatste menstruatie en de vermoedelijke bevallingsdatum moeten 266 tot 294 dagen liggen.",
         "patientNotFemale": "Het geregistreerde geslacht van de patiënt is «{{sex}}»: het zwangerschapsblok vereist een vrouwelijke patiënt. Corrigeer dit in stap 1 als dit een invoerfout was.",
-        "alreadyExists": "Er bestaat al een ingetrokken zwangerschapsblok voor deze melding. Het opnieuw activeren vereist een superbeheerder; er kan geen nieuw blok worden aangemaakt."
+        "alreadyExists": "Er bestaat al een ingetrokken zwangerschapsblok voor deze melding. Het opnieuw activeren vereist een superbeheerder; er kan geen nieuw blok worden aangemaakt.",
+        "load": "We konden het zwangerschapsblok niet laden."
       },
       "derived": {
         "hasComplications": "Er is minstens één complicatie geregistreerd: dit wordt automatisch beantwoord met «Ja»."

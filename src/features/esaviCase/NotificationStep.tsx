@@ -67,7 +67,10 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
-import { PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE, usePregnancyGate } from '@/shared/hooks/usePregnancyGate';
+import {
+  PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE,
+  usePregnancyGate,
+} from '@/shared/hooks/usePregnancyGate';
 import { useSystemConfigByCode } from '@/shared/hooks/useSystemConfigByCode';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { esaviCaseResource } from './api';
@@ -92,7 +95,9 @@ function NotificationStepSkeleton() {
 // travel explicitly — `null` when the death section is hidden, whatever the form holds when it's
 // visible — so the same `PUT` that moves the outcome away from `DEATH` also clears the three
 // (§3.5 "al ocultarse pone los tres campos a null").
-function buildNotificationPayload(values: NotificationFormValues): Partial<CreateNotificationInput> {
+function buildNotificationPayload(
+  values: NotificationFormValues,
+): Partial<CreateNotificationInput> {
   return {
     esaviDescription: values.esaviDescription.trim(),
     hasRelevantMedicalHistory: values.hasRelevantMedicalHistory ?? null,
@@ -110,7 +115,9 @@ function buildNotificationPayload(values: NotificationFormValues): Partial<Creat
   };
 }
 
-function buildSeverePayload(values: NotificationFormValues): Partial<CreateSevereNotificationInput> {
+function buildSeverePayload(
+  values: NotificationFormValues,
+): Partial<CreateSevereNotificationInput> {
   return {
     hasPreviousEventHistory: values.hasPreviousEventHistory ?? null,
     hasAllergyToOtherVaccines: values.hasAllergyToOtherVaccines ?? null,
@@ -143,7 +150,9 @@ function buildNonSeverePayload(
   };
 }
 
-function buildPregnancyPayload(values: NotificationFormValues): Partial<CreateNotificationPregnancyInput> {
+function buildPregnancyPayload(
+  values: NotificationFormValues,
+): Partial<CreateNotificationPregnancyInput> {
   return {
     // El contrato declara `wasPregnantAtVaccination` sin `| null` porque el `001` nunca la acepta
     // vacía (§3.3) — pero el `004` sí (`notificationPregnancy.service.ts`, "nullable here although
@@ -225,6 +234,11 @@ interface NotificationFormBodyProps {
   // y sin acciones de fila. El aviso en sí lo pinta `CaseWizardPage` (FE08); esto sólo retira las
   // acciones que ese aviso ya explica que no aplican.
   isClosed: boolean;
+  // El `GET` del bloque de embarazo falló (SPEC FE12d §4 paso 14): `readyToRenderForm` ya lo
+  // espera para no parpadear, pero sin este banner el fallo quedaba en silencio y el bloque se
+  // pintaba vacío como si no hubiera datos que leer.
+  pregnancyLoadError: boolean;
+  onRetryPregnancyLoad: () => void;
 }
 
 // The form itself (SPEC FE12a §3.5, §3.1): only mounted once `NotificationStep` resolved workflow
@@ -242,6 +256,8 @@ function NotificationFormBody({
   pregnancyConfigMissing,
   patientSexName,
   isClosed,
+  pregnancyLoadError,
+  onRetryPregnancyLoad,
 }: NotificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -310,9 +326,11 @@ function NotificationFormBody({
     hasAllergyToPreviousSameVaccine: severeNotification?.hasAllergyToPreviousSameVaccine ?? null,
     // Los dos de embarazo llegan en el paso 13, junto con su compuerta.
     hasPregnancyComplications: severeNotification?.hasPregnancyComplications ?? null,
-    pregnancyComplicationsDescription: severeNotification?.pregnancyComplicationsDescription ?? null,
+    pregnancyComplicationsDescription:
+      severeNotification?.pregnancyComplicationsDescription ?? null,
     severeNotes: severeNotification?.notes ?? null,
-    vaccinationHealthFacilityId: nonSevereNotification?.vaccinationHealthFacility?.healthFacilityId ?? null,
+    vaccinationHealthFacilityId:
+      nonSevereNotification?.vaccinationHealthFacility?.healthFacilityId ?? null,
     vaccinationSiteItemId: nonSevereNotification?.vaccinationSite?.catalogItemId ?? null,
     vaccinationCenterAddress: nonSevereNotification?.vaccinationCenterAddress ?? null,
     vaccinationGeoLocationId: nonSevereNotification?.vaccinationGeoLocation?.geoLocationId ?? null,
@@ -363,11 +381,14 @@ function NotificationFormBody({
     }
     // 'restore': gana el borrador sobre los valores de la fila que `defaultValues` ya sembró.
     const draftValues = draft?.values as NotificationFormValues;
-    (Object.entries(draftValues) as [keyof NotificationFormValues, NotificationFormValues[keyof NotificationFormValues]][]).forEach(
-      ([key, value]) => {
-        form.setValue(key, value, { shouldDirty: true });
-      },
-    );
+    (
+      Object.entries(draftValues) as [
+        keyof NotificationFormValues,
+        NotificationFormValues[keyof NotificationFormValues],
+      ][]
+    ).forEach(([key, value]) => {
+      form.setValue(key, value, { shouldDirty: true });
+    });
     toast.info(t('notification.draft.restored'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -383,7 +404,9 @@ function NotificationFormBody({
     if (!hasResolvedDraftRef.current || !form.formState.isDirty) return;
     if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
     draftDebounceRef.current = setTimeout(() => {
-      useDraftsStore.getState().set(caseId, 'notification', watchedValues, baseUpdatedAtRef.current);
+      useDraftsStore
+        .getState()
+        .set(caseId, 'notification', watchedValues, baseUpdatedAtRef.current);
     }, 500);
     return () => {
       if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
@@ -536,7 +559,9 @@ function NotificationFormBody({
           throw err;
         }
         const alreadyExistsCode =
-          notificationType === 'SEVERE' ? 'SEVNOT_001_ALREADY_EXISTS' : 'NSEVNOT_001_ALREADY_EXISTS';
+          notificationType === 'SEVERE'
+            ? 'SEVNOT_001_ALREADY_EXISTS'
+            : 'NSEVNOT_001_ALREADY_EXISTS';
         // Se trata como éxito (SPEC FE12a §3.5, §6): el `POST` anterior sí llegó, sólo se perdió
         // la respuesta — no hay nada que reintentar en esta fase, sólo releer con el `006` y
         // continuar la cadena hacia el bloque de embarazo (SPEC FE12d §4 paso 8: sin `return`).
@@ -561,7 +586,9 @@ function NotificationFormBody({
             return;
           }
           const branchFieldMap =
-            notificationType === 'SEVERE' ? severeNotificationErrorFieldMap : nonSevereNotificationErrorFieldMap;
+            notificationType === 'SEVERE'
+              ? severeNotificationErrorFieldMap
+              : nonSevereNotificationErrorFieldMap;
           const field = branchFieldMap[err.code];
           if (field) {
             form.setError(field, { type: 'server', message: err.message });
@@ -605,7 +632,9 @@ function NotificationFormBody({
           // Los tres propios de §3.5 con toast propio — ninguno señala un campo del formulario que
           // el usuario pueda corregir ahí mismo.
           if (err.code === NOTIFPRG_PATIENT_NOT_FEMALE) {
-            toast.error(t('notification.pregnancy.error.patientNotFemale', { sex: patientSexName ?? '—' }));
+            toast.error(
+              t('notification.pregnancy.error.patientNotFemale', { sex: patientSexName ?? '—' }),
+            );
             return;
           }
           if (err.code === NOTIFPRG_SEX_CONFIG_MISSING) {
@@ -663,7 +692,10 @@ function NotificationFormBody({
     ],
   );
 
-  const performSave = useCallback(() => form.handleSubmit(handleValidSubmit)(), [form, handleValidSubmit]);
+  const performSave = useCallback(
+    () => form.handleSubmit(handleValidSubmit)(),
+    [form, handleValidSubmit],
+  );
 
   const pendingFields = computePendingFields(
     watchedValues,
@@ -715,7 +747,10 @@ function NotificationFormBody({
         name="esaviDescription"
         render={({ field, fieldState }) => (
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="notification-esaviDescription" className="text-sm font-medium text-foreground">
+            <label
+              htmlFor="notification-esaviDescription"
+              className="text-sm font-medium text-foreground"
+            >
               {t('notification.fields.esaviDescription')}
             </label>
             <Textarea
@@ -792,7 +827,12 @@ function NotificationFormBody({
         readOnly={isClosed}
         takesMedication={watchedValues.takesMedication ?? null}
       />
-      <VaccineList caseId={caseId} notificationId={notificationId} eventDate={eventDate} readOnly={isClosed} />
+      <VaccineList
+        caseId={caseId}
+        notificationId={notificationId}
+        eventDate={eventDate}
+        readOnly={isClosed}
+      />
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-foreground">
@@ -884,7 +924,9 @@ function NotificationFormBody({
         <span className="text-sm font-medium text-foreground">
           {t('notification.fields.requestInvestigation')}
         </span>
-        <p className="text-sm text-muted-foreground">{t('notification.help.requestInvestigation')}</p>
+        <p className="text-sm text-muted-foreground">
+          {t('notification.help.requestInvestigation')}
+        </p>
         <Controller
           control={form.control}
           name="requestInvestigation"
@@ -920,6 +962,8 @@ function NotificationFormBody({
         pregnancyId={pregnancyId}
         isClosed={isClosed}
         complicationsDerived={hasActiveComplications}
+        loadError={pregnancyLoadError}
+        onRetryLoad={onRetryPregnancyLoad}
       />
 
       {notificationType === 'SEVERE' ? (
@@ -933,7 +977,9 @@ function NotificationFormBody({
       ) : (
         <NonSevereNotificationFields
           control={form.control}
-          initialHealthFacilityLabel={nonSevereNotification?.vaccinationHealthFacility?.name ?? null}
+          initialHealthFacilityLabel={
+            nonSevereNotification?.vaccinationHealthFacility?.name ?? null
+          }
           verifiedOtherSource={watchedValues.verifiedOtherSource}
           otherSourceDescription={watchedValues.otherSourceDescription}
         />
@@ -984,8 +1030,16 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       ? ('SEVERE' as const)
       : ('NON_SEVERE' as const)
     : undefined;
-  const severeNotification = useSevereNotificationByCase(caseId, notificationTypeMaybe, stageExists);
-  const nonSevereNotification = useNonSevereNotificationByCase(caseId, notificationTypeMaybe, stageExists);
+  const severeNotification = useSevereNotificationByCase(
+    caseId,
+    notificationTypeMaybe,
+    stageExists,
+  );
+  const nonSevereNotification = useNonSevereNotificationByCase(
+    caseId,
+    notificationTypeMaybe,
+    stageExists,
+  );
   const activeBranch =
     notificationTypeMaybe === 'SEVERE'
       ? severeNotification
@@ -1043,13 +1097,19 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
     classification.error.code === 'CLASSIF_006_NOT_FOUND';
 
   if (classificationInactive) {
-    return <p className="text-sm text-muted-foreground">{t('notification.blocked.classificationInactive')}</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {t('notification.blocked.classificationInactive')}
+      </p>
+    );
   }
 
   const loadError = notification.error ?? activeBranch?.error;
   if (notification.isError || activeBranch?.isError) {
     const message =
-      loadError instanceof EsaviApiError ? getErrorMessage(loadError) : t('common.errors.unexpected');
+      loadError instanceof EsaviApiError
+        ? getErrorMessage(loadError)
+        : t('common.errors.unexpected');
     return (
       <div className="flex items-center gap-2">
         <p className="text-sm text-destructive">{message}</p>
@@ -1090,6 +1150,8 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       pregnancyConfigMissing={pregnancyConfigMissing}
       patientSexName={patient.data?.sex?.name ?? null}
       isClosed={isClosed}
+      pregnancyLoadError={notificationPregnancy.isError}
+      onRetryPregnancyLoad={() => void notificationPregnancy.refetch()}
     />
   );
 }

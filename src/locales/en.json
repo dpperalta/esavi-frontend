@@ -837,7 +837,8 @@
       "error": {
         "deliveryDateOutOfRange": "There must be between 266 and 294 days between the last menstruation and the probable delivery date.",
         "patientNotFemale": "The patient's registered sex is «{{sex}}»: the pregnancy block requires a female patient. Fix it in step 1 if this was a capture mistake.",
-        "alreadyExists": "A withdrawn pregnancy block already exists for this notification. Reactivating it requires a superadmin; a new one cannot be created."
+        "alreadyExists": "A withdrawn pregnancy block already exists for this notification. Reactivating it requires a superadmin; a new one cannot be created.",
+        "load": "We couldn't load the pregnancy block."
       },
       "derived": {
         "hasComplications": "At least one complication is registered: this is automatically answered «Yes»."
