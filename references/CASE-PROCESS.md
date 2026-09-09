@@ -2453,9 +2453,10 @@ Pedirlos es el error más fácil de cometer, porque están en el DDL como cualqu
 | **FE10** — Pasos 1 y 2 | Paciente y apertura del caso. Los dos juntos porque son los únicos que ocurren **sin `caseId`** | §5.1, §5.2 |
 | **FE11** — Paso 3 | Clasificación inicial. Fija la gravedad, que manda sobre todo lo demás | §5.3, §6.1 |
 | **FE12a** — Paso 4, cabecera y rama | `notification`, `severeNotification`, `nonSevereNotification`. 33 columnas y la regla de fallecimiento | §5.4, §6.1, §7 |
-| **FE12b** — Paso 4, eventos, medicación y antecedentes | `notificationEvent` (13 col.), `notificationMedication` (11) y `notificationMedicalHistory` (6). La resolución del término, las dos reglas de «otro» y la compuerta de `takesMedication`. Deja `<SatelliteList>`, `<MeddraSearchField>` y `<TimeField>`. **Bloqueado por §10.4** | §5.4b, §7.3 |
+| **FE12b** — Paso 4, eventos y medicación | `notificationEvent` (13 col.) y `notificationMedication` (11). La resolución del término, las dos reglas de «otro» y la compuerta de `takesMedication`. Deja `<SatelliteList>`, `<MeddraSearchField>` y `<TimeField>`. **Bloqueado por §10.4** | §5.4b, §7.3 |
 | **FE12c** — Paso 4, vacunas y diluyentes | `notificationVaccine` (14) y `notificationDiluent` (10). El árbol de cinco niveles, los tres textos copiados y las dos coherencias temporales. Deja `<WhodrugTreePicker>` y `<SearchableSelect>`. **Bloqueado por §10.4** | §5.4b |
 | **FE12d** — Paso 4, embarazo y complicaciones | `notificationPregnancy` (8) y `notificationPregnancyComplication` (8). La compuerta de §7.4, el rango de Naegele y la derivación de §6.5. **Bloqueado además por §10.6** | §5.4b, §6.5, §7.4 |
+| **FE12e** — Paso 4, orden del formulario y antecedentes médicos | `notificationMedicalHistory` (6), el séptimo satélite, con su resolución del término y su compuerta de cinco banderas. Además el reorden del paso 4 contra `ESAVI-FORM.md`, la disolución de los dos bloques de rama y las etiquetas literales del formulario | §5.4b, §7.3 |
 | **FE13a…d** — Paso 5 | Investigación: cabecera, 8 satélites 1:1, 3 listas y 2 nietas. **Se parte en cuatro**, con el reparto de §5.5.0; los diagnósticos de §5.5.6 van con `FE13d`, que es el bloque de conclusión. Sin bloque de COVID (§10.7) | §5.5, §7 |
 | **FE14** — Paso 6 | Clasificación final y cierre, con las cuatro precondiciones de §4.4 | §5.6, §4.4 |
 
@@ -2469,7 +2470,7 @@ Pedirlos es el error más fácil de cometer, porque están en el DDL como cualqu
 
 | Pieza | Quién la necesita primero |
 |---|---|
-| `<EntitySearchSelect>` | FE10 (unidad de salud) y FE12b (términos diagnósticos, en eventos y en antecedentes) |
+| `<EntitySearchSelect>` | FE10 (unidad de salud), FE12b (términos diagnósticos, en eventos) y FE12e (en antecedentes médicos) |
 | `<WhodrugTreePicker>` | **FE12c** — sin él no hay selector de vacuna. Contrato en §5.4b |
 | `<MeddraSearchField>` | **FE12b**. Contrato en §5.4b |
 | `<AnswerOptionField>` | FE12a. Luego **FE12d** y las cuatro de FE13 |
