@@ -845,6 +845,17 @@
       "help": {
         "probableDeliveryDateSuggested": "Voorgesteld op basis van de laatste menstruatie (+280 dagen). Je kunt dit aanpassen."
       },
+      "gate": {
+        "blockedTitle": "Er zijn zwangerschapsgegevens geregistreerd",
+        "blocked": {
+          "sex": "Deze wijziging van geslacht kan niet worden opgeslagen: de patiënt heeft zwangerschapsgegevens geregistreerd in stap 4. Leeg eerst het zwangerschapsblok.",
+          "age": "Deze wijziging kan niet worden opgeslagen: de patiënt zou buiten de leeftijdsrange voor zwangerschap vallen, en heeft zwangerschapsgegevens geregistreerd in stap 4. Leeg eerst het zwangerschapsblok.",
+          "complications": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Verwijder ze één voor één voordat het blok geleegd kan worden.",
+          "complicationsNeedsAdmin": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Alleen een beheerder kan ze verwijderen voordat het blok geleegd kan worden."
+        },
+        "clearBlock": "Zwangerschapsblok leegmaken",
+        "cleared": "Het zwangerschapsblok is geleegd. Je kunt de wijziging nu opslaan."
+      },
       "complications": {
         "sectionTitle": "Complicaties",
         "needsParent": "Sla het zwangerschapsblok op voordat je complicaties toevoegt.",

@@ -146,7 +146,7 @@ function SelectedPatientSummary({ patientId, onChange }: { patientId: string; on
 // Modo reentrada (SPEC FE10 §3.1, §13): identidad en sólo lectura + «Editar paciente», que abre
 // el mismo `PatientFormDialog` del paso 8 (`004`). No ofrece cambiar de paciente — no hay campo
 // de búsqueda ni selector alguno en esta rama, sólo el resumen y el botón de edición.
-function PatientStepReentry({ patientId }: { patientId: string }) {
+function PatientStepReentry({ caseId, patientId }: { caseId: string; patientId: string }) {
   const { t } = useTranslation();
   const existing = patientResource.useOne(patientId);
   const [editOpen, setEditOpen] = useState(false);
@@ -167,23 +167,25 @@ function PatientStepReentry({ patientId }: { patientId: string }) {
           {t('patient.reentry.editButton')}
         </Button>
       </CardContent>
-      <PatientFormDialog open={editOpen} patientId={patientId} onOpenChange={setEditOpen} />
+      <PatientFormDialog open={editOpen} caseId={caseId} patientId={patientId} onOpenChange={setEditOpen} />
     </Card>
   );
 }
 
 export interface PatientStepProps {
-  // Sólo lo pasa `CaseWizardPage` en modo reentrada — el `patient.patientId` ya resuelto del caso
-  // que esa página ya obtuvo. Su ausencia es la señal de que se está en el alta
-  // (`/esavi-cases/new/patient`); este componente no vuelve a pedir el caso por su cuenta.
+  // Sólo lo pasa `CaseWizardPage` en modo reentrada, junto con `patientId` — el bloqueo de SPEC
+  // FE12d §4 paso 13 necesita el caso para leer si hay datos de embarazo cargados. El alta
+  // (`/esavi-cases/new/patient`) no tiene caso todavía, así que nunca puede cerrar una compuerta
+  // que no existe.
+  caseId?: string;
   patientId?: string;
 }
 
 // Paso 1 del alta y, con `patientId`, su reentrada (SPEC FE10 §3.1, §13): buscar o crear al
 // paciente, o mostrarlo de sólo lectura con edición.
-export function PatientStep({ patientId: reentryPatientId }: PatientStepProps = {}) {
-  if (reentryPatientId) {
-    return <PatientStepReentry patientId={reentryPatientId} />;
+export function PatientStep({ caseId, patientId: reentryPatientId }: PatientStepProps = {}) {
+  if (reentryPatientId && caseId) {
+    return <PatientStepReentry caseId={caseId} patientId={reentryPatientId} />;
   }
   return <PatientStepCreate />;
 }

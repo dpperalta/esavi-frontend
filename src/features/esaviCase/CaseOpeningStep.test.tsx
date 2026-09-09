@@ -24,8 +24,77 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+// `usePregnancyBlockGuard` (SPEC FE12d §4 paso 13) pide `case-workflows/case/:id` y
+// `patients/:id` en cada montaje de `CaseOpeningStep` en reentrada, no sólo en los tests del
+// bloqueo — sin este respaldo, `onUnhandledRequest: 'error'` tumbaría el resto de la suite. Sin
+// etapa de notificación, la cadena del guard se detiene ahí (§3.4): ningún otro test de este
+// archivo necesita que el guard bloquee nada.
+function mockPregnancyGuardChainClosed() {
+  server.use(
+    http.get('http://localhost:4500/api/system-configs/code/PREGNANCY_FEMALE_SEX_ITEM', () =>
+      HttpResponse.json(
+        { ok: false, message: 'not found', code: 'SYSCONF_006_NOT_FOUND' },
+        { status: 404 },
+      ),
+    ),
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          caseWorkflowId: 'workflow-1',
+          caseId: CASE_1,
+          status: { catalogItemId: 'status-1', code: 'IN_CASE_OPENING', name: 'Apertura' },
+          previousStatus: null,
+          openedAt: '2026-01-01T00:00:00.000Z',
+          closedAt: null,
+          lastReopenedAt: null,
+          reopenCount: 0,
+          stages: {
+            classification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+            notification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+            investigation: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+            finalClassification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+          },
+          totalDurationMinutes: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/patients/${PATIENT_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          patientId: PATIENT_1,
+          names: 'Ana',
+          lastNames: 'Pérez',
+          documentNumber: '1712345678',
+          passportNumber: null,
+          birthDate: null,
+          healthSystemCode: 'HSC-0001',
+          email: null,
+          phoneNumber: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          sex: null,
+          residence: null,
+        },
+      }),
+    ),
+  );
+}
+
 beforeEach(() => {
   localStorage.clear();
+  mockPregnancyGuardChainClosed();
 });
 
 function signInAs(roleName: string, level: number) {
@@ -201,7 +270,11 @@ describe('CaseOpeningStep — reentrada (SPEC FE10 §5)', () => {
     );
 
     await screen.findByText('ESAVI-2026-0001');
-    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+    const saveButton = screen.getByRole('button', { name: 'Guardar' });
+    // El guard de embarazo del paso 13 pide sus propias lecturas al montar (§3.4) — «Guardar»
+    // queda inerte hasta que resuelven, para no dejar pasar la escritura que existe para impedir.
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
 
     await waitFor(() => expect(receivedBody).not.toBeNull());
     expect(receivedBody).not.toHaveProperty('patientId');
@@ -476,4 +549,187 @@ describe('CaseOpeningStep — aviso de eventDate contra vacunas (SPEC FE12c §8)
 
     await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
   }, 30000);
+});
+
+const NOTIFICATION_1 = '55555555-5555-4555-8555-555555555555';
+const PREGNANCY_1 = '66666666-6666-4666-8666-666666666666';
+
+describe('CaseOpeningStep — el bloqueo de embarazo del paso 13 (SPEC FE12d §4 paso 13, §8)', () => {
+  it('un eventDate que deja la edad fuera de 15–49 con datos de embarazo cargados no guarda; «Vaciar» lo limpia y entonces sí', async () => {
+    const user = setupUser();
+    signInAs('ADMIN', 50);
+    mockCountryIsoCodeFallback();
+    mockHealthFacilitySearch();
+    mockVaccines(CASE_1, []);
+    let pregnancyRow: Record<string, unknown> | null = {
+      pregnancyId: PREGNANCY_1,
+      notificationId: NOTIFICATION_1,
+      wasPregnantAtVaccination: 'NO',
+      wasPregnantAtEsavi: null,
+      lastMenstruationDate: null,
+      probableDeliveryDate: null,
+      hasComplications: null,
+      notes: null,
+      isActive: true,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: null,
+      deletedAt: null,
+      appDetails: [],
+    };
+    let pregnancyPutBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`http://localhost:4500/api/esavi-cases/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: makeCaseDetail({ eventDate: '2026-01-15' }) }),
+      ),
+      // El paciente es mujer en edad fértil hoy (26 años el 2026-01-15): la compuerta está abierta
+      // con el `eventDate` actual, y el cambio a un `eventDate` mucho más antiguo la cerraría.
+      http.get(`http://localhost:4500/api/patients/${PATIENT_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            patientId: PATIENT_1,
+            names: 'Ana',
+            lastNames: 'Pérez',
+            documentNumber: '1712345678',
+            passportNumber: null,
+            birthDate: '2000-01-15',
+            healthSystemCode: 'HSC-0001',
+            email: null,
+            phoneNumber: null,
+            isActive: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+            sex: { catalogItemId: 'sex-FEMALE', code: 'FEMALE', name: 'Femenino', value: 'FEMALE' },
+            residence: null,
+          },
+        }),
+      ),
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            caseWorkflowId: 'workflow-1',
+            caseId: CASE_1,
+            status: { catalogItemId: 'status-1', code: 'IN_NOTIFICATION', name: 'En notificación' },
+            previousStatus: null,
+            openedAt: '2026-01-01T00:00:00.000Z',
+            closedAt: null,
+            lastReopenedAt: null,
+            reopenCount: 0,
+            stages: {
+              classification: {
+                exists: true,
+                id: 'classification-1',
+                startedAt: '2026-01-01T00:00:00.000Z',
+                endedAt: '2026-01-01T00:00:00.000Z',
+                durationMinutes: 5,
+              },
+              notification: {
+                exists: true,
+                id: NOTIFICATION_1,
+                startedAt: '2026-01-02T00:00:00.000Z',
+                endedAt: null,
+                durationMinutes: null,
+              },
+              investigation: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+              finalClassification: {
+                exists: false,
+                id: null,
+                startedAt: null,
+                endedAt: null,
+                durationMinutes: null,
+              },
+            },
+            totalDurationMinutes: null,
+            isActive: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+          },
+        }),
+      ),
+      http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { notificationId: NOTIFICATION_1, notificationType: 'NON_SEVERE' },
+        }),
+      ),
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+        pregnancyRow
+          ? HttpResponse.json({ ok: true, message: 'ok', data: pregnancyRow })
+          : HttpResponse.json(
+              { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+              { status: 404 },
+            ),
+      ),
+      http.put(`http://localhost:4500/api/notification-pregnancies/${PREGNANCY_1}`, async ({ request }) => {
+        pregnancyPutBody = (await request.json()) as Record<string, unknown>;
+        pregnancyRow = { ...pregnancyRow, ...pregnancyPutBody };
+        return HttpResponse.json({ ok: true, message: 'ok', data: pregnancyRow });
+      }),
+      http.get(
+        `http://localhost:4500/api/notification-pregnancy-complications/pregnancy/${PREGNANCY_1}`,
+        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+    mockEmptyNotifierList(CASE_1);
+    let esaviCasePutCalls = 0;
+    server.use(
+      http.put(`http://localhost:4500/api/esavi-cases/${CASE_1}`, async () => {
+        esaviCasePutCalls++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: makeCaseDetail({ eventDate: '2005-01-15' }) });
+      }),
+    );
+
+    const router = createMemoryRouter(
+      [{ path: '/esavi-cases/:id/wizard/case-opening', element: <CaseOpeningStep /> }],
+      { initialEntries: [`/esavi-cases/${CASE_1}/wizard/case-opening`] },
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+
+    const eventDateInput = await screen.findByLabelText('Fecha del evento');
+    // A los 5 años, muy fuera de 15–49 (SPEC FE12d §4 paso 13, verificación).
+    fireEvent.change(eventDateInput, { target: { value: '2005-01-15' } });
+
+    const saveButton = screen.getByRole('button', { name: 'Guardar' });
+    // El guard pide siete lecturas propias al montar (§3.4) — sin esperar a que resuelvan, el
+    // primer «Guardar» encontraría `hasPregnancyData` en `false` por falta de datos, no porque no
+    // los haya (SPEC FE12d §4 paso 13, race descubierta al escribir este mismo test).
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    expect(await screen.findByText('Hay datos de embarazo cargados')).toBeInTheDocument();
+    expect(esaviCasePutCalls).toBe(0);
+
+    await user.click(screen.getByRole('button', { name: 'Vaciar el bloque de embarazo' }));
+
+    await waitFor(() => expect(pregnancyPutBody).not.toBeNull());
+    expect(pregnancyPutBody).toMatchObject({
+      wasPregnantAtVaccination: null,
+      wasPregnantAtEsavi: null,
+      lastMenstruationDate: null,
+      probableDeliveryDate: null,
+      hasComplications: null,
+      notes: null,
+    });
+    // Sin `<Toaster>` montado en este árbol de render, el aviso no deja rastro visible (mismo
+    // motivo que documenta `PatientFormDialog.test.tsx`) — la prueba real de que se desbloqueó es
+    // que el segundo «Guardar» sí llega al `PUT` del caso.
+    await waitFor(() => expect(screen.queryByText('Hay datos de embarazo cargados')).not.toBeInTheDocument());
+
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+    await waitFor(() => expect(esaviCasePutCalls).toBe(1));
+  }, 60000);
 });

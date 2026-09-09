@@ -845,6 +845,17 @@
       "help": {
         "probableDeliveryDateSuggested": "Sugerida a partir de la última menstruación (+280 días). Puedes editarla."
       },
+      "gate": {
+        "blockedTitle": "Hay datos de embarazo cargados",
+        "blocked": {
+          "sex": "No se puede guardar este cambio de sexo: el paciente tiene datos de embarazo registrados en el paso 4. Vacía primero el bloque de embarazo.",
+          "age": "No se puede guardar este cambio: dejaría al paciente fuera del rango de edad del embarazo, y tiene datos de embarazo registrados en el paso 4. Vacía primero el bloque de embarazo.",
+          "complications": "Hay {{count}} complicación(es) activa(s) registradas. Retíralas una a una antes de poder vaciar el bloque.",
+          "complicationsNeedsAdmin": "Hay {{count}} complicación(es) activa(s) registradas. Sólo un administrador puede retirarlas antes de poder vaciar el bloque."
+        },
+        "clearBlock": "Vaciar el bloque de embarazo",
+        "cleared": "El bloque de embarazo se vació. Ya puedes guardar el cambio."
+      },
       "complications": {
         "sectionTitle": "Complicaciones",
         "needsParent": "Guarda el bloque de embarazo antes de añadir complicaciones.",

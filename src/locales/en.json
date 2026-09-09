@@ -845,6 +845,17 @@
       "help": {
         "probableDeliveryDateSuggested": "Suggested from the last menstruation (+280 days). You can edit it."
       },
+      "gate": {
+        "blockedTitle": "There is pregnancy data on file",
+        "blocked": {
+          "sex": "This sex change cannot be saved: the patient has pregnancy data recorded in step 4. Clear the pregnancy block first.",
+          "age": "This change cannot be saved: it would leave the patient outside the pregnancy age range, and the patient has pregnancy data recorded in step 4. Clear the pregnancy block first.",
+          "complications": "There are {{count}} active complication(s) recorded. Remove them one by one before the block can be cleared.",
+          "complicationsNeedsAdmin": "There are {{count}} active complication(s) recorded. Only an administrator can remove them before the block can be cleared."
+        },
+        "clearBlock": "Clear the pregnancy block",
+        "cleared": "The pregnancy block was cleared. You can now save the change."
+      },
       "complications": {
         "sectionTitle": "Complications",
         "needsParent": "Save the pregnancy block before adding complications.",
