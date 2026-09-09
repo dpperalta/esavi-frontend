@@ -1674,3 +1674,117 @@ describe('NotificationStep — los dos satélites conviven en el mismo paso (SPE
     expect(screen.getAllByText('Fiebre alta').length).toBeGreaterThan(0);
   }, 120000);
 });
+
+describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC FE12d §4 paso 8)', () => {
+  it('con wasPregnantAtVaccination respondido, el guardado encadena el 001 del bloque de embarazo', async () => {
+    const user = setupUser();
+    const workflowCalls = { count: 0 };
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockWorkflow(workflowCalls);
+    mockSevereNotificationBranch();
+
+    let pregnancyPostCalls = 0;
+    let lastPregnancyPostBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+      http.post('http://localhost:4500/api/notification-pregnancies', async ({ request }) => {
+        pregnancyPostCalls++;
+        lastPregnancyPostBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(
+          {
+            ok: true,
+            message: 'ok',
+            data: {
+              pregnancyId: 'pregnancy-1',
+              notificationId: NOTIFICATION_1,
+              wasPregnantAtVaccination: lastPregnancyPostBody.wasPregnantAtVaccination,
+              wasPregnantAtEsavi: null,
+              lastMenstruationDate: null,
+              probableDeliveryDate: null,
+              hasComplications: null,
+              notes: null,
+              isActive: true,
+              createdAt: '2026-01-02T00:00:00.000Z',
+              updatedAt: null,
+              deletedAt: null,
+              appDetails: [],
+            },
+          },
+          { status: 201 },
+        );
+      }),
+    );
+
+    renderNotificationStep();
+
+    const description = await screen.findByLabelText('Descripción del ESAVI');
+    await user.type(description, 'Reacción local en el sitio de aplicación');
+
+    await user.click(
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'No' }));
+
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(pregnancyPostCalls).toBe(1));
+    expect(lastPregnancyPostBody).toMatchObject({
+      notificationId: NOTIFICATION_1,
+      wasPregnantAtVaccination: 'NO',
+    });
+  }, 30000);
+
+  it('con el bloque de embarazo intacto, el guardado no dispara el 001 de embarazo (decisión de este paso, no del spec)', async () => {
+    const user = setupUser();
+    const workflowCalls = { count: 0 };
+    mockCaseDetail();
+    mockPatientDetail('FEMALE');
+    mockFemaleSexItemConfig('sex-FEMALE');
+    mockClassificationDetail(true, 30);
+    mockEmptyCatalogTypes();
+    mockWorkflow(workflowCalls);
+    mockSevereNotificationBranch();
+
+    let pregnancyPostCalls = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+      http.post('http://localhost:4500/api/notification-pregnancies', () => {
+        pregnancyPostCalls++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: {} }, { status: 201 });
+      }),
+    );
+
+    renderNotificationStep();
+
+    const description = await screen.findByLabelText('Descripción del ESAVI');
+    await user.type(description, 'Reacción local en el sitio de aplicación');
+
+    // La compuerta está abierta (paciente femenino, 30 años) — confirmado por la presencia del
+    // campo, sin tocarlo.
+    await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' });
+
+    const initialWorkflowCalls = workflowCalls.count;
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(workflowCalls.count).toBeGreaterThan(initialWorkflowCalls));
+    expect(pregnancyPostCalls).toBe(0);
+  }, 30000);
+});

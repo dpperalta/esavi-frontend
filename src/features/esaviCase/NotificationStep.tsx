@@ -5,8 +5,10 @@ import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { AnswerOption } from '@/contracts/common';
 import type { CreateNonSevereNotificationInput } from '@/contracts/nonSevereNotification';
 import type { CreateNotificationInput } from '@/contracts/notification';
+import type { CreateNotificationPregnancyInput } from '@/contracts/notificationPregnancy';
 import type { CreateSevereNotificationInput } from '@/contracts/severeNotification';
 import type { NonSevereNotificationDetail } from '@/contracts/declared/nonSevereNotification';
 import type { NotificationDetail } from '@/contracts/declared/notification';
@@ -22,6 +24,8 @@ import {
   nonSevereNotificationByCaseKey,
   nonSevereNotificationResource,
   notificationByCaseKey,
+  notificationPregnancyByNotificationKey,
+  notificationPregnancyResource,
   notificationResource,
   severeNotificationByCaseKey,
   severeNotificationResource,
@@ -36,8 +40,12 @@ import {
 import {
   createNotificationCompleteSchema,
   isDeathDateNotBeforeEventDate,
+  NOTIFPRG_ALREADY_EXISTS,
+  NOTIFPRG_PATIENT_NOT_FEMALE,
+  NOTIFPRG_SEX_CONFIG_MISSING,
   nonSevereNotificationErrorFieldMap,
   notificationErrorFieldMap,
+  notificationPregnancyErrorFieldMap,
   notificationSaveSchema,
   severeNotificationErrorFieldMap,
   type NotificationCompleteContext,
@@ -134,6 +142,22 @@ function buildNonSeverePayload(
   };
 }
 
+function buildPregnancyPayload(values: NotificationFormValues): Partial<CreateNotificationPregnancyInput> {
+  return {
+    // El contrato declara `wasPregnantAtVaccination` sin `| null` porque el `001` nunca la acepta
+    // vacía (§3.3) — pero el `004` sí (`notificationPregnancy.service.ts`, "nullable here although
+    // it is required by the 001"), y `Partial<...>` sólo añade `| undefined`, no `| null`. El cast
+    // es a propósito: en tiempo de ejecución el `null` explícito es justo lo que retira una
+    // respuesta dada por error sobre una fila que ya existe (§3.3).
+    wasPregnantAtVaccination: (values.wasPregnantAtVaccination ?? null) as AnswerOption | undefined,
+    wasPregnantAtEsavi: values.wasPregnantAtEsavi ?? null,
+    lastMenstruationDate: values.lastMenstruationDate ?? null,
+    probableDeliveryDate: values.probableDeliveryDate ?? null,
+    hasComplications: values.hasComplications ?? null,
+    notes: values.pregnancyNotes ?? null,
+  };
+}
+
 // Un i18n key por cada `path[0]` que `createNotificationCompleteSchema` puede señalar.
 const PENDING_FIELD_LABEL_KEYS: Partial<Record<string, string>> = {
   hasRelevantMedicalHistory: 'notification.pending.hasRelevantMedicalHistory',
@@ -192,6 +216,10 @@ interface NotificationFormBodyProps {
   // `PREGNANCY_FEMALE_SEX_ITEM` sin sembrar (SPEC FE12d §3.4, §3.6) — el bloque se muestra igual,
   // deshabilitado con su explicación, en vez de desaparecer.
   pregnancyConfigMissing: boolean;
+  // Sólo para el toast de `NOTIFPRG_001_PATIENT_NOT_FEMALE` (§3.5, §4 paso 8): nombra el sexo que
+  // el paciente tiene registrado. `name` ya llega en el idioma activo (§7.2, "el `catalogItem` que
+  // trae `ESAVI-PATIENT-003`").
+  patientSexName: string | null;
   // Caso cerrado (SPEC FE12b §3.6): las listas de satélites pasan a sólo lectura — sin «Añadir»
   // y sin acciones de fila. El aviso en sí lo pinta `CaseWizardPage` (FE08); esto sólo retira las
   // acciones que ese aviso ya explica que no aplican.
@@ -211,6 +239,7 @@ function NotificationFormBody({
   eventDate,
   pregnancyGate,
   pregnancyConfigMissing,
+  patientSexName,
   isClosed,
 }: NotificationFormBodyProps) {
   const { t } = useTranslation();
@@ -222,6 +251,8 @@ function NotificationFormBody({
   const severeUpdate = severeNotificationResource.useUpdate();
   const nonSevereCreate = nonSevereNotificationResource.useCreate();
   const nonSevereUpdate = nonSevereNotificationResource.useUpdate();
+  const pregnancyCreate = notificationPregnancyResource.useCreate();
+  const pregnancyUpdate = notificationPregnancyResource.useUpdate();
   const outcomeItems = useCatalogItemsByTypeCode('outcome');
 
   // Never in `useState` (SPEC FE12a §3.4, corrigiendo el mismo patrón de FE11 en el paso 2 de
@@ -231,6 +262,7 @@ function NotificationFormBody({
   const notificationId = notification?.notificationId ?? null;
   const severeNotificationId = severeNotification?.notificationId ?? null;
   const nonSevereNotificationId = nonSevereNotification?.notificationId ?? null;
+  const pregnancyId = notificationPregnancy?.pregnancyId ?? null;
 
   // La misma clave que `<MedicationList>` consulta por su cuenta (TanStack Query la comparte, no
   // duplica la petición): aquí sólo hace falta el conteo para bloquear `takesMedication` en la
@@ -478,12 +510,9 @@ function NotificationFormBody({
             } as CreateNonSevereNotificationInput);
           }
         }
-        toast.success(t(successToastKey));
-        form.reset(values);
-        // Se borra en cuanto el guardado completo responde correctamente (SPEC FE12a §3.4) — no
-        // antes, para que un fallo de la rama deje el borrador como red de seguridad de lo que
-        // todavía no llegó a guardarse.
-        useDraftsStore.getState().clear(caseId, 'notification');
+        // Sin `toast.success`/`form.reset`/limpiar el borrador todavía (SPEC FE12d §4 paso 8): la
+        // cadena sigue con el bloque de embarazo, y las tres acciones de cierre viven en un único
+        // sitio al final de las tres fases, no una por tabla.
       } catch (err) {
         if (!(err instanceof EsaviApiError)) {
           throw err;
@@ -491,7 +520,8 @@ function NotificationFormBody({
         const alreadyExistsCode =
           notificationType === 'SEVERE' ? 'SEVNOT_001_ALREADY_EXISTS' : 'NSEVNOT_001_ALREADY_EXISTS';
         // Se trata como éxito (SPEC FE12a §3.5, §6): el `POST` anterior sí llegó, sólo se perdió
-        // la respuesta — no hay nada que reintentar, sólo releer con el `006`.
+        // la respuesta — no hay nada que reintentar en esta fase, sólo releer con el `006` y
+        // continuar la cadena hacia el bloque de embarazo (SPEC FE12d §4 paso 8: sin `return`).
         if (err.code === alreadyExistsCode) {
           await queryClient.invalidateQueries({
             queryKey:
@@ -499,32 +529,95 @@ function NotificationFormBody({
                 ? severeNotificationByCaseKey(caseId)
                 : nonSevereNotificationByCaseKey(caseId),
           });
-          toast.success(t(successToastKey));
-          form.reset(values);
-          useDraftsStore.getState().clear(caseId, 'notification');
-          return;
-        }
-        const notSameTypeCode =
-          notificationType === 'SEVERE'
-            ? 'SEVNOT_001_NOTIFICATION_NOT_SEVERE'
-            : 'NSEVNOT_001_NOTIFICATION_NOT_NON_SEVERE';
-        // La gravedad ya no es la que esta pestaña creía (SPEC FE12a §3.5, §7 riesgo "dos
-        // pestañas"): se invalida workflow y clasificación en vez de reintentar a ciegas.
-        if (err.code === notSameTypeCode) {
-          await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
-          await queryClient.invalidateQueries({ queryKey: ['classification'] });
+        } else {
+          const notSameTypeCode =
+            notificationType === 'SEVERE'
+              ? 'SEVNOT_001_NOTIFICATION_NOT_SEVERE'
+              : 'NSEVNOT_001_NOTIFICATION_NOT_NON_SEVERE';
+          // La gravedad ya no es la que esta pestaña creía (SPEC FE12a §3.5, §7 riesgo "dos
+          // pestañas"): se invalida workflow y clasificación en vez de reintentar a ciegas.
+          if (err.code === notSameTypeCode) {
+            await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
+            await queryClient.invalidateQueries({ queryKey: ['classification'] });
+            toast.error(getErrorMessage(err));
+            return;
+          }
+          const branchFieldMap =
+            notificationType === 'SEVERE' ? severeNotificationErrorFieldMap : nonSevereNotificationErrorFieldMap;
+          const field = branchFieldMap[err.code];
+          if (field) {
+            form.setError(field, { type: 'server', message: err.message });
+            return;
+          }
           toast.error(getErrorMessage(err));
           return;
         }
-        const branchFieldMap =
-          notificationType === 'SEVERE' ? severeNotificationErrorFieldMap : nonSevereNotificationErrorFieldMap;
-        const field = branchFieldMap[err.code];
-        if (field) {
-          form.setError(field, { type: 'server', message: err.message });
+      }
+
+      // Fase 3 — el bloque de embarazo (SPEC FE12d §4 paso 8), con el `resolvedNotificationId` que
+      // ya resolvió la fase 1. Sólo se intenta detrás de la compuerta abierta y con la
+      // configuración sembrada, y — decisión explícita, fuera de lo que dice el spec — únicamente
+      // si ya existe la fila (siempre `004`, responda o no el usuario) o si `wasPregnantAtVaccination`
+      // tiene respuesta, lo único que el `001` exige: un bloque intacto no dispara un `POST` que el
+      // usuario no pidió, mismo criterio que FE12c no encadenó el `POST` de una vacuna sin
+      // identidad tras el de la cabecera.
+      const attemptsPregnancyWrite =
+        pregnancyGate !== 'hidden' &&
+        !pregnancyConfigMissing &&
+        (pregnancyId !== null || values.wasPregnantAtVaccination != null);
+
+      if (attemptsPregnancyWrite) {
+        try {
+          const pregnancyPayload = buildPregnancyPayload(values);
+          if (pregnancyId) {
+            await pregnancyUpdate.mutateAsync({ id: pregnancyId, data: pregnancyPayload });
+          } else {
+            await pregnancyCreate.mutateAsync({
+              ...pregnancyPayload,
+              notificationId: resolvedNotificationId,
+            } as CreateNotificationPregnancyInput);
+          }
+          await queryClient.invalidateQueries({
+            queryKey: notificationPregnancyByNotificationKey(resolvedNotificationId ?? ''),
+          });
+        } catch (err) {
+          if (!(err instanceof EsaviApiError)) {
+            throw err;
+          }
+          // Los tres propios de §3.5 con toast propio — ninguno señala un campo del formulario que
+          // el usuario pueda corregir ahí mismo.
+          if (err.code === NOTIFPRG_PATIENT_NOT_FEMALE) {
+            toast.error(t('notification.pregnancy.error.patientNotFemale', { sex: patientSexName ?? '—' }));
+            return;
+          }
+          if (err.code === NOTIFPRG_SEX_CONFIG_MISSING) {
+            // Mismo texto que el bloque deshabilitado por configuración (§3.6): no se presenta
+            // como fallo del servidor, es un despliegue sin sembrar.
+            toast.error(t('notification.pregnancy.notConfigured'));
+            return;
+          }
+          if (err.code === NOTIFPRG_ALREADY_EXISTS) {
+            toast.error(t('notification.pregnancy.error.alreadyExists'));
+            return;
+          }
+          const field = notificationPregnancyErrorFieldMap[err.code];
+          if (field) {
+            form.setError(field, { type: 'server', message: err.message });
+            return;
+          }
+          toast.error(getErrorMessage(err));
           return;
         }
-        toast.error(getErrorMessage(err));
       }
+
+      // Fin de la cadena (SPEC FE12a §3.5, extendida por SPEC FE12d §4 paso 8): una sola
+      // confirmación para las tres fases, no una por tabla.
+      toast.success(t(successToastKey));
+      form.reset(values);
+      // Se borra en cuanto el guardado completo responde correctamente (SPEC FE12a §3.4) — no
+      // antes, para que un fallo en cualquier fase deje el borrador como red de seguridad de lo
+      // que todavía no llegó a guardarse.
+      useDraftsStore.getState().clear(caseId, 'notification');
     },
     [
       caseId,
@@ -536,6 +629,12 @@ function NotificationFormBody({
       nonSevereUpdate,
       notificationId,
       notificationType,
+      patientSexName,
+      pregnancyConfigMissing,
+      pregnancyCreate,
+      pregnancyGate,
+      pregnancyId,
+      pregnancyUpdate,
       queryClient,
       severeCreate,
       severeNotificationId,
@@ -966,6 +1065,7 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       eventDate={esaviCase.data?.eventDate ?? null}
       pregnancyGate={pregnancyGate}
       pregnancyConfigMissing={pregnancyConfigMissing}
+      patientSexName={patient.data?.sex?.name ?? null}
       isClosed={isClosed}
     />
   );

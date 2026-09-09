@@ -393,6 +393,23 @@ export const nonSevereNotificationErrorFieldMap: Partial<Record<string, keyof No
   NSEVNOT_004_GEOLOCATION_NOT_FOUND: 'vaccinationGeoLocationId',
 };
 
+// SPEC FE12d §3.5 "Códigos de error mapeados" — sólo el rango va a un campo. Los otros tres
+// propios del bloque (`PATIENT_NOT_FEMALE`, `SEX_CONFIG_MISSING`, `ALREADY_EXISTS`) llevan toast
+// propio en vez de `form.setError` (paso 8): ninguno señala un campo del formulario que el usuario
+// pueda corregir ahí mismo — el primero se corrige en el paso 1 del asistente, el segundo es un
+// despliegue sin configurar, y el tercero exige un `SUPERADMIN` — así que se cablean por código
+// exacto en `NotificationStep`, no aquí.
+export const notificationPregnancyErrorFieldMap: Partial<Record<string, keyof NotificationFormValues>> = {
+  NOTIFPRG_001_DELIVERY_DATE_OUT_OF_RANGE: 'probableDeliveryDate',
+  NOTIFPRG_004_DELIVERY_DATE_OUT_OF_RANGE: 'probableDeliveryDate',
+};
+
+// Los tres códigos de toast propio de arriba, con nombre — para que `NotificationStep` los
+// compare por constante y no por cadena repetida a mano.
+export const NOTIFPRG_PATIENT_NOT_FEMALE = 'NOTIFPRG_001_PATIENT_NOT_FEMALE';
+export const NOTIFPRG_SEX_CONFIG_MISSING = 'NOTIFPRG_001_SEX_CONFIG_MISSING';
+export const NOTIFPRG_ALREADY_EXISTS = 'NOTIFPRG_001_ALREADY_EXISTS';
+
 // ---------------------------------------------------------------------------------------------
 // SPEC FE12b §3.5 — el evento y la medicación concomitante. Dos modales, dos `useForm` propios,
 // ninguno comparte estado con el de la cabecera: una fila de satélite se guarda al aceptar el

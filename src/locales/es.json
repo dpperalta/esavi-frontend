@@ -835,7 +835,9 @@
         "notes": "Notas"
       },
       "error": {
-        "deliveryDateOutOfRange": "Entre la última menstruación y la fecha probable de parto tiene que haber entre 266 y 294 días."
+        "deliveryDateOutOfRange": "Entre la última menstruación y la fecha probable de parto tiene que haber entre 266 y 294 días.",
+        "patientNotFemale": "El paciente tiene registrado el sexo «{{sex}}»: el bloque de embarazo exige un paciente femenino. Corrígelo en el paso 1 si es un error de captura.",
+        "alreadyExists": "Ya existe un bloque de embarazo retirado para esta notificación. Reactivarlo exige un superadministrador; no se puede crear uno nuevo."
       }
     },
     "nonSevere": {
