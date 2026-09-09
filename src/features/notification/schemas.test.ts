@@ -21,6 +21,8 @@ import {
   notificationEventSchema,
   notificationMedicationSchema,
   notificationPregnancyComplicationSchema,
+  notificationMedicalHistorySchema,
+  notificationMedicalHistoryUpdateSchema,
   notificationPregnancyCreateSchema,
   notificationPregnancyUpdateSchema,
   notificationSaveSchema,
@@ -458,7 +460,8 @@ describe('notificationEventSchema', () => {
   it('rechaza "otro" sin descripción, en el campo otherDescription', () => {
     const result = notificationEventSchema.safeParse({ ...base, isOtherEsavi: true });
     expect(result.success).toBe(false);
-    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'otherDescription');
+    const issue =
+      !result.success && result.error.issues.find((i) => i.path[0] === 'otherDescription');
     expect(issue).toBeTruthy();
   });
 
@@ -523,7 +526,8 @@ describe('notificationMedicationSchema', () => {
       medicationCode: 'PAR001',
     });
     expect(result.success).toBe(false);
-    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'isOtherMedication');
+    const issue =
+      !result.success && result.error.issues.find((i) => i.path[0] === 'isOtherMedication');
     expect(issue).toBeTruthy();
   });
 
@@ -577,9 +581,9 @@ describe('notificationVaccineSchema — la guarda de contenido mínimo se evalú
   it('vaccinationDate igual a eventDate pasa; un día después falla', () => {
     const schema = createNotificationVaccineSchema({ eventDate: '2026-03-10' });
 
-    expect(
-      schema.safeParse({ vaccineName: 'BCG', vaccinationDate: '2026-03-10' }).success,
-    ).toBe(true);
+    expect(schema.safeParse({ vaccineName: 'BCG', vaccinationDate: '2026-03-10' }).success).toBe(
+      true,
+    );
 
     const late = schema.safeParse({ vaccineName: 'BCG', vaccinationDate: '2026-03-11' });
     expect(late.success).toBe(false);
@@ -589,9 +593,9 @@ describe('notificationVaccineSchema — la guarda de contenido mínimo se evalú
 
   it('con vaccineWhodrugId y sin vaccineName, la guarda de contenido mínimo se satisface igual', () => {
     const schema = createNotificationVaccineSchema({ eventDate: null });
-    expect(schema.safeParse({ vaccineWhodrugId: '11111111-1111-4111-8111-111111111111' }).success).toBe(
-      true,
-    );
+    expect(
+      schema.safeParse({ vaccineWhodrugId: '11111111-1111-4111-8111-111111111111' }).success,
+    ).toBe(true);
   });
 });
 
@@ -635,9 +639,13 @@ describe('notificationDiluentSchema', () => {
 
   it('reconstitutionDate un día después de vaccinationDate falla', () => {
     const schema = createNotificationDiluentSchema({ vaccinationDate: '2026-03-10' });
-    const result = schema.safeParse({ diluentName: 'Agua estéril', reconstitutionDate: '2026-03-11' });
+    const result = schema.safeParse({
+      diluentName: 'Agua estéril',
+      reconstitutionDate: '2026-03-11',
+    });
     expect(result.success).toBe(false);
-    const issue = !result.success && result.error.issues.find((i) => i.path[0] === 'reconstitutionDate');
+    const issue =
+      !result.success && result.error.issues.find((i) => i.path[0] === 'reconstitutionDate');
     expect(issue).toBeTruthy();
   });
 });
@@ -711,9 +719,9 @@ describe('notificationPregnancyCreateSchema / notificationPregnancyUpdateSchema 
   });
 
   it('sin ninguna de las dos fechas de gestación, ninguna variante rechaza el resto', () => {
-    expect(notificationPregnancyCreateSchema.safeParse({ wasPregnantAtVaccination: 'NO' }).success).toBe(
-      true,
-    );
+    expect(
+      notificationPregnancyCreateSchema.safeParse({ wasPregnantAtVaccination: 'NO' }).success,
+    ).toBe(true);
   });
 });
 
@@ -732,5 +740,50 @@ describe('notificationPregnancyComplicationSchema (SPEC FE12d §3.5)', () => {
       complicationTypeItemId: '11111111-1111-4111-8111-111111111111',
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe('notificationMedicalHistorySchema (SPEC FE12e §3.5)', () => {
+  it('exige historyName y rechaza un nombre de solo espacios', () => {
+    expect(notificationMedicalHistorySchema.safeParse({}).success).toBe(false);
+    expect(notificationMedicalHistorySchema.safeParse({ historyName: '   ' }).success).toBe(false);
+  });
+
+  it('rechaza un historyName de 501 caracteres y admite uno de 500', () => {
+    expect(
+      notificationMedicalHistorySchema.safeParse({ historyName: 'a'.repeat(501) }).success,
+    ).toBe(false);
+    expect(
+      notificationMedicalHistorySchema.safeParse({ historyName: 'a'.repeat(500) }).success,
+    ).toBe(true);
+  });
+
+  it('rechaza un historyCode de 101 caracteres y pasa sin historyCode ni source', () => {
+    expect(
+      notificationMedicalHistorySchema.safeParse({
+        historyName: 'Diabetes mellitus',
+        historyCode: 'a'.repeat(101),
+      }).success,
+    ).toBe(false);
+    expect(
+      notificationMedicalHistorySchema.safeParse({ historyName: 'Diabetes mellitus' }).success,
+    ).toBe(true);
+  });
+
+  it('acepta notes en null en las dos variantes', () => {
+    expect(
+      notificationMedicalHistorySchema.safeParse({ historyName: 'Asma', notes: null }).success,
+    ).toBe(true);
+    expect(notificationMedicalHistoryUpdateSchema.safeParse({ notes: null }).success).toBe(true);
+  });
+
+  it('la variante de edición admite historyName ausente y rechaza un null explícito', () => {
+    expect(notificationMedicalHistoryUpdateSchema.safeParse({}).success).toBe(true);
+    expect(notificationMedicalHistoryUpdateSchema.safeParse({ historyName: null }).success).toBe(
+      false,
+    );
+    expect(notificationMedicalHistoryUpdateSchema.safeParse({ historyName: '  ' }).success).toBe(
+      false,
+    );
   });
 });
