@@ -650,6 +650,7 @@
     },
     "actions": {
       "save": "Save",
+      "saveAndContinue": "Save and continue",
       "completeStage": "Complete stage",
       "stageCompleted": "Stage completed.",
       "next": "Next",

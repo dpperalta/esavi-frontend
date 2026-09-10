@@ -80,7 +80,7 @@ export function SatelliteList<T>({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-sm font-medium text-foreground">{t(titleKey)}</h3>
+        <h3 tabIndex={-1} className="text-sm font-medium text-foreground">{t(titleKey)}</h3>
         {onAdd && (
           <Button type="button" onClick={onAdd} size="sm">
             <PlusIcon aria-hidden="true" />

@@ -1,6 +1,6 @@
 # SPEC FE12e — Paso 4: orden del formulario y antecedentes médicos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (armazón del wizard), SPEC FE12a (la cabecera y las dos ramas, que este spec reordena y disuelve), SPEC FE12b (de ahí salen `<SatelliteList>`, `<MeddraSearchField>` y el patrón de compuerta de `takesMedication`, que aquí se repite con cinco banderas), SPEC FE12c (las vacunas y los diluyentes, que cambian de posición y de rama), SPEC FE12d (el bloque de embarazo, que recibe un campo de la rama grave). Del backend: SPEC F57 (`notificationMedicalHistory`), SPEC F15 (`diagnosticTerm` y su resolución) y SPEC F55 (búsqueda de términos MedDRA).
 > **Fecha:** 2026-09-09
 > **Objetivo:** Alinear el paso 4 con el orden y las etiquetas del formulario en producción, disolviendo el bloque de rama, y añadir la séptima lista satélite — los antecedentes médicos de la notificación.

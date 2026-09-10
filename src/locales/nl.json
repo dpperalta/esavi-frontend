@@ -650,6 +650,7 @@
     },
     "actions": {
       "save": "Opslaan",
+      "saveAndContinue": "Opslaan en doorgaan",
       "completeStage": "Fase voltooien",
       "stageCompleted": "Fase voltooid.",
       "next": "Volgende",

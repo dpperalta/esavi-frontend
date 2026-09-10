@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -69,6 +69,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
+import { useProgressiveSections } from '@/shared/hooks/useProgressiveSections';
 import {
   PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE,
   usePregnancyGate,
@@ -102,6 +103,40 @@ const HEADER_HISTORY_FLAG = {
   labelKey: 'notification.fields.hasRelevantMedicalHistory',
 } as const;
 const SEVERE_GATE_FLAGS = [HEADER_HISTORY_FLAG, ...SEVERE_HISTORY_FLAGS] as const;
+
+// The sections of step 4, which SPEC FE12f reveals one by one. `description` heads the list —
+// `esaviDescription` is the header's only save blocker, so nothing can be persisted before it is
+// written. The last two carry no advance button: nothing downstream depends on them and the
+// action bar sits right below (§3.1).
+type NotificationSectionId =
+  | 'description'
+  | 'background'
+  | 'medicalHistory'
+  | 'medications'
+  | 'pregnancy'
+  | 'vaccinationBackground'
+  | 'verificationSource'
+  | 'vaccines'
+  | 'events'
+  | 'outcome'
+  | 'observations';
+
+// The heading of every section that can be revealed, for the live region and nothing else (SPEC
+// FE12f §3.7). All of them are FE12e keys already: announcing an advance names the section, it does
+// not add a string. `observations` is absent on purpose — it never is the target of an advance,
+// because it surfaces together with `outcome`, which is what gets announced.
+const SECTION_TITLE_KEYS: Partial<Record<NotificationSectionId, string>> = {
+  description: 'notification.section.description',
+  background: 'notification.section.background',
+  medicalHistory: 'notification.section.medicalHistory',
+  medications: 'notification.section.medication',
+  pregnancy: 'notification.pregnancy.sectionTitle',
+  vaccinationBackground: 'notification.section.vaccinationBackground',
+  verificationSource: 'notification.section.verification',
+  vaccines: 'notification.section.vaccines',
+  events: 'notification.section.events',
+  outcome: 'notification.section.outcome',
+};
 
 function NotificationStepSkeleton() {
   return (
@@ -263,6 +298,10 @@ interface NotificationFormBodyProps {
   // pintaba vacío como si no hubiera datos que leer.
   pregnancyLoadError: boolean;
   onRetryPregnancyLoad: () => void;
+  // `existedOnMount` of SPEC FE12f §3.1: `stages.notification.exists` (ESAVI-CASEFLOW-006) as it
+  // read when this body mounted. It arrives as a prop and is frozen below — the step is only
+  // walked through section by section when it did not exist yet.
+  stageExisted: boolean;
 }
 
 // The form itself (SPEC FE12a §3.5, §3.1): only mounted once `NotificationStep` resolved workflow
@@ -282,6 +321,7 @@ function NotificationFormBody({
   isClosed,
   pregnancyLoadError,
   onRetryPregnancyLoad,
+  stageExisted,
 }: NotificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -514,7 +554,7 @@ function NotificationFormBody({
           type: 'client',
           message: 'notification.validation.deathDateBeforeEventDate',
         });
-        return;
+        return false;
       }
 
       // Fase 1 — la cabecera. `resolvedNotificationId` es lo que la rama necesita para
@@ -547,22 +587,22 @@ function NotificationFormBody({
             old ? { ...old, status: { ...old.status, code: 'CLOSED' } } : old,
           );
           toast.error(getErrorMessage(err));
-          return;
+          return false;
         }
         // El caso ya tiene notificación (SPEC FE12a §3.5 "Con comportamiento propio"): se
         // invalida y se recarga en vez de insistir con un segundo `POST`.
         if (err.code === 'NOTIFCN_001_CASE_ALREADY_NOTIFIED') {
           await queryClient.invalidateQueries({ queryKey: notificationByCaseKey(caseId) });
           toast.error(getErrorMessage(err));
-          return;
+          return false;
         }
         const field = notificationErrorFieldMap[err.code];
         if (field) {
           form.setError(field, { type: 'server', message: err.message });
-          return;
+          return false;
         }
         toast.error(getErrorMessage(err));
-        return;
+        return false;
       }
 
       // Fase 2 — la rama, con el `notificationId` que acaba de resolver la fase 1 (SPEC FE12a §4
@@ -623,7 +663,7 @@ function NotificationFormBody({
             await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
             await queryClient.invalidateQueries({ queryKey: ['classification'] });
             toast.error(getErrorMessage(err));
-            return;
+            return false;
           }
           const branchFieldMap =
             notificationType === 'SEVERE'
@@ -632,24 +672,28 @@ function NotificationFormBody({
           const field = branchFieldMap[err.code];
           if (field) {
             form.setError(field, { type: 'server', message: err.message });
-            return;
+            return false;
           }
           toast.error(getErrorMessage(err));
-          return;
+          return false;
         }
       }
 
       // Fase 3 — el bloque de embarazo (SPEC FE12d §4 paso 8), con el `resolvedNotificationId` que
       // ya resolvió la fase 1. Sólo se intenta detrás de la compuerta abierta y con la
       // configuración sembrada, y — decisión explícita, fuera de lo que dice el spec — únicamente
-      // si ya existe la fila (siempre `004`, responda o no el usuario) o si `wasPregnantAtVaccination`
-      // tiene respuesta, lo único que el `001` exige: un bloque intacto no dispara un `POST` que el
-      // usuario no pidió, mismo criterio que FE12c no encadenó el `POST` de una vacuna sin
-      // identidad tras el de la cabecera.
+      // si ya existe la fila (siempre `004`, responda o no el usuario) o si el bloque tiene alguna
+      // respuesta: un bloque intacto no dispara un `POST` que el usuario no pidió, mismo criterio
+      // que FE12c no encadenó el `POST` de una vacuna sin identidad tras el de la cabecera.
+      //
+      // SPEC FE12f §3.5 — the trigger is `wasPregnantAtEsavi`, the first question on screen since
+      // FE12e reordered the block. Keyed to `wasPregnantAtVaccination`, answering only the first
+      // question and advancing would create no row, and Complications would stay hidden inside the
+      // section with nothing explaining why.
       const attemptsPregnancyWrite =
         pregnancyGate !== 'hidden' &&
         !pregnancyConfigMissing &&
-        (pregnancyId !== null || values.wasPregnantAtVaccination != null);
+        (pregnancyId !== null || values.wasPregnantAtEsavi != null);
 
       if (attemptsPregnancyWrite) {
         try {
@@ -675,25 +719,25 @@ function NotificationFormBody({
             toast.error(
               t('notification.pregnancy.error.patientNotFemale', { sex: patientSexName ?? '—' }),
             );
-            return;
+            return false;
           }
           if (err.code === NOTIFPRG_SEX_CONFIG_MISSING) {
             // Mismo texto que el bloque deshabilitado por configuración (§3.6): no se presenta
             // como fallo del servidor, es un despliegue sin sembrar.
             toast.error(t('notification.pregnancy.notConfigured'));
-            return;
+            return false;
           }
           if (err.code === NOTIFPRG_ALREADY_EXISTS) {
             toast.error(t('notification.pregnancy.error.alreadyExists'));
-            return;
+            return false;
           }
           const field = notificationPregnancyErrorFieldMap[err.code];
           if (field) {
             form.setError(field, { type: 'server', message: err.message });
-            return;
+            return false;
           }
           toast.error(getErrorMessage(err));
-          return;
+          return false;
         }
       }
 
@@ -705,6 +749,10 @@ function NotificationFormBody({
       // antes, para que un fallo en cualquier fase deje el borrador como red de seguridad de lo
       // que todavía no llegó a guardarse.
       useDraftsStore.getState().clear(caseId, 'notification');
+      // SPEC FE12f §3.5: the chain reports whether it resolved so «Guardar y continuar» only
+      // reveals the next section when it did. Every early return above answers `false`, and a
+      // failed advance leaves the screen exactly where it was.
+      return true;
     },
     [
       caseId,
@@ -732,10 +780,100 @@ function NotificationFormBody({
     ],
   );
 
-  const performSave = useCallback(
-    () => form.handleSubmit(handleValidSubmit)(),
-    [form, handleValidSubmit],
-  );
+  // The action bar's «Guardar» keeps its exact contract (`Promise<void>`): the outcome the chain
+  // now reports is only read by the advance button below (SPEC FE12f §8, `CaseWizardActionBar` and
+  // `CaseWizardContext` do not change).
+  const performSave = useCallback(async () => {
+    await form.handleSubmit(handleValidSubmit)();
+  }, [form, handleValidSubmit]);
+
+  // The same `performSave` the action bar registers, but reporting the outcome (SPEC FE12f §3.2:
+  // "cada avance es la cadena completa de FE12a, no un guardado parcial"). A schema error never
+  // reaches the submit handler, so `saved` stays `false` and nothing is revealed.
+  const performSaveAndReport = useCallback(async () => {
+    let saved = false;
+    await form.handleSubmit(async (values) => {
+      saved = await handleValidSubmit(values);
+    })();
+    return saved;
+  }, [form, handleValidSubmit]);
+
+  // The sections that apply today, in DOM order — never the nine or eleven theoretical ones (SPEC
+  // FE12f §3.1). A closed gate or a male patient drops the section from the list, so it neither
+  // renders nor counts as an advance.
+  // The same gate `<MedicationList>` applies to itself (SPEC FE12b §3.5): with `takesMedication`
+  // outside `'YES'` and no active rows it renders nothing, so it must not take a turn either — an
+  // advance that reveals an empty stretch of screen is the one thing this spec exists to remove.
+  const showsMedicationSection = watchedValues.takesMedication === 'YES' || hasActiveMedications;
+
+  const sections: NotificationSectionId[] = [
+    'description',
+    'background',
+    ...(showsMedicalHistorySection ? (['medicalHistory'] as const) : []),
+    ...(showsMedicationSection ? (['medications'] as const) : []),
+    ...(pregnancyGate !== 'hidden' ? (['pregnancy'] as const) : []),
+    ...(notificationType === 'NON_SEVERE'
+      ? (['vaccinationBackground', 'verificationSource'] as const)
+      : []),
+    'vaccines',
+    'events',
+    'outcome',
+    'observations',
+  ];
+
+  // Read once, frozen on purpose (SPEC FE12f §3.4): re-reading it would let the row created by the
+  // first advance reveal the whole step. A closed case enters the same branch — everything visible,
+  // no advance button, read-only as before.
+  const revealAllRef = useRef(stageExisted || isClosed);
+  const { isVisible, frontier, advance } = useProgressiveSections<NotificationSectionId>({
+    sections,
+    revealAll: revealAllRef.current,
+    lastWithButton: 'events',
+  });
+
+  // The section the next advance will reveal, read before advancing: once `advance()` runs the
+  // frontier has already moved on.
+  const nextSection = frontier ? (sections[sections.indexOf(frontier) + 1] ?? null) : null;
+
+  const sectionsRef = useRef<HTMLDivElement>(null);
+  const [revealedSection, setRevealedSection] = useState<NotificationSectionId | null>(null);
+  const announcementKey = revealedSection ? SECTION_TITLE_KEYS[revealedSection] : undefined;
+
+  const handleAdvance = useCallback(async () => {
+    if (await performSaveAndReport()) {
+      advance();
+      setRevealedSection(nextSection);
+    }
+  }, [advance, nextSection, performSaveAndReport]);
+
+  // Focus lands on the heading of the section just revealed and brings it into view (SPEC FE12f
+  // §3.7): otherwise whoever pressed the button with the keyboard stays at the end of the document
+  // and a screen reader never learns that anything appeared. Every heading carries `tabIndex={-1}`
+  // — the four rendered by components included, through `<SatelliteList>` and the three sections
+  // of the non-severe branch.
+  useEffect(() => {
+    if (!revealedSection) return;
+    const heading = sectionsRef.current?.querySelector<HTMLElement>(
+      `[data-section="${revealedSection}"] h3`,
+    );
+    heading?.focus();
+    heading?.scrollIntoView?.({ block: 'start' });
+  }, [revealedSection]);
+
+  // The single advance button on screen, at the end of the section that holds the frontier (SPEC
+  // FE12f §3.7): full width below `md`, right-aligned on desktop, 44px touch target. Disabled
+  // while the chain is in flight; the footer bar keeps working throughout.
+  const renderAdvanceButton = (id: NotificationSectionId) =>
+    frontier === id ? (
+      <Button
+        type="button"
+        className="min-h-11 w-full md:w-auto md:self-end"
+        disabled={form.formState.isSubmitting}
+        onClick={() => void handleAdvance()}
+      >
+        {t('caseWizard.actions.saveAndContinue')}
+      </Button>
+    ) : null;
 
   const pendingFields = computePendingFields(
     watchedValues,
@@ -781,115 +919,164 @@ function NotificationFormBody({
   ]);
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-4">
-        <h3 className="text-sm font-medium text-foreground">
-          {t('notification.section.background')}
-        </h3>
+    <div ref={sectionsRef} className="flex flex-col gap-6">
+      {/* The advance announcement (SPEC FE12f §3.7): the heading of the revealed section, with the
+          key FE12e already defines. Visually hidden — the heading itself, which also takes focus,
+          is the visible cue. */}
+      <p aria-live="polite" className="sr-only">
+        {announcementKey ? t(announcementKey) : ''}
+      </p>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* La bandera de la cabecera y, en rama grave, las cuatro de la ficha, en línea entre
-            ella y `takesMedication` (SPEC FE12e §3.1 sección 1). Se pintan de una lista porque
-            comparten forma, orden y compuerta: la que quede sola en `'YES'` con antecedentes
-            cargados es la que se bloquea (§3.5). */}
-          {gateFlags.map(({ name, labelKey }) => (
-            <div key={name} className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
+      {/* The first section of the walkthrough (SPEC FE12f §3.1, corrected while implementing):
+          `esaviDescription` is the only field that blocks the header save (`CASE-PROCESS.md` §4.6),
+          so no parent row can exist before it is written — and with no parent row no advance is
+          possible at all. That is why it opens the step instead of closing it. */}
+      {isVisible('description') && (
+        <section data-section="description" className="flex flex-col gap-4">
+          <h3 tabIndex={-1} className="text-sm font-medium text-foreground">
+            {t('notification.section.description')}
+          </h3>
+
+          <Controller
+            control={form.control}
+            name="esaviDescription"
+            render={({ field, fieldState }) => (
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="notification-esaviDescription"
+                  className="text-sm font-medium text-foreground"
+                >
+                  {t('notification.fields.esaviDescription')}
+                </label>
+                <Textarea
+                  id="notification-esaviDescription"
+                  value={field.value ?? ''}
+                  onChange={(event) => field.onChange(event.target.value)}
+                />
+                {fieldState.error && (
+                  <p role="alert" className="text-sm text-destructive">
+                    {t('notification.validation.esaviDescriptionRequired')}
+                  </p>
+                )}
+              </div>
+            )}
+          />
+          {renderAdvanceButton('description')}
+        </section>
+      )}
+
+      {isVisible('background') && (
+        <section data-section="background" className="flex flex-col gap-4">
+          <h3 tabIndex={-1} className="text-sm font-medium text-foreground">
+            {t('notification.section.background')}
+          </h3>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* La bandera de la cabecera y, en rama grave, las cuatro de la ficha, en línea entre
+              ella y `takesMedication` (SPEC FE12e §3.1 sección 1). Se pintan de una lista porque
+              comparten forma, orden y compuerta: la que quede sola en `'YES'` con antecedentes
+              cargados es la que se bloquea (§3.5). */}
+            {gateFlags.map(({ name, labelKey }) => (
+              <div key={name} className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
+                <Controller
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <AnswerOptionField
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      ariaLabel={t(labelKey)}
+                      variant="unknown"
+                      disabled={lockedGateFlag === name}
+                      ariaDescribedBy={
+                        lockedGateFlag === name ? `medicalHistory-gateLocked-${name}` : undefined
+                      }
+                    />
+                  )}
+                />
+                {lockedGateFlag === name && (
+                  <p
+                    id={`medicalHistory-gateLocked-${name}`}
+                    className="text-sm text-muted-foreground"
+                  >
+                    {t(
+                      canAdminSatellites
+                        ? 'notification.medicalHistory.gateLocked'
+                        : 'notification.medicalHistory.gateLockedNeedsAdmin',
+                    )}
+                  </p>
+                )}
+              </div>
+            ))}
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.fields.takesMedication')}
+              </span>
               <Controller
                 control={form.control}
-                name={name}
+                name="takesMedication"
                 render={({ field }) => (
                   <AnswerOptionField
                     value={field.value ?? null}
                     onChange={field.onChange}
-                    ariaLabel={t(labelKey)}
+                    ariaLabel={t('notification.fields.takesMedication')}
                     variant="unknown"
-                    disabled={lockedGateFlag === name}
-                    ariaDescribedBy={
-                      lockedGateFlag === name ? `medicalHistory-gateLocked-${name}` : undefined
-                    }
+                    disabled={hasActiveMedications}
                   />
                 )}
               />
-              {lockedGateFlag === name && (
-                <p
-                  id={`medicalHistory-gateLocked-${name}`}
-                  className="text-sm text-muted-foreground"
-                >
+              {/* No es un aviso al guardar: es un campo que no se puede mover mientras haya datos que
+                quedarían huérfanos (SPEC FE12b §3.5). El texto asociado, no sólo el atributo
+                `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
+              {hasActiveMedications && (
+                <p className="text-sm text-muted-foreground">
                   {t(
                     canAdminSatellites
-                      ? 'notification.medicalHistory.gateLocked'
-                      : 'notification.medicalHistory.gateLockedNeedsAdmin',
+                      ? 'notification.medications.gateLocked'
+                      : 'notification.medications.gateLockedNeedsAdmin',
                   )}
                 </p>
               )}
             </div>
-          ))}
+          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-foreground">
-              {t('notification.fields.takesMedication')}
-            </span>
+          {/* `severeNotes` cierra la sección de banderas y no el bloque de embarazo (SPEC FE12e §3.1,
+            §6): el embarazo ya tiene su `pregnancyNotes`, y dos campos de notas seguidos en la misma
+            caja son indistinguibles para quien rellena. */}
+          {notificationType === 'SEVERE' && (
             <Controller
               control={form.control}
-              name="takesMedication"
+              name="severeNotes"
               render={({ field }) => (
-                <AnswerOptionField
-                  value={field.value ?? null}
-                  onChange={field.onChange}
-                  ariaLabel={t('notification.fields.takesMedication')}
-                  variant="unknown"
-                  disabled={hasActiveMedications}
-                />
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="severeNotification-notes"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    {t('notification.fields.notes')}
+                  </label>
+                  <Textarea
+                    id="severeNotification-notes"
+                    value={field.value ?? ''}
+                    onChange={(event) => field.onChange(event.target.value || null)}
+                  />
+                </div>
               )}
             />
-            {/* No es un aviso al guardar: es un campo que no se puede mover mientras haya datos que
-              quedarían huérfanos (SPEC FE12b §3.5). El texto asociado, no sólo el atributo
-              `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
-            {hasActiveMedications && (
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  canAdminSatellites
-                    ? 'notification.medications.gateLocked'
-                    : 'notification.medications.gateLockedNeedsAdmin',
-                )}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* `severeNotes` cierra la sección de banderas y no el bloque de embarazo (SPEC FE12e §3.1,
-          §6): el embarazo ya tiene su `pregnancyNotes`, y dos campos de notas seguidos en la misma
-          caja son indistinguibles para quien rellena. */}
-        {notificationType === 'SEVERE' && (
-          <Controller
-            control={form.control}
-            name="severeNotes"
-            render={({ field }) => (
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="severeNotification-notes"
-                  className="text-sm font-medium text-foreground"
-                >
-                  {t('notification.fields.notes')}
-                </label>
-                <Textarea
-                  id="severeNotification-notes"
-                  value={field.value ?? ''}
-                  onChange={(event) => field.onChange(event.target.value || null)}
-                />
-              </div>
-            )}
-          />
-        )}
-      </section>
+          )}
+          {renderAdvanceButton('background')}
+        </section>
+      )}
 
       {/* Section 2 (SPEC FE12e §3.1), detrás de la compuerta de §3.6: con la compuerta cerrada y
           sin filas **no existe en el DOM**, no basta con ocultarla. Con filas y ninguna bandera
           en `'YES'` se muestra igual, con el aviso de discrepancia — que aparece al mover una
-          bandera y no al guardar, y por eso va en una región viva (§3.7). */}
-      {showsMedicalHistorySection && (
-        <section className="flex flex-col gap-3">
+          bandera y no al guardar, y por eso va en una región viva (§3.7). `isVisible` ya lleva
+          dentro la compuerta: la sección sólo entra en la secuencia de FE12f cuando se muestra. */}
+      {isVisible('medicalHistory') && (
+        <section data-section="medicalHistory" className="flex flex-col gap-3">
           <div aria-live="polite">
             {!medicalHistoryGateOpen && (
               <p className="text-sm text-muted-foreground">
@@ -898,230 +1085,239 @@ function NotificationFormBody({
             )}
           </div>
           <MedicalHistoryList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+          {renderAdvanceButton('medicalHistory')}
         </section>
       )}
 
       {/* Sólo existen con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
-          `notificationId` no hay padre al que colgar ningún satélite. */}
-      <MedicationList
-        caseId={caseId}
-        notificationId={notificationId}
-        readOnly={isClosed}
-        takesMedication={watchedValues.takesMedication ?? null}
-      />
+          `notificationId` no hay padre al que colgar ningún satélite. Desde FE12f ese estado deja
+          de ser alcanzable en el recorrido normal — la sección no se revela antes de que el primer
+          avance haya creado el padre (§3.1). */}
+      {isVisible('medications') && (
+        <div data-section="medications" className="contents">
+          <MedicationList
+            caseId={caseId}
+            notificationId={notificationId}
+            readOnly={isClosed}
+            takesMedication={watchedValues.takesMedication ?? null}
+          />
+          {renderAdvanceButton('medications')}
+        </div>
+      )}
 
       {/* Detrás de la compuerta de `CASE-PROCESS.md` §7.4 (SPEC FE12d §4 paso 7): independiente
-          de la rama, así que va antes de la que corresponda por gravedad. */}
-      <PregnancySection
-        control={form.control}
-        pregnancyGate={pregnancyGate}
-        configMissing={pregnancyConfigMissing}
-        pregnancyId={pregnancyId}
-        isClosed={isClosed}
-        complicationsDerived={hasActiveComplications}
-        loadError={pregnancyLoadError}
-        onRetryLoad={onRetryPregnancyLoad}
-        showsSevereComplications={notificationType === 'SEVERE'}
-        hasPregnancyComplications={watchedValues.hasPregnancyComplications}
-        pregnancyComplicationsDescription={watchedValues.pregnancyComplicationsDescription}
-      />
+          de la rama, así que va antes de la que corresponda por gravedad. Su único botón hace dos
+          cosas en una pulsación (SPEC FE12f §6): crea la fila de embarazo —que revela
+          Complicaciones dentro de esta misma sección— y avanza a la siguiente. */}
+      {isVisible('pregnancy') && (
+        <div data-section="pregnancy" className="contents">
+          <PregnancySection
+            control={form.control}
+            pregnancyGate={pregnancyGate}
+            configMissing={pregnancyConfigMissing}
+            pregnancyId={pregnancyId}
+            isClosed={isClosed}
+            complicationsDerived={hasActiveComplications}
+            loadError={pregnancyLoadError}
+            onRetryLoad={onRetryPregnancyLoad}
+            showsSevereComplications={notificationType === 'SEVERE'}
+            hasPregnancyComplications={watchedValues.hasPregnancyComplications}
+            pregnancyComplicationsDescription={watchedValues.pregnancyComplicationsDescription}
+          />
+          {renderAdvanceButton('pregnancy')}
+        </div>
+      )}
 
-      {notificationType === 'NON_SEVERE' && (
-        <>
+      {isVisible('vaccinationBackground') && (
+        <div data-section="vaccinationBackground" className="contents">
           <VaccinationBackgroundSection
             control={form.control}
             initialHealthFacilityLabel={
               nonSevereNotification?.vaccinationHealthFacility?.name ?? null
             }
           />
+          {renderAdvanceButton('vaccinationBackground')}
+        </div>
+      )}
+
+      {isVisible('verificationSource') && (
+        <div data-section="verificationSource" className="contents">
           <VerificationSourceSection
             control={form.control}
             verifiedOtherSource={watchedValues.verifiedOtherSource}
             otherSourceDescription={watchedValues.otherSourceDescription}
           />
-        </>
+          {renderAdvanceButton('verificationSource')}
+        </div>
       )}
 
-      <VaccineList
-        caseId={caseId}
-        notificationId={notificationId}
-        eventDate={eventDate}
-        readOnly={isClosed}
-        showsDiluents={notificationType === 'SEVERE'}
-      />
+      {isVisible('vaccines') && (
+        <div data-section="vaccines" className="contents">
+          <VaccineList
+            caseId={caseId}
+            notificationId={notificationId}
+            eventDate={eventDate}
+            readOnly={isClosed}
+            showsDiluents={notificationType === 'SEVERE'}
+          />
+          {renderAdvanceButton('vaccines')}
+        </div>
+      )}
 
-      <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+      {isVisible('events') && (
+        <div data-section="events" className="contents">
+          <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+          {renderAdvanceButton('events')}
+        </div>
+      )}
 
-      <section className="flex flex-col gap-4">
-        <h3 className="text-sm font-medium text-foreground">
-          {t('notification.section.description')}
-        </h3>
+      {/* Las dos últimas se revelan juntas con el último avance (SPEC FE12f §3.1): ninguna
+          desbloquea nada y la barra de acciones ya está justo debajo. */}
+      {isVisible('outcome') && (
+        <section data-section="outcome" className="flex flex-col gap-4">
+          <h3 tabIndex={-1} className="text-sm font-medium text-foreground">
+            {t('notification.section.outcome')}
+          </h3>
 
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-foreground">
+              {t('notification.fields.outcomeItemId')}
+            </span>
+            <Controller
+              control={form.control}
+              name="outcomeItemId"
+              render={({ field }) => (
+                <CatalogSelect
+                  typeCode="outcome"
+                  emit="id"
+                  value={field.value ?? null}
+                  onChange={field.onChange}
+                  ariaLabel={t('notification.fields.outcomeItemId')}
+                />
+              )}
+            />
+          </div>
+
+          {/* Sólo aparece con outcome.value === 'DEATH' (SPEC FE12a §3.5, §7) — nunca con `code` ni
+            `name`, que pertenecen al catálogo del país (SPEC F46). `aria-live="polite"` porque
+            aparece por un cambio en otro control: sin el anuncio, un lector de pantalla no se
+            entera de que acaban de aparecer tres campos, dos de ellos obligatorios. */}
+          <div aria-live="polite">
+            {isDeathOutcome && (
+              <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
+                <span className="text-sm font-medium text-foreground">
+                  {t('notification.death.sectionTitle')}
+                </span>
+
+                <Controller
+                  control={form.control}
+                  name="deathDate"
+                  render={({ field }) => (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-sm font-medium text-foreground">
+                        {t('notification.death.deathDate')}
+                      </span>
+                      <DateField
+                        value={field.value ?? null}
+                        onChange={field.onChange}
+                        ariaLabel={t('notification.death.deathDate')}
+                        allowFuture={false}
+                      />
+                      {!deathDateValid && (
+                        <p role="alert" className="text-sm text-destructive">
+                          {t('notification.validation.deathDateBeforeEventDate')}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="autopsyRequested"
+                  render={({ field }) => (
+                    <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
+                      <Switch
+                        checked={field.value === true}
+                        onCheckedChange={field.onChange}
+                        aria-label={t('notification.death.autopsyRequested')}
+                      />
+                      {t('notification.death.autopsyRequested')}
+                    </label>
+                  )}
+                />
+
+                <Controller
+                  control={form.control}
+                  name="verbalAutopsyPerformed"
+                  render={({ field }) => (
+                    <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
+                      <Switch
+                        checked={field.value === true}
+                        onCheckedChange={field.onChange}
+                        aria-label={t('notification.death.verbalAutopsyPerformed')}
+                      />
+                      {t('notification.death.verbalAutopsyPerformed')}
+                    </label>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium text-foreground">
+              {t('notification.fields.requestInvestigation')}
+            </span>
+            <p className="text-sm text-muted-foreground">
+              {t('notification.help.requestInvestigation')}
+            </p>
+            <Controller
+              control={form.control}
+              name="requestInvestigation"
+              render={({ field }) => (
+                <RadioGroup
+                  aria-label={t('notification.fields.requestInvestigation')}
+                  // Cadena vacía, no `undefined`, mientras no se responda — mismo motivo que la
+                  // compuerta de gravedad de `ClassificationStep` (Radix trata un `RadioGroup` sin
+                  // `value` inicial como no controlado).
+                  value={field.value === true ? 'true' : field.value === false ? 'false' : ''}
+                  onValueChange={(next) => field.onChange(next === 'true')}
+                  className="flex w-auto gap-4"
+                >
+                  <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                    <RadioGroupItem value="true" />
+                    {t('common.answerOption.yes')}
+                  </label>
+                  <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                    <RadioGroupItem value="false" />
+                    {t('common.answerOption.no')}
+                  </label>
+                </RadioGroup>
+              )}
+            />
+          </div>
+        </section>
+      )}
+
+      {isVisible('observations') && (
         <Controller
           control={form.control}
-          name="esaviDescription"
-          render={({ field, fieldState }) => (
+          name="notes"
+          render={({ field }) => (
             <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="notification-esaviDescription"
-                className="text-sm font-medium text-foreground"
-              >
-                {t('notification.fields.esaviDescription')}
+              <label htmlFor="notification-notes" className="text-sm font-medium text-foreground">
+                {t('notification.fields.notes')}
               </label>
               <Textarea
-                id="notification-esaviDescription"
+                id="notification-notes"
                 value={field.value ?? ''}
-                onChange={(event) => field.onChange(event.target.value)}
+                onChange={(event) => field.onChange(event.target.value || null)}
               />
-              {fieldState.error && (
-                <p role="alert" className="text-sm text-destructive">
-                  {t('notification.validation.esaviDescriptionRequired')}
-                </p>
-              )}
             </div>
           )}
         />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <h3 className="text-sm font-medium text-foreground">{t('notification.section.outcome')}</h3>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-foreground">
-            {t('notification.fields.outcomeItemId')}
-          </span>
-          <Controller
-            control={form.control}
-            name="outcomeItemId"
-            render={({ field }) => (
-              <CatalogSelect
-                typeCode="outcome"
-                emit="id"
-                value={field.value ?? null}
-                onChange={field.onChange}
-                ariaLabel={t('notification.fields.outcomeItemId')}
-              />
-            )}
-          />
-        </div>
-
-        {/* Sólo aparece con outcome.value === 'DEATH' (SPEC FE12a §3.5, §7) — nunca con `code` ni
-          `name`, que pertenecen al catálogo del país (SPEC F46). `aria-live="polite"` porque
-          aparece por un cambio en otro control: sin el anuncio, un lector de pantalla no se
-          entera de que acaban de aparecer tres campos, dos de ellos obligatorios. */}
-        <div aria-live="polite">
-          {isDeathOutcome && (
-            <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
-              <span className="text-sm font-medium text-foreground">
-                {t('notification.death.sectionTitle')}
-              </span>
-
-              <Controller
-                control={form.control}
-                name="deathDate"
-                render={({ field }) => (
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-sm font-medium text-foreground">
-                      {t('notification.death.deathDate')}
-                    </span>
-                    <DateField
-                      value={field.value ?? null}
-                      onChange={field.onChange}
-                      ariaLabel={t('notification.death.deathDate')}
-                      allowFuture={false}
-                    />
-                    {!deathDateValid && (
-                      <p role="alert" className="text-sm text-destructive">
-                        {t('notification.validation.deathDateBeforeEventDate')}
-                      </p>
-                    )}
-                  </div>
-                )}
-              />
-
-              <Controller
-                control={form.control}
-                name="autopsyRequested"
-                render={({ field }) => (
-                  <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
-                    <Switch
-                      checked={field.value === true}
-                      onCheckedChange={field.onChange}
-                      aria-label={t('notification.death.autopsyRequested')}
-                    />
-                    {t('notification.death.autopsyRequested')}
-                  </label>
-                )}
-              />
-
-              <Controller
-                control={form.control}
-                name="verbalAutopsyPerformed"
-                render={({ field }) => (
-                  <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
-                    <Switch
-                      checked={field.value === true}
-                      onCheckedChange={field.onChange}
-                      aria-label={t('notification.death.verbalAutopsyPerformed')}
-                    />
-                    {t('notification.death.verbalAutopsyPerformed')}
-                  </label>
-                )}
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-foreground">
-            {t('notification.fields.requestInvestigation')}
-          </span>
-          <p className="text-sm text-muted-foreground">
-            {t('notification.help.requestInvestigation')}
-          </p>
-          <Controller
-            control={form.control}
-            name="requestInvestigation"
-            render={({ field }) => (
-              <RadioGroup
-                aria-label={t('notification.fields.requestInvestigation')}
-                // Cadena vacía, no `undefined`, mientras no se responda — mismo motivo que la
-                // compuerta de gravedad de `ClassificationStep` (Radix trata un `RadioGroup` sin
-                // `value` inicial como no controlado).
-                value={field.value === true ? 'true' : field.value === false ? 'false' : ''}
-                onValueChange={(next) => field.onChange(next === 'true')}
-                className="flex w-auto gap-4"
-              >
-                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                  <RadioGroupItem value="true" />
-                  {t('common.answerOption.yes')}
-                </label>
-                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                  <RadioGroupItem value="false" />
-                  {t('common.answerOption.no')}
-                </label>
-              </RadioGroup>
-            )}
-          />
-        </div>
-      </section>
-
-      <Controller
-        control={form.control}
-        name="notes"
-        render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="notification-notes" className="text-sm font-medium text-foreground">
-              {t('notification.fields.notes')}
-            </label>
-            <Textarea
-              id="notification-notes"
-              value={field.value ?? ''}
-              onChange={(event) => field.onChange(event.target.value || null)}
-            />
-          </div>
-        )}
-      />
+      )}
     </div>
   );
 }
@@ -1190,6 +1386,13 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
   const femaleSexConfig = useSystemConfigByCode(PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE);
   const pregnancyConfigMissing = femaleSexConfig.data === null;
 
+  // Set on the first render that mounts the body, and never cleared (SPEC FE12f §3.4, decided
+  // while implementing): a query that only becomes enabled after the first advance — the branch
+  // row, the pregnancy block — turns `readyToRenderForm` false for a moment, and swapping the
+  // form back for the skeleton would unmount it, taking the frozen `existedOnMount` and the
+  // progressive position with it.
+  const formEverRenderedRef = useRef(false);
+
   const readyToRenderForm =
     !!workflow.data &&
     !!esaviCase.data &&
@@ -1249,7 +1452,11 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
     );
   }
 
-  if (!readyToRenderForm) {
+  // The skeleton only stands in before the form exists. Inside that transient window the branch
+  // row arrives as `null` for a render; a second advance there would `POST` again, which the chain
+  // already reads as success (`SEVNOT_001_ALREADY_EXISTS`, SPEC FE12a §3.5).
+  if (readyToRenderForm) formEverRenderedRef.current = true;
+  if (!readyToRenderForm && !formEverRenderedRef.current) {
     return <NotificationStepSkeleton />;
   }
 
@@ -1273,6 +1480,7 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       isClosed={isClosed}
       pregnancyLoadError={notificationPregnancy.isError}
       onRetryPregnancyLoad={() => void notificationPregnancy.refetch()}
+      stageExisted={stageExists}
     />
   );
 }
