@@ -91,6 +91,8 @@ El primero deja de ser observable: la sección 2 no se revela antes de que el pr
 
 **Rama no grave — nueve avances:** las mismas, más «Antecedentes de vacunación o inmunización» y «¿Cómo se verificó la información de la vacunación?» entre el embarazo y las vacunas, ambas con botón.
 
+**«Antecedentes farmacológicos» sólo entra en la secuencia con su compuerta abierta** (decisión tomada al implementar, 2026-09-10). `<MedicationList>` no se pinta con `takesMedication` fuera de `'YES'` y sin filas activas (SPEC FE12b §3.5), así que en esa situación tampoco consume un avance: un botón que revela una franja vacía de pantalla es justo lo que este spec existe para quitar. La pregunta que abre la compuerta vive en la sección anterior, «Antecedentes de la persona vacunada», de modo que se responde antes de llegar. Es la misma regla que ya se aplicaba a «Antecedentes médicos» y al bloque de embarazo.
+
 ### 3.2 Endpoints consumidos
 
 Ninguno nuevo. Copiados textualmente de `references/API-ROUTES.md`; lo que este spec cambia es **cuándo** se llaman, no cuáles:
@@ -142,6 +144,8 @@ useProgressiveSections<Id extends string>(input: {
 | Qué secciones son visibles | derivado en render | la regla de §3.1 | no es estado |
 | Qué sección pinta el botón | derivado en render | la última visible con botón | no es estado |
 | Borrador sin guardar | Zustand `drafts` | `drafts[caseId]['notification']` | **no cambia** |
+
+**El cuerpo del formulario no se desmonta a mitad de recorrido** (decisión tomada al implementar, 2026-09-10). `NotificationStep` sólo montaba `NotificationFormBody` con todas las consultas resueltas, y el primer avance vuelve a bajar esa condición: el `POST` pone `stages.notification.exists` en `true`, con ello se habilitan la consulta de la ficha de rama y la del bloque de embarazo, y ambas pasan por `pending`. Sustituir el formulario por el esqueleto en esa ventana lo desmonta, y con él se van **las dos cosas de esta tabla**: el `useRef` congelado —que al remontar ya leería `true`— y el contador de avances. En la aplicación real eso significaba que el primer «Guardar y continuar» revelaba el paso entero de golpe. Desde este spec, el esqueleto sólo sustituye al formulario **antes** del primer montaje; después, un refetch ya no lo reemplaza. La contrapartida está acotada: durante esa ventana la ficha de rama llega como `null`, y un segundo avance dentro de ella mandaría `POST` en vez de `PUT` — que la cadena ya trata como éxito (`SEVNOT_001_ALREADY_EXISTS`, SPEC FE12a §3.5).
 
 **Los cuatro puntos obligatorios:**
 

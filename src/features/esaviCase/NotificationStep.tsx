@@ -801,11 +801,16 @@ function NotificationFormBody({
   // The sections that apply today, in DOM order — never the nine or eleven theoretical ones (SPEC
   // FE12f §3.1). A closed gate or a male patient drops the section from the list, so it neither
   // renders nor counts as an advance.
+  // The same gate `<MedicationList>` applies to itself (SPEC FE12b §3.5): with `takesMedication`
+  // outside `'YES'` and no active rows it renders nothing, so it must not take a turn either — an
+  // advance that reveals an empty stretch of screen is the one thing this spec exists to remove.
+  const showsMedicationSection = watchedValues.takesMedication === 'YES' || hasActiveMedications;
+
   const sections: NotificationSectionId[] = [
     'description',
     'background',
     ...(showsMedicalHistorySection ? (['medicalHistory'] as const) : []),
-    'medications',
+    ...(showsMedicationSection ? (['medications'] as const) : []),
     ...(pregnancyGate !== 'hidden' ? (['pregnancy'] as const) : []),
     ...(notificationType === 'NON_SEVERE'
       ? (['vaccinationBackground', 'verificationSource'] as const)
@@ -1381,6 +1386,13 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
   const femaleSexConfig = useSystemConfigByCode(PREGNANCY_FEMALE_SEX_ITEM_CONFIG_CODE);
   const pregnancyConfigMissing = femaleSexConfig.data === null;
 
+  // Set on the first render that mounts the body, and never cleared (SPEC FE12f §3.4, decided
+  // while implementing): a query that only becomes enabled after the first advance — the branch
+  // row, the pregnancy block — turns `readyToRenderForm` false for a moment, and swapping the
+  // form back for the skeleton would unmount it, taking the frozen `existedOnMount` and the
+  // progressive position with it.
+  const formEverRenderedRef = useRef(false);
+
   const readyToRenderForm =
     !!workflow.data &&
     !!esaviCase.data &&
@@ -1440,7 +1452,11 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
     );
   }
 
-  if (!readyToRenderForm) {
+  // The skeleton only stands in before the form exists. Inside that transient window the branch
+  // row arrives as `null` for a render; a second advance there would `POST` again, which the chain
+  // already reads as success (`SEVNOT_001_ALREADY_EXISTS`, SPEC FE12a §3.5).
+  if (readyToRenderForm) formEverRenderedRef.current = true;
+  if (!readyToRenderForm && !formEverRenderedRef.current) {
     return <NotificationStepSkeleton />;
   }
 
