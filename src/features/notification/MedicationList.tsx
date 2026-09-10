@@ -112,7 +112,7 @@ export function MedicationList({
         </p>
       )}
       <SatelliteList<NotificationMedicationDetail>
-        titleKey="notification.medications.sectionTitle"
+        titleKey="notification.section.medication"
         columns={columns}
         rows={rows}
         idField="medicationId"

@@ -219,7 +219,7 @@ describe('CaseWizardPage — reanudación y bloqueo de paso', () => {
     // is the most advanced unlocked step — investigation/final-classification stay locked
     // (their precondition, notification.exists, is still false). `notification` no es ya un
     // placeholder (SPEC FE12a) — se confirma con el propio formulario, no con el slug crudo.
-    await waitFor(() => expect(screen.getByLabelText('Descripción del ESAVI')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByLabelText('Descripción del ESAVI (signos y síntomas)')).toBeInTheDocument());
   });
 });
 

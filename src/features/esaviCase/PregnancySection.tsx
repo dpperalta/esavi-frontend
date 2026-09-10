@@ -2,7 +2,11 @@ import { useRef } from 'react';
 import { addDays, format } from 'date-fns';
 import { Controller, useController, type Control } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { NotificationFormValues, PregnancyGateState } from '@/features/notification/schemas';
+import {
+  isPregnancyDescriptionRequirementMet,
+  type NotificationFormValues,
+  type PregnancyGateState,
+} from '@/features/notification/schemas';
 import { PregnancyComplicationList } from '@/features/notification/PregnancyComplicationList';
 import { AnswerOptionField } from '@/shared/components/AnswerOptionField';
 import { DateField } from '@/shared/components/DateField';
@@ -32,6 +36,14 @@ export interface PregnancySectionProps {
   // si de verdad no hubiera datos, en vez de avisar que la lectura falló.
   loadError: boolean;
   onRetryLoad: () => void;
+  // `hasPregnancyComplications` y `pregnancyComplicationsDescription` son columnas de
+  // `severeNotification`, no del bloque de embarazo (SPEC FE12e §3.1, §6): el formulario las pide
+  // pegadas a las complicaciones porque son su resumen, así que este componente compartido recibe
+  // dos campos que sólo existen en la rama grave y no los pinta en la otra.
+  showsSevereComplications: boolean;
+  hasPregnancyComplications:
+    'YES' | 'NO' | 'UNKNOWN' | 'NOT_APPLICABLE' | 'NO_ANSWER' | null | undefined;
+  pregnancyComplicationsDescription: string | null | undefined;
 }
 
 // El bloque de embarazo (SPEC FE12d §4 paso 7), encadenado al `useForm` de `NotificationStep`
@@ -49,8 +61,19 @@ export function PregnancySection({
   complicationsDerived,
   loadError,
   onRetryLoad,
+  showsSevereComplications,
+  hasPregnancyComplications,
+  pregnancyComplicationsDescription,
 }: PregnancySectionProps) {
   const { t } = useTranslation();
+  const effectiveHasPregnancyComplications = complicationsDerived
+    ? 'YES'
+    : hasPregnancyComplications;
+  const showsPregnancyDescription = effectiveHasPregnancyComplications === 'YES';
+  const pregnancyDescriptionCoherent = isPregnancyDescriptionRequirementMet(
+    effectiveHasPregnancyComplications,
+    pregnancyComplicationsDescription,
+  );
 
   // `useController`, no `Controller`, para las dos fechas (SPEC FE12d §3.5, §4 paso 12): la
   // sugerencia de parto necesita leer y escribir `probableDeliveryDate` desde el propio
@@ -93,9 +116,9 @@ export function PregnancySection({
             {t('notification.pregnancy.ifApplicable')}
           </span>
         )}
-        <span className="text-sm font-medium text-foreground">
+        <h3 className="text-sm font-medium text-foreground">
           {t('notification.pregnancy.sectionTitle')}
-        </span>
+        </h3>
       </div>
 
       {loadError && (
@@ -123,25 +146,6 @@ export function PregnancySection({
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-foreground">
-                {t('notification.pregnancy.field.wasPregnantAtVaccination')}
-              </span>
-              <Controller
-                control={control}
-                name="wasPregnantAtVaccination"
-                render={({ field }) => (
-                  <AnswerOptionField
-                    value={field.value ?? null}
-                    onChange={field.onChange}
-                    ariaLabel={t('notification.pregnancy.field.wasPregnantAtVaccination')}
-                    variant="unknown"
-                    disabled={configMissing}
-                  />
-                )}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-foreground">
                 {t('notification.pregnancy.field.wasPregnantAtEsavi')}
               </span>
               <Controller
@@ -152,6 +156,25 @@ export function PregnancySection({
                     value={field.value ?? null}
                     onChange={field.onChange}
                     ariaLabel={t('notification.pregnancy.field.wasPregnantAtEsavi')}
+                    variant="unknown"
+                    disabled={configMissing}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.pregnancy.field.wasPregnantAtVaccination')}
+              </span>
+              <Controller
+                control={control}
+                name="wasPregnantAtVaccination"
+                render={({ field }) => (
+                  <AnswerOptionField
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    ariaLabel={t('notification.pregnancy.field.wasPregnantAtVaccination')}
                     variant="unknown"
                     disabled={configMissing}
                   />
@@ -227,6 +250,75 @@ export function PregnancySection({
               </p>
             )}
           </div>
+        </>
+      )}
+
+      <PregnancyComplicationList pregnancyId={pregnancyId} readOnly={isClosed} />
+
+      {/* The complication list comes before its severe-branch summary, not after: SPEC FE12e §3.1
+          orders section 4 as the five questions, the complication list, then
+          `pregnancyComplicationsDescription` and `pregnancyNotes`. That splits the `!loadError`
+          body in two around a list that renders regardless of the pregnancy GET. */}
+      {!loadError && (
+        <>
+          {showsSevereComplications && (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.severe.hasPregnancyComplications')}
+              </span>
+              <Controller
+                control={control}
+                name="hasPregnancyComplications"
+                render={({ field }) => (
+                  <AnswerOptionField
+                    value={complicationsDerived ? 'YES' : (field.value ?? null)}
+                    onChange={field.onChange}
+                    ariaLabel={t('notification.severe.hasPregnancyComplications')}
+                    variant="unknown"
+                    disabled={complicationsDerived}
+                  />
+                )}
+              />
+              {/* §6.5: mismo texto que el campo de arriba, compartido entre las dos mitades de la
+              derivación (§3.8 "compartida por los dos campos"). */}
+              {complicationsDerived && (
+                <p className="text-sm text-muted-foreground">
+                  {t('notification.pregnancy.derived.hasComplications')}
+                </p>
+              )}
+
+              {/* Visible sólo con hasPregnancyComplications === 'YES' (SPEC FE12a §3.5, §7) —
+              mismo motivo de aria-live que las otras secciones condicionales. */}
+              <div aria-live="polite">
+                {showsPregnancyDescription && (
+                  <Controller
+                    control={control}
+                    name="pregnancyComplicationsDescription"
+                    render={({ field }) => (
+                      <div className="flex flex-col gap-1.5">
+                        <label
+                          htmlFor="severeNotification-pregnancyComplicationsDescription"
+                          className="text-sm font-medium text-foreground"
+                        >
+                          {t('notification.severe.pregnancyComplicationsDescription')}
+                        </label>
+                        <Textarea
+                          id="severeNotification-pregnancyComplicationsDescription"
+                          value={field.value ?? ''}
+                          onChange={(event) => field.onChange(event.target.value || null)}
+                        />
+                        {!pregnancyDescriptionCoherent && (
+                          <p role="alert" className="text-sm text-destructive">
+                            {t('notification.validation.pregnancyDescriptionRequired')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  />
+                )}
+              </div>
+            </div>
+          )}
 
           <Controller
             control={control}
@@ -247,8 +339,6 @@ export function PregnancySection({
           />
         </>
       )}
-
-      <PregnancyComplicationList pregnancyId={pregnancyId} readOnly={isClosed} />
     </div>
   );
 }

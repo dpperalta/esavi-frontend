@@ -161,8 +161,8 @@ describe('MedicationFormDialog — SPEC FE12b §4 paso 10', () => {
     await user.click(await screen.findByRole('option', { name: /Paracetamol/ }));
     await screen.findByText('Del catálogo de medicamentos.');
 
-    await user.click(screen.getByRole('switch', { name: 'Otra medicación (no está en el catálogo)' }));
-    await user.type(screen.getByLabelText('Describe la medicación'), 'Paracetamol de otra marca');
+    await user.click(screen.getByRole('switch', { name: 'Otro (no consta en la lista)' }));
+    await user.type(screen.getByLabelText('Describa el medicamento'), 'Paracetamol de otra marca');
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
     await waitFor(() => expect(requestBody).not.toBeNull());

@@ -33,6 +33,10 @@ export interface VaccineFormDialogProps {
   eventDate: string | null;
   // `null` significa «crear» — mismo precedente que `EventFormDialog`/`MedicationFormDialog`.
   vaccineId: string | null;
+  // Only the severe branch collects diluents (SPEC FE12e §3.1, §4 paso 9): the non-severe form
+  // does not ask for them and there are no rows to hide. `notificationType` lives in
+  // `NotificationStep`, so it arrives here as a flag, not as the branch itself.
+  showsDiluents: boolean;
 }
 
 function isRoleForbidden(error: EsaviApiError): boolean {
@@ -49,12 +53,18 @@ interface VaccineFormFieldsProps {
   // El id real de la vacuna ya creada — `null` mientras sigue en fase 1 (SPEC FE12c §3.1, §4
   // paso 9). Nunca el de `defaultValues`: ese no cambia cuando el `POST` de fase 1 responde.
   savedVaccineId: string | null;
+  showsDiluents: boolean;
 }
 
 // Separado de `VaccineFormDialog`, misma razón que `EventFormFields`: sus campos no existen
 // mientras `existing` no ha resuelto en modo edición, y no pueden montarse a medio camino de los
 // hooks del diálogo.
-function VaccineFormFields({ form, mutationError, savedVaccineId }: VaccineFormFieldsProps) {
+function VaccineFormFields({
+  form,
+  mutationError,
+  savedVaccineId,
+  showsDiluents,
+}: VaccineFormFieldsProps) {
   const { t } = useTranslation();
   const vaccineWhodrugId = form.watch('vaccineWhodrugId') ?? null;
   const vaccinationDate = form.watch('vaccinationDate') ?? null;
@@ -269,7 +279,9 @@ function VaccineFormFields({ form, mutationError, savedVaccineId }: VaccineFormF
         )}
       />
 
-      <DiluentList vaccineId={savedVaccineId} vaccinationDate={vaccinationDate} />
+      {showsDiluents && (
+        <DiluentList vaccineId={savedVaccineId} vaccinationDate={vaccinationDate} />
+      )}
     </>
   );
 }
@@ -285,6 +297,7 @@ export function VaccineFormDialog({
   notificationId,
   eventDate,
   vaccineId,
+  showsDiluents,
 }: VaccineFormDialogProps) {
   const { t } = useTranslation();
   // El id real una vez responde el `POST` de fase 1 — mientras `vaccineId` (el de alta) siga
@@ -406,7 +419,7 @@ export function VaccineFormDialog({
             cancelLabel="common.satelliteList.cancel"
           >
             {(form) => (
-              <VaccineFormFields form={form} mutationError={mutationError} savedVaccineId={savedVaccineId} />
+              <VaccineFormFields form={form} mutationError={mutationError} savedVaccineId={savedVaccineId} showsDiluents={showsDiluents} />
             )}
           </ResourceForm>
         )}

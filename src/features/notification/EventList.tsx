@@ -119,7 +119,7 @@ export function EventList({ caseId, notificationId, readOnly = false }: EventLis
   return (
     <div className="flex flex-col gap-3">
       <SatelliteList<NotificationEventDetail>
-        titleKey="notification.events.sectionTitle"
+        titleKey="notification.section.events"
         columns={columns}
         rows={events.data?.rows ?? []}
         idField="eventId"

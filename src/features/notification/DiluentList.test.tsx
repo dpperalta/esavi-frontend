@@ -112,7 +112,7 @@ describe('DiluentList — SPEC FE12c §4 paso 9', () => {
     renderList('v-1', '2026-03-10');
 
     await user.click(await screen.findByRole('button', { name: 'Añadir diluyente' }));
-    await user.type(screen.getByLabelText('Nombre del diluyente'), 'Agua estéril');
+    await user.type(screen.getByLabelText('Describa el diluyente'), 'Agua estéril');
     fireEvent.change(screen.getByLabelText('Fecha de reconstitución'), { target: { value: '2026-03-15' } });
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 

@@ -4,6 +4,7 @@ import type { CreateNonSevereNotificationInput } from '@/contracts/nonSevereNoti
 import type { CreateNotificationEventInput } from '@/contracts/notificationEvent';
 import type { CreateNotificationInput, NotificationType } from '@/contracts/notification';
 import type { CreateNotificationMedicationInput } from '@/contracts/notificationMedication';
+import type { CreateNotificationMedicalHistoryInput } from '@/contracts/notificationMedicalHistory';
 import type { CreateNotificationDiluentInput } from '@/contracts/notificationDiluent';
 import type { CreateNotificationVaccineInput } from '@/contracts/notificationVaccine';
 import type { CreateNotificationPregnancyInput } from '@/contracts/notificationPregnancy';
@@ -31,7 +32,10 @@ export type NotificationFormValues = Omit<
     severeNotes?: CreateSevereNotificationInput['notes'];
   } & Omit<CreateNonSevereNotificationInput, 'notificationId' | 'notes'> & {
     nonSevereNotes?: CreateNonSevereNotificationInput['notes'];
-  } & Omit<CreateNotificationPregnancyInput, 'notificationId' | 'isActive' | 'wasPregnantAtVaccination' | 'notes'> & {
+  } & Omit<
+    CreateNotificationPregnancyInput,
+    'notificationId' | 'isActive' | 'wasPregnantAtVaccination' | 'notes'
+  > & {
     wasPregnantAtVaccination?: AnswerOption | null;
     pregnancyNotes?: CreateNotificationPregnancyInput['notes'];
   };
@@ -56,7 +60,10 @@ const notificationBaseSchema = z.object({
   hasAllergyToMedications: answerOptionSchema.nullable().optional(),
   hasAllergyToPreviousSameVaccine: answerOptionSchema.nullable().optional(),
   hasPregnancyComplications: answerOptionSchema.nullable().optional(),
-  pregnancyComplicationsDescription: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  pregnancyComplicationsDescription: z.preprocess(
+    emptyToUndefined,
+    z.string().nullable().optional(),
+  ),
   severeNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   vaccinationHealthFacilityId: z.string().uuid().nullable().optional(),
   vaccinationSiteItemId: z.string().uuid().nullable().optional(),
@@ -97,13 +104,19 @@ const notificationBaseSchema = z.object({
 // importa aquí.
 export const notificationSaveSchema = notificationBaseSchema.superRefine((data, ctx) => {
   if (!isGestationRangeCoherent(data.lastMenstruationDate, data.probableDeliveryDate)) {
-    ctx.addIssue({ code: 'custom', message: 'deliveryDateOutOfRange', path: ['probableDeliveryDate'] });
+    ctx.addIssue({
+      code: 'custom',
+      message: 'deliveryDateOutOfRange',
+      path: ['probableDeliveryDate'],
+    });
   }
 });
 
 // Never called, only type-checked — same technique as `_assertSchemaMatchesContract` in
 // `features/classification/schemas.ts`.
-function _assertSchemaMatchesContract(value: z.infer<typeof notificationSaveSchema>): NotificationFormValues {
+function _assertSchemaMatchesContract(
+  value: z.infer<typeof notificationSaveSchema>,
+): NotificationFormValues {
   return value;
 }
 void _assertSchemaMatchesContract;
@@ -333,7 +346,11 @@ export function createNotificationCompleteSchema({
 
     if (notificationType === 'NON_SEVERE') {
       if (!data.vaccinationHealthFacilityId) {
-        ctx.addIssue({ code: 'custom', message: 'required', path: ['vaccinationHealthFacilityId'] });
+        ctx.addIssue({
+          code: 'custom',
+          message: 'required',
+          path: ['vaccinationHealthFacilityId'],
+        });
       }
       if (!data.vaccinationSiteItemId) {
         ctx.addIssue({ code: 'custom', message: 'required', path: ['vaccinationSiteItemId'] });
@@ -344,10 +361,17 @@ export function createNotificationCompleteSchema({
       if (!hasAnyVerificationSource(data)) {
         // Group-level error, no single field owns it — same technique as `criteria` in
         // `features/classification/schemas.ts`.
-        ctx.addIssue({ code: 'custom', message: 'atLeastOneVerificationSource', path: ['verifiedAny'] });
+        ctx.addIssue({
+          code: 'custom',
+          message: 'atLeastOneVerificationSource',
+          path: ['verifiedAny'],
+        });
       }
       if (
-        !isOtherSourceDescriptionRequirementMet(data.verifiedOtherSource, data.otherSourceDescription)
+        !isOtherSourceDescriptionRequirementMet(
+          data.verifiedOtherSource,
+          data.otherSourceDescription,
+        )
       ) {
         ctx.addIssue({
           code: 'custom',
@@ -373,14 +397,18 @@ export const notificationErrorFieldMap: Partial<Record<string, keyof Notificatio
   NOTIFCN_004_DEATH_FIELDS_NOT_ALLOWED: 'outcomeItemId',
 };
 
-export const severeNotificationErrorFieldMap: Partial<Record<string, keyof NotificationFormValues>> = {
+export const severeNotificationErrorFieldMap: Partial<
+  Record<string, keyof NotificationFormValues>
+> = {
   SEVNOT_001_PREGNANCY_DESCRIPTION_REQUIRED: 'pregnancyComplicationsDescription',
   SEVNOT_004_PREGNANCY_DESCRIPTION_REQUIRED: 'pregnancyComplicationsDescription',
   SEVNOT_001_PREGNANCY_DESCRIPTION_NOT_ALLOWED: 'pregnancyComplicationsDescription',
   SEVNOT_004_PREGNANCY_DESCRIPTION_NOT_ALLOWED: 'pregnancyComplicationsDescription',
 };
 
-export const nonSevereNotificationErrorFieldMap: Partial<Record<string, keyof NotificationFormValues>> = {
+export const nonSevereNotificationErrorFieldMap: Partial<
+  Record<string, keyof NotificationFormValues>
+> = {
   NSEVNOT_001_OTHER_SOURCE_DESCRIPTION_REQUIRED: 'otherSourceDescription',
   NSEVNOT_004_OTHER_SOURCE_DESCRIPTION_REQUIRED: 'otherSourceDescription',
   NSEVNOT_001_OTHER_SOURCE_DESCRIPTION_NOT_ALLOWED: 'otherSourceDescription',
@@ -399,7 +427,9 @@ export const nonSevereNotificationErrorFieldMap: Partial<Record<string, keyof No
 // pueda corregir ahí mismo — el primero se corrige en el paso 1 del asistente, el segundo es un
 // despliegue sin configurar, y el tercero exige un `SUPERADMIN` — así que se cablean por código
 // exacto en `NotificationStep`, no aquí.
-export const notificationPregnancyErrorFieldMap: Partial<Record<string, keyof NotificationFormValues>> = {
+export const notificationPregnancyErrorFieldMap: Partial<
+  Record<string, keyof NotificationFormValues>
+> = {
   NOTIFPRG_001_DELIVERY_DATE_OUT_OF_RANGE: 'probableDeliveryDate',
   NOTIFPRG_004_DELIVERY_DATE_OUT_OF_RANGE: 'probableDeliveryDate',
 };
@@ -419,7 +449,10 @@ export const NOTIFPRG_ALREADY_EXISTS = 'NOTIFPRG_001_ALREADY_EXISTS';
 // `source` viaja al crear/actualizar y nunca vuelve en la respuesta (§3.3): es el único campo del
 // tipo que no es columna. `diagnosticTermId` y `esaviRawName` son derivados — la resolución los
 // escribe — y por eso no están aquí, igual que en `CreateNotificationEventInput`.
-export type NotificationEventFormValues = Omit<CreateNotificationEventInput, 'notificationId' | 'isActive'>;
+export type NotificationEventFormValues = Omit<
+  CreateNotificationEventInput,
+  'notificationId' | 'isActive'
+>;
 
 const timeRegex = /^\d{2}:\d{2}$/;
 
@@ -457,15 +490,26 @@ export const notificationEventSchema = z
     startDate: z.string().regex(isoDateRegex).nullable().optional(),
     startTime: z.preprocess(emptyToUndefined, z.string().regex(timeRegex).nullable().optional()),
     isOtherEsavi: z.boolean().optional(),
-    otherDescription: z.preprocess(emptyToUndefined, z.string().trim().max(500).nullable().optional()),
+    otherDescription: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().max(500).nullable().optional(),
+    ),
     notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
   })
   .superRefine((data, ctx) => {
     if (!isOtherEsaviDescriptionCoherent(data.isOtherEsavi, data.otherDescription)) {
       if (data.isOtherEsavi === true) {
-        ctx.addIssue({ code: 'custom', message: 'otherDescriptionRequired', path: ['otherDescription'] });
+        ctx.addIssue({
+          code: 'custom',
+          message: 'otherDescriptionRequired',
+          path: ['otherDescription'],
+        });
       } else {
-        ctx.addIssue({ code: 'custom', message: 'otherDescriptionNotAllowed', path: ['isOtherEsavi'] });
+        ctx.addIssue({
+          code: 'custom',
+          message: 'otherDescriptionNotAllowed',
+          path: ['isOtherEsavi'],
+        });
       }
     }
     if (!isOtherEsaviCodeConflictAbsent(data.isOtherEsavi, data.esaviCode)) {
@@ -478,7 +522,9 @@ export const notificationEventSchema = z
 // oculto en ese momento (mismo criterio que `NOTIFCN_004_DEATH_FIELDS_NOT_ALLOWED` en FE12a). Los
 // dos `404` de `DIAGTERM_NOT_FOUND` no están aquí — tienen comportamiento propio, no un campo que
 // señalar (§3.5, cablea en el paso 9).
-export const notificationEventErrorFieldMap: Partial<Record<string, keyof NotificationEventFormValues>> = {
+export const notificationEventErrorFieldMap: Partial<
+  Record<string, keyof NotificationEventFormValues>
+> = {
   NOTIFEVT_001_OTHER_DESCRIPTION_REQUIRED: 'otherDescription',
   NOTIFEVT_004_OTHER_DESCRIPTION_REQUIRED: 'otherDescription',
   NOTIFEVT_001_OTHER_DESCRIPTION_NOT_ALLOWED: 'isOtherEsavi',
@@ -520,7 +566,10 @@ export function isMedicationCodeClearedWhenOther(
 export const notificationMedicationSchema = z
   .object({
     medicationName: z.string().trim().min(1).max(250),
-    medicationCode: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
+    medicationCode: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().max(250).nullable().optional(),
+    ),
     dose: z.preprocess(emptyToUndefined, z.string().trim().max(100).nullable().optional()),
     pharmaceuticalFormItemId: z.string().uuid().nullable().optional(),
     administrationRouteItemId: z.string().uuid().nullable().optional(),
@@ -533,15 +582,27 @@ export const notificationMedicationSchema = z
   .superRefine((data, ctx) => {
     if (!isOtherMedicationTextCoherent(data.isOtherMedication, data.otherMedicationText)) {
       if (data.isOtherMedication === true) {
-        ctx.addIssue({ code: 'custom', message: 'otherTextRequired', path: ['otherMedicationText'] });
+        ctx.addIssue({
+          code: 'custom',
+          message: 'otherTextRequired',
+          path: ['otherMedicationText'],
+        });
       } else {
-        ctx.addIssue({ code: 'custom', message: 'otherTextNotAllowed', path: ['isOtherMedication'] });
+        ctx.addIssue({
+          code: 'custom',
+          message: 'otherTextNotAllowed',
+          path: ['isOtherMedication'],
+        });
       }
     }
     // La cuarta regla es del cliente, no del backend (§3.5): no hay código de error del servicio
     // que mapear aquí, sólo la coherencia local antes de enviar.
     if (!isMedicationCodeClearedWhenOther(data.isOtherMedication, data.medicationCode)) {
-      ctx.addIssue({ code: 'custom', message: 'medicationCodeNotAllowed', path: ['isOtherMedication'] });
+      ctx.addIssue({
+        code: 'custom',
+        message: 'medicationCodeNotAllowed',
+        path: ['isOtherMedication'],
+      });
     }
   });
 
@@ -609,7 +670,10 @@ export function createNotificationVaccineSchema({ eventDate }: NotificationVacci
       vaccineCode: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
       vaccineName: z.preprocess(emptyToUndefined, z.string().trim().max(500).nullable().optional()),
       vaccinationDate: z.string().regex(isoDateRegex).nullable().optional(),
-      vaccinationTime: z.preprocess(emptyToUndefined, z.string().regex(timeRegex).nullable().optional()),
+      vaccinationTime: z.preprocess(
+        emptyToUndefined,
+        z.string().regex(timeRegex).nullable().optional(),
+      ),
       // Entero >= 0, sin techo (§3.5: a diferencia de los nueve contadores con techo de `smallint`
       // de `ARCHITECTURE.md` §4.3, esta columna no lo tiene).
       doseNumber: z.number().int().min(0).nullable().optional(),
@@ -622,14 +686,20 @@ export function createNotificationVaccineSchema({ eventDate }: NotificationVacci
         ctx.addIssue({ code: 'custom', message: 'vaccineRequired', path: ['vaccineName'] });
       }
       if (!isVaccinationNotAfterEventDate(data.vaccinationDate, eventDate)) {
-        ctx.addIssue({ code: 'custom', message: 'vaccinationAfterEvent', path: ['vaccinationDate'] });
+        ctx.addIssue({
+          code: 'custom',
+          message: 'vaccinationAfterEvent',
+          path: ['vaccinationDate'],
+        });
       }
     });
 }
 
 // SPEC FE12c §3.5 "Códigos de error mapeados". `NOTIFVAC_00X_WHODRUG_NOT_FOUND` no está aquí: va
 // al `<WhodrugTreePicker>`, no a un campo del formulario (cableado en el paso 9).
-export const notificationVaccineErrorFieldMap: Partial<Record<string, keyof NotificationVaccineFormValues>> = {
+export const notificationVaccineErrorFieldMap: Partial<
+  Record<string, keyof NotificationVaccineFormValues>
+> = {
   NOTIFVAC_001_VACCINE_REQUIRED: 'vaccineName',
   NOTIFVAC_004_VACCINE_REQUIRED: 'vaccineName',
   NOTIFVAC_001_VACCINATION_AFTER_EVENT: 'vaccinationDate',
@@ -657,7 +727,10 @@ export function isReconstitutionNotAfterVaccination(
   return reconstitutionDate <= vaccinationDate;
 }
 
-export type NotificationDiluentFormValues = Omit<CreateNotificationDiluentInput, 'vaccineId' | 'isActive'>;
+export type NotificationDiluentFormValues = Omit<
+  CreateNotificationDiluentInput,
+  'vaccineId' | 'isActive'
+>;
 
 export interface NotificationDiluentContext {
   // `vaccinationDate` de la fila de `notificationVaccine` a la que cuelga este diluyente — no un
@@ -675,7 +748,10 @@ export function createNotificationDiluentSchema({ vaccinationDate }: Notificatio
       expirationDate: z.string().regex(isoDateRegex).nullable().optional(),
       reconstitutionDate: z.string().regex(isoDateRegex).nullable().optional(),
       // No entra en ninguna comparación (§3.5) — se declara igual que cualquier otra hora.
-      reconstitutionTime: z.preprocess(emptyToUndefined, z.string().regex(timeRegex).nullable().optional()),
+      reconstitutionTime: z.preprocess(
+        emptyToUndefined,
+        z.string().regex(timeRegex).nullable().optional(),
+      ),
       diluentName: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
       diluentCode: z.preprocess(emptyToUndefined, z.string().trim().max(250).nullable().optional()),
     })
@@ -684,7 +760,11 @@ export function createNotificationDiluentSchema({ vaccinationDate }: Notificatio
         ctx.addIssue({ code: 'custom', message: 'diluentRequired', path: ['diluentName'] });
       }
       if (!isReconstitutionNotAfterVaccination(data.reconstitutionDate, vaccinationDate)) {
-        ctx.addIssue({ code: 'custom', message: 'reconstitutionAfterVaccination', path: ['reconstitutionDate'] });
+        ctx.addIssue({
+          code: 'custom',
+          message: 'reconstitutionAfterVaccination',
+          path: ['reconstitutionDate'],
+        });
       }
     });
 }
@@ -692,7 +772,9 @@ export function createNotificationDiluentSchema({ vaccinationDate }: Notificatio
 // SPEC FE12c §3.5. El código real del backend es `CATALOG_NOT_FOUND`
 // (esavi-backend/src/services/notificationDiluent.service.ts), no `DILUENT_NOT_FOUND` como cita
 // la prosa del spec — se mapea el código estable, no la paráfrasis.
-export const notificationDiluentErrorFieldMap: Partial<Record<string, keyof NotificationDiluentFormValues>> = {
+export const notificationDiluentErrorFieldMap: Partial<
+  Record<string, keyof NotificationDiluentFormValues>
+> = {
   NOTIFDIL_001_DILUENT_REQUIRED: 'diluentName',
   NOTIFDIL_004_DILUENT_REQUIRED: 'diluentName',
   NOTIFDIL_001_RECONSTITUTION_AFTER_VACCINATION: 'reconstitutionDate',
@@ -772,7 +854,11 @@ export const notificationPregnancyCreateSchema = z
   })
   .superRefine((data, ctx) => {
     if (!isGestationRangeCoherent(data.lastMenstruationDate, data.probableDeliveryDate)) {
-      ctx.addIssue({ code: 'custom', message: 'deliveryDateOutOfRange', path: ['probableDeliveryDate'] });
+      ctx.addIssue({
+        code: 'custom',
+        message: 'deliveryDateOutOfRange',
+        path: ['probableDeliveryDate'],
+      });
     }
   });
 
@@ -785,7 +871,11 @@ export const notificationPregnancyUpdateSchema = z
   })
   .superRefine((data, ctx) => {
     if (!isGestationRangeCoherent(data.lastMenstruationDate, data.probableDeliveryDate)) {
-      ctx.addIssue({ code: 'custom', message: 'deliveryDateOutOfRange', path: ['probableDeliveryDate'] });
+      ctx.addIssue({
+        code: 'custom',
+        message: 'deliveryDateOutOfRange',
+        path: ['probableDeliveryDate'],
+      });
     }
   });
 
@@ -805,7 +895,10 @@ export type NotificationPregnancyComplicationFormValues = Omit<
 // en el `PUT`"), así que un único schema basta para las dos operaciones.
 export const notificationPregnancyComplicationSchema = z.object({
   complicationName: z.string().trim().min(1).max(500),
-  complicationCode: z.preprocess(emptyToUndefined, z.string().trim().max(100).nullable().optional()),
+  complicationCode: z.preprocess(
+    emptyToUndefined,
+    z.string().trim().max(100).nullable().optional(),
+  ),
   complicationTypeItemId: z.string().uuid(),
   source: z.enum(TERM_SOURCES).optional(),
   notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
@@ -824,4 +917,44 @@ export const notificationPregnancyComplicationErrorFieldMap: Partial<
   PREGCOMP_004_ALREADY_EXISTS: 'complicationName',
   PREGCOMP_001_COMPLICATION_TYPE_NOT_FOUND: 'complicationTypeItemId',
   PREGCOMP_004_COMPLICATION_TYPE_NOT_FOUND: 'complicationTypeItemId',
+};
+
+// `historyCode` and `source` travel on create/update and never come back in the response, and
+// `historyName` ends up in `historyRaw` only when it differs from the master's name (SPEC FE12e
+// §3.3). `diagnosticTermId`, `historyRaw` and `sortOrder` are derived — the resolution and the
+// trigger write them — and that is why none of the three is here.
+export type NotificationMedicalHistoryFormValues = Omit<
+  CreateNotificationMedicalHistoryInput,
+  'notificationId' | 'isActive'
+>;
+
+// Create (`ESAVI-MEDHIST-001`): `historyName` is the only required field — the maximum lengths are
+// the DDL's, 500 for the name that `historyRaw` holds and 100 for the code that
+// `diagnosticTerm.code` holds, so an overlong text is a readable 400 and not a Postgres 22001.
+export const notificationMedicalHistorySchema = z.object({
+  historyName: z.string().trim().min(1).max(500),
+  historyCode: z.preprocess(emptyToUndefined, z.string().trim().max(100).nullable().optional()),
+  source: z.enum(TERM_SOURCES).optional(),
+  notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+});
+
+// Update (`ESAVI-MEDHIST-004`): `historyName` is optional but *not nullable*, the same asymmetry as
+// `PREGCOMP-004` (SPEC FE12e §3.3). It is optional because the field only travels when the user
+// changed it — resending it unchanged on every `PUT` would overwrite the notifier's own text with
+// an echo of the `GET`. And it is not nullable because an explicit null would erase the only text
+// that identifies the row and leave behind something the `001` would have rejected. `notes` is
+// nullable in both.
+export const notificationMedicalHistoryUpdateSchema = notificationMedicalHistorySchema.extend({
+  historyName: z.string().trim().min(1).max(500).optional(),
+});
+
+// SPEC FE12e §3.5 "Códigos de error mapeados". The 404 of `DIAGTERM_NOT_FOUND` is not here, same
+// reason as in its two siblings: it has behaviour of its own — the search field offers to save the
+// text free-form — not a field to point at. Neither are the two 404 of the `006`, which are the
+// section's error state, nor the `AUTH_ROLE_FORBIDDEN` of the `005A`, which is the §10.4 notice.
+export const notificationMedicalHistoryErrorFieldMap: Partial<
+  Record<string, keyof NotificationMedicalHistoryFormValues>
+> = {
+  MEDHIST_001_ALREADY_EXISTS: 'historyName',
+  MEDHIST_004_ALREADY_EXISTS: 'historyName',
 };

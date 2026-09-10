@@ -33,7 +33,7 @@ function renderList(notificationId: string | null = NOTIFICATION_ID) {
     queryClient,
     ...render(
       <QueryClientProvider client={queryClient}>
-        <VaccineList caseId="case-1" notificationId={notificationId} eventDate={null} />
+        <VaccineList caseId="case-1" notificationId={notificationId} eventDate={null} showsDiluents />
       </QueryClientProvider>,
     ),
   };

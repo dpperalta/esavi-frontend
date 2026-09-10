@@ -17,6 +17,10 @@ export interface AnswerOptionFieldProps {
   // (SPEC FE12a §2). Neither variant restricts what the field can *read* — see §7.1 below.
   variant?: 'unknown' | 'full';
   disabled?: boolean;
+  // The id of the text explaining why the field is disabled. A greyed-out control with no
+  // stated reason is indistinguishable from a failure, and `disabled` alone says nothing to a
+  // screen reader (SPEC FE12e §3.7).
+  ariaDescribedBy?: string;
 }
 
 const UNKNOWN_OPTIONS: AnswerOption[] = ['YES', 'NO', 'UNKNOWN'];
@@ -42,6 +46,7 @@ export function AnswerOptionField({
   ariaLabel,
   variant = 'unknown',
   disabled,
+  ariaDescribedBy,
 }: AnswerOptionFieldProps) {
   const { t } = useTranslation();
   const offeredOptions = variant === 'full' ? FULL_OPTIONS : UNKNOWN_OPTIONS;
@@ -53,7 +58,12 @@ export function AnswerOptionField({
       onValueChange={(next) => onChange((next || null) as AnswerOption | null)}
       disabled={disabled}
     >
-      <SelectTrigger className="w-full" aria-label={ariaLabel} onClear={() => onChange(null)}>
+      <SelectTrigger
+        className="w-full"
+        aria-label={ariaLabel}
+        aria-describedby={ariaDescribedBy}
+        onClear={() => onChange(null)}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -63,7 +73,12 @@ export function AnswerOptionField({
           </SelectItem>
         ))}
         {unofferedValue && (
-          <SelectItem key={unofferedValue} value={unofferedValue} className="hidden" aria-hidden="true">
+          <SelectItem
+            key={unofferedValue}
+            value={unofferedValue}
+            className="hidden"
+            aria-hidden="true"
+          >
             {t(LABEL_KEYS[unofferedValue])}
           </SelectItem>
         )}

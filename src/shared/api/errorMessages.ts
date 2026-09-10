@@ -149,6 +149,12 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   NOTIFMED_006_NOT_FOUND: 'notification.medications.error.load',
   NOTIFMED_006_CASE_NOT_FOUND: 'notification.medications.error.load',
   NOTIFMED_006_NOTIFICATION_NOT_FOUND: 'notification.medications.error.load',
+  // SPEC FE12e §3.5 — sólo los dos `404` del `006`, que son el estado de error de la sección
+  // y no «no hay antecedentes». Los dos `ALREADY_EXISTS` van al campo vía `errorFieldMap`, el
+  // `_DIAGTERM_NOT_FOUND` tiene comportamiento propio en el diálogo y el `AUTH_ROLE_FORBIDDEN`
+  // del `005A` lo intercepta `MedicalHistoryList` con el aviso de §10.4.
+  MEDHIST_006_CASE_NOT_FOUND: 'notification.medicalHistory.error.load',
+  MEDHIST_006_NOTIFICATION_NOT_FOUND: 'notification.medicalHistory.error.load',
   // Los dos buscadores nunca deberían alcanzar este toast en uso normal: `<TermSearchField>`
   // intercepta `isError` y degrada a texto libre con el mismo texto de estado de servicio antes
   // de que un `EsaviApiError` llegue tan lejos (§3.5) — esto es sólo el respaldo estable para

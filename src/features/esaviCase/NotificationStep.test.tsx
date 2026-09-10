@@ -1,6 +1,6 @@
 import '@/shared/config/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
@@ -18,6 +18,14 @@ import { NotificationStep } from './NotificationStep';
 // paso 8) hace falta el texto exacto del toast, así que se sustituye `sonner` por el mismo espía
 // que ya usa `PregnancyComplicationList.test.tsx`.
 const toastError = vi.fn();
+
+// Cada `<SatelliteList>` pinta su `<h3>` y su «Añadir» en la misma fila, así que la sección se
+// localiza por su encabezado y no por la posición del botón: el reorden de SPEC FE12e §4 paso 8
+// cambió el orden en que se montan las listas.
+async function findAddButtonOf(sectionTitle: string) {
+  const heading = await screen.findByRole('heading', { name: sectionTitle });
+  return within(heading.parentElement as HTMLElement).getByRole('button', { name: 'Añadir' });
+}
 vi.mock('sonner', () => ({
   toast: {
     error: (...args: unknown[]) => toastError(...args),
@@ -88,8 +96,19 @@ beforeEach(() => {
   localStorage.clear();
   useDraftsStore.setState({ drafts: {} });
   mockFemaleSexItemConfigNotSeeded();
+  mockMedicalHistories([]);
   toastError.mockClear();
 });
+
+// `ESAVI-MEDHIST-006` — la séptima lista satélite (SPEC FE12e §3.2). Se responde vacía por
+// defecto y los tests que la necesitan poblada la vuelven a declarar.
+function mockMedicalHistories(rows: unknown[]) {
+  server.use(
+    http.get(`http://localhost:4500/api/notification-medical-histories/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: rows.length, rows } }),
+    ),
+  );
+}
 
 // Sin `outcome` sembrado entre los tipos: `<CatalogSelect typeCode="outcome">` cae en su rama
 // "sin catalogTypeId" y nunca pide `/catalog-items/type/:id` (mismo comportamiento que
@@ -360,6 +379,7 @@ function mockWorkflow(getCallCounter: { count: number }) {
 }
 
 const SEVERE_NOTIFICATION_1 = 'severe-notification-1';
+const NON_SEVERE_NOTIFICATION_1 = 'non-severe-notification-1';
 
 // La rama grave, en su forma más simple: no existe hasta que el `POST` la crea, igual que hace
 // `mockWorkflow` con la cabecera. Usado por los tests que no examinan la rama en sí, sólo
@@ -493,7 +513,7 @@ describe('NotificationStep — alta sin fila previa (SPEC FE12a §3.4, §5, §4 
 
     renderNotificationStep();
 
-    const description = await screen.findByLabelText('Descripción del ESAVI');
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await user.type(description, 'Reacción local en el sitio de aplicación');
 
     const initialWorkflowCalls = workflowCalls.count;
@@ -529,7 +549,7 @@ describe('NotificationStep — reentrada (SPEC FE12a §3.4, §5)', () => {
 
     renderNotificationStep();
 
-    const description = await screen.findByLabelText('Descripción del ESAVI');
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await waitFor(() => expect(description).toHaveValue('Reacción local en el sitio de aplicación'));
     expect(postCalls).toBe(0);
   }, 30000);
@@ -675,16 +695,16 @@ describe('NotificationStep — sección de fallecimiento (SPEC FE12a §3.5, §7,
 
     renderNotificationStep();
 
-    const description = await screen.findByLabelText('Descripción del ESAVI');
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await user.type(description, 'Reacción local en el sitio de aplicación');
 
     await user.click(await screen.findByRole('combobox', { name: 'Desenlace' }));
     await user.click(await screen.findByRole('option', { name: 'Fallecido' }));
 
-    const deathDateInput = await screen.findByLabelText('Fecha de fallecimiento');
+    const deathDateInput = await screen.findByLabelText('Si la persona murió, indique la fecha de la muerte');
     fireEvent.change(deathDateInput, { target: { value: '2026-01-16' } });
-    await user.click(screen.getByRole('switch', { name: '¿Se solicitó autopsia?' }));
-    await user.click(screen.getByRole('switch', { name: '¿Se realizó autopsia verbal?' }));
+    await user.click(screen.getByRole('switch', { name: '¿Se solicitó una autopsia?' }));
+    await user.click(screen.getByRole('switch', { name: '¿Fue hecha una autopsia verbal?' }));
 
     const saveButton = await screen.findByRole('button', { name: 'Guardar' });
     await waitFor(() => expect(saveButton).toBeEnabled());
@@ -703,7 +723,7 @@ describe('NotificationStep — sección de fallecimiento (SPEC FE12a §3.5, §7,
     await user.click(await screen.findByRole('combobox', { name: 'Desenlace' }));
     await user.click(await screen.findByRole('option', { name: 'Recuperado' }));
     await waitFor(() =>
-      expect(screen.queryByLabelText('Fecha de fallecimiento')).not.toBeInTheDocument(),
+      expect(screen.queryByLabelText('Si la persona murió, indique la fecha de la muerte')).not.toBeInTheDocument(),
     );
 
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
@@ -730,15 +750,15 @@ describe('NotificationStep — sección de fallecimiento (SPEC FE12a §3.5, §7,
 
     renderNotificationStep();
 
-    const description = await screen.findByLabelText('Descripción del ESAVI');
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await user.type(description, 'Reacción local en el sitio de aplicación');
 
     await user.click(await screen.findByRole('combobox', { name: 'Desenlace' }));
     await user.click(await screen.findByRole('option', { name: 'Fallecido' }));
 
-    const deathDateInput = await screen.findByLabelText('Fecha de fallecimiento');
+    const deathDateInput = await screen.findByLabelText('Si la persona murió, indique la fecha de la muerte');
     fireEvent.change(deathDateInput, { target: { value: '2026-01-10' } });
-    await user.click(screen.getByRole('switch', { name: '¿Se solicitó autopsia?' }));
+    await user.click(screen.getByRole('switch', { name: '¿Se solicitó una autopsia?' }));
 
     const saveButton = await screen.findByRole('button', { name: 'Guardar' });
     await waitFor(() => expect(saveButton).toBeEnabled());
@@ -900,7 +920,7 @@ describe('NotificationStep — cadena de guardado, la rama falla y se reintenta 
 
     renderNotificationStep();
 
-    const description = await screen.findByLabelText('Descripción del ESAVI');
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await user.type(description, 'Reacción local en el sitio de aplicación');
 
     const saveButton = await screen.findByRole('button', { name: 'Guardar' });
@@ -911,7 +931,7 @@ describe('NotificationStep — cadena de guardado, la rama falla y se reintenta 
     await waitFor(() => expect(headerPostCalls).toBe(1));
     await waitFor(() => expect(branchPostCalls).toBe(1));
     // Sigue visible: el mismo campo, ya guardado, no desaparece ni se limpia.
-    expect(screen.getByLabelText('Descripción del ESAVI')).toHaveValue(
+    expect(screen.getByLabelText('Descripción del ESAVI (signos y síntomas)')).toHaveValue(
       'Reacción local en el sitio de aplicación',
     );
 
@@ -936,16 +956,17 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
 
     renderNotificationStep();
 
-    // Se espera a que el formulario esté listo (la ficha grave ya renderizada) antes de afirmar
-    // la ausencia — de lo contrario un falso negativo por el skeleton pasaría el test.
-    await screen.findByText('Ficha de notificación grave');
+    // Se espera a que el formulario esté listo (una bandera de la rama grave ya renderizada) antes
+    // de afirmar la ausencia — de lo contrario un falso negativo por el skeleton pasaría el test.
+    // Desde SPEC FE12e §4 paso 7 las banderas van en línea: ya no hay bloque con título propio.
+    await screen.findByText('¿Tiene antecedentes de eventos previos similares al actual?');
 
     expect(
       screen.queryByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Si aplica')).not.toBeInTheDocument();
     expect(
-      screen.queryByLabelText('Describe las complicaciones del embarazo'),
+      screen.queryByLabelText('Describa complicaciones (Haga un resumen cronológico de la historia clínica relacionada con la complicación del embarazo actual)'),
     ).not.toBeInTheDocument();
   }, 30000);
 
@@ -962,9 +983,9 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     expect(
       await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).toBeInTheDocument();
-    // Dos marcas (SPEC FE12d §4 paso 7): la ficha grave y `PregnancySection` comparten la misma
-    // compuerta y cada una pinta la suya.
-    expect(screen.getAllByText('Si aplica')).toHaveLength(2);
+    // Una sola marca desde SPEC FE12e §4 paso 7: disuelta la ficha grave, `PregnancySection` es
+    // el único bloque que pinta la compuerta.
+    expect(screen.getAllByText('Si aplica')).toHaveLength(1);
   }, 30000);
 
   it('con paciente femenino en edad fértil, el bloque aparece sin la marca', async () => {
@@ -1019,7 +1040,7 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     expect(
       await screen.findByRole('combobox', { name: '¿Tuvo complicaciones el embarazo?' }),
     ).toBeInTheDocument();
-    expect(screen.getAllByText('Si aplica')).toHaveLength(2);
+    expect(screen.getAllByText('Si aplica')).toHaveLength(1);
   }, 30000);
 
   it('con la fila de configuración ausente, el bloque sale deshabilitado con su explicación y el resto del paso 4 sigue utilizable (SPEC FE12d §4 paso 7)', async () => {
@@ -1045,7 +1066,7 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
 
     // El resto del paso 4 sigue utilizable: la descripción del ESAVI se puede escribir y guardar
     // funciona con normalidad, sin que el bloque deshabilitado lo bloquee.
-    const description = screen.getByLabelText('Descripción del ESAVI');
+    const description = screen.getByLabelText('Descripción del ESAVI (signos y síntomas)');
     expect(description).toBeEnabled();
   }, 30000);
 });
@@ -1104,7 +1125,7 @@ describe('NotificationStep — error de carga (SPEC FE12a §3.6, §4 paso 15)', 
 
     await user.click(retryButton);
 
-    expect(await screen.findByLabelText('Descripción del ESAVI')).toHaveValue(
+    expect(await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)')).toHaveValue(
       'Reacción local en el sitio de aplicación',
     );
     expect(screen.queryByText('No pudimos cargar la notificación.')).not.toBeInTheDocument();
@@ -1138,7 +1159,7 @@ describe('NotificationStep — clasificación desactivada (CASE-PROCESS.md §6.2
       ),
     ).toBeInTheDocument();
     // Ni la cabecera ni el formulario se muestran — el aviso reemplaza la pantalla entera.
-    expect(screen.queryByLabelText('Descripción del ESAVI')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Descripción del ESAVI (signos y síntomas)')).not.toBeInTheDocument();
     // Sin botón de reactivar (SPEC FE12a §3.6): `005B` es SUPERADMIN, y ofrecerlo a casi
     // cualquiera es peor que explicar qué falta.
     expect(screen.queryByRole('button', { name: /reactivar/i })).not.toBeInTheDocument();
@@ -1165,7 +1186,7 @@ describe('NotificationStep — borrador persistido (SPEC FE12a §3.4, §4 paso 1
     // El toast de aviso ("se recuperaron cambios...") no se verifica aquí: ningún test de este
     // repositorio monta `<Toaster>` (sonner necesita el tema resuelto vía `preferencesStore`), y
     // el efecto observable real — el valor restaurado — ya lo cubre esta aserción.
-    expect(await screen.findByLabelText('Descripción del ESAVI')).toHaveValue(
+    expect(await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)')).toHaveValue(
       'Borrador recuperado de otra pestaña',
     );
   }, 30000);
@@ -1193,7 +1214,7 @@ describe('NotificationStep — borrador persistido (SPEC FE12a §3.4, §4 paso 1
 
     renderNotificationStep();
 
-    expect(await screen.findByLabelText('Descripción del ESAVI')).toHaveValue(
+    expect(await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)')).toHaveValue(
       'Reacción local en el sitio de aplicación',
     );
     // Se descarta: el efecto observable es que la fila ganó (arriba) y que el borrador ya no
@@ -1215,7 +1236,7 @@ describe('NotificationStep — borrador persistido (SPEC FE12a §3.4, §4 paso 1
 
     renderNotificationStep();
 
-    const description = await screen.findByLabelText('Descripción del ESAVI');
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await user.type(description, 'Reacción local en el sitio de aplicación');
 
     await waitFor(
@@ -1324,7 +1345,7 @@ describe('NotificationStep — compuerta de takesMedication (SPEC FE12b §4 paso
 
     renderNotificationStep();
 
-    const field = await screen.findByRole('combobox', { name: '¿Toma medicación?' });
+    const field = await screen.findByRole('combobox', { name: '¿El paciente estaba tomando algún medicamento cuando se vacunó?' });
     await waitFor(() => expect(field).toBeDisabled());
     expect(await screen.findByText(/Hace falta un administrador/)).toBeInTheDocument();
   }, 30000);
@@ -1335,7 +1356,7 @@ describe('NotificationStep — compuerta de takesMedication (SPEC FE12b §4 paso
 
     renderNotificationStep();
 
-    const field = await screen.findByRole('combobox', { name: '¿Toma medicación?' });
+    const field = await screen.findByRole('combobox', { name: '¿El paciente estaba tomando algún medicamento cuando se vacunó?' });
     await waitFor(() => expect(field).toBeDisabled());
     expect(await screen.findByText(/Bórralas una a una/)).toBeInTheDocument();
     expect(screen.queryByText(/administrador/)).not.toBeInTheDocument();
@@ -1395,7 +1416,7 @@ describe('NotificationStep — compuerta de takesMedication (SPEC FE12b §4 paso
 
     renderNotificationStep();
 
-    const field = await screen.findByRole('combobox', { name: '¿Toma medicación?' });
+    const field = await screen.findByRole('combobox', { name: '¿El paciente estaba tomando algún medicamento cuando se vacunó?' });
     await waitFor(() => expect(field).toBeDisabled());
 
     const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Paracetamol' });
@@ -1529,7 +1550,7 @@ describe('NotificationStep — «al menos un evento» en «Completar etapa» (SP
 
     renderNotificationStep();
 
-    await screen.findByLabelText('Descripción del ESAVI');
+    await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     expect(await screen.findByText('Al menos un evento del ESAVI')).toBeInTheDocument();
   }, 30000);
 
@@ -1538,7 +1559,7 @@ describe('NotificationStep — «al menos un evento» en «Completar etapa» (SP
 
     renderNotificationStep();
 
-    await screen.findByLabelText('Descripción del ESAVI');
+    await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await waitFor(() => expect(screen.queryByText('Al menos un evento del ESAVI')).not.toBeInTheDocument());
   }, 30000);
 
@@ -1548,7 +1569,7 @@ describe('NotificationStep — «al menos un evento» en «Completar etapa» (SP
 
     renderNotificationStep();
 
-    const description = await screen.findByLabelText('Descripción del ESAVI');
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await user.clear(description);
     await user.type(description, 'Reacción local en el sitio de aplicación, editada');
 
@@ -1556,7 +1577,7 @@ describe('NotificationStep — «al menos un evento» en «Completar etapa» (SP
     await waitFor(() => expect(saveButton).toBeEnabled());
     await user.click(saveButton);
 
-    await waitFor(() => expect(screen.getByLabelText('Descripción del ESAVI')).toHaveValue(
+    await waitFor(() => expect(screen.getByLabelText('Descripción del ESAVI (signos y síntomas)')).toHaveValue(
       'Reacción local en el sitio de aplicación, editada',
     ));
   }, 30000);
@@ -1685,19 +1706,16 @@ describe('NotificationStep — los dos satélites conviven en el mismo paso (SPE
 
     renderNotificationStep();
 
-    await screen.findByLabelText('Descripción del ESAVI');
+    await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
 
-    // El botón «Añadir» es genérico (`common.satelliteList.add`) y aparece una vez por lista —
-    // el primero es el de eventos, el segundo el de medicación, en el orden en que
-    // `NotificationStep` las monta.
-    const [addEventButton] = await screen.findAllByRole('button', { name: 'Añadir' });
+    const addEventButton = await findAddButtonOf('Eventos adversos');
 
     // El evento, por texto libre — las tres ramas de `source` ya están probadas en
     // `EventFormDialog.test.tsx`; aquí sólo hace falta que el flujo complete. El diálogo se monta
     // sobre la pantalla sin desmontar el «Guardar» de `CaseWizardActionBar` — el suyo propio es
     // el último en el documento, dentro del `<Dialog>`.
     await user.click(addEventButton);
-    await user.type(await screen.findByLabelText('Diagnóstico del ESAVI'), 'Fiebre alta');
+    await user.type(await screen.findByLabelText('Evento adverso'), 'Fiebre alta');
     await user.keyboard('{Escape}');
     const dialogSaveButtons = await screen.findAllByRole('button', { name: 'Guardar' });
     await user.click(dialogSaveButtons[dialogSaveButtons.length - 1]);
@@ -1705,8 +1723,7 @@ describe('NotificationStep — los dos satélites conviven en el mismo paso (SPE
 
     // La medicación, también por texto libre — los tres caminos del nombre ya están probados en
     // `MedicationFormDialog.test.tsx`.
-    const addButtons = await screen.findAllByRole('button', { name: 'Añadir' });
-    await user.click(addButtons[1]);
+    await user.click(await findAddButtonOf('Antecedentes farmacológicos'));
     await user.type(await screen.findByLabelText('Medicamento'), 'Paracetamol');
     await user.keyboard('{Escape}');
     const dialogSaveButtons2 = await screen.findAllByRole('button', { name: 'Guardar' });
@@ -1769,7 +1786,7 @@ describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC F
 
     renderNotificationStep();
 
-    const description = await screen.findByLabelText('Descripción del ESAVI');
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await user.type(description, 'Reacción local en el sitio de aplicación');
 
     await user.click(
@@ -1815,7 +1832,7 @@ describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC F
 
     renderNotificationStep();
 
-    const description = await screen.findByLabelText('Descripción del ESAVI');
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     await user.type(description, 'Reacción local en el sitio de aplicación');
 
     // La compuerta está abierta (paciente femenino, 30 años) — confirmado por la presencia del
@@ -2033,7 +2050,7 @@ describe('NotificationStep — el GET del bloque de embarazo falla (SPEC FE12d �
 
     renderNotificationStep();
 
-    await screen.findByLabelText('Descripción del ESAVI');
+    await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
     expect(await screen.findByText('No pudimos cargar el bloque de embarazo.')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Reintentar' }));
@@ -2064,7 +2081,7 @@ describe('NotificationStep — la derivación de §6.5 (SPEC FE12d §4 paso 11)'
     renderNotificationStep();
 
     const pregnancyField = await screen.findByRole('combobox', {
-      name: '¿El embarazo tiene complicaciones registradas?',
+      name: '¿Tuvo complicaciones el embarazo?',
     });
     const severeField = await screen.findByRole('combobox', {
       name: '¿Tuvo complicaciones el embarazo?',
@@ -2102,7 +2119,7 @@ describe('NotificationStep — la derivación de §6.5 (SPEC FE12d §4 paso 11)'
     renderNotificationStep();
 
     const pregnancyField = await screen.findByRole('combobox', {
-      name: '¿El embarazo tiene complicaciones registradas?',
+      name: '¿Tuvo complicaciones el embarazo?',
     });
     const severeField = await screen.findByRole('combobox', {
       name: '¿Tuvo complicaciones el embarazo?',
@@ -2284,7 +2301,7 @@ describe('NotificationStep — la sugerencia de la fecha de parto (SPEC FE12d §
     const menstruationInput = await screen.findByLabelText('Fecha de la última menstruación');
     fireEvent.change(menstruationInput, { target: { value: '2026-01-01' } });
 
-    const deliveryInput = await screen.findByLabelText('Fecha probable de parto');
+    const deliveryInput = await screen.findByLabelText('Registre la fecha probable de parto o fecha de nacimiento');
     await waitFor(() => expect(deliveryInput).toHaveValue('2026-10-08'));
   }, 30000);
 
@@ -2292,7 +2309,7 @@ describe('NotificationStep — la sugerencia de la fecha de parto (SPEC FE12d §
     renderOpenGate();
 
     const menstruationInput = await screen.findByLabelText('Fecha de la última menstruación');
-    const deliveryInput = await screen.findByLabelText('Fecha probable de parto');
+    const deliveryInput = await screen.findByLabelText('Registre la fecha probable de parto o fecha de nacimiento');
 
     fireEvent.change(menstruationInput, { target: { value: '2026-01-01' } });
     await waitFor(() => expect(deliveryInput).toHaveValue('2026-10-08'));
@@ -2305,7 +2322,7 @@ describe('NotificationStep — la sugerencia de la fecha de parto (SPEC FE12d §
     renderOpenGate();
 
     const menstruationInput = await screen.findByLabelText('Fecha de la última menstruación');
-    const deliveryInput = await screen.findByLabelText('Fecha probable de parto');
+    const deliveryInput = await screen.findByLabelText('Registre la fecha probable de parto o fecha de nacimiento');
 
     fireEvent.change(menstruationInput, { target: { value: '2026-01-01' } });
     await waitFor(() => expect(deliveryInput).toHaveValue('2026-10-08'));
@@ -2319,5 +2336,330 @@ describe('NotificationStep — la sugerencia de la fecha de parto (SPEC FE12d §
     // disparar antes de confirmar que el valor sigue siendo el mismo.
     await waitFor(() => expect(menstruationInput).toHaveValue('2026-02-01'));
     expect(deliveryInput).toHaveValue('2026-12-25');
+  }, 30000);
+});
+
+const MEDICAL_HISTORY_ROW = {
+  medicalHistoryId: 'medhist-1',
+  notificationId: NOTIFICATION_1,
+  diagnosticTermId: null,
+  historyRaw: 'Diabetes mellitus',
+  sortOrder: 1,
+  notes: null,
+  isActive: true,
+  createdAt: '2026-01-02T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+  diagnosticTerm: null,
+};
+
+type GateFlags = {
+  hasRelevantMedicalHistory?: string;
+  hasPreviousEventHistory?: string;
+  hasAllergyToOtherVaccines?: string;
+};
+
+// Reentrada de la rama grave con las banderas de la compuerta bajo control (SPEC FE12e §3.6).
+// Como la compuerta se deriva en render de la query de antecedentes, el escenario sólo necesita
+// fijar las banderas y las filas: no hay estado que sembrar.
+function mockGateScenario(flags: GateFlags, histories: unknown[]) {
+  mockCaseDetail();
+  mockPatientDetail('MALE');
+  mockClassificationDetail(true);
+  mockEmptyCatalogTypes();
+  mockMedicalHistories(histories);
+  server.use(
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+    ),
+    http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: NOTIFICATION_1,
+          notificationType: 'SEVERE',
+          esaviDescription: 'Reacción local en el sitio de aplicación',
+          hasRelevantMedicalHistory: flags.hasRelevantMedicalHistory ?? 'NO',
+          takesMedication: 'YES',
+          requestInvestigation: false,
+          deathDate: null,
+          autopsyRequested: null,
+          verbalAutopsyPerformed: null,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+          outcome: null,
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: SEVERE_NOTIFICATION_1,
+          hasPreviousEventHistory: flags.hasPreviousEventHistory ?? 'NO',
+          hasAllergyToOtherVaccines: flags.hasAllergyToOtherVaccines ?? 'NO',
+          hasAllergyToMedications: 'NO',
+          hasAllergyToPreviousSameVaccine: 'NO',
+          hasPregnancyComplications: null,
+          pregnancyComplicationsDescription: null,
+          notes: null,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          notification: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'SEVERE',
+            esaviDescription: 'Reacción local en el sitio de aplicación',
+            isActive: true,
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+          },
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/notification-events/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get(`http://localhost:4500/api/notification-medications/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+  );
+}
+
+// La misma reentrada en la rama no grave: la ficha que resuelve es `NSEVNOT-006` y en pantalla
+// aparecen las dos secciones de vacunación que el paso 6 separó.
+function mockNonSevereReentry(hasRelevantMedicalHistory: string, histories: unknown[]) {
+  mockCaseDetail();
+  mockPatientDetail('MALE');
+  mockClassificationDetail(false);
+  mockEmptyCatalogTypes();
+  mockMedicalHistories(histories);
+  server.use(
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) }),
+    ),
+    http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: NOTIFICATION_1,
+          notificationType: 'NON_SEVERE',
+          esaviDescription: 'Reacción local en el sitio de aplicación',
+          hasRelevantMedicalHistory,
+          takesMedication: 'YES',
+          requestInvestigation: false,
+          deathDate: null,
+          autopsyRequested: null,
+          verbalAutopsyPerformed: null,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+          outcome: null,
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/non-severe-notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: NON_SEVERE_NOTIFICATION_1,
+          vaccinationSiteItemId: null,
+          vaccinationCenterAddress: null,
+          vaccinationGeoLocationId: null,
+          vaccinationHealthFacilityId: null,
+          verifiedPhysicalDocument: null,
+          verifiedElectronicRecord: null,
+          verifiedVerbalReport: null,
+          verifiedClinicalRecord: null,
+          verifiedUnknown: null,
+          verifiedOtherSource: null,
+          otherSourceDescription: null,
+          notes: null,
+          createdAt: '2026-01-02T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          vaccinationHealthFacility: null,
+          notification: {
+            notificationId: NOTIFICATION_1,
+            notificationType: 'NON_SEVERE',
+            esaviDescription: 'Reacción local en el sitio de aplicación',
+            isActive: true,
+            case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+          },
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/notification-events/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get(`http://localhost:4500/api/notification-medications/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get('http://localhost:4500/api/geo-locations/roots', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+  );
+}
+
+async function headingOrder() {
+  await screen.findByRole('heading', { name: 'Desenlace' });
+  return screen.getAllByRole('heading').map((node) => node.textContent);
+}
+
+describe('NotificationStep  — el orden del paso 4 (SPEC FE12e §4 paso 8)', () => {
+  it('en rama grave, las secciones salen en el orden de ESAVI-FORM.md', async () => {
+    mockGateScenario({ hasRelevantMedicalHistory: 'YES' }, []);
+
+    renderNotificationStep();
+
+    // Sin bloque de embarazo: el paciente es masculino y la compuerta de CASE-PROCESS.md §7.4 lo
+    // deja fuera del DOM entero — su posición la cubren los tests de FE12d.
+    expect(await headingOrder()).toEqual([
+      'Antecedentes de la persona vacunada',
+      'Antecedentes médicos',
+      'Antecedentes farmacológicos',
+      'Selección de vacunas',
+      'Eventos adversos',
+      'Descripción del ESAVI',
+      'Desenlace',
+    ]);
+  }, 30000);
+
+  it('en rama no grave, las dos secciones de vacunación quedan antes de las vacunas', async () => {
+    mockNonSevereReentry('YES', []);
+
+    renderNotificationStep();
+
+    expect(await headingOrder()).toEqual([
+      'Antecedentes de la persona vacunada',
+      'Antecedentes médicos',
+      'Antecedentes farmacológicos',
+      'Antecedentes de vacunación o inmunización',
+      '¿Cómo se verificó la información de la vacunación?',
+      'Selección de vacunas',
+      'Eventos adversos',
+      'Descripción del ESAVI',
+      'Desenlace',
+    ]);
+  }, 30000);
+});
+
+describe('NotificationStep  — la compuerta de antecedentes medicos (SPEC FE12e §4 paso 11)', () => {
+  it('con las cinco banderas en «No» y sin filas, la sección no existe en el DOM', async () => {
+    mockGateScenario({}, []);
+
+    renderNotificationStep();
+
+    await screen.findByRole('heading', { name: 'Desenlace' });
+    expect(screen.queryByRole('heading', { name: 'Antecedentes médicos' })).not.toBeInTheDocument();
+  }, 30000);
+
+  it('con una bandera en «Sí», la sección aparece', async () => {
+    mockGateScenario({ hasAllergyToOtherVaccines: 'YES' }, []);
+
+    renderNotificationStep();
+
+    expect(await screen.findByRole('heading', { name: 'Antecedentes médicos' })).toBeInTheDocument();
+  }, 30000);
+
+  it('con dos banderas en «Sí» y filas cargadas, ninguna queda deshabilitada', async () => {
+    signInAs('USER', 25);
+    mockGateScenario(
+      { hasRelevantMedicalHistory: 'YES', hasPreviousEventHistory: 'YES' },
+      [MEDICAL_HISTORY_ROW],
+    );
+
+    renderNotificationStep();
+
+    // La fila se pinta dos veces: la tabla de escritorio y la tarjeta de movil conviven en el
+    // DOM y las oculta el CSS (`<SatelliteList>`, SPEC FE12b 3.7).
+    await screen.findAllByText('Diabetes mellitus');
+    expect(
+      await screen.findByRole('combobox', {
+        name: '¿El paciente presenta antecedentes médicos relevantes?',
+      }),
+    ).not.toBeDisabled();
+    expect(
+      screen.getByRole('combobox', {
+        name: '¿Tiene antecedentes de eventos previos similares al actual?',
+      }),
+    ).not.toBeDisabled();
+  }, 30000);
+
+  it('al bajar una de las dos, la que queda en «Sí» se deshabilita y explica por qué', async () => {
+    const user = setupUser();
+    signInAs('USER', 25);
+    mockGateScenario(
+      { hasRelevantMedicalHistory: 'YES', hasPreviousEventHistory: 'YES' },
+      [MEDICAL_HISTORY_ROW],
+    );
+
+    renderNotificationStep();
+
+    // La fila se pinta dos veces: la tabla de escritorio y la tarjeta de movil conviven en el
+    // DOM y las oculta el CSS (`<SatelliteList>`, SPEC FE12b 3.7).
+    await screen.findAllByText('Diabetes mellitus');
+    const previousEventField = await screen.findByRole('combobox', {
+      name: '¿Tiene antecedentes de eventos previos similares al actual?',
+    });
+    await user.click(previousEventField);
+    await user.click(await screen.findByRole('option', { name: 'No' }));
+
+    // La otra es ahora la única que sostiene las filas: es la única que se bloquea, y con el
+    // texto de rol USER, que no puede retirarlas él mismo (§3.5).
+    const relevantField = await screen.findByRole('combobox', {
+      name: '¿El paciente presenta antecedentes médicos relevantes?',
+    });
+    await waitFor(() => expect(relevantField).toBeDisabled());
+    expect(previousEventField).not.toBeDisabled();
+    expect(await screen.findByText(/Hace falta un administrador para borrarlos/)).toBeInTheDocument();
+  }, 30000);
+
+  it('con filas y ninguna bandera en «Sí», la lista se muestra igual con el aviso de discrepancia', async () => {
+    mockGateScenario({}, [MEDICAL_HISTORY_ROW]);
+
+    renderNotificationStep();
+
+    expect(await screen.findByRole('heading', { name: 'Antecedentes médicos' })).toBeInTheDocument();
+    expect(
+      await screen.findByText(/ninguna de estas respuestas dice que los haya/),
+    ).toBeInTheDocument();
+  }, 30000);
+
+  it('en rama no grave, sólo hasRelevantMedicalHistory abre la compuerta', async () => {
+    mockNonSevereReentry('NO', []);
+
+    renderNotificationStep();
+
+    await screen.findByRole('heading', { name: 'Desenlace' });
+    // Las cuatro banderas de la ficha grave no existen en esta rama, así que no hay nada más que
+    // pueda abrirla (SPEC FE12e §3.1, rama no grave).
+    expect(screen.queryByRole('heading', { name: 'Antecedentes médicos' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('combobox', {
+        name: '¿Tiene antecedentes de eventos previos similares al actual?',
+      }),
+    ).not.toBeInTheDocument();
   }, 30000);
 });

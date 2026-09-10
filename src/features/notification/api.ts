@@ -3,6 +3,7 @@ import type { CreateNonSevereNotificationInput } from '@/contracts/nonSevereNoti
 import type { CreateNotificationEventInput } from '@/contracts/notificationEvent';
 import type { CreateNotificationInput, NotificationType } from '@/contracts/notification';
 import type { CreateNotificationMedicationInput } from '@/contracts/notificationMedication';
+import type { CreateNotificationMedicalHistoryInput } from '@/contracts/notificationMedicalHistory';
 import type { CreateNotificationDiluentInput } from '@/contracts/notificationDiluent';
 import type { CreateNotificationVaccineInput } from '@/contracts/notificationVaccine';
 import type { CreateNotificationPregnancyInput } from '@/contracts/notificationPregnancy';
@@ -14,6 +15,7 @@ import type { NotificationDetail } from '@/contracts/declared/notification';
 import type { NotificationDiluentDetail } from '@/contracts/declared/notificationDiluent';
 import type { NotificationEventDetail } from '@/contracts/declared/notificationEvent';
 import type { NotificationMedicationDetail } from '@/contracts/declared/notificationMedication';
+import type { NotificationMedicalHistoryDetail } from '@/contracts/declared/notificationMedicalHistory';
 import type { NotificationVaccineDetail } from '@/contracts/declared/notificationVaccine';
 import type { NotificationPregnancyDetail } from '@/contracts/declared/notificationPregnancy';
 import type { NotificationPregnancyComplicationDetail } from '@/contracts/declared/notificationPregnancyComplication';
@@ -429,6 +431,57 @@ export function useNotificationPregnancyComplicationsByPregnancy(
       return response.data;
     },
     enabled: enabled && pregnancyId !== undefined,
+  });
+}
+
+// POST   /api/notification-medical-histories            ESAVI-MEDHIST-001   USER   create
+// GET    /api/notification-medical-histories/case/:id   ESAVI-MEDHIST-006   USER   antecedents of the case, in reentry — hand-written below
+// PUT    /api/notification-medical-histories/:id        ESAVI-MEDHIST-004   USER   update — USER, not the ADMIN of its event/medication siblings (§10.4)
+// DELETE /api/notification-medical-histories/:id        ESAVI-MEDHIST-005A  ADMIN  soft delete
+// Out of scope (SPEC FE12e §3.2): 002A (the `006` above covers it, entered by caseId), 002B
+// (ADMIN, includes retired rows the wizard never shows), 003 by own PK (the row is edited with
+// what the list already brought), and 005B/005C (SUPERADMIN, reactivate/purge — never offered,
+// never named as an available action).
+export const notificationMedicalHistoryResource = createResource<
+  NotificationMedicalHistoryDetail,
+  CreateNotificationMedicalHistoryInput,
+  Partial<CreateNotificationMedicalHistoryInput>
+>({
+  key: 'notificationMedicalHistory',
+  path: 'notification-medical-histories',
+  idField: 'medicalHistoryId',
+  // `005B` (reactivate) is SUPERADMIN and out of scope (SPEC FE12e §3.2): the wizard neither
+  // offers it nor names it as an available action, so the hook does not exist rather than
+  // existing unused — the same reason `classificationResource` sets it false.
+  hasActivate: false,
+  // No screen ever toggles inactive rows for a satellite, so `useList`/`useListByParent` are never
+  // called here — same case as its four sibling lists of step 4.
+  inactiveMode: 'serverDecides',
+});
+
+export function notificationMedicalHistoriesByCaseKey(caseId: string) {
+  return ['notificationMedicalHistory', 'byCase', caseId] as const;
+}
+
+// ESAVI-MEDHIST-006 — the real query of the domain: the client holds `caseId`, not
+// `notificationId`, and waiting for the header to resolve one would delay the list for nothing
+// (SPEC FE12e §3.2). Returns `{ count, rows }`, active rows only, ordered by `sortOrder`; a
+// notification with no antecedents answers 200 with an empty page, never 404. No `staleTime`
+// (SPEC FE12e §3.4): the three mutations of the resource above invalidate this exact key on every
+// write, and nothing else should make it stale.
+export function useNotificationMedicalHistoriesByCase(
+  caseId: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: notificationMedicalHistoriesByCaseKey(caseId ?? ''),
+    queryFn: async () => {
+      const response = await client.get<PaginatedResponse<NotificationMedicalHistoryDetail>>(
+        `notification-medical-histories/case/${caseId}`,
+      );
+      return response.data;
+    },
+    enabled: enabled && caseId !== undefined,
   });
 }
 

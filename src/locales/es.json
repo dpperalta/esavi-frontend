@@ -797,41 +797,52 @@
   },
   "notification": {
     "fields": {
-      "esaviDescription": "Descripción del ESAVI",
-      "hasRelevantMedicalHistory": "¿Tiene antecedentes médicos relevantes?",
-      "takesMedication": "¿Toma medicación?",
+      "esaviDescription": "Descripción del ESAVI (signos y síntomas)",
+      "hasRelevantMedicalHistory": "¿El paciente presenta antecedentes médicos relevantes?",
+      "takesMedication": "¿El paciente estaba tomando algún medicamento cuando se vacunó?",
       "outcomeItemId": "Desenlace",
-      "requestInvestigation": "¿Se solicita investigación?",
+      "requestInvestigation": "Investigación requerida",
       "notes": "Observaciones"
+    },
+    "section": {
+      "background": "Antecedentes de la persona vacunada",
+      "medicalHistory": "Antecedentes médicos",
+      "medication": "Antecedentes farmacológicos",
+      "vaccinationBackground": "Antecedentes de vacunación o inmunización",
+      "verification": "¿Cómo se verificó la información de la vacunación?",
+      "vaccines": "Selección de vacunas",
+      "events": "Eventos adversos",
+      "description": "Descripción del ESAVI",
+      "outcome": "Desenlace"
     },
     "help": {
       "requestInvestigation": "Es independiente de la gravedad: un evento no grave puede investigarse y uno grave puede no requerirlo."
     },
     "death": {
       "sectionTitle": "Fallecimiento",
-      "deathDate": "Fecha de fallecimiento",
-      "autopsyRequested": "¿Se solicitó autopsia?",
-      "verbalAutopsyPerformed": "¿Se realizó autopsia verbal?"
+      "deathDate": "Si la persona murió, indique la fecha de la muerte",
+      "autopsyRequested": "¿Se solicitó una autopsia?",
+      "verbalAutopsyPerformed": "¿Fue hecha una autopsia verbal?"
     },
     "severe": {
       "sectionTitle": "Ficha de notificación grave",
-      "hasPreviousEventHistory": "¿Tiene antecedente de un evento previo?",
-      "hasAllergyToOtherVaccines": "¿Tiene alergia a otras vacunas?",
-      "hasAllergyToMedications": "¿Tiene alergia a medicamentos?",
-      "hasAllergyToPreviousSameVaccine": "¿Tiene alergia a una dosis previa de la misma vacuna?",
+      "hasPreviousEventHistory": "¿Tiene antecedentes de eventos previos similares al actual?",
+      "hasAllergyToOtherVaccines": "¿Tiene antecedentes de reacciones alérgicas a otras vacunas?",
+      "hasAllergyToMedications": "¿Tiene antecedentes de reacciones alérgicas a medicamentos?",
+      "hasAllergyToPreviousSameVaccine": "¿Tiene antecedentes de reacciones alérgicas a dosis previas de la misma vacuna?",
       "hasPregnancyComplications": "¿Tuvo complicaciones el embarazo?",
-      "pregnancyComplicationsDescription": "Describe las complicaciones del embarazo"
+      "pregnancyComplicationsDescription": "Describa complicaciones (Haga un resumen cronológico de la historia clínica relacionada con la complicación del embarazo actual)"
     },
     "pregnancy": {
-      "sectionTitle": "Embarazo",
+      "sectionTitle": "Datos de embarazo",
       "ifApplicable": "Si aplica",
       "notConfigured": "El registro de embarazo no está configurado en este despliegue. Pídelo a un administrador.",
       "field": {
         "wasPregnantAtVaccination": "¿Estaba embarazada al momento de la vacunación?",
         "wasPregnantAtEsavi": "¿Estaba embarazada al momento del ESAVI?",
         "lastMenstruationDate": "Fecha de la última menstruación",
-        "probableDeliveryDate": "Fecha probable de parto",
-        "hasComplications": "¿El embarazo tiene complicaciones registradas?",
+        "probableDeliveryDate": "Registre la fecha probable de parto o fecha de nacimiento",
+        "hasComplications": "¿Hubo alguna complicación durante el embarazo, el parto o el puerperio, o complicaciones neonatales o anomalías congénitas?",
         "notes": "Notas"
       },
       "error": {
@@ -891,18 +902,18 @@
     },
     "nonSevere": {
       "sectionTitle": "Ficha de notificación no grave",
-      "vaccinationHealthFacilityId": "Unidad de vacunación",
+      "vaccinationHealthFacilityId": "Establecimiento de vacunación",
       "vaccinationSiteItemId": "Sitio de vacunación",
       "vaccinationCenterAddress": "Dirección del centro de vacunación",
-      "vaccinationGeoLocationId": "Ubicación de la vacunación",
+      "vaccinationGeoLocationId": "Localidad",
       "verificationLegend": "Fuentes de verificación",
-      "verifiedPhysicalDocument": "Documento físico",
-      "verifiedElectronicRecord": "Registro electrónico",
-      "verifiedVerbalReport": "Reporte verbal",
-      "verifiedClinicalRecord": "Historia clínica",
+      "verifiedPhysicalDocument": "Registro/certificado físico",
+      "verifiedElectronicRecord": "Registro/certificado electrónico",
+      "verifiedVerbalReport": "Declaración verbal del paciente",
+      "verifiedClinicalRecord": "Historias clínicas corroboradas con certificado",
       "verifiedUnknown": "No se sabe",
-      "verifiedOtherSource": "Otra fuente",
-      "otherSourceDescription": "Describe la otra fuente"
+      "verifiedOtherSource": "Otro",
+      "otherSourceDescription": "¿Cuál?"
     },
     "validation": {
       "esaviDescriptionRequired": "Describe el ESAVI antes de guardar.",
@@ -947,11 +958,11 @@
     "events": {
       "sectionTitle": "Eventos",
       "fields": {
-        "esaviName": "Diagnóstico del ESAVI",
+        "esaviName": "Evento adverso",
         "esaviCode": "Código",
         "isOtherEsavi": "Otro evento (no está en el catálogo)",
         "otherDescription": "Describe el evento",
-        "isMainEsavi": "Evento principal",
+        "isMainEsavi": "Principal",
         "startDate": "Fecha de inicio",
         "startTime": "Hora de inicio",
         "notes": "Observaciones"
@@ -983,8 +994,8 @@
         "pharmaceuticalFormItemId": "Forma farmacéutica",
         "administrationRouteItemId": "Vía de administración",
         "startDate": "Fecha de inicio",
-        "isOtherMedication": "Otra medicación (no está en el catálogo)",
-        "otherMedicationText": "Describe la medicación"
+        "isOtherMedication": "Otro (no consta en la lista)",
+        "otherMedicationText": "Describa el medicamento"
       },
       "fromCatalog": "Del catálogo de medicamentos.",
       "notInCatalog": "Ningún medicamento coincide; puede no estar en el catálogo de este despliegue. Puedes escribirlo tal cual.",
@@ -1004,6 +1015,35 @@
         "load": "No pudimos cargar la medicación concomitante.",
         "generic": "No pudimos guardar la medicación. Intenta de nuevo."
       }
+    },
+    "medicalHistory": {
+      "fields": {
+        "historyName": "Antecedente médico",
+        "historyCode": "Código",
+        "notes": "Observaciones"
+      },
+      "form": {
+        "createTitle": "Añadir antecedente",
+        "editTitle": "Editar antecedente"
+      },
+      "error": {
+        "load": "No pudimos cargar los antecedentes médicos."
+      },
+      "validation": {
+        "historyNameRequired": "Indica el antecedente médico."
+      },
+      "diagtermNotImported": "El diccionario de esta fuente no está importado en este despliegue.",
+      "keepAsFreeText": "Guardar como texto libre",
+      "meddraUnavailable": "El buscador de términos no está disponible ahora mismo; puedes escribirlo tal cual.",
+      "delete": {
+        "confirm": "¿Dar de baja el antecedente «{{name}}»? Esta acción no se puede deshacer desde aquí."
+      },
+      "roleForbidden": {
+        "delete": "Retirar un antecedente exige un administrador en este despliegue, aunque registrarlo y corregirlo no."
+      },
+      "mismatch": "Hay antecedentes médicos registrados más abajo y ninguna de estas respuestas dice que los haya.",
+      "gateLocked": "Es la única respuesta que sostiene los antecedentes registrados; no se puede cambiar mientras existan. Bórralos uno a uno para poder cambiarla.",
+      "gateLockedNeedsAdmin": "Es la única respuesta que sostiene los antecedentes registrados; no se puede cambiar mientras existan. Hace falta un administrador para borrarlos."
     },
     "satellites": {
       "deleteTitle": "Dar de baja",
@@ -1030,13 +1070,13 @@
     "field": {
       "whoCode": "Código WHODrug",
       "vaccineCode": "Código de la vacuna",
-      "vaccineName": "Vacuna",
+      "vaccineName": "Nombre de la vacuna",
       "isSuspected": "Vacuna sospechosa",
       "vaccinationDate": "Fecha de vacunación",
       "vaccinationTime": "Hora de vacunación",
-      "doseNumber": "Número de dosis",
-      "batchNumber": "Número de lote",
-      "expirationDate": "Fecha de caducidad",
+      "doseNumber": "Dosis de la vacuna",
+      "batchNumber": "Lote/número de lote",
+      "expirationDate": "Fecha de expiración",
       "notes": "Observaciones"
     },
     "help": {
@@ -1067,13 +1107,14 @@
       "needsParent": "Guarda la vacuna antes de añadir sus diluyentes."
     },
     "field": {
-      "diluentCatalogId": "Diluyente",
-      "diluentName": "Nombre del diluyente",
+      "diluentCatalogId": "Nombre del diluyente",
+      "diluentName": "Describa el diluyente",
       "diluentCode": "Código del diluyente",
-      "batchNumber": "Número de lote",
-      "expirationDate": "Fecha de caducidad",
+      "batchNumber": "Lote/número de lote",
+      "expirationDate": "Fecha de expiración",
       "reconstitutionDate": "Fecha de reconstitución",
-      "reconstitutionTime": "Hora de reconstitución"
+      "reconstitutionTime": "Hora de reconstitución",
+      "isOtherDiluent": "Otro (no consta en la lista)"
     },
     "error": {
       "diluentRequired": "Elige un diluyente del catálogo o escribe su nombre antes de guardar.",

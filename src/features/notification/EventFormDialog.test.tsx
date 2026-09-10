@@ -98,7 +98,7 @@ describe('EventFormDialog — SPEC FE12b §4 paso 9', () => {
 
     renderDialog();
 
-    await user.type(await screen.findByLabelText('Diagnóstico del ESAVI'), 'Fie');
+    await user.type(await screen.findByLabelText('Evento adverso'), 'Fie');
     await user.click(await screen.findByRole('option', { name: /Fiebre alta/ }));
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
@@ -123,7 +123,7 @@ describe('EventFormDialog — SPEC FE12b §4 paso 9', () => {
 
     renderDialog();
 
-    await user.type(await screen.findByLabelText('Diagnóstico del ESAVI'), 'Fiebre no catalogada');
+    await user.type(await screen.findByLabelText('Evento adverso'), 'Fiebre no catalogada');
     await user.type(screen.getByLabelText('Código'), 'FIEBRE-X');
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
@@ -148,7 +148,7 @@ describe('EventFormDialog — SPEC FE12b §4 paso 9', () => {
 
     renderDialog();
 
-    const nameField = await screen.findByLabelText('Diagnóstico del ESAVI');
+    const nameField = await screen.findByLabelText('Evento adverso');
     await user.type(nameField, 'Fiebre alta');
     await user.keyboard('{Escape}');
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
