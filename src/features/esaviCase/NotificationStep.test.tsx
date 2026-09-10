@@ -487,6 +487,99 @@ function mockNotificationDetail() {
   );
 }
 
+// SPEC FE12f §3.1 — reentrada: con `stages.notification.exists` en `true` al montar, el paso 4 se
+// pinta entero y sin botones de avance. Es la vía de los tests que examinan una sección posterior
+// a la primera —la compuerta de embarazo, la sugerencia de la fecha de parto, el desenlace— y que
+// antes de este spec veían la pantalla completa desde el primer render. Se llama **antes** de los
+// handlers propios de cada test: `server.use` antepone, así que el último declarado manda.
+function mockNotificationReentry(getCallCounter?: { count: number }) {
+  const notificationRow = {
+    notificationId: NOTIFICATION_1,
+    notificationType: 'SEVERE',
+    esaviDescription: 'Reacción local en el sitio de aplicación',
+    hasRelevantMedicalHistory: null,
+    takesMedication: null,
+    requestInvestigation: false,
+    deathDate: null,
+    autopsyRequested: null,
+    verbalAutopsyPerformed: null,
+    notes: null,
+    isActive: true,
+    createdAt: '2026-01-02T00:00:00.000Z',
+    updatedAt: null,
+    deletedAt: null,
+    appDetails: [],
+    case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null, eventDate: '2026-01-15' },
+    outcome: null,
+  };
+  const severeRow = {
+    notificationId: SEVERE_NOTIFICATION_1,
+    hasPreviousEventHistory: null,
+    hasAllergyToOtherVaccines: null,
+    hasAllergyToMedications: null,
+    hasAllergyToPreviousSameVaccine: null,
+    hasPregnancyComplications: null,
+    pregnancyComplicationsDescription: null,
+    notes: null,
+    createdAt: '2026-01-02T00:00:00.000Z',
+    updatedAt: null,
+    deletedAt: null,
+    appDetails: [],
+    notification: {
+      notificationId: NOTIFICATION_1,
+      notificationType: 'SEVERE',
+      esaviDescription: 'Reacción local en el sitio de aplicación',
+      isActive: true,
+      case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
+    },
+  };
+  const emptyList = { count: 0, rows: [] };
+  server.use(
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () => {
+      if (getCallCounter) getCallCounter.count++;
+      return HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(true) });
+    }),
+    http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: notificationRow }),
+    ),
+    http.put(`http://localhost:4500/api/notifications/${NOTIFICATION_1}`, async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      return HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { ...notificationRow, ...body, updatedAt: '2026-01-03T00:00:00.000Z' },
+      });
+    }),
+    http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: severeRow }),
+    ),
+    http.put(
+      `http://localhost:4500/api/severe-notifications/${SEVERE_NOTIFICATION_1}`,
+      async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { ...severeRow, ...body } });
+      },
+    ),
+    http.get(`http://localhost:4500/api/notification-events/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: emptyList }),
+    ),
+    http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: emptyList }),
+    ),
+    http.get(`http://localhost:4500/api/notification-medications/case/${CASE_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: emptyList }),
+    ),
+    http.get(
+      `http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`,
+      () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'NOTIFPRG_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+    ),
+  );
+}
+
 function renderNotificationStep() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -562,9 +655,18 @@ describe('NotificationStep — sección de fallecimiento (SPEC FE12a §3.5, §7,
     mockClassificationDetail(true);
     mockOutcomeCatalog();
 
-    let notificationExists = false;
+    // SPEC FE12f §3.1: el desenlace es de las dos últimas secciones, así que en un paso 4 nuevo no
+    // se ve hasta el último avance — cuando la fila ya existe. Este test entra por la reentrada, y
+    // por eso sus dos escrituras son `PUT`: la creación con los tres campos de fallecimiento ya no
+    // es un recorrido alcanzable.
+    let notificationExists = true;
     let lastPostBody: Record<string, unknown> | null = null;
     let lastPutBody: Record<string, unknown> | null = null;
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones. Va
+    // antes de los handlers propios del test, que deben seguir mandando sobre los de aquí.
+    mockNotificationReentry();
+
     server.use(
       http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
         HttpResponse.json({ ok: true, message: 'ok', data: workflowBody(notificationExists) }),
@@ -653,44 +755,6 @@ describe('NotificationStep — sección de fallecimiento (SPEC FE12a §3.5, §7,
           },
         });
       }),
-      // Este test no examina la rama en sí — sólo que la cadena de guardado (SPEC FE12a §4 paso
-      // 12) no se rompa contra un endpoint sin mockear.
-      http.get(`http://localhost:4500/api/severe-notifications/case/${CASE_1}`, () =>
-        HttpResponse.json(
-          { ok: false, message: 'no encontrada', code: 'SEVNOT_006_NOT_FOUND' },
-          { status: 404 },
-        ),
-      ),
-      http.post('http://localhost:4500/api/severe-notifications', () =>
-        HttpResponse.json(
-          {
-            ok: true,
-            message: 'ok',
-            data: {
-              notificationId: 'severe-notification-1',
-              hasPreviousEventHistory: null,
-              hasAllergyToOtherVaccines: null,
-              hasAllergyToMedications: null,
-              hasAllergyToPreviousSameVaccine: null,
-              hasPregnancyComplications: null,
-              pregnancyComplicationsDescription: null,
-              notes: null,
-              createdAt: '2026-01-02T00:00:00.000Z',
-              updatedAt: null,
-              deletedAt: null,
-              appDetails: [],
-              notification: {
-                notificationId: NOTIFICATION_1,
-                notificationType: 'SEVERE',
-                esaviDescription: 'Reacción local en el sitio de aplicación',
-                isActive: true,
-                case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: '2026-01-15' },
-              },
-            },
-          },
-          { status: 201 },
-        ),
-      ),
     );
 
     renderNotificationStep();
@@ -710,13 +774,14 @@ describe('NotificationStep — sección de fallecimiento (SPEC FE12a §3.5, §7,
     await waitFor(() => expect(saveButton).toBeEnabled());
     await user.click(saveButton);
 
-    await waitFor(() => expect(lastPostBody).not.toBeNull());
-    expect(lastPostBody).toMatchObject({
+    await waitFor(() => expect(lastPutBody).not.toBeNull());
+    expect(lastPutBody).toMatchObject({
       outcomeItemId: OUTCOME_DEATH,
       deathDate: '2026-01-16',
       autopsyRequested: true,
       verbalAutopsyPerformed: true,
     });
+    lastPutBody = null;
 
     // Cambiar a «Recuperado»: la sección desaparece y los tres campos se limpian en el propio
     // estado del formulario, sin esperar a un segundo guardado (SPEC FE12a §3.5).
@@ -747,6 +812,11 @@ describe('NotificationStep — sección de fallecimiento (SPEC FE12a §3.5, §7,
     // A propósito, sin handler de POST /api/notifications adicional al de `mockWorkflow`: si el
     // cliente llegara a intentarlo con una fecha inválida, ese POST respondería 500 y el test lo
     // detectaría por el toast de error en vez de por la ausencia de llamada.
+
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones. Va
+    // antes de los handlers propios del test, que deben seguir mandando sobre los de aquí.
+    mockNotificationReentry();
 
     renderNotificationStep();
 
@@ -978,6 +1048,11 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     const workflowCalls = { count: 0 };
     mockWorkflow(workflowCalls);
 
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones. Va
+    // antes de los handlers propios del test, que deben seguir mandando sobre los de aquí.
+    mockNotificationReentry();
+
     renderNotificationStep();
 
     expect(
@@ -996,6 +1071,11 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     const workflowCalls = { count: 0 };
     mockWorkflow(workflowCalls);
 
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones. Va
+    // antes de los handlers propios del test, que deben seguir mandando sobre los de aquí.
+    mockNotificationReentry();
+
     renderNotificationStep();
 
     expect(
@@ -1012,6 +1092,11 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     mockEmptyCatalogTypes();
     const workflowCalls = { count: 0 };
     mockWorkflow(workflowCalls);
+
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones. Va
+    // antes de los handlers propios del test, que deben seguir mandando sobre los de aquí.
+    mockNotificationReentry();
 
     renderNotificationStep();
 
@@ -1035,6 +1120,11 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     const workflowCalls = { count: 0 };
     mockWorkflow(workflowCalls);
 
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones. Va
+    // antes de los handlers propios del test, que deben seguir mandando sobre los de aquí.
+    mockNotificationReentry();
+
     renderNotificationStep();
 
     expect(
@@ -1051,6 +1141,11 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     mockEmptyCatalogTypes();
     const workflowCalls = { count: 0 };
     mockWorkflow(workflowCalls);
+
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones. Va
+    // antes de los handlers propios del test, que deben seguir mandando sobre los de aquí.
+    mockNotificationReentry();
 
     renderNotificationStep();
 
@@ -1749,6 +1844,11 @@ describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC F
 
     let pregnancyPostCalls = 0;
     let lastPregnancyPostBody: Record<string, unknown> | null = null;
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones. Va
+    // antes de los handlers propios del test, que deben seguir mandando sobre los de aquí.
+    mockNotificationReentry(workflowCalls);
+
     server.use(
       http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
         HttpResponse.json(
@@ -1817,6 +1917,11 @@ describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC F
     mockSevereNotificationBranch();
 
     let pregnancyPostCalls = 0;
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones. Va
+    // antes de los handlers propios del test, que deben seguir mandando sobre los de aquí.
+    mockNotificationReentry(workflowCalls);
+
     server.use(
       http.get(`http://localhost:4500/api/notification-pregnancies/notification/${NOTIFICATION_1}`, () =>
         HttpResponse.json(
@@ -2292,6 +2397,9 @@ describe('NotificationStep — la sugerencia de la fecha de parto (SPEC FE12d §
     mockClassificationDetail(true, 30);
     mockEmptyCatalogTypes();
     mockWorkflow({ count: 0 });
+    // SPEC FE12f §4 paso 4: la sugerencia vive en el bloque de embarazo, que en un paso 4 nuevo no
+    // se revela hasta el cuarto avance — estos tests entran por la reentrada.
+    mockNotificationReentry();
     renderNotificationStep();
   }
 
@@ -2535,13 +2643,15 @@ describe('NotificationStep  — el orden del paso 4 (SPEC FE12e §4 paso 8)', ()
 
     // Sin bloque de embarazo: el paciente es masculino y la compuerta de CASE-PROCESS.md §7.4 lo
     // deja fuera del DOM entero — su posición la cubren los tests de FE12d.
+    // «Descripción del ESAVI» encabeza el paso desde SPEC FE12f §3.1: es el único bloqueante de
+    // guardado de la cabecera, así que nada puede persistirse antes de que esté escrita.
     expect(await headingOrder()).toEqual([
+      'Descripción del ESAVI',
       'Antecedentes de la persona vacunada',
       'Antecedentes médicos',
       'Antecedentes farmacológicos',
       'Selección de vacunas',
       'Eventos adversos',
-      'Descripción del ESAVI',
       'Desenlace',
     ]);
   }, 30000);
@@ -2552,6 +2662,7 @@ describe('NotificationStep  — el orden del paso 4 (SPEC FE12e §4 paso 8)', ()
     renderNotificationStep();
 
     expect(await headingOrder()).toEqual([
+      'Descripción del ESAVI',
       'Antecedentes de la persona vacunada',
       'Antecedentes médicos',
       'Antecedentes farmacológicos',
@@ -2559,7 +2670,6 @@ describe('NotificationStep  — el orden del paso 4 (SPEC FE12e §4 paso 8)', ()
       '¿Cómo se verificó la información de la vacunación?',
       'Selección de vacunas',
       'Eventos adversos',
-      'Descripción del ESAVI',
       'Desenlace',
     ]);
   }, 30000);

@@ -27,7 +27,8 @@
 
 - **La regla de visibilidad del paso 4**, derivada en render: una sección se muestra si los datos ya la desbloquean **o** si el usuario avanzó hasta ella en esta sesión — lo que sea mayor. Se aplica a las nueve secciones de la rama grave y a las once de la no grave que fijó FE12e.
 - **Un solo «Guardar y continuar» en pantalla en todo momento**: el de la última sección revelada. Al avanzar, ese botón desaparece y aparece el de la siguiente. Con todo revelado —reentrada incluida— no queda ninguno y manda la barra del pie.
-- **Qué secciones lo llevan:** todas menos las **tres últimas** —descripción del ESAVI, desenlace y las observaciones de la cabecera—, que se revelan juntas con el último avance porque la barra ya está debajo.
+- **Qué secciones lo llevan:** todas menos las **dos últimas** —desenlace y las observaciones de la cabecera—, que se revelan juntas con el último avance porque la barra ya está debajo.
+- **«Descripción del ESAVI» pasa a ser la primera sección del paso**, por delante de «Antecedentes de la persona vacunada». Es el único bloqueante de guardado de la cabecera, así que sin ella no hay fila padre ni avance posible; es el único punto en que este spec toca el orden de FE12e.
 - **El disparador del `POST` de embarazo pasa de `wasPregnantAtVaccination` a `wasPregnantAtEsavi`**, que es la primera pregunta en pantalla desde FE12e. Sin esto, responder sólo la primera pregunta y avanzar no crearía la fila y Complicaciones no aparecería, sin explicación.
 - **El bloque de embarazo conserva un único botón**, que crea su fila —y con ella revela Complicaciones dentro de la propia sección— y avanza a la siguiente en la misma pulsación.
 - **El mecanismo, extraído a `useProgressiveSections` en `shared/hooks/`**, para que FE13 lo herede sin rediseñarlo. Sale a `shared/` desde el primer uso, no después.
@@ -40,7 +41,7 @@
 - **El paso 5 y los demás pasos del asistente.** FE13 adopta el hook; este spec sólo lo deja escrito y probado en el paso 4.
 - **Elevar el patrón a `CONVENTIONS.md`.** Con un solo uso todavía es una decisión de pantalla. La entrada se escribe cuando FE13 lo adopte y se sepa qué sobrevivió al segundo caso.
 - **Persistir por dónde va el recorrido.** No entra en `draftsStore`, ni en `searchParams`, ni en la base. Al refrescar mandan los datos, y eso basta.
-- **El orden, las etiquetas, los encabezados y el diseño de FE12e.** Se respetan tal cual; este spec sólo decide qué se pinta y cuándo.
+- **El orden, las etiquetas, los encabezados y el diseño de FE12e.** Se respetan tal cual —**con una excepción declarada arriba**: «Descripción del ESAVI» sube al principio del paso, porque sin ella no existe la fila padre. Salvo esa, este spec sólo decide qué se pinta y cuándo.
 - **El comportamiento de «Guardar» y de «Completar etapa» de la barra.** No cambian. La lista de pendientes seguirá nombrando campos de secciones aún ocultas, y eso se declara como funcionalidad en §3.6: le dice al usuario qué datos tiene que ir a recoger.
 - **Convertir las secciones en etapas reales del expediente.** El progreso del asistente son las seis etapas de `case-workflow`; esto es ayuda de llenado dentro de una sola.
 - **Unificar el botón de dos fases de `VaccineFormDialog` con el hook.** Vive dentro de un modal y responde a otra mecánica; tocarlo aquí ampliaría el alcance sin ganar nada.
@@ -71,21 +72,24 @@ visible(sección i)  =  existíaAlMontar
 
 El primero deja de ser observable: la sección 2 no se revela antes de que el primer «continuar» haya creado la fila. El segundo sí, y por eso el bloque de embarazo conserva su mensaje `needsParent` para la ventana entre revelarse y guardarse.
 
+**«Descripción del ESAVI» encabeza el recorrido** (decisión tomada al implementar, 2026-09-10). `esaviDescription` es el único bloqueante de guardado de la cabecera —`TEXT NOT NULL` en `CASE-PROCESS.md` §4.6 y §5, y `min(1)` en `notificationSaveSchema`—, así que ninguna fila padre puede existir antes de que esté escrita: dejarla entre las tres últimas hacía que el primer «Guardar y continuar» fallara en la validación de un campo fuera del DOM, sin nada que explicara por qué. Pasa de cerrar el paso a abrirlo, y **con ello cambia el orden de pantalla que fijó FE12e**: es la única sección que se mueve, y `ESAVI-FORM.md` deja de mandar en su posición.
+
 **La secuencia se calcula sobre las secciones que aplican, no sobre las nueve u once teóricas.** Si la compuerta de antecedentes médicos está cerrada, esa sección no existe y avanzar desde la 1 lleva a la 3. Con paciente masculino, el bloque de embarazo no cuenta como paso.
 
 **Rama grave — seis avances:**
 
 | # | Sección | Botón |
 |---|---|---|
-| 1 | Antecedentes de la persona vacunada | sí |
-| 2 | Antecedentes médicos | sí |
-| 3 | Antecedentes farmacológicos | sí |
-| 4 | Datos de embarazo | sí |
-| 5 | Selección de vacunas | sí |
-| 6 | Eventos adversos | sí |
-| 7–9 | Descripción del ESAVI · Desenlace · Observaciones | **no**: se revelan juntas con el sexto avance |
+| 1 | Descripción del ESAVI | sí |
+| 2 | Antecedentes de la persona vacunada | sí |
+| 3 | Antecedentes médicos | sí |
+| 4 | Antecedentes farmacológicos | sí |
+| 5 | Datos de embarazo | sí |
+| 6 | Selección de vacunas | sí |
+| 7 | Eventos adversos | sí |
+| 8–9 | Desenlace · Observaciones | **no**: se revelan juntas con el séptimo avance |
 
-**Rama no grave — ocho avances:** las mismas, más «Antecedentes de vacunación o inmunización» y «¿Cómo se verificó la información de la vacunación?» entre el embarazo y las vacunas, ambas con botón.
+**Rama no grave — nueve avances:** las mismas, más «Antecedentes de vacunación o inmunización» y «¿Cómo se verificó la información de la vacunación?» entre el embarazo y las vacunas, ambas con botón.
 
 ### 3.2 Endpoints consumidos
 
@@ -221,10 +225,10 @@ Van a los **tres** archivos de idioma; `npm run i18n:check` exige paridad exacta
 
 ## 5. Criterios de aceptación
 
-- [ ] Con un paso 4 que no existía, al entrar sólo se ve la sección «Antecedentes de la persona vacunada» y **un** botón «Guardar y continuar».
+- [ ] Con un paso 4 que no existía, al entrar sólo se ve la sección «Descripción del ESAVI» y **un** botón «Guardar y continuar».
 - [ ] En todo momento hay **como máximo un** botón de avance en el DOM.
 - [ ] Cada avance ejecuta la cadena completa de FE12a y sólo revela la sección siguiente si resolvió bien.
-- [ ] El último avance revela descripción del ESAVI, desenlace y observaciones **juntas**, y deja el DOM sin ningún botón de avance.
+- [ ] El último avance revela desenlace y observaciones **juntas**, y deja el DOM sin ningún botón de avance.
 - [ ] Con la fila de `notification` ya existente al montar el paso, **todo** está visible y no hay ningún botón de avance.
 - [ ] Una sección que no aplica —antecedentes médicos con la compuerta cerrada, embarazo con paciente masculino— no cuenta como avance y no aparece en el DOM.
 - [ ] Con el bloque de embarazo respondido sólo en `wasPregnantAtEsavi`, el avance encadena `ESAVI-NOTIFPRG-001` y Complicaciones queda visible dentro de la misma sección.
@@ -250,7 +254,8 @@ Van a los **tres** archivos de idioma; `npm run i18n:check` exige paridad exacta
 - **Sí:** el primer término de la regla es **«el paso ya existía al montar»**, no «los datos lo desbloquean». Con la definición literal, en cuanto existe la fila padre todos los umbrales quedan satisfechos y el primer avance revelaría el paso entero: la regla se anulaba a sí misma.
 - **Sí:** un solo botón en pantalla, el de la frontera. Un «continuar» donde ya no queda nada que revelar miente sobre lo que hace.
 - **Sí:** el bloque de embarazo conserva **un** botón, aunque haga dos cosas a la vez —crear su fila, que revela Complicaciones dentro de la sección, y avanzar—. Partirlo rompería el orden que FE12e acaba de fijar contra `ESAVI-FORM.md`, y dos botones seguidos en la misma caja son indistinguibles para quien rellena.
-- **Sí:** las tres últimas secciones se revelan juntas. Ninguna desbloquea nada, y la barra del pie ya está justo debajo.
+- **Sí:** las dos últimas secciones se revelan juntas. Ninguna desbloquea nada, y la barra del pie ya está justo debajo.
+- **Sí:** «Descripción del ESAVI» encabeza el paso. Se decidió al implementar, contra la primera redacción de §3.1: con ella al final, el primer avance no podía guardar nada y el recorrido entero quedaba bloqueado sin explicación. Se prefirió moverla a revelarla en su sitio antiguo porque es lo primero que el usuario tiene que llenar.
 - **Sí:** el hook sale a `shared/hooks/` desde el primer uso. Extraerlo cuando FE13 lo pida significa extraerlo mal: con la forma que le dejó el paso 4.
 - **Sí:** «Guardar y continuar», no «Siguiente». «Siguiente» ya significa pasar al paso 5 en este asistente, y el botón no lleva a ninguna parte. El precedente literal es «Guardar y añadir diluyentes» de `VaccineFormDialog`.
 - **Sí:** el disparador del `POST` de embarazo se alinea con la primera pregunta en pantalla. Es una corrección arrastrada de FE12e, no una decisión nueva.
@@ -281,7 +286,7 @@ Van a los **tres** archivos de idioma; `npm run i18n:check` exige paridad exacta
 |---|---|
 | `shared/hooks/useProgressiveSections.ts` | **Nuevo.** Genérico, sin saber de notificaciones |
 | `features/esaviCase/NotificationStep.tsx` | Consume el hook; cada sección con botón lo pinta; el disparador del `POST` de embarazo cambia de campo |
-| `features/esaviCase/NotificationStep.test.tsx` | Los tests que parten de un paso 4 inexistente se redirigen al recorrido |
+| `features/esaviCase/NotificationStep.test.tsx` | Los tests que parten de un paso 4 inexistente y examinan una sección posterior entran por la reentrada (`mockNotificationReentry`); los dos del orden de FE12e esperan la descripción primero |
 | `src/locales/{es,en,nl}.json` | Una clave |
 
 **`CaseWizardActionBar.tsx` y `CaseWizardContext.tsx` no cambian.** Al concretar el diseño resultó que el avance no necesita nada de la barra: reutiliza el `performSave` que el paso ya registra. La dependencia de FE08 sigue siendo real —el comportamiento de «Guardar» y «Completar etapa» es una restricción de este spec— pero no se toca ninguno de sus dos archivos.
