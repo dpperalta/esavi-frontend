@@ -906,6 +906,7 @@ function NotificationFormBody({
         notificationId={notificationId}
         eventDate={eventDate}
         readOnly={isClosed}
+        showsDiluents={notificationType === 'SEVERE'}
       />
 
       <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />

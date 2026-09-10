@@ -30,6 +30,9 @@ export interface VaccineListProps {
   eventDate: string | null;
   // Caso cerrado (§3.6): sin «Añadir» y sin acciones de fila — mismo patrón que `<EventList>`.
   readOnly?: boolean;
+  // Severe branch only (SPEC FE12e §4 paso 9) — this list never renders diluents itself, it
+  // just hands the flag to `<VaccineFormDialog>`.
+  showsDiluents: boolean;
 }
 
 function isRoleForbidden(error: unknown): boolean {
@@ -39,7 +42,7 @@ function isRoleForbidden(error: unknown): boolean {
 // La tercera lista del paso 4 y la única anidada (SPEC FE12c §1), completa: alta/edición (paso 8),
 // diluyentes en fase 2 (paso 9) y baja con confirmación (paso 10) — sobre `<SatelliteList>`, sin
 // saber de diluyentes más allá de nombrarlos en el diálogo de baja.
-export function VaccineList({ caseId, notificationId, eventDate, readOnly = false }: VaccineListProps) {
+export function VaccineList({ caseId, notificationId, eventDate, readOnly = false, showsDiluents }: VaccineListProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const vaccines = useNotificationVaccinesByCase(caseId, notificationId !== null);
@@ -144,6 +147,7 @@ export function VaccineList({ caseId, notificationId, eventDate, readOnly = fals
         notificationId={notificationId}
         eventDate={eventDate}
         vaccineId={dialog.vaccineId}
+        showsDiluents={showsDiluents}
         onOpenChange={(open) => setDialog((prev) => ({ ...prev, open }))}
       />
 

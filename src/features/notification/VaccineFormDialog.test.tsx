@@ -121,6 +121,7 @@ function renderDialog(vaccineId: string | null = null, eventDate: string | null 
         notificationId={NOTIFICATION_ID}
         eventDate={eventDate}
         vaccineId={vaccineId}
+        showsDiluents
         onOpenChange={() => {}}
       />
     </QueryClientProvider>,
