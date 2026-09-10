@@ -450,6 +450,10 @@ export const notificationMedicalHistoryResource = createResource<
   key: 'notificationMedicalHistory',
   path: 'notification-medical-histories',
   idField: 'medicalHistoryId',
+  // `005B` (reactivate) is SUPERADMIN and out of scope (SPEC FE12e §3.2): the wizard neither
+  // offers it nor names it as an available action, so the hook does not exist rather than
+  // existing unused — the same reason `classificationResource` sets it false.
+  hasActivate: false,
   // No screen ever toggles inactive rows for a satellite, so `useList`/`useListByParent` are never
   // called here — same case as its four sibling lists of step 4.
   inactiveMode: 'serverDecides',
