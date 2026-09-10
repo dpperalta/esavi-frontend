@@ -650,6 +650,7 @@
     },
     "actions": {
       "save": "Guardar",
+      "saveAndContinue": "Guardar y continuar",
       "completeStage": "Completar etapa",
       "stageCompleted": "Etapa completada.",
       "next": "Siguiente",
