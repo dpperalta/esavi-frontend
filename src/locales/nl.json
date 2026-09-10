@@ -804,6 +804,17 @@
       "requestInvestigation": "Onderzoek vereist",
       "notes": "Opmerkingen"
     },
+    "section": {
+      "background": "Voorgeschiedenis van de gevaccineerde persoon",
+      "medicalHistory": "Medische voorgeschiedenis",
+      "medication": "Medicatiegeschiedenis",
+      "vaccinationBackground": "Vaccinatie- of immunisatiegegevens",
+      "verification": "Hoe is de vaccinatie-informatie geverifieerd?",
+      "vaccines": "Vaccinselectie",
+      "events": "Ongewenste voorvallen",
+      "description": "Beschrijving van het AEFI",
+      "outcome": "Uitkomst"
+    },
     "help": {
       "requestInvestigation": "Onafhankelijk van de ernst: een niet-ernstige gebeurtenis kan toch onderzocht worden, en een ernstige hoeft dat niet altijd te vereisen."
     },

@@ -37,10 +37,12 @@ export function VerificationSourceSection({
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
+      <h3 className="text-sm font-medium text-foreground">
+        {t('notification.section.verification')}
+      </h3>
+
       <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-medium text-foreground">
-          {t('notification.nonSevere.verificationLegend')}
-        </legend>
+        <legend className="sr-only">{t('notification.nonSevere.verificationLegend')}</legend>
         {VERIFICATION_SWITCHES.map(({ name, labelKey }) => (
           <Controller
             key={name}

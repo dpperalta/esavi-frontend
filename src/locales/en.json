@@ -804,6 +804,17 @@
       "requestInvestigation": "Investigation required",
       "notes": "Notes"
     },
+    "section": {
+      "background": "Background of the vaccinated person",
+      "medicalHistory": "Medical history",
+      "medication": "Medication history",
+      "vaccinationBackground": "Vaccination or immunisation background",
+      "verification": "How was the vaccination information verified?",
+      "vaccines": "Vaccine selection",
+      "events": "Adverse events",
+      "description": "AEFI description",
+      "outcome": "Outcome"
+    },
     "help": {
       "requestInvestigation": "Independent of severity: a non-serious event can still be investigated, and a serious one may not require it."
     },

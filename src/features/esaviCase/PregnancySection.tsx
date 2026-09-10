@@ -116,9 +116,9 @@ export function PregnancySection({
             {t('notification.pregnancy.ifApplicable')}
           </span>
         )}
-        <span className="text-sm font-medium text-foreground">
+        <h3 className="text-sm font-medium text-foreground">
           {t('notification.pregnancy.sectionTitle')}
-        </span>
+        </h3>
       </div>
 
       {loadError && (
@@ -146,25 +146,6 @@ export function PregnancySection({
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-foreground">
-                {t('notification.pregnancy.field.wasPregnantAtVaccination')}
-              </span>
-              <Controller
-                control={control}
-                name="wasPregnantAtVaccination"
-                render={({ field }) => (
-                  <AnswerOptionField
-                    value={field.value ?? null}
-                    onChange={field.onChange}
-                    ariaLabel={t('notification.pregnancy.field.wasPregnantAtVaccination')}
-                    variant="unknown"
-                    disabled={configMissing}
-                  />
-                )}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-foreground">
                 {t('notification.pregnancy.field.wasPregnantAtEsavi')}
               </span>
               <Controller
@@ -175,6 +156,25 @@ export function PregnancySection({
                     value={field.value ?? null}
                     onChange={field.onChange}
                     ariaLabel={t('notification.pregnancy.field.wasPregnantAtEsavi')}
+                    variant="unknown"
+                    disabled={configMissing}
+                  />
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.pregnancy.field.wasPregnantAtVaccination')}
+              </span>
+              <Controller
+                control={control}
+                name="wasPregnantAtVaccination"
+                render={({ field }) => (
+                  <AnswerOptionField
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    ariaLabel={t('notification.pregnancy.field.wasPregnantAtVaccination')}
                     variant="unknown"
                     disabled={configMissing}
                   />
@@ -250,7 +250,17 @@ export function PregnancySection({
               </p>
             )}
           </div>
+        </>
+      )}
 
+      <PregnancyComplicationList pregnancyId={pregnancyId} readOnly={isClosed} />
+
+      {/* The complication list comes before its severe-branch summary, not after: SPEC FE12e §3.1
+          orders section 4 as the five questions, the complication list, then
+          `pregnancyComplicationsDescription` and `pregnancyNotes`. That splits the `!loadError`
+          body in two around a list that renders regardless of the pregnancy GET. */}
+      {!loadError && (
+        <>
           {showsSevereComplications && (
             <div className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-foreground">
@@ -329,8 +339,6 @@ export function PregnancySection({
           />
         </>
       )}
-
-      <PregnancyComplicationList pregnancyId={pregnancyId} readOnly={isClosed} />
     </div>
   );
 }

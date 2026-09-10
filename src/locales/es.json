@@ -804,6 +804,17 @@
       "requestInvestigation": "Investigación requerida",
       "notes": "Observaciones"
     },
+    "section": {
+      "background": "Antecedentes de la persona vacunada",
+      "medicalHistory": "Antecedentes médicos",
+      "medication": "Antecedentes farmacológicos",
+      "vaccinationBackground": "Antecedentes de vacunación o inmunización",
+      "verification": "¿Cómo se verificó la información de la vacunación?",
+      "vaccines": "Selección de vacunas",
+      "events": "Eventos adversos",
+      "description": "Descripción del ESAVI",
+      "outcome": "Desenlace"
+    },
     "help": {
       "requestInvestigation": "Es independiente de la gravedad: un evento no grave puede investigarse y uno grave puede no requerirlo."
     },

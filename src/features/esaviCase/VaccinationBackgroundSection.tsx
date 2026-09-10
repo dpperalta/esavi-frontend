@@ -28,30 +28,9 @@ export function VaccinationBackgroundSection({
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
-      <span className="text-sm font-medium text-foreground">
-        {t('notification.nonSevere.sectionTitle')}
-      </span>
-
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-foreground">
-          {t('notification.nonSevere.vaccinationHealthFacilityId')}
-        </span>
-        <Controller
-          control={control}
-          name="vaccinationHealthFacilityId"
-          render={({ field }) => (
-            <HealthFacilitySelect
-              value={field.value ?? null}
-              resolvedLabel={initialHealthFacilityLabel ?? selectedFacilityLabel}
-              scoped={false}
-              onChange={(option) => {
-                field.onChange(option?.id ?? null);
-                setSelectedFacilityLabel(option?.label ?? null);
-              }}
-            />
-          )}
-        />
-      </div>
+      <h3 className="text-sm font-medium text-foreground">
+        {t('notification.section.vaccinationBackground')}
+      </h3>
 
       <div className="flex flex-col gap-1.5">
         <span className="text-sm font-medium text-foreground">
@@ -102,6 +81,27 @@ export function VaccinationBackgroundSection({
           name="vaccinationGeoLocationId"
           render={({ field }) => (
             <GeoLocationPicker value={field.value ?? null} onChange={field.onChange} />
+          )}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-foreground">
+          {t('notification.nonSevere.vaccinationHealthFacilityId')}
+        </span>
+        <Controller
+          control={control}
+          name="vaccinationHealthFacilityId"
+          render={({ field }) => (
+            <HealthFacilitySelect
+              value={field.value ?? null}
+              resolvedLabel={initialHealthFacilityLabel ?? selectedFacilityLabel}
+              scoped={false}
+              onChange={(option) => {
+                field.onChange(option?.id ?? null);
+                setSelectedFacilityLabel(option?.label ?? null);
+              }}
+            />
           )}
         />
       </div>

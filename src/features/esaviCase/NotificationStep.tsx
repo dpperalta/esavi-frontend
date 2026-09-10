@@ -754,262 +754,120 @@ function NotificationFormBody({
 
   return (
     <div className="flex flex-col gap-6">
-      <Controller
-        control={form.control}
-        name="esaviDescription"
-        render={({ field, fieldState }) => (
+      <section className="flex flex-col gap-4">
+        <h3 className="text-sm font-medium text-foreground">
+          {t('notification.section.background')}
+        </h3>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="notification-esaviDescription"
-              className="text-sm font-medium text-foreground"
-            >
-              {t('notification.fields.esaviDescription')}
-            </label>
-            <Textarea
-              id="notification-esaviDescription"
-              value={field.value ?? ''}
-              onChange={(event) => field.onChange(event.target.value)}
+            <span className="text-sm font-medium text-foreground">
+              {t('notification.fields.hasRelevantMedicalHistory')}
+            </span>
+            <Controller
+              control={form.control}
+              name="hasRelevantMedicalHistory"
+              render={({ field }) => (
+                <AnswerOptionField
+                  value={field.value ?? null}
+                  onChange={field.onChange}
+                  ariaLabel={t('notification.fields.hasRelevantMedicalHistory')}
+                  variant="unknown"
+                />
+              )}
             />
-            {fieldState.error && (
-              <p role="alert" className="text-sm text-destructive">
-                {t('notification.validation.esaviDescriptionRequired')}
+          </div>
+
+          {/* Las cuatro banderas de la ficha grave, en línea entre las dos de la cabecera
+            (SPEC FE12e §3.1 sección 1): el bloque que las agrupaba se disolvió en el paso 7. */}
+          {notificationType === 'SEVERE' &&
+            SEVERE_HISTORY_FLAGS.map(({ name, labelKey }) => (
+              <div key={name} className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
+                <Controller
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <AnswerOptionField
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      ariaLabel={t(labelKey)}
+                      variant="unknown"
+                    />
+                  )}
+                />
+              </div>
+            ))}
+
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-foreground">
+              {t('notification.fields.takesMedication')}
+            </span>
+            <Controller
+              control={form.control}
+              name="takesMedication"
+              render={({ field }) => (
+                <AnswerOptionField
+                  value={field.value ?? null}
+                  onChange={field.onChange}
+                  ariaLabel={t('notification.fields.takesMedication')}
+                  variant="unknown"
+                  disabled={hasActiveMedications}
+                />
+              )}
+            />
+            {/* No es un aviso al guardar: es un campo que no se puede mover mientras haya datos que
+              quedarían huérfanos (SPEC FE12b §3.5). El texto asociado, no sólo el atributo
+              `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
+            {hasActiveMedications && (
+              <p className="text-sm text-muted-foreground">
+                {t(
+                  canAdminMedications
+                    ? 'notification.medications.gateLocked'
+                    : 'notification.medications.gateLockedNeedsAdmin',
+                )}
               </p>
             )}
           </div>
-        )}
-      />
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-foreground">
-            {t('notification.fields.hasRelevantMedicalHistory')}
-          </span>
-          <Controller
-            control={form.control}
-            name="hasRelevantMedicalHistory"
-            render={({ field }) => (
-              <AnswerOptionField
-                value={field.value ?? null}
-                onChange={field.onChange}
-                ariaLabel={t('notification.fields.hasRelevantMedicalHistory')}
-                variant="unknown"
-              />
-            )}
-          />
         </div>
 
-        {/* Las cuatro banderas de la ficha grave, en línea entre las dos de la cabecera
-            (SPEC FE12e §3.1 sección 1): el bloque que las agrupaba se disolvió en el paso 7. */}
-        {notificationType === 'SEVERE' &&
-          SEVERE_HISTORY_FLAGS.map(({ name, labelKey }) => (
-            <div key={name} className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
-              <Controller
-                control={form.control}
-                name={name}
-                render={({ field }) => (
-                  <AnswerOptionField
-                    value={field.value ?? null}
-                    onChange={field.onChange}
-                    ariaLabel={t(labelKey)}
-                    variant="unknown"
-                  />
-                )}
-              />
-            </div>
-          ))}
-
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-foreground">
-            {t('notification.fields.takesMedication')}
-          </span>
-          <Controller
-            control={form.control}
-            name="takesMedication"
-            render={({ field }) => (
-              <AnswerOptionField
-                value={field.value ?? null}
-                onChange={field.onChange}
-                ariaLabel={t('notification.fields.takesMedication')}
-                variant="unknown"
-                disabled={hasActiveMedications}
-              />
-            )}
-          />
-          {/* No es un aviso al guardar: es un campo que no se puede mover mientras haya datos que
-              quedarían huérfanos (SPEC FE12b §3.5). El texto asociado, no sólo el atributo
-              `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
-          {hasActiveMedications && (
-            <p className="text-sm text-muted-foreground">
-              {t(
-                canAdminMedications
-                  ? 'notification.medications.gateLocked'
-                  : 'notification.medications.gateLockedNeedsAdmin',
-              )}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* `severeNotes` cierra la sección de banderas y no el bloque de embarazo (SPEC FE12e §3.1,
+        {/* `severeNotes` cierra la sección de banderas y no el bloque de embarazo (SPEC FE12e §3.1,
           §6): el embarazo ya tiene su `pregnancyNotes`, y dos campos de notas seguidos en la misma
           caja son indistinguibles para quien rellena. */}
-      {notificationType === 'SEVERE' && (
-        <Controller
-          control={form.control}
-          name="severeNotes"
-          render={({ field }) => (
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="severeNotification-notes"
-                className="text-sm font-medium text-foreground"
-              >
-                {t('notification.fields.notes')}
-              </label>
-              <Textarea
-                id="severeNotification-notes"
-                value={field.value ?? ''}
-                onChange={(event) => field.onChange(event.target.value || null)}
-              />
-            </div>
-          )}
-        />
-      )}
+        {notificationType === 'SEVERE' && (
+          <Controller
+            control={form.control}
+            name="severeNotes"
+            render={({ field }) => (
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="severeNotification-notes"
+                  className="text-sm font-medium text-foreground"
+                >
+                  {t('notification.fields.notes')}
+                </label>
+                <Textarea
+                  id="severeNotification-notes"
+                  value={field.value ?? ''}
+                  onChange={(event) => field.onChange(event.target.value || null)}
+                />
+              </div>
+            )}
+          />
+        )}
+      </section>
+
+      {/* Section 2, «Antecedentes médicos»: `<MedicalHistoryList>` lands here in step 10 of
+          SPEC FE12e §4, behind the five-flag gate of step 11. */}
 
       {/* Sólo existen con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
           `notificationId` no hay padre al que colgar ningún satélite. */}
-      <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
       <MedicationList
         caseId={caseId}
         notificationId={notificationId}
         readOnly={isClosed}
         takesMedication={watchedValues.takesMedication ?? null}
       />
-      <VaccineList
-        caseId={caseId}
-        notificationId={notificationId}
-        eventDate={eventDate}
-        readOnly={isClosed}
-      />
-
-      <div className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-foreground">
-          {t('notification.fields.outcomeItemId')}
-        </span>
-        <Controller
-          control={form.control}
-          name="outcomeItemId"
-          render={({ field }) => (
-            <CatalogSelect
-              typeCode="outcome"
-              emit="id"
-              value={field.value ?? null}
-              onChange={field.onChange}
-              ariaLabel={t('notification.fields.outcomeItemId')}
-            />
-          )}
-        />
-      </div>
-
-      {/* Sólo aparece con outcome.value === 'DEATH' (SPEC FE12a §3.5, §7) — nunca con `code` ni
-          `name`, que pertenecen al catálogo del país (SPEC F46). `aria-live="polite"` porque
-          aparece por un cambio en otro control: sin el anuncio, un lector de pantalla no se
-          entera de que acaban de aparecer tres campos, dos de ellos obligatorios. */}
-      <div aria-live="polite">
-        {isDeathOutcome && (
-          <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
-            <span className="text-sm font-medium text-foreground">
-              {t('notification.death.sectionTitle')}
-            </span>
-
-            <Controller
-              control={form.control}
-              name="deathDate"
-              render={({ field }) => (
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-sm font-medium text-foreground">
-                    {t('notification.death.deathDate')}
-                  </span>
-                  <DateField
-                    value={field.value ?? null}
-                    onChange={field.onChange}
-                    ariaLabel={t('notification.death.deathDate')}
-                    allowFuture={false}
-                  />
-                  {!deathDateValid && (
-                    <p role="alert" className="text-sm text-destructive">
-                      {t('notification.validation.deathDateBeforeEventDate')}
-                    </p>
-                  )}
-                </div>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="autopsyRequested"
-              render={({ field }) => (
-                <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
-                  <Switch
-                    checked={field.value === true}
-                    onCheckedChange={field.onChange}
-                    aria-label={t('notification.death.autopsyRequested')}
-                  />
-                  {t('notification.death.autopsyRequested')}
-                </label>
-              )}
-            />
-
-            <Controller
-              control={form.control}
-              name="verbalAutopsyPerformed"
-              render={({ field }) => (
-                <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
-                  <Switch
-                    checked={field.value === true}
-                    onCheckedChange={field.onChange}
-                    aria-label={t('notification.death.verbalAutopsyPerformed')}
-                  />
-                  {t('notification.death.verbalAutopsyPerformed')}
-                </label>
-              )}
-            />
-          </div>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-foreground">
-          {t('notification.fields.requestInvestigation')}
-        </span>
-        <p className="text-sm text-muted-foreground">
-          {t('notification.help.requestInvestigation')}
-        </p>
-        <Controller
-          control={form.control}
-          name="requestInvestigation"
-          render={({ field }) => (
-            <RadioGroup
-              aria-label={t('notification.fields.requestInvestigation')}
-              // Cadena vacía, no `undefined`, mientras no se responda — mismo motivo que la
-              // compuerta de gravedad de `ClassificationStep` (Radix trata un `RadioGroup` sin
-              // `value` inicial como no controlado).
-              value={field.value === true ? 'true' : field.value === false ? 'false' : ''}
-              onValueChange={(next) => field.onChange(next === 'true')}
-              className="flex w-auto gap-4"
-            >
-              <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                <RadioGroupItem value="true" />
-                {t('common.answerOption.yes')}
-              </label>
-              <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
-                <RadioGroupItem value="false" />
-                {t('common.answerOption.no')}
-              </label>
-            </RadioGroup>
-          )}
-        />
-      </div>
 
       {/* Detrás de la compuerta de `CASE-PROCESS.md` §7.4 (SPEC FE12d §4 paso 7): independiente
           de la rama, así que va antes de la que corresponda por gravedad. */}
@@ -1042,6 +900,169 @@ function NotificationFormBody({
           />
         </>
       )}
+
+      <VaccineList
+        caseId={caseId}
+        notificationId={notificationId}
+        eventDate={eventDate}
+        readOnly={isClosed}
+      />
+
+      <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+
+      <section className="flex flex-col gap-4">
+        <h3 className="text-sm font-medium text-foreground">
+          {t('notification.section.description')}
+        </h3>
+
+        <Controller
+          control={form.control}
+          name="esaviDescription"
+          render={({ field, fieldState }) => (
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="notification-esaviDescription"
+                className="text-sm font-medium text-foreground"
+              >
+                {t('notification.fields.esaviDescription')}
+              </label>
+              <Textarea
+                id="notification-esaviDescription"
+                value={field.value ?? ''}
+                onChange={(event) => field.onChange(event.target.value)}
+              />
+              {fieldState.error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {t('notification.validation.esaviDescriptionRequired')}
+                </p>
+              )}
+            </div>
+          )}
+        />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h3 className="text-sm font-medium text-foreground">{t('notification.section.outcome')}</h3>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-foreground">
+            {t('notification.fields.outcomeItemId')}
+          </span>
+          <Controller
+            control={form.control}
+            name="outcomeItemId"
+            render={({ field }) => (
+              <CatalogSelect
+                typeCode="outcome"
+                emit="id"
+                value={field.value ?? null}
+                onChange={field.onChange}
+                ariaLabel={t('notification.fields.outcomeItemId')}
+              />
+            )}
+          />
+        </div>
+
+        {/* Sólo aparece con outcome.value === 'DEATH' (SPEC FE12a §3.5, §7) — nunca con `code` ni
+          `name`, que pertenecen al catálogo del país (SPEC F46). `aria-live="polite"` porque
+          aparece por un cambio en otro control: sin el anuncio, un lector de pantalla no se
+          entera de que acaban de aparecer tres campos, dos de ellos obligatorios. */}
+        <div aria-live="polite">
+          {isDeathOutcome && (
+            <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.death.sectionTitle')}
+              </span>
+
+              <Controller
+                control={form.control}
+                name="deathDate"
+                render={({ field }) => (
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-sm font-medium text-foreground">
+                      {t('notification.death.deathDate')}
+                    </span>
+                    <DateField
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      ariaLabel={t('notification.death.deathDate')}
+                      allowFuture={false}
+                    />
+                    {!deathDateValid && (
+                      <p role="alert" className="text-sm text-destructive">
+                        {t('notification.validation.deathDateBeforeEventDate')}
+                      </p>
+                    )}
+                  </div>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="autopsyRequested"
+                render={({ field }) => (
+                  <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
+                    <Switch
+                      checked={field.value === true}
+                      onCheckedChange={field.onChange}
+                      aria-label={t('notification.death.autopsyRequested')}
+                    />
+                    {t('notification.death.autopsyRequested')}
+                  </label>
+                )}
+              />
+
+              <Controller
+                control={form.control}
+                name="verbalAutopsyPerformed"
+                render={({ field }) => (
+                  <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
+                    <Switch
+                      checked={field.value === true}
+                      onCheckedChange={field.onChange}
+                      aria-label={t('notification.death.verbalAutopsyPerformed')}
+                    />
+                    {t('notification.death.verbalAutopsyPerformed')}
+                  </label>
+                )}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-foreground">
+            {t('notification.fields.requestInvestigation')}
+          </span>
+          <p className="text-sm text-muted-foreground">
+            {t('notification.help.requestInvestigation')}
+          </p>
+          <Controller
+            control={form.control}
+            name="requestInvestigation"
+            render={({ field }) => (
+              <RadioGroup
+                aria-label={t('notification.fields.requestInvestigation')}
+                // Cadena vacía, no `undefined`, mientras no se responda — mismo motivo que la
+                // compuerta de gravedad de `ClassificationStep` (Radix trata un `RadioGroup` sin
+                // `value` inicial como no controlado).
+                value={field.value === true ? 'true' : field.value === false ? 'false' : ''}
+                onValueChange={(next) => field.onChange(next === 'true')}
+                className="flex w-auto gap-4"
+              >
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                  <RadioGroupItem value="true" />
+                  {t('common.answerOption.yes')}
+                </label>
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                  <RadioGroupItem value="false" />
+                  {t('common.answerOption.no')}
+                </label>
+              </RadioGroup>
+            )}
+          />
+        </div>
+      </section>
 
       <Controller
         control={form.control}

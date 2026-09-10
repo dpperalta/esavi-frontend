@@ -117,7 +117,7 @@ export function VaccineList({ caseId, notificationId, eventDate, readOnly = fals
   return (
     <div className="flex flex-col gap-3">
       <SatelliteList<NotificationVaccineDetail>
-        titleKey="notificationVaccine.list.title"
+        titleKey="notification.section.vaccines"
         columns={columns}
         rows={vaccines.data?.rows ?? []}
         idField="vaccineId"
