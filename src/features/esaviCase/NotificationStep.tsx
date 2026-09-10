@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -120,6 +120,23 @@ type NotificationSectionId =
   | 'events'
   | 'outcome'
   | 'observations';
+
+// The heading of every section that can be revealed, for the live region and nothing else (SPEC
+// FE12f §3.7). All of them are FE12e keys already: announcing an advance names the section, it does
+// not add a string. `observations` is absent on purpose — it never is the target of an advance,
+// because it surfaces together with `outcome`, which is what gets announced.
+const SECTION_TITLE_KEYS: Partial<Record<NotificationSectionId, string>> = {
+  description: 'notification.section.description',
+  background: 'notification.section.background',
+  medicalHistory: 'notification.section.medicalHistory',
+  medications: 'notification.section.medication',
+  pregnancy: 'notification.pregnancy.sectionTitle',
+  vaccinationBackground: 'notification.section.vaccinationBackground',
+  verificationSource: 'notification.section.verification',
+  vaccines: 'notification.section.vaccines',
+  events: 'notification.section.events',
+  outcome: 'notification.section.outcome',
+};
 
 function NotificationStepSkeleton() {
   return (
@@ -809,9 +826,34 @@ function NotificationFormBody({
     lastWithButton: 'events',
   });
 
+  // The section the next advance will reveal, read before advancing: once `advance()` runs the
+  // frontier has already moved on.
+  const nextSection = frontier ? (sections[sections.indexOf(frontier) + 1] ?? null) : null;
+
+  const sectionsRef = useRef<HTMLDivElement>(null);
+  const [revealedSection, setRevealedSection] = useState<NotificationSectionId | null>(null);
+  const announcementKey = revealedSection ? SECTION_TITLE_KEYS[revealedSection] : undefined;
+
   const handleAdvance = useCallback(async () => {
-    if (await performSaveAndReport()) advance();
-  }, [advance, performSaveAndReport]);
+    if (await performSaveAndReport()) {
+      advance();
+      setRevealedSection(nextSection);
+    }
+  }, [advance, nextSection, performSaveAndReport]);
+
+  // Focus lands on the heading of the section just revealed and brings it into view (SPEC FE12f
+  // §3.7): otherwise whoever pressed the button with the keyboard stays at the end of the document
+  // and a screen reader never learns that anything appeared. Every heading carries `tabIndex={-1}`
+  // — the four rendered by components included, through `<SatelliteList>` and the three sections
+  // of the non-severe branch.
+  useEffect(() => {
+    if (!revealedSection) return;
+    const heading = sectionsRef.current?.querySelector<HTMLElement>(
+      `[data-section="${revealedSection}"] h3`,
+    );
+    heading?.focus();
+    heading?.scrollIntoView?.({ block: 'start' });
+  }, [revealedSection]);
 
   // The single advance button on screen, at the end of the section that holds the frontier (SPEC
   // FE12f §3.7): full width below `md`, right-aligned on desktop, 44px touch target. Disabled
@@ -872,14 +914,21 @@ function NotificationFormBody({
   ]);
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Primera sección del recorrido (SPEC FE12f §3.1, corregido al implementarlo):
-          `esaviDescription` es el único bloqueante de guardado de la cabecera (`CASE-PROCESS.md`
-          §4.6), así que ninguna fila padre puede existir antes de que esté escrita — y sin fila
-          padre no hay ningún avance posible. Por eso encabeza el paso en vez de cerrarlo. */}
+    <div ref={sectionsRef} className="flex flex-col gap-6">
+      {/* The advance announcement (SPEC FE12f §3.7): the heading of the revealed section, with the
+          key FE12e already defines. Visually hidden — the heading itself, which also takes focus,
+          is the visible cue. */}
+      <p aria-live="polite" className="sr-only">
+        {announcementKey ? t(announcementKey) : ''}
+      </p>
+
+      {/* The first section of the walkthrough (SPEC FE12f §3.1, corrected while implementing):
+          `esaviDescription` is the only field that blocks the header save (`CASE-PROCESS.md` §4.6),
+          so no parent row can exist before it is written — and with no parent row no advance is
+          possible at all. That is why it opens the step instead of closing it. */}
       {isVisible('description') && (
-        <section className="flex flex-col gap-4">
-          <h3 className="text-sm font-medium text-foreground">
+        <section data-section="description" className="flex flex-col gap-4">
+          <h3 tabIndex={-1} className="text-sm font-medium text-foreground">
             {t('notification.section.description')}
           </h3>
 
@@ -911,108 +960,110 @@ function NotificationFormBody({
         </section>
       )}
 
-      <section className="flex flex-col gap-4">
-        <h3 className="text-sm font-medium text-foreground">
-          {t('notification.section.background')}
-        </h3>
+      {isVisible('background') && (
+        <section data-section="background" className="flex flex-col gap-4">
+          <h3 tabIndex={-1} className="text-sm font-medium text-foreground">
+            {t('notification.section.background')}
+          </h3>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* La bandera de la cabecera y, en rama grave, las cuatro de la ficha, en línea entre
-            ella y `takesMedication` (SPEC FE12e §3.1 sección 1). Se pintan de una lista porque
-            comparten forma, orden y compuerta: la que quede sola en `'YES'` con antecedentes
-            cargados es la que se bloquea (§3.5). */}
-          {gateFlags.map(({ name, labelKey }) => (
-            <div key={name} className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {/* La bandera de la cabecera y, en rama grave, las cuatro de la ficha, en línea entre
+              ella y `takesMedication` (SPEC FE12e §3.1 sección 1). Se pintan de una lista porque
+              comparten forma, orden y compuerta: la que quede sola en `'YES'` con antecedentes
+              cargados es la que se bloquea (§3.5). */}
+            {gateFlags.map(({ name, labelKey }) => (
+              <div key={name} className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
+                <Controller
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <AnswerOptionField
+                      value={field.value ?? null}
+                      onChange={field.onChange}
+                      ariaLabel={t(labelKey)}
+                      variant="unknown"
+                      disabled={lockedGateFlag === name}
+                      ariaDescribedBy={
+                        lockedGateFlag === name ? `medicalHistory-gateLocked-${name}` : undefined
+                      }
+                    />
+                  )}
+                />
+                {lockedGateFlag === name && (
+                  <p
+                    id={`medicalHistory-gateLocked-${name}`}
+                    className="text-sm text-muted-foreground"
+                  >
+                    {t(
+                      canAdminSatellites
+                        ? 'notification.medicalHistory.gateLocked'
+                        : 'notification.medicalHistory.gateLockedNeedsAdmin',
+                    )}
+                  </p>
+                )}
+              </div>
+            ))}
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">
+                {t('notification.fields.takesMedication')}
+              </span>
               <Controller
                 control={form.control}
-                name={name}
+                name="takesMedication"
                 render={({ field }) => (
                   <AnswerOptionField
                     value={field.value ?? null}
                     onChange={field.onChange}
-                    ariaLabel={t(labelKey)}
+                    ariaLabel={t('notification.fields.takesMedication')}
                     variant="unknown"
-                    disabled={lockedGateFlag === name}
-                    ariaDescribedBy={
-                      lockedGateFlag === name ? `medicalHistory-gateLocked-${name}` : undefined
-                    }
+                    disabled={hasActiveMedications}
                   />
                 )}
               />
-              {lockedGateFlag === name && (
-                <p
-                  id={`medicalHistory-gateLocked-${name}`}
-                  className="text-sm text-muted-foreground"
-                >
+              {/* No es un aviso al guardar: es un campo que no se puede mover mientras haya datos que
+                quedarían huérfanos (SPEC FE12b §3.5). El texto asociado, no sólo el atributo
+                `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
+              {hasActiveMedications && (
+                <p className="text-sm text-muted-foreground">
                   {t(
                     canAdminSatellites
-                      ? 'notification.medicalHistory.gateLocked'
-                      : 'notification.medicalHistory.gateLockedNeedsAdmin',
+                      ? 'notification.medications.gateLocked'
+                      : 'notification.medications.gateLockedNeedsAdmin',
                   )}
                 </p>
               )}
             </div>
-          ))}
+          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-foreground">
-              {t('notification.fields.takesMedication')}
-            </span>
+          {/* `severeNotes` cierra la sección de banderas y no el bloque de embarazo (SPEC FE12e §3.1,
+            §6): el embarazo ya tiene su `pregnancyNotes`, y dos campos de notas seguidos en la misma
+            caja son indistinguibles para quien rellena. */}
+          {notificationType === 'SEVERE' && (
             <Controller
               control={form.control}
-              name="takesMedication"
+              name="severeNotes"
               render={({ field }) => (
-                <AnswerOptionField
-                  value={field.value ?? null}
-                  onChange={field.onChange}
-                  ariaLabel={t('notification.fields.takesMedication')}
-                  variant="unknown"
-                  disabled={hasActiveMedications}
-                />
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="severeNotification-notes"
+                    className="text-sm font-medium text-foreground"
+                  >
+                    {t('notification.fields.notes')}
+                  </label>
+                  <Textarea
+                    id="severeNotification-notes"
+                    value={field.value ?? ''}
+                    onChange={(event) => field.onChange(event.target.value || null)}
+                  />
+                </div>
               )}
             />
-            {/* No es un aviso al guardar: es un campo que no se puede mover mientras haya datos que
-              quedarían huérfanos (SPEC FE12b §3.5). El texto asociado, no sólo el atributo
-              `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
-            {hasActiveMedications && (
-              <p className="text-sm text-muted-foreground">
-                {t(
-                  canAdminSatellites
-                    ? 'notification.medications.gateLocked'
-                    : 'notification.medications.gateLockedNeedsAdmin',
-                )}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* `severeNotes` cierra la sección de banderas y no el bloque de embarazo (SPEC FE12e §3.1,
-          §6): el embarazo ya tiene su `pregnancyNotes`, y dos campos de notas seguidos en la misma
-          caja son indistinguibles para quien rellena. */}
-        {notificationType === 'SEVERE' && (
-          <Controller
-            control={form.control}
-            name="severeNotes"
-            render={({ field }) => (
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="severeNotification-notes"
-                  className="text-sm font-medium text-foreground"
-                >
-                  {t('notification.fields.notes')}
-                </label>
-                <Textarea
-                  id="severeNotification-notes"
-                  value={field.value ?? ''}
-                  onChange={(event) => field.onChange(event.target.value || null)}
-                />
-              </div>
-            )}
-          />
-        )}
-        {renderAdvanceButton('background')}
-      </section>
+          )}
+          {renderAdvanceButton('background')}
+        </section>
+      )}
 
       {/* Section 2 (SPEC FE12e §3.1), detrás de la compuerta de §3.6: con la compuerta cerrada y
           sin filas **no existe en el DOM**, no basta con ocultarla. Con filas y ninguna bandera
@@ -1020,7 +1071,7 @@ function NotificationFormBody({
           bandera y no al guardar, y por eso va en una región viva (§3.7). `isVisible` ya lleva
           dentro la compuerta: la sección sólo entra en la secuencia de FE12f cuando se muestra. */}
       {isVisible('medicalHistory') && (
-        <section className="flex flex-col gap-3">
+        <section data-section="medicalHistory" className="flex flex-col gap-3">
           <div aria-live="polite">
             {!medicalHistoryGateOpen && (
               <p className="text-sm text-muted-foreground">
@@ -1038,7 +1089,7 @@ function NotificationFormBody({
           de ser alcanzable en el recorrido normal — la sección no se revela antes de que el primer
           avance haya creado el padre (§3.1). */}
       {isVisible('medications') && (
-        <>
+        <div data-section="medications" className="contents">
           <MedicationList
             caseId={caseId}
             notificationId={notificationId}
@@ -1046,7 +1097,7 @@ function NotificationFormBody({
             takesMedication={watchedValues.takesMedication ?? null}
           />
           {renderAdvanceButton('medications')}
-        </>
+        </div>
       )}
 
       {/* Detrás de la compuerta de `CASE-PROCESS.md` §7.4 (SPEC FE12d §4 paso 7): independiente
@@ -1054,7 +1105,7 @@ function NotificationFormBody({
           cosas en una pulsación (SPEC FE12f §6): crea la fila de embarazo —que revela
           Complicaciones dentro de esta misma sección— y avanza a la siguiente. */}
       {isVisible('pregnancy') && (
-        <>
+        <div data-section="pregnancy" className="contents">
           <PregnancySection
             control={form.control}
             pregnancyGate={pregnancyGate}
@@ -1069,11 +1120,11 @@ function NotificationFormBody({
             pregnancyComplicationsDescription={watchedValues.pregnancyComplicationsDescription}
           />
           {renderAdvanceButton('pregnancy')}
-        </>
+        </div>
       )}
 
       {isVisible('vaccinationBackground') && (
-        <>
+        <div data-section="vaccinationBackground" className="contents">
           <VaccinationBackgroundSection
             control={form.control}
             initialHealthFacilityLabel={
@@ -1081,22 +1132,22 @@ function NotificationFormBody({
             }
           />
           {renderAdvanceButton('vaccinationBackground')}
-        </>
+        </div>
       )}
 
       {isVisible('verificationSource') && (
-        <>
+        <div data-section="verificationSource" className="contents">
           <VerificationSourceSection
             control={form.control}
             verifiedOtherSource={watchedValues.verifiedOtherSource}
             otherSourceDescription={watchedValues.otherSourceDescription}
           />
           {renderAdvanceButton('verificationSource')}
-        </>
+        </div>
       )}
 
       {isVisible('vaccines') && (
-        <>
+        <div data-section="vaccines" className="contents">
           <VaccineList
             caseId={caseId}
             notificationId={notificationId}
@@ -1105,21 +1156,21 @@ function NotificationFormBody({
             showsDiluents={notificationType === 'SEVERE'}
           />
           {renderAdvanceButton('vaccines')}
-        </>
+        </div>
       )}
 
       {isVisible('events') && (
-        <>
+        <div data-section="events" className="contents">
           <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
           {renderAdvanceButton('events')}
-        </>
+        </div>
       )}
 
       {/* Las dos últimas se revelan juntas con el último avance (SPEC FE12f §3.1): ninguna
           desbloquea nada y la barra de acciones ya está justo debajo. */}
       {isVisible('outcome') && (
-        <section className="flex flex-col gap-4">
-          <h3 className="text-sm font-medium text-foreground">
+        <section data-section="outcome" className="flex flex-col gap-4">
+          <h3 tabIndex={-1} className="text-sm font-medium text-foreground">
             {t('notification.section.outcome')}
           </h3>
 

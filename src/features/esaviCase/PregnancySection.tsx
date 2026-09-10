@@ -116,7 +116,7 @@ export function PregnancySection({
             {t('notification.pregnancy.ifApplicable')}
           </span>
         )}
-        <h3 className="text-sm font-medium text-foreground">
+        <h3 tabIndex={-1} className="text-sm font-medium text-foreground">
           {t('notification.pregnancy.sectionTitle')}
         </h3>
       </div>

@@ -28,7 +28,7 @@ export function VaccinationBackgroundSection({
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
-      <h3 className="text-sm font-medium text-foreground">
+      <h3 tabIndex={-1} className="text-sm font-medium text-foreground">
         {t('notification.section.vaccinationBackground')}
       </h3>
 

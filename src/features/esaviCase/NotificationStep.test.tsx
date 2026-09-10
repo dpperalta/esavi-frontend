@@ -1023,6 +1023,9 @@ describe('NotificationStep — compuerta de embarazo (CASE-PROCESS.md §7.4, SPE
     mockEmptyCatalogTypes();
     const workflowCalls = { count: 0 };
     mockWorkflow(workflowCalls);
+    // SPEC FE12f §4 paso 4: este test examina una sección posterior a la primera, así que entra
+    // por la reentrada —el paso 4 ya existe al montar— en vez de recorrer las secciones.
+    mockNotificationReentry(workflowCalls);
 
     renderNotificationStep();
 
