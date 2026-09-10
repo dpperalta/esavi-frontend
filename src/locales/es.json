@@ -1016,6 +1016,32 @@
         "generic": "No pudimos guardar la medicación. Intenta de nuevo."
       }
     },
+    "medicalHistory": {
+      "fields": {
+        "historyName": "Antecedente médico",
+        "historyCode": "Código",
+        "notes": "Observaciones"
+      },
+      "form": {
+        "createTitle": "Añadir antecedente",
+        "editTitle": "Editar antecedente"
+      },
+      "error": {
+        "load": "No pudimos cargar los antecedentes médicos."
+      },
+      "validation": {
+        "historyNameRequired": "Indica el antecedente médico."
+      },
+      "diagtermNotImported": "El diccionario de esta fuente no está importado en este despliegue.",
+      "keepAsFreeText": "Guardar como texto libre",
+      "meddraUnavailable": "El buscador de términos no está disponible ahora mismo; puedes escribirlo tal cual.",
+      "delete": {
+        "confirm": "¿Dar de baja el antecedente «{{name}}»? Esta acción no se puede deshacer desde aquí."
+      },
+      "roleForbidden": {
+        "delete": "Retirar un antecedente exige un administrador en este despliegue, aunque registrarlo y corregirlo no."
+      }
+    },
     "satellites": {
       "deleteTitle": "Dar de baja",
       "deleteConfirm": "¿Dar de baja «{{name}}»? Esta acción no se puede deshacer desde aquí.",

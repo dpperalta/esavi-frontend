@@ -1016,6 +1016,32 @@
         "generic": "We couldn't save the medication. Try again."
       }
     },
+    "medicalHistory": {
+      "fields": {
+        "historyName": "Medical antecedent",
+        "historyCode": "Code",
+        "notes": "Notes"
+      },
+      "form": {
+        "createTitle": "Add antecedent",
+        "editTitle": "Edit antecedent"
+      },
+      "error": {
+        "load": "We couldn't load the medical antecedents."
+      },
+      "validation": {
+        "historyNameRequired": "Enter the medical antecedent."
+      },
+      "diagtermNotImported": "The dictionary for this source is not imported in this deployment.",
+      "keepAsFreeText": "Save as free text",
+      "meddraUnavailable": "The term search is not available right now; you can type it as-is.",
+      "delete": {
+        "confirm": "Retire the antecedent “{{name}}”? This cannot be undone from here."
+      },
+      "roleForbidden": {
+        "delete": "Retiring an antecedent takes an administrator in this deployment, even though recording and correcting one does not."
+      }
+    },
     "satellites": {
       "deleteTitle": "Deactivate",
       "deleteConfirm": "Deactivate «{{name}}»? This action can't be undone from here.",

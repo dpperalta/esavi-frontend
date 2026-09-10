@@ -18,6 +18,7 @@ import type { NotificationPregnancyDetail } from '@/contracts/declared/notificat
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { EventList } from '@/features/notification/EventList';
+import { MedicalHistoryList } from '@/features/notification/MedicalHistoryList';
 import { MedicationList } from '@/features/notification/MedicationList';
 import { VaccineList } from '@/features/notification/VaccineList';
 import {
@@ -857,8 +858,9 @@ function NotificationFormBody({
         )}
       </section>
 
-      {/* Section 2, «Antecedentes médicos»: `<MedicalHistoryList>` lands here in step 10 of
-          SPEC FE12e §4, behind the five-flag gate of step 11. */}
+      {/* Section 2 (SPEC FE12e §3.1). Still ungated: the five-flag gate of §3.6 arrives in
+          step 11 — for now it shows as soon as there is a `notificationId`. */}
+      <MedicalHistoryList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
 
       {/* Sólo existen con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
           `notificationId` no hay padre al que colgar ningún satélite. */}
