@@ -17,8 +17,15 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     passWithNoTests: true,
-    // A jsdom fork with React 19 + MSW is CPU-bound, so one fork per logical core doubles the CPU
-    // the suite burns for the same wall time. The cap is about not saturating the machine while
+    // Worker threads instead of the default `forks` pool: on Windows, spawning a process per test
+    // file is expensive and this suite pays it 102 times — the import phase alone was ~124s of a
+    // 672s run. Module state is still isolated per file (`isolate` stays on); what threads share is
+    // the process, so anything a test does to it — env vars, `process.on` handlers — now reaches
+    // its neighbours. Nothing here does: `src/test/setup.ts` only patches `window`, and every file
+    // builds its own MSW server with `setupServer()`.
+    pool: 'threads',
+    // A jsdom worker with React 19 + MSW is CPU-bound, so one worker per logical core doubles the
+    // CPU the suite burns for the same wall time. The cap is about not saturating the machine while
     // `npm test` runs; it is not what makes the suite deterministic (see src/test/user.ts).
     maxWorkers: 6,
     // The slowest test is ~3s, so this is a 5x margin: enough that a loaded machine never trips it,
