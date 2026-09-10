@@ -1040,7 +1040,10 @@
       },
       "roleForbidden": {
         "delete": "Retiring an antecedent takes an administrator in this deployment, even though recording and correcting one does not."
-      }
+      },
+      "mismatch": "There are medical antecedents recorded below and none of these answers says there are any.",
+      "gateLocked": "It is the only answer holding up the recorded antecedents, so it can't be changed while they exist. Delete them one row at a time to change it.",
+      "gateLockedNeedsAdmin": "It is the only answer holding up the recorded antecedents, so it can't be changed while they exist. An administrator is needed to delete them."
     },
     "satellites": {
       "deleteTitle": "Deactivate",

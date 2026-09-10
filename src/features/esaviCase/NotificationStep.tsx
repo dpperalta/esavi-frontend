@@ -33,6 +33,7 @@ import {
   useNonSevereNotificationByCase,
   useNotificationByCase,
   useNotificationEventsByCase,
+  useNotificationMedicalHistoriesByCase,
   useNotificationMedicationsByCase,
   useNotificationPregnancyByNotification,
   useNotificationPregnancyComplicationsByPregnancy,
@@ -91,6 +92,16 @@ const SEVERE_HISTORY_FLAGS = [
     labelKey: 'notification.severe.hasAllergyToPreviousSameVaccine',
   },
 ] as const;
+
+// The flags that open the medical-history gate in the severe branch (SPEC FE12e §3.6):
+// `hasRelevantMedicalHistory` from the header plus the four above. The non-severe branch is
+// opened by the header one alone — the form's non-severe text is a copy of the severe one and
+// this spec corrects it (§2).
+const HEADER_HISTORY_FLAG = {
+  name: 'hasRelevantMedicalHistory',
+  labelKey: 'notification.fields.hasRelevantMedicalHistory',
+} as const;
+const SEVERE_GATE_FLAGS = [HEADER_HISTORY_FLAG, ...SEVERE_HISTORY_FLAGS] as const;
 
 function NotificationStepSkeleton() {
   return (
@@ -299,6 +310,11 @@ function NotificationFormBody({
   // cabecera (SPEC FE12b §3.5, «la compuerta en su forma nueva»).
   const medications = useNotificationMedicationsByCase(caseId, notificationId !== null);
   const hasActiveMedications = (medications.data?.rows.length ?? 0) > 0;
+  // La misma clave que `<MedicalHistoryList>` consulta por su cuenta: la compuerta, el bloqueo
+  // de la bandera y el aviso de discrepancia se derivan en render de esta query, nunca de
+  // invalidar la cabecera para enterarse de algo que ésta ya sabe (SPEC FE12e §3.4, punto 4).
+  const medicalHistories = useNotificationMedicalHistoriesByCase(caseId, notificationId !== null);
+  const hasActiveMedicalHistories = (medicalHistories.data?.rows.length ?? 0) > 0;
   // Ídem con `<EventList>`: el obligatorio de proceso «al menos un evento» (§4 paso 12) sólo
   // necesita el conteo, no las filas.
   const events = useNotificationEventsByCase(caseId, notificationId !== null);
@@ -321,7 +337,7 @@ function NotificationFormBody({
   // `useCan()` decide aquí sólo qué frase se muestra, nunca si el control existe (§3.5, la línea
   // que §10.4 no quiere que se cruce): mientras `NOTIFMED-005A` siga en ADMIN, un USER no puede
   // borrar las filas y por tanto no puede cambiar la respuesta en absoluto.
-  const canAdminMedications = useCan(ROLE_LEVELS.ADMIN);
+  const canAdminSatellites = useCan(ROLE_LEVELS.ADMIN);
 
   const defaultValues: NotificationFormValues = {
     esaviDescription: notification?.esaviDescription ?? '',
@@ -425,6 +441,17 @@ function NotificationFormBody({
       if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
     };
   }, [caseId, watchedValues, form.formState.isDirty]);
+
+  // SPEC FE12e §3.6, derivado en render: la compuerta se abre con cualquier bandera en `'YES'`;
+  // la sección se muestra si está abierta **o** si hay filas, y en ese segundo caso con el aviso
+  // de discrepancia; y sólo se bloquea la **última** bandera en `'YES'` con filas activas — es la
+  // única cuyo cambio dejaría filas huérfanas (§3.5).
+  const gateFlags = notificationType === 'SEVERE' ? SEVERE_GATE_FLAGS : [HEADER_HISTORY_FLAG];
+  const gateFlagsInYes = gateFlags.filter(({ name }) => watchedValues[name] === 'YES');
+  const medicalHistoryGateOpen = gateFlagsInYes.length > 0;
+  const lockedGateFlag =
+    hasActiveMedicalHistories && gateFlagsInYes.length === 1 ? gateFlagsInYes[0].name : null;
+  const showsMedicalHistorySection = medicalHistoryGateOpen || hasActiveMedicalHistories;
 
   const isDeathOutcome =
     outcomeItems.rows.find((row) => row.catalogItemId === watchedValues.outcomeItemId)?.value ===
@@ -761,44 +788,43 @@ function NotificationFormBody({
         </h3>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-foreground">
-              {t('notification.fields.hasRelevantMedicalHistory')}
-            </span>
-            <Controller
-              control={form.control}
-              name="hasRelevantMedicalHistory"
-              render={({ field }) => (
-                <AnswerOptionField
-                  value={field.value ?? null}
-                  onChange={field.onChange}
-                  ariaLabel={t('notification.fields.hasRelevantMedicalHistory')}
-                  variant="unknown"
-                />
-              )}
-            />
-          </div>
-
-          {/* Las cuatro banderas de la ficha grave, en línea entre las dos de la cabecera
-            (SPEC FE12e §3.1 sección 1): el bloque que las agrupaba se disolvió en el paso 7. */}
-          {notificationType === 'SEVERE' &&
-            SEVERE_HISTORY_FLAGS.map(({ name, labelKey }) => (
-              <div key={name} className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
-                <Controller
-                  control={form.control}
-                  name={name}
-                  render={({ field }) => (
-                    <AnswerOptionField
-                      value={field.value ?? null}
-                      onChange={field.onChange}
-                      ariaLabel={t(labelKey)}
-                      variant="unknown"
-                    />
+          {/* La bandera de la cabecera y, en rama grave, las cuatro de la ficha, en línea entre
+            ella y `takesMedication` (SPEC FE12e §3.1 sección 1). Se pintan de una lista porque
+            comparten forma, orden y compuerta: la que quede sola en `'YES'` con antecedentes
+            cargados es la que se bloquea (§3.5). */}
+          {gateFlags.map(({ name, labelKey }) => (
+            <div key={name} className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
+              <Controller
+                control={form.control}
+                name={name}
+                render={({ field }) => (
+                  <AnswerOptionField
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    ariaLabel={t(labelKey)}
+                    variant="unknown"
+                    disabled={lockedGateFlag === name}
+                    ariaDescribedBy={
+                      lockedGateFlag === name ? `medicalHistory-gateLocked-${name}` : undefined
+                    }
+                  />
+                )}
+              />
+              {lockedGateFlag === name && (
+                <p
+                  id={`medicalHistory-gateLocked-${name}`}
+                  className="text-sm text-muted-foreground"
+                >
+                  {t(
+                    canAdminSatellites
+                      ? 'notification.medicalHistory.gateLocked'
+                      : 'notification.medicalHistory.gateLockedNeedsAdmin',
                   )}
-                />
-              </div>
-            ))}
+                </p>
+              )}
+            </div>
+          ))}
 
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-foreground">
@@ -823,7 +849,7 @@ function NotificationFormBody({
             {hasActiveMedications && (
               <p className="text-sm text-muted-foreground">
                 {t(
-                  canAdminMedications
+                  canAdminSatellites
                     ? 'notification.medications.gateLocked'
                     : 'notification.medications.gateLockedNeedsAdmin',
                 )}
@@ -858,9 +884,22 @@ function NotificationFormBody({
         )}
       </section>
 
-      {/* Section 2 (SPEC FE12e §3.1). Still ungated: the five-flag gate of §3.6 arrives in
-          step 11 — for now it shows as soon as there is a `notificationId`. */}
-      <MedicalHistoryList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+      {/* Section 2 (SPEC FE12e §3.1), detrás de la compuerta de §3.6: con la compuerta cerrada y
+          sin filas **no existe en el DOM**, no basta con ocultarla. Con filas y ninguna bandera
+          en `'YES'` se muestra igual, con el aviso de discrepancia — que aparece al mover una
+          bandera y no al guardar, y por eso va en una región viva (§3.7). */}
+      {showsMedicalHistorySection && (
+        <section className="flex flex-col gap-3">
+          <div aria-live="polite">
+            {!medicalHistoryGateOpen && (
+              <p className="text-sm text-muted-foreground">
+                {t('notification.medicalHistory.mismatch')}
+              </p>
+            )}
+          </div>
+          <MedicalHistoryList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+        </section>
+      )}
 
       {/* Sólo existen con la fila de `notification` ya creada (SPEC FE12b §3.6): sin
           `notificationId` no hay padre al que colgar ningún satélite. */}

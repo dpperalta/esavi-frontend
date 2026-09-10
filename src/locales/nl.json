@@ -1040,7 +1040,10 @@
       },
       "roleForbidden": {
         "delete": "Een voorgeschiedenis intrekken vereist een beheerder in deze omgeving, terwijl vastleggen en corrigeren dat niet doet."
-      }
+      },
+      "mismatch": "Hieronder staat medische voorgeschiedenis geregistreerd en geen van deze antwoorden zegt dat die er is.",
+      "gateLocked": "Dit is het enige antwoord dat de geregistreerde voorgeschiedenis draagt; het kan niet worden gewijzigd zolang die bestaat. Verwijder de regels één voor één om het te wijzigen.",
+      "gateLockedNeedsAdmin": "Dit is het enige antwoord dat de geregistreerde voorgeschiedenis draagt; het kan niet worden gewijzigd zolang die bestaat. Een beheerder is nodig om de regels te verwijderen."
     },
     "satellites": {
       "deleteTitle": "Deactiveren",

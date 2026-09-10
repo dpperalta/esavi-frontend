@@ -1040,7 +1040,10 @@
       },
       "roleForbidden": {
         "delete": "Retirar un antecedente exige un administrador en este despliegue, aunque registrarlo y corregirlo no."
-      }
+      },
+      "mismatch": "Hay antecedentes médicos registrados más abajo y ninguna de estas respuestas dice que los haya.",
+      "gateLocked": "Es la única respuesta que sostiene los antecedentes registrados; no se puede cambiar mientras existan. Bórralos uno a uno para poder cambiarla.",
+      "gateLockedNeedsAdmin": "Es la única respuesta que sostiene los antecedentes registrados; no se puede cambiar mientras existan. Hace falta un administrador para borrarlos."
     },
     "satellites": {
       "deleteTitle": "Dar de baja",
