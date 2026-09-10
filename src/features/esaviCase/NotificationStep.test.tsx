@@ -1736,7 +1736,7 @@ describe('NotificationStep — los dos satélites conviven en el mismo paso (SPE
 });
 
 describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC FE12d §4 paso 8)', () => {
-  it('con wasPregnantAtVaccination respondido, el guardado encadena el 001 del bloque de embarazo', async () => {
+  it('con wasPregnantAtEsavi respondido, el guardado encadena el 001 del bloque de embarazo', async () => {
     const user = setupUser();
     const workflowCalls = { count: 0 };
     mockCaseDetail();
@@ -1766,8 +1766,8 @@ describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC F
             data: {
               pregnancyId: 'pregnancy-1',
               notificationId: NOTIFICATION_1,
-              wasPregnantAtVaccination: lastPregnancyPostBody.wasPregnantAtVaccination,
-              wasPregnantAtEsavi: null,
+              wasPregnantAtVaccination: null,
+              wasPregnantAtEsavi: lastPregnancyPostBody.wasPregnantAtEsavi,
               lastMenstruationDate: null,
               probableDeliveryDate: null,
               hasComplications: null,
@@ -1790,7 +1790,7 @@ describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC F
     await user.type(description, 'Reacción local en el sitio de aplicación');
 
     await user.click(
-      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento del ESAVI?' }),
     );
     await user.click(await screen.findByRole('option', { name: 'No' }));
 
@@ -1801,7 +1801,7 @@ describe('NotificationStep — cadena de guardado, el bloque de embarazo (SPEC F
     await waitFor(() => expect(pregnancyPostCalls).toBe(1));
     expect(lastPregnancyPostBody).toMatchObject({
       notificationId: NOTIFICATION_1,
-      wasPregnantAtVaccination: 'NO',
+      wasPregnantAtEsavi: 'NO',
     });
   }, 30000);
 
@@ -2196,7 +2196,7 @@ describe('NotificationStep — mapeo de errores propios del bloque de embarazo (
     );
 
     await user.click(
-      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento del ESAVI?' }),
     );
     await user.click(await screen.findByRole('option', { name: 'No' }));
 
@@ -2230,7 +2230,7 @@ describe('NotificationStep — mapeo de errores propios del bloque de embarazo (
     );
 
     await user.click(
-      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento del ESAVI?' }),
     );
     await user.click(await screen.findByRole('option', { name: 'No' }));
 
@@ -2266,7 +2266,7 @@ describe('NotificationStep — mapeo de errores propios del bloque de embarazo (
     );
 
     await user.click(
-      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento de la vacunación?' }),
+      await screen.findByRole('combobox', { name: '¿Estaba embarazada al momento del ESAVI?' }),
     );
     await user.click(await screen.findByRole('option', { name: 'No' }));
 

@@ -642,14 +642,18 @@ function NotificationFormBody({
       // Fase 3 — el bloque de embarazo (SPEC FE12d §4 paso 8), con el `resolvedNotificationId` que
       // ya resolvió la fase 1. Sólo se intenta detrás de la compuerta abierta y con la
       // configuración sembrada, y — decisión explícita, fuera de lo que dice el spec — únicamente
-      // si ya existe la fila (siempre `004`, responda o no el usuario) o si `wasPregnantAtVaccination`
-      // tiene respuesta, lo único que el `001` exige: un bloque intacto no dispara un `POST` que el
-      // usuario no pidió, mismo criterio que FE12c no encadenó el `POST` de una vacuna sin
-      // identidad tras el de la cabecera.
+      // si ya existe la fila (siempre `004`, responda o no el usuario) o si el bloque tiene alguna
+      // respuesta: un bloque intacto no dispara un `POST` que el usuario no pidió, mismo criterio
+      // que FE12c no encadenó el `POST` de una vacuna sin identidad tras el de la cabecera.
+      //
+      // SPEC FE12f §3.5 — the trigger is `wasPregnantAtEsavi`, the first question on screen since
+      // FE12e reordered the block. Keyed to `wasPregnantAtVaccination`, answering only the first
+      // question and advancing would create no row, and Complications would stay hidden inside the
+      // section with nothing explaining why.
       const attemptsPregnancyWrite =
         pregnancyGate !== 'hidden' &&
         !pregnancyConfigMissing &&
-        (pregnancyId !== null || values.wasPregnantAtVaccination != null);
+        (pregnancyId !== null || values.wasPregnantAtEsavi != null);
 
       if (attemptsPregnancyWrite) {
         try {
