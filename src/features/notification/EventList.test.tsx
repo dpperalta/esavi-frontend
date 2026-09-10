@@ -106,7 +106,7 @@ describe('EventList — SPEC FE12b §4 paso 8', () => {
     renderList();
 
     await user.click(await screen.findByRole('button', { name: 'Añadir' }));
-    await user.type(await screen.findByLabelText('Diagnóstico del ESAVI'), 'Fiebre alta');
+    await user.type(await screen.findByLabelText('Evento adverso'), 'Fiebre alta');
     await user.keyboard('{Escape}');
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
@@ -150,7 +150,7 @@ describe('EventList — SPEC FE12b §4 paso 8', () => {
 
     // `<SatelliteList>` pinta la tabla completa y luego las tarjetas completas (SPEC FE12b §4
     // paso 4): con dos filas, los primeros dos checkboxes son la tabla — uno por fila, en orden.
-    const checkboxes = await screen.findAllByRole('checkbox', { name: 'Evento principal' });
+    const checkboxes = await screen.findAllByRole('checkbox', { name: 'Principal' });
     expect(checkboxes).toHaveLength(4); // dos filas × (tabla + tarjeta)
 
     await user.click(checkboxes[0]);

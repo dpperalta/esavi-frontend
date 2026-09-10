@@ -111,7 +111,11 @@ function vaccineRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function renderDialog(vaccineId: string | null = null, eventDate: string | null = null) {
+function renderDialog(
+  vaccineId: string | null = null,
+  eventDate: string | null = null,
+  showsDiluents = true,
+) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
@@ -121,7 +125,7 @@ function renderDialog(vaccineId: string | null = null, eventDate: string | null 
         notificationId={NOTIFICATION_ID}
         eventDate={eventDate}
         vaccineId={vaccineId}
-        showsDiluents
+        showsDiluents={showsDiluents}
         onOpenChange={() => {}}
       />
     </QueryClientProvider>,
@@ -237,7 +241,7 @@ describe('VaccineFormDialog — SPEC FE12c §4 paso 8', () => {
 
     expect(await screen.findByText('Guarda la vacuna antes de añadir sus diluyentes.')).toBeInTheDocument();
 
-    const vaccineNameInput = screen.getByLabelText('Vacuna');
+    const vaccineNameInput = screen.getByLabelText('Nombre de la vacuna');
     await user.type(vaccineNameInput, 'Rotavirus');
     await user.click(screen.getByRole('button', { name: 'Guardar y añadir diluyentes' }));
 
@@ -284,7 +288,7 @@ describe('VaccineFormDialog — SPEC FE12c §4 paso 8', () => {
     const user = setupUser();
     renderDialog(null, '2026-03-05');
 
-    await user.type(screen.getByLabelText('Vacuna'), 'Rotavirus');
+    await user.type(screen.getByLabelText('Nombre de la vacuna'), 'Rotavirus');
     fireEvent.change(screen.getByLabelText('Fecha de vacunación'), { target: { value: '2026-03-10' } });
     await user.click(screen.getByRole('button', { name: 'Guardar y añadir diluyentes' }));
 
@@ -292,5 +296,33 @@ describe('VaccineFormDialog — SPEC FE12c §4 paso 8', () => {
       await screen.findByText('La fecha de vacunación no puede ser posterior a la fecha del evento.'),
     ).toBeInTheDocument();
     expect(vaccinePosted).toBe(false);
+  });
+});
+
+describe('VaccineFormDialog — los diluyentes fuera de la rama no grave (SPEC FE12e §4 paso 9)', () => {
+  it('con showsDiluents en false, la sección no existe y NOTIFDIL no se consulta', async () => {
+    let diluentRequests = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_ID}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { count: 1, rows: [vaccineRow({ vaccineId: 'v-1' })] },
+        }),
+      ),
+      http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () => treeResponse([])),
+      http.get('http://localhost:4500/api/notification-diluents/vaccine/v-1', () => {
+        diluentRequests++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderDialog('v-1', null, false);
+
+    // El modal abre entero: lo que falta es sólo la sección de diluyentes.
+    await screen.findByLabelText('Nombre de la vacuna');
+    expect(screen.queryByText('Diluyentes')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Añadir diluyente' })).not.toBeInTheDocument();
+    expect(diluentRequests).toBe(0);
   });
 });
