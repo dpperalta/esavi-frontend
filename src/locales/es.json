@@ -1193,6 +1193,10 @@
         "createTitle": "Añadir miembro del equipo",
         "editTitle": "Editar miembro del equipo"
       }
+    },
+    "draft": {
+      "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
+      "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
     }
   },
   "whodrugTreePicker": {

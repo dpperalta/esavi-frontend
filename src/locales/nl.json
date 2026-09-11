@@ -1193,6 +1193,10 @@
         "createTitle": "Teamlid toevoegen",
         "editTitle": "Teamlid bewerken"
       }
+    },
+    "draft": {
+      "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
+      "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
     }
   },
   "whodrugTreePicker": {

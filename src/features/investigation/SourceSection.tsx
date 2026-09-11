@@ -1,5 +1,6 @@
+import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm, type Resolver } from 'react-hook-form';
+import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -56,6 +57,13 @@ export interface SourceSectionProps {
   // reentrar en un paso que ya existía, `InvestigationStep` lo oculta y todo queda visible.
   showSaveButton: boolean;
   onSaved: () => void;
+  // El borrador contra el cierre de pestaña (§3.4) vive combinado en `InvestigationStep`, bajo la
+  // única clave `'investigation'` del contrato de estado — esta sección no toca `localStorage`
+  // directamente. `draftValues` gana sobre `investigationSource` sólo al montar (mismo criterio
+  // que la restauración de FE12a); `onValuesChange` informa cada cambio para que el padre lo
+  // junte con las otras dos secciones y lo escriba con un solo rebote de 500 ms.
+  draftValues?: InvestigationSourceFormValues;
+  onValuesChange?: (values: InvestigationSourceFormValues) => void;
 }
 
 // Sección 1 del paso 5 (SPEC FE13a §3.5 B): las ocho banderas tri-estado de `investigationSource`
@@ -69,6 +77,8 @@ export function SourceSection({
   disabled,
   showSaveButton,
   onSaved,
+  draftValues,
+  onValuesChange,
 }: SourceSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -77,10 +87,16 @@ export function SourceSection({
 
   const form = useForm<InvestigationSourceFormValues>({
     resolver: zodResolver(investigationSourceSaveSchema) as Resolver<InvestigationSourceFormValues>,
-    defaultValues: buildDefaultValues(investigationSource),
+    defaultValues: { ...buildDefaultValues(investigationSource), ...draftValues },
     mode: 'onTouched',
     reValidateMode: 'onChange',
   });
+
+  const watchedValues = useWatch({ control: form.control }) as InvestigationSourceFormValues;
+  useEffect(() => {
+    onValuesChange?.(watchedValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedValues]);
 
   const other = form.watch('other');
   const otherDescription = form.watch('otherDescription');

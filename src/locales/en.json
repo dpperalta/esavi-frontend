@@ -1193,6 +1193,10 @@
         "createTitle": "Add team member",
         "editTitle": "Edit team member"
       }
+    },
+    "draft": {
+      "restored": "Recovered unsaved changes from an earlier session.",
+      "discarded": "Discarded unsaved changes: the case was edited somewhere else."
     }
   },
   "whodrugTreePicker": {

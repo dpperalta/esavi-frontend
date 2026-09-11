@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm, type Resolver } from 'react-hook-form';
+import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -77,6 +77,16 @@ export interface BasicInfoSectionProps {
   disabled?: boolean;
   showSaveButton: boolean;
   onSaved: () => void;
+  // Mismo mecanismo combinado que `SourceSection` (§3.4): `InvestigationStep` junta las tres
+  // secciones bajo la única clave `'investigation'` del borrador, esta no toca `localStorage`.
+  draftValues?: {
+    basicInfo: InvestigationFormValues;
+    autopsy: InvestigationAutopsyFormValues;
+  };
+  onValuesChange?: (values: {
+    basicInfo: InvestigationFormValues;
+    autopsy: InvestigationAutopsyFormValues;
+  }) => void;
 }
 
 // Sección A1 del paso 5 (SPEC FE13a §3.5 A y C): las diez columnas de `investigation` más, dentro
@@ -94,6 +104,8 @@ export function BasicInfoSection({
   disabled,
   showSaveButton,
   onSaved,
+  draftValues,
+  onValuesChange,
 }: BasicInfoSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -109,17 +121,27 @@ export function BasicInfoSection({
 
   const form = useForm<InvestigationFormValues>({
     resolver: zodResolver(investigationSaveSchema) as Resolver<InvestigationFormValues>,
-    defaultValues: buildDefaultValues(investigation),
+    defaultValues: { ...buildDefaultValues(investigation), ...draftValues?.basicInfo },
     mode: 'onTouched',
     reValidateMode: 'onChange',
   });
 
   const autopsyForm = useForm<InvestigationAutopsyFormValues>({
     resolver: zodResolver(investigationAutopsySaveSchema) as Resolver<InvestigationAutopsyFormValues>,
-    defaultValues: buildAutopsyDefaultValues(investigationAutopsy, notification?.deathDate ?? null),
+    defaultValues: {
+      ...buildAutopsyDefaultValues(investigationAutopsy, notification?.deathDate ?? null),
+      ...draftValues?.autopsy,
+    },
     mode: 'onTouched',
     reValidateMode: 'onChange',
   });
+
+  const watchedBasicInfo = useWatch({ control: form.control }) as InvestigationFormValues;
+  const watchedAutopsy = useWatch({ control: autopsyForm.control }) as InvestigationAutopsyFormValues;
+  useEffect(() => {
+    onValuesChange?.({ basicInfo: watchedBasicInfo, autopsy: watchedAutopsy });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchedBasicInfo, watchedAutopsy]);
 
   const statusItemId = form.watch('statusItemId');
   const vaccinationGeoLocationId = form.watch('vaccinationGeoLocationId');
