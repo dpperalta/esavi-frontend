@@ -1134,6 +1134,24 @@
   "investigation": {
     "error": {
       "createFailed": "Could not start the investigation."
+    },
+    "fields": {
+      "notes": "Notes"
+    },
+    "source": {
+      "title": "Information sources",
+      "intro": "Indicate the information sources consulted to gather information for the following investigation (check all that apply).",
+      "legend": "Information sources consulted",
+      "history": "Medical record",
+      "interviewVaccinatedPerson": "Interview with the vaccinated person",
+      "interviewHealthWorker": "Interview with the health worker",
+      "vaccinationRecord": "Vaccination records",
+      "autopsyRecord": "Autopsy report",
+      "verbalAutopsyRecord": "Verbal autopsy report",
+      "investigationReport": "Community investigation report",
+      "other": "Other",
+      "otherDescription": "Please specify",
+      "otherDescriptionRequired": "Specify the other source before saving."
     }
   },
   "whodrugTreePicker": {

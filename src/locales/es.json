@@ -1134,6 +1134,24 @@
   "investigation": {
     "error": {
       "createFailed": "No se pudo iniciar la investigación."
+    },
+    "fields": {
+      "notes": "Observaciones"
+    },
+    "source": {
+      "title": "Fuentes de información",
+      "intro": "Indique las fuentes de información consultadas para recopilar la información de la siguiente investigación (marque todas las que correspondan).",
+      "legend": "Fuentes de información consultadas",
+      "history": "Historia clínica",
+      "interviewVaccinatedPerson": "Entrevista al vacunado",
+      "interviewHealthWorker": "Entrevista al personal de salud",
+      "vaccinationRecord": "Registros de vacunación",
+      "autopsyRecord": "Informe de autopsia",
+      "verbalAutopsyRecord": "Informe de autopsia verbal",
+      "investigationReport": "Informe de investigación comunitaria",
+      "other": "Otro",
+      "otherDescription": "Especifique ¿cuál?",
+      "otherDescriptionRequired": "Especifica cuál es la otra fuente antes de guardar."
     }
   },
   "whodrugTreePicker": {

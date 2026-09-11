@@ -1134,6 +1134,24 @@
   "investigation": {
     "error": {
       "createFailed": "Het onderzoek kon niet gestart worden."
+    },
+    "fields": {
+      "notes": "Opmerkingen"
+    },
+    "source": {
+      "title": "Informatiebronnen",
+      "intro": "Geef de informatiebronnen aan die zijn geraadpleegd om informatie te verzamelen voor het volgende onderzoek (vink alles aan wat van toepassing is).",
+      "legend": "Geraadpleegde informatiebronnen",
+      "history": "Medisch dossier",
+      "interviewVaccinatedPerson": "Interview met de gevaccineerde persoon",
+      "interviewHealthWorker": "Interview met de zorgverlener",
+      "vaccinationRecord": "Vaccinatieregisters",
+      "autopsyRecord": "Autopsierapport",
+      "verbalAutopsyRecord": "Verbaal autopsierapport",
+      "investigationReport": "Rapport van gemeenschapsonderzoek",
+      "other": "Andere",
+      "otherDescription": "Specificeer welke",
+      "otherDescriptionRequired": "Specificeer de andere bron voordat je opslaat."
     }
   },
   "whodrugTreePicker": {
