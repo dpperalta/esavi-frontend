@@ -4,8 +4,8 @@ import { useTranslation } from 'react-i18next';
 import type { NotificationFormValues } from '@/features/notification/schemas';
 import { CatalogSelect } from '@/shared/components/CatalogSelect';
 import { GeoLocationPicker } from '@/shared/components/GeoLocationPicker';
+import { HealthFacilitySelect } from '@/shared/components/HealthFacilitySelect';
 import { Input } from '@/shared/components/ui/input';
-import { HealthFacilitySelect } from './HealthFacilitySelect';
 
 export interface VaccinationBackgroundSectionProps {
   control: Control<NotificationFormValues>;

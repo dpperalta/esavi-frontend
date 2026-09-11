@@ -13,6 +13,7 @@ import { useUserGeoCoverage } from '@/features/userGeoLocation/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { DateField } from '@/shared/components/DateField';
+import { HealthFacilitySelect } from '@/shared/components/HealthFacilitySelect';
 import { ResourceForm } from '@/shared/components/ResourceForm';
 import { Button } from '@/shared/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/components/ui/form';
@@ -22,7 +23,6 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { ROLE_LEVELS, getEffectiveLevel } from '@/shared/config/roles';
 import { usePregnancyBlockGuard } from '@/shared/hooks/usePregnancyBlockGuard';
 import { esaviCaseResource } from './api';
-import { HealthFacilitySelect } from './HealthFacilitySelect';
 import { caseOpeningErrorFieldMap, createEsaviCaseOpeningSchema, type CaseOpeningFormValues } from './schemas';
 
 // Paso 2 del alta y a la vez su reentrada (SPEC FE10 §3.1): un solo componente. El route param

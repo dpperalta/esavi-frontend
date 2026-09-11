@@ -1133,10 +1133,21 @@
   },
   "investigation": {
     "error": {
-      "createFailed": "Could not start the investigation."
+      "createFailed": "Could not start the investigation.",
+      "defaultStatusMissing": "The investigation status catalog has no default item configured. Contact the system administrator."
     },
     "fields": {
       "notes": "Notes"
+    },
+    "basicInfo": {
+      "title": "Basic information",
+      "statusItemId": "Status of the person at the time of the investigation",
+      "vaccinationSiteItemId": "Vaccination site",
+      "vaccinationHealthFacilityId": "Vaccination facility",
+      "vaccinationGeoLocationId": "Subnational geographic level",
+      "mapLabel": "Full address of the vaccination site",
+      "hospitalizationDate": "Hospitalization date",
+      "investigationStartDate": "Investigation start date"
     },
     "source": {
       "title": "Information sources",
@@ -1152,6 +1163,23 @@
       "other": "Other",
       "otherDescription": "Please specify",
       "otherDescriptionRequired": "Specify the other source before saving."
+    },
+    "autopsy": {
+      "sectionTitle": "Death and autopsy",
+      "deathDate": "If the person died, enter the date of death",
+      "deathTime": "Time of death",
+      "isAutopsyPerformed": "An autopsy was performed",
+      "autopsyDate": "Autopsy date",
+      "autopsyComments": "Record the autopsy findings",
+      "isAutopsyScheduled": "An autopsy date has been scheduled",
+      "scheduledAutopsyDate": "Scheduled autopsy date",
+      "flagsExclusive": "“An autopsy was performed” and “autopsy scheduled” cannot both be active.",
+      "autopsyDateNotAllowed": "The autopsy date only applies if the autopsy was performed.",
+      "scheduledAutopsyDateNotAllowed": "The scheduled autopsy date only applies if an autopsy is scheduled.",
+      "autopsyDateBeforeDeath": "The autopsy date cannot be earlier than the date of death.",
+      "deathWarning": "This case's notification does not record a death outcome, or its date of death does not match this investigation's.",
+      "deathWarningLink": "Review step 4",
+      "dismissWarning": "Dismiss warning"
     }
   },
   "whodrugTreePicker": {

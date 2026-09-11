@@ -1133,10 +1133,21 @@
   },
   "investigation": {
     "error": {
-      "createFailed": "No se pudo iniciar la investigación."
+      "createFailed": "No se pudo iniciar la investigación.",
+      "defaultStatusMissing": "El catálogo de estados de investigación no tiene un ítem por defecto configurado. Contacta al administrador del sistema."
     },
     "fields": {
       "notes": "Observaciones"
+    },
+    "basicInfo": {
+      "title": "Información básica",
+      "statusItemId": "Estado de la persona al momento de la investigación",
+      "vaccinationSiteItemId": "Lugar de vacunación",
+      "vaccinationHealthFacilityId": "Establecimiento de vacunación",
+      "vaccinationGeoLocationId": "Nivel geográfico subnacional",
+      "mapLabel": "Dirección completa del lugar de vacunación",
+      "hospitalizationDate": "Fecha de hospitalización",
+      "investigationStartDate": "Fecha de inicio de la investigación"
     },
     "source": {
       "title": "Fuentes de información",
@@ -1152,6 +1163,23 @@
       "other": "Otro",
       "otherDescription": "Especifique ¿cuál?",
       "otherDescriptionRequired": "Especifica cuál es la otra fuente antes de guardar."
+    },
+    "autopsy": {
+      "sectionTitle": "Fallecimiento y autopsia",
+      "deathDate": "Si la persona murió, indique la fecha de la muerte",
+      "deathTime": "Hora de la muerte",
+      "isAutopsyPerformed": "Se realizó autopsia",
+      "autopsyDate": "Fecha de la autopsia",
+      "autopsyComments": "Registre los resultados de la necropsia",
+      "isAutopsyScheduled": "Se ha programado una fecha prevista de la autopsia",
+      "scheduledAutopsyDate": "Fecha prevista de la autopsia",
+      "flagsExclusive": "«Se realizó autopsia» y «autopsia programada» no pueden estar activos a la vez.",
+      "autopsyDateNotAllowed": "La fecha de la autopsia solo aplica si se indica que la autopsia se realizó.",
+      "scheduledAutopsyDateNotAllowed": "La fecha prevista de la autopsia solo aplica si se indica que la autopsia está programada.",
+      "autopsyDateBeforeDeath": "La fecha de la autopsia no puede ser anterior a la fecha de la muerte.",
+      "deathWarning": "La notificación de este caso no registra un desenlace de muerte, o su fecha de muerte no coincide con la de esta investigación.",
+      "deathWarningLink": "Revisar el paso 4",
+      "dismissWarning": "Descartar aviso"
     }
   },
   "whodrugTreePicker": {
