@@ -1180,6 +1180,19 @@
       "deathWarning": "La notificación de este caso no registra un desenlace de muerte, o su fecha de muerte no coincide con la de esta investigación.",
       "deathWarningLink": "Revisar el paso 4",
       "dismissWarning": "Descartar aviso"
+    },
+    "team": {
+      "sectionTitle": "Datos del equipo de investigación",
+      "field": {
+        "fullName": "Nombres y apellidos",
+        "institutionName": "Institución y cargo",
+        "email": "Correo electrónico",
+        "phone": "Teléfono"
+      },
+      "form": {
+        "createTitle": "Añadir miembro del equipo",
+        "editTitle": "Editar miembro del equipo"
+      }
     }
   },
   "whodrugTreePicker": {

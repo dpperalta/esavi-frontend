@@ -1180,6 +1180,19 @@
       "deathWarning": "De melding van deze zaak registreert geen overlijden als uitkomst, of de datum van overlijden komt niet overeen met die van dit onderzoek.",
       "deathWarningLink": "Stap 4 bekijken",
       "dismissWarning": "Melding negeren"
+    },
+    "team": {
+      "sectionTitle": "Gegevens van het onderzoeksteam",
+      "field": {
+        "fullName": "Volledige naam",
+        "institutionName": "Instelling en functie",
+        "email": "E-mailadres",
+        "phone": "Telefoon"
+      },
+      "form": {
+        "createTitle": "Teamlid toevoegen",
+        "editTitle": "Teamlid bewerken"
+      }
     }
   },
   "whodrugTreePicker": {

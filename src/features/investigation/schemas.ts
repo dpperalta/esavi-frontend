@@ -213,3 +213,10 @@ function _assertTeamMemberSchemaMatchesContract(
   return value;
 }
 void _assertTeamMemberSchemaMatchesContract;
+
+// SPEC FE13a §3.5 E — el duplicado se detecta sobre `fullName` normalizado, en las dos
+// operaciones de escritura (`API-ROUTES.md`: `001` alta, `004` corrección).
+export const teamMemberErrorFieldMap: Partial<Record<string, keyof TeamMemberFormValues>> = {
+  INVTEAM_001_ALREADY_EXISTS: 'fullName',
+  INVTEAM_004_ALREADY_EXISTS: 'fullName',
+};

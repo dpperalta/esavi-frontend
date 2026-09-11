@@ -1180,6 +1180,19 @@
       "deathWarning": "This case's notification does not record a death outcome, or its date of death does not match this investigation's.",
       "deathWarningLink": "Review step 4",
       "dismissWarning": "Dismiss warning"
+    },
+    "team": {
+      "sectionTitle": "Investigation team information",
+      "field": {
+        "fullName": "Full name",
+        "institutionName": "Institution and role",
+        "email": "Email",
+        "phone": "Phone"
+      },
+      "form": {
+        "createTitle": "Add team member",
+        "editTitle": "Edit team member"
+      }
     }
   },
   "whodrugTreePicker": {
