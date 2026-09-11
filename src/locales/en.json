@@ -69,6 +69,11 @@
     "numberField": {
       "invalid": "The number is not valid."
     },
+    "mapPointPicker": {
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "clearPoint": "Clear point"
+    },
     "satelliteList": {
       "add": "Add",
       "edit": "Edit {{name}}",

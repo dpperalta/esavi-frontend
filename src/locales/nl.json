@@ -69,6 +69,11 @@
     "numberField": {
       "invalid": "Het getal is niet geldig."
     },
+    "mapPointPicker": {
+      "latitude": "Breedtegraad",
+      "longitude": "Lengtegraad",
+      "clearPoint": "Punt wissen"
+    },
     "satelliteList": {
       "add": "Toevoegen",
       "edit": "{{name}} bewerken",
