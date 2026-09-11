@@ -38,6 +38,33 @@ Cuando dos fuentes se contradigan, gana la de más arriba:
 
 **Ningún texto visible se escribe literal en un componente.** Ni un título, ni un placeholder, ni un `aria-label`, ni el texto de un botón. La regla no admite «esto es provisional»: un literal suelto no aparece en `i18n:check` y sobrevive a producción.
 
+### 2.1 Comentarios: los justos
+
+**Escribe código limpio, autodocumentado y de producción.** El nombre de la función, del hook y de la variable es la primera documentación; si hace falta un comentario para entender *qué* hace una línea, casi siempre lo que falta es un nombre mejor o una función extraída.
+
+**No añadas comentarios obvios, redundantes ni explicaciones paso a paso dentro del archivo**, salvo que se pidan explícitamente. Nada de narrar el código que sigue, ni de numerar los pasos de una función, ni de repetir en prosa lo que la firma ya declara:
+
+```ts
+// ❌ redundante: la línea ya lo dice
+// Get the case id from the URL params
+const { id } = useParams();
+
+// ❌ paso a paso: es el código otra vez, en inglés
+// 1. Build the payload
+// 2. Send the PUT
+// 3. Invalidate the cache
+```
+
+**Lo que sí se comenta**, porque no está en el código y se pierde en cuanto alguien lo toca:
+
+- **El código de operación `ESAVI-*`** donde se consume el endpoint. Es obligatorio (§6.4) y no cuenta como comentario redundante.
+- **El *por qué* de una decisión que parece un error**: una comparación estricta que podría escribirse por veracidad, un `null` explícito que parecería omisible, un límite de pantalla que no coincide con el `varchar(n)` de la columna. Con la cita del spec o del documento que manda.
+- **Una excepción declarada a una norma de este archivo**, nombrando la norma.
+
+Un comentario que cita el spec, la sección de `CASE-PROCESS.md` o el `409` que el backend responde vale su espacio; uno que traduce la línea siguiente al inglés, no.
+
+Y sigue valiendo la fila de §2: cuando hay comentario, va **en inglés**.
+
 ---
 
 ## 3. Estructura de directorios
@@ -381,6 +408,7 @@ npm run check            # build && lint && i18n:check && test
 - [ ] Los **seis artefactos** están, y las claves i18n en **los tres** idiomas.
 - [ ] El `minLevel` del `NavItem` y el `level` del `<RequireRole>` coinciden con `API-ROUTES.md`.
 - [ ] El código `ESAVI-*` aparece citado donde se consume el endpoint.
+- [ ] Ningún comentario obvio, redundante ni paso a paso (§2.1): los que quedan dicen **por qué**, no qué.
 - [ ] Ningún color literal, ningún texto literal visible, ningún `any` en el límite con la API.
 - [ ] Si la entidad tiene `isActive`, `<ResourceTable>` recibe `isRowInactive` (§10.1): la fila inactiva lleva el tinte `bg-destructive/5` además del badge.
 - [ ] Ningún `response.data.data`, ningún `axios` importado fuera de `client.ts`, ningún `localStorage` de tokens fuera de `TokenStore`.

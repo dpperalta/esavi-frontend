@@ -1,6 +1,6 @@
 # SPEC FE12f — Paso 4 incremental: revelado progresivo por secciones
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (armazón del asistente y `CaseWizardActionBar`), SPEC FE12a (la cabecera, las dos ramas y la cadena de guardado que este spec fracciona), SPEC FE12d (el bloque de embarazo y su compuerta), SPEC FE12e (las secciones del paso 4, su orden y sus encabezados, que aquí no se tocan)
 > **Fecha:** 2026-09-10
 > **Objetivo:** Que el paso 4 se descubra sección a sección y guarde al avanzar, para que las listas satélite dejen de exigir un viaje al botón «Guardar» del pie.
