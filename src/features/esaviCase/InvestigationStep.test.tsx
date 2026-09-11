@@ -13,11 +13,13 @@ import { CaseWizardProvider } from './CaseWizardContext';
 import { InvestigationStep } from './InvestigationStep';
 
 const toastInfo = vi.fn();
+const toastSuccess = vi.fn();
+const toastError = vi.fn();
 vi.mock('sonner', () => ({
   toast: {
     info: (...args: unknown[]) => toastInfo(...args),
-    success: vi.fn(),
-    error: vi.fn(),
+    success: (...args: unknown[]) => toastSuccess(...args),
+    error: (...args: unknown[]) => toastError(...args),
   },
 }));
 
@@ -89,6 +91,8 @@ beforeEach(() => {
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
   toastInfo.mockClear();
+  toastSuccess.mockClear();
+  toastError.mockClear();
   mockSectionDependencies();
 });
 
@@ -255,6 +259,75 @@ function mockWorkflowDynamic(getInvestigationExists: () => boolean) {
           updatedAt: null,
           deletedAt: null,
           appDetails: [],
+        },
+      }),
+    ),
+  );
+}
+
+function mockWorkflowClosed() {
+  server.use(
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          caseWorkflowId: 'workflow-1',
+          caseId: CASE_1,
+          status: { catalogItemId: 'status-closed', code: 'CLOSED', name: 'Cerrado' },
+          previousStatus: null,
+          openedAt: '2026-01-01T00:00:00.000Z',
+          closedAt: '2026-02-01T00:00:00.000Z',
+          lastReopenedAt: null,
+          reopenCount: 0,
+          stages: {
+            classification: { exists: true, id: 'classification-1', startedAt: null, endedAt: null, durationMinutes: null },
+            notification: { exists: true, id: 'notification-1', startedAt: null, endedAt: null, durationMinutes: null },
+            investigation: { exists: true, id: INVESTIGATION_1, startedAt: null, endedAt: null, durationMinutes: null },
+            finalClassification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+          },
+          totalDurationMinutes: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      }),
+    ),
+  );
+}
+
+const INVESTIGATION_STATUS_TYPE = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+const STATUS_DEATH = '11111111-1111-4111-8111-111111111111';
+const STATUS_RECOVERED = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+
+// Real `investigationStatus` catalog with a `DEATH` and a non-`DEATH` item — the death block's
+// gate needs a real item behind `<CatalogSelect>`, same reasoning as `BasicInfoSection.test.tsx`.
+function mockInvestigationStatusCatalog() {
+  server.use(
+    http.get('http://localhost:4500/api/catalog-types', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          count: 1,
+          rows: [
+            { catalogTypeId: INVESTIGATION_STATUS_TYPE, code: 'investigationStatus', name: 'Estado' },
+          ],
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/catalog-items/type/${INVESTIGATION_STATUS_TYPE}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          count: 2,
+          rows: [
+            { catalogItemId: STATUS_DEATH, code: 'DEATH', name: 'Fallecido', value: 'DEATH' },
+            { catalogItemId: STATUS_RECOVERED, code: 'RECOVERED', name: 'Recuperado', value: 'RECOVERED' },
+          ],
         },
       }),
     ),
@@ -471,5 +544,265 @@ describe('InvestigationStep — revelado progresivo y borrador (SPEC FE13a §4 p
     await waitFor(() =>
       expect(toastInfo).toHaveBeenCalledWith('Se recuperaron cambios sin guardar de una sesión anterior.'),
     );
+  });
+});
+
+describe('InvestigationStep — el recorrido completo (SPEC FE13a §4 paso 13)', () => {
+  it('alta desde cero: crea la cabecera, guarda las tres secciones y añade un miembro del equipo', async () => {
+    let postCount = 0;
+    mockWorkflowDynamic(() => postCount > 0);
+    mockInvestigationDetail();
+    let teamRows: Record<string, unknown>[] = [];
+    server.use(
+      http.post('http://localhost:4500/api/investigations', () => {
+        postCount++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() });
+      }),
+      http.post('http://localhost:4500/api/investigation-sources', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { investigationId: INVESTIGATION_1, history: true },
+        }),
+      ),
+      http.put(`http://localhost:4500/api/investigations/${INVESTIGATION_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() }),
+      ),
+      http.get(
+        `http://localhost:4500/api/investigation-team-members/investigation/${INVESTIGATION_1}`,
+        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: teamRows.length, rows: teamRows } }),
+      ),
+      http.post('http://localhost:4500/api/investigation-team-members', async ({ request }) => {
+        await request.json();
+        const created = {
+          investigationTeamMemberId: 'member-1',
+          fullName: 'Ana Pérez',
+          institutionName: null,
+          email: null,
+          phone: null,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        };
+        teamRows = [created];
+        return HttpResponse.json({ ok: true, message: 'ok', data: created });
+      }),
+    );
+
+    const user = setupUser();
+    renderInvestigationStep();
+
+    await waitFor(() => expect(postCount).toBe(1));
+
+    await user.click(await screen.findByRole('button', { name: 'Guardar y continuar' }));
+
+    expect(await screen.findByText('Información básica')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Añadir' }));
+    await user.type(screen.getByLabelText('Nombres y apellidos'), 'Ana Pérez');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect((await screen.findAllByText('Ana Pérez')).length).toBeGreaterThan(0);
+  });
+
+  it('reentrada: las tres secciones muestran los datos ya guardados', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail({ notes: 'Notas previas' });
+    server.use(
+      http.get(`http://localhost:4500/api/investigation-sources/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            investigationId: INVESTIGATION_1,
+            history: true,
+            interviewVaccinatedPerson: null,
+            interviewHealthWorker: null,
+            vaccinationRecord: null,
+            autopsyRecord: null,
+            verbalAutopsyRecord: null,
+            investigationReport: null,
+            other: null,
+            otherDescription: null,
+            notes: null,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+          },
+        }),
+      ),
+      http.get(
+        `http://localhost:4500/api/investigation-team-members/investigation/${INVESTIGATION_1}`,
+        () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 1,
+              rows: [
+                {
+                  investigationTeamMemberId: 'member-1',
+                  fullName: 'Ana Pérez',
+                  institutionName: 'MINSAL',
+                  email: null,
+                  phone: null,
+                  notes: null,
+                  isActive: true,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: null,
+                  deletedAt: null,
+                  appDetails: [],
+                },
+              ],
+            },
+          }),
+      ),
+    );
+
+    renderInvestigationStep();
+
+    expect(await screen.findByRole('switch', { name: 'Historia clínica' })).toBeChecked();
+    await screen.findByText('Información básica');
+    expect(document.getElementById('investigation-basicInfo-notes')).toHaveValue('Notas previas');
+    expect((await screen.findAllByText('Ana Pérez')).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+  });
+
+  it('cambiar el estado a muerte y volver a otro antes de guardar no crea la fila de autopsia', async () => {
+    let postCount = 0;
+    mockWorkflowDynamic(() => postCount > 0);
+    mockInvestigationDetail();
+    mockInvestigationStatusCatalog();
+    let investigationSourcePut = false;
+    let investigationPutBody: Record<string, unknown> | null = null;
+    let autopsyPostCount = 0;
+    server.use(
+      http.post('http://localhost:4500/api/investigations', () => {
+        postCount++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() });
+      }),
+      http.post('http://localhost:4500/api/investigation-sources', () => {
+        investigationSourcePut = true;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { investigationId: INVESTIGATION_1, history: null },
+        });
+      }),
+      http.put(`http://localhost:4500/api/investigations/${INVESTIGATION_1}`, async ({ request }) => {
+        investigationPutBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: investigationDetail({ status: { catalogItemId: STATUS_RECOVERED, code: 'RECOVERED', name: 'Recuperado' } }),
+        });
+      }),
+      http.post('http://localhost:4500/api/investigation-autopsies', () => {
+        autopsyPostCount++;
+        return HttpResponse.json(
+          { ok: false, message: 'no debería llamarse', code: 'UNKNOWN_ERROR' },
+          { status: 500 },
+        );
+      }),
+    );
+
+    const user = setupUser();
+    renderInvestigationStep();
+
+    await waitFor(() => expect(postCount).toBe(1));
+    await user.click(await screen.findByRole('button', { name: 'Guardar y continuar' }));
+    await waitFor(() => expect(investigationSourcePut).toBe(true));
+
+    expect(await screen.findByText('Información básica')).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('combobox', { name: 'Estado de la persona al momento de la investigación' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'Fallecido' }));
+    expect(
+      await screen.findByLabelText('Si la persona murió, indique la fecha de la muerte'),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('combobox', { name: 'Estado de la persona al momento de la investigación' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'Recuperado' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByLabelText('Si la persona murió, indique la fecha de la muerte'),
+      ).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    await waitFor(() => expect(investigationPutBody).not.toBeNull());
+    expect(investigationPutBody).toMatchObject({ statusItemId: STATUS_RECOVERED });
+    expect(autopsyPostCount).toBe(0);
+    expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
+  });
+
+  it('fallo de guardado: un error en la sección 1 no avanza, y un reintento sí', async () => {
+    let postCount = 0;
+    mockWorkflowDynamic(() => postCount > 0);
+    mockInvestigationDetail();
+    let attempt = 0;
+    server.use(
+      http.post('http://localhost:4500/api/investigations', () => {
+        postCount++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() });
+      }),
+      http.post('http://localhost:4500/api/investigation-sources', () => {
+        attempt++;
+        if (attempt === 1) {
+          return HttpResponse.json(
+            { ok: false, message: 'Error inesperado', code: 'UNKNOWN_ERROR' },
+            { status: 500 },
+          );
+        }
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { investigationId: INVESTIGATION_1, history: true },
+        });
+      }),
+    );
+
+    const user = setupUser();
+    renderInvestigationStep();
+
+    await waitFor(() => expect(postCount).toBe(1));
+    await user.click(await screen.findByRole('button', { name: 'Guardar y continuar' }));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(screen.queryByText('Información básica')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Guardar y continuar' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    expect(await screen.findByText('Información básica')).toBeInTheDocument();
+    expect(attempt).toBe(2);
+  });
+
+  it('expediente CLOSED: las tres secciones se ven pero deshabilitadas, sin botones de guardar ni de añadir', async () => {
+    mockWorkflowClosed();
+    mockInvestigationDetail();
+
+    renderInvestigationStep();
+
+    expect(await screen.findByText('Fuentes de información')).toBeInTheDocument();
+    expect(await screen.findByText('Información básica')).toBeInTheDocument();
+    expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Historia clínica' })).toBeDisabled();
   });
 });
