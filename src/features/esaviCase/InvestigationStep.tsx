@@ -45,9 +45,8 @@ interface InvestigationCreateErrorStateProps {
   onRetry: () => void;
 }
 
-// Estado propio de §3.8: si el `POST` vacío que crea la cabecera falla, no hay dónde colgar
-// ningún formulario todavía — se muestra el error con reintento, nunca las tres secciones a
-// medio construir.
+// State of its own per §3.8: if the empty `POST` that creates the header fails, there's no row
+// yet to hang any form on — the error shows with a retry, never the three sections half-built.
 function InvestigationCreateErrorState({ error, onRetry }: InvestigationCreateErrorStateProps) {
   const { t } = useTranslation();
   const message =
@@ -67,9 +66,9 @@ function InvestigationCreateErrorState({ error, onRetry }: InvestigationCreateEr
 type InvestigationSectionId = 'source' | 'basicInfo' | 'team';
 const SECTIONS: InvestigationSectionId[] = ['source', 'basicInfo', 'team'];
 
-// El borrador combinado (§3.4): una sola clave `'investigation'`, aunque tres secciones
-// autocontenidas escriban en él — cada campo es opcional porque el usuario puede haber tocado
-// sólo una sección antes del cierre accidental de la pestaña.
+// The combined draft (§3.4): a single `'investigation'` key, even though three self-contained
+// sections write into it — every field is optional because the user may have touched only one
+// section before the accidental tab close.
 interface InvestigationDraftValues {
   source?: InvestigationSourceFormValues;
   basicInfo?: InvestigationFormValues;
@@ -83,9 +82,9 @@ interface InvestigationStepBodyProps {
   investigationSource: InvestigationSourceDetail | null;
   investigationAutopsy: InvestigationAutopsyDetail | null;
   notification: NotificationDetail | null;
-  // `stages.investigation.exists` como lo leyó `InvestigationStep` antes de su propio `POST`
-  // (SPEC FE12f §3.1, adaptado): un paso nuevo se recorre sección por sección; uno que ya
-  // existía se muestra entero desde el primer render.
+  // `stages.investigation.exists` as `InvestigationStep` read it before its own `POST`
+  // (SPEC FE12f §3.1, adapted): a fresh step is walked through section by section; one that
+  // already existed shows in full from the first render.
   existedOnMount: boolean;
   isClosed: boolean;
 }
@@ -102,15 +101,14 @@ function InvestigationStepBody({
 }: InvestigationStepBodyProps) {
   const { t } = useTranslation();
 
-  // El `updatedAt` de la cabecera al montar (SPEC FE12a §3.4, adaptado a un borrador que cubre
-  // tres secciones a la vez): nunca recalculado, o la regla de conflicto compararía siempre
-  // contra sí misma.
+  // The header's `updatedAt` on mount (SPEC FE12a §3.4, adapted to a draft that covers three
+  // sections at once): never recalculated, or the conflict rule would always compare against
+  // itself.
   const baseUpdatedAtRef = useRef(investigation.updatedAt);
 
-  // Resuelto una sola vez, en el primer render de este cuerpo — que sólo monta cuando la
-  // cabecera y los tres satélites ya cargaron, así que no hace falta el guardián de
-  // `hasResolvedDraftRef` de `NotificationStep`: aquí no hay un segundo render intermedio con
-  // datos a medio llegar.
+  // Resolved once, on this body's first render — which only mounts once the header and the
+  // three satellites have already loaded, so `NotificationStep`'s `hasResolvedDraftRef` guard
+  // isn't needed here: there's no intermediate second render with half-arrived data.
   const [draft] = useState(() => {
     const stored = useDraftsStore.getState().get(caseId, 'investigation');
     const resolution = resolveDraftConflict(stored, baseUpdatedAtRef.current);
@@ -136,8 +134,8 @@ function InvestigationStepBody({
   const draftDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasPendingDraftValues = Object.keys(pendingDraftValues).length > 0;
 
-  // Un solo rebote de 500 ms para las tres secciones (SPEC FE12a §3.4), aunque cada una tenga su
-  // propio `useForm`: cualquier cambio en cualquiera reinicia el mismo temporizador.
+  // A single 500ms debounce for the three sections (SPEC FE12a §3.4), even though each has its
+  // own `useForm`: any change in any of them resets the same timer.
   useEffect(() => {
     if (!hasPendingDraftValues) return;
     if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
@@ -149,9 +147,9 @@ function InvestigationStepBody({
     };
   }, [caseId, pendingDraftValues, hasPendingDraftValues]);
 
-  // "Se borra en cuanto responde el PUT" (§3.4): tras cualquiera de los dos guardados, lo ya
-  // escrito quedó en la base y lo que falte por tocar no necesita sobrevivir a un cierre
-  // accidental sobre datos que ya son historia.
+  // "Cleared as soon as the PUT responds" (§3.4): after either of the two saves, what was already
+  // written is now in the database, and whatever's left untouched doesn't need to survive an
+  // accidental close over data that's already history.
   function clearDraft() {
     if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
     setPendingDraftValues({});
@@ -221,10 +219,10 @@ export interface InvestigationStepProps {
   caseId: string;
 }
 
-// Paso 5 del asistente (SPEC FE13a). Reemplaza el marcador de posición del slug `investigation`
-// en `CaseWizardPage` (FE08, §4 paso 9). Crea la cabecera al entrar (§2) y monta las tres
-// secciones del §4 pasos 7-10 bajo el revelado progresivo de FE12f (§4 paso 11): fuentes,
-// información básica con el bloque de muerte y autopsia, y equipo — sin sub-paso de ruta propio.
+// Wizard step 5 (SPEC FE13a). Replaces the `investigation` slug's placeholder in `CaseWizardPage`
+// (FE08, §4 step 9). Creates the header on entry (§2) and mounts the three sections from §4
+// steps 7-10 under FE12f's progressive reveal (§4 step 11): sources, basic info with the death
+// and autopsy block, and team — no route sub-step of its own.
 export function InvestigationStep({ caseId }: InvestigationStepProps) {
   const queryClient = useQueryClient();
   const workflow = useCaseWorkflow(caseId);
@@ -236,9 +234,9 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
   const notification = useNotificationByCase(caseId, notificationStageExists);
   const create = investigationResource.useCreate();
 
-  // Guarda contra un segundo `POST` en el mismo montaje — el doble efecto de StrictMode en
-  // desarrollo, o un nuevo render mientras la mutación todavía está en vuelo (§5 criterio: "un
-  // solo POST"). Se limpia a mano en `handleRetry`, nunca por un efecto que dependa de `create`.
+  // Guards against a second `POST` on the same mount — StrictMode's double effect in dev, or a
+  // new render while the mutation is still in flight (§5 criterion: "a single POST"). Cleared by
+  // hand in `handleRetry`, never by an effect depending on `create`.
   const attemptedCaseIdRef = useRef<string | null>(null);
 
   function createHeader() {
@@ -248,8 +246,8 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
       {
         onSuccess: (created) => {
           queryClient.setQueryData(investigationByCaseKey(caseId), created);
-          // `stages.investigation.exists` acaba de cambiar — sin esto el stepper y la
-          // reanudación seguirían viendo el paso 5 como no iniciado (SPEC FE13a §3.4).
+          // `stages.investigation.exists` just changed — without this the stepper and resume
+          // logic would keep seeing step 5 as not started (SPEC FE13a §3.4).
           void queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
         },
       },
@@ -273,10 +271,10 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
     createHeader();
   }
 
-  // Congelado la primera vez que el workflow responde (SPEC FE12f §3.1, adaptado): el efecto de
-  // arriba puede cambiar `stageExists` a `true` un instante después con su propio `POST`, y el
-  // revelado progresivo tiene que ignorar ese cambio — sólo importa si la cabecera **ya**
-  // existía antes de que este paso hiciera nada.
+  // Frozen the first time the workflow responds (SPEC FE12f §3.1, adapted): the effect above can
+  // flip `stageExists` to `true` a moment later with its own `POST`, and the progressive reveal
+  // has to ignore that change — only whether the header **already** existed before this step did
+  // anything matters.
   const existedOnMountRef = useRef<boolean | null>(null);
   if (workflow.data && existedOnMountRef.current === null) {
     existedOnMountRef.current = stageExists;

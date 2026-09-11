@@ -17,18 +17,18 @@ import { Textarea } from '@/shared/components/ui/textarea';
 export interface AutopsyFieldsProps {
   form: UseFormReturn<InvestigationAutopsyFormValues>;
   disabled?: boolean;
-  // El aviso de §6.6 (CASE-PROCESS.md) es del bloque, no de un campo — se calcula en
-  // `BasicInfoSection` a partir de la notificación, que esta pieza no conoce.
+  // The §6.6 warning (CASE-PROCESS.md) belongs to the block, not to a field — it's computed in
+  // `BasicInfoSection` from the notification, which this piece doesn't know about.
   showsDeathWarning: boolean;
   onDismissDeathWarning: () => void;
-  // Ruta al paso 4 del asistente, para el enlace del aviso — la construye `BasicInfoSection`
-  // porque es quien conoce el `caseId`.
+  // Path to wizard step 4, for the warning's link — built by `BasicInfoSection` because it's the
+  // one that knows the `caseId`.
   wizardStepFourPath: string;
 }
 
-// Bloque 6.1–6.7 de `ESAVI-FORM.md` A1, dentro de `BasicInfoSection` (SPEC FE13a §3.5 C). La
-// compuerta (`status.value === 'DEATH'`) vive en el padre — aquí sólo se pintan los campos, ya
-// gateados. `isDeath` nunca se ofrece como control: viaja fijo en `true` desde el schema.
+// Block 6.1–6.7 of `ESAVI-FORM.md` A1, inside `BasicInfoSection` (SPEC FE13a §3.5 C). The gate
+// (`status.value === 'DEATH'`) lives in the parent — here only the already-gated fields render.
+// `isDeath` is never offered as a control: it travels fixed at `true` from the schema.
 export function AutopsyFields({
   form,
   disabled,
@@ -48,9 +48,9 @@ export function AutopsyFields({
   const showsAutopsyScheduledSwitch = isAutopsyPerformed !== true;
   const showsScheduledAutopsyDate = showsAutopsyScheduledSwitch && isAutopsyScheduled === true;
 
-  // Las cuatro reglas de coherencia (§3.5 C) se muestran las cuatro a la vez si se rompen a la
-  // vez — nunca una por viaje al servidor. La 1 a la 3 casi nunca llegan a dispararse porque los
-  // `<Switch>` de abajo limpian su contrario al tocarse; la 4 sí, porque nace de `deathDate`.
+  // The four coherence rules (§3.5 C) all show at once if they all break at once — never one per
+  // server round trip. Rules 1 to 3 almost never fire because the `<Switch>` controls below
+  // clear their counterpart on toggle; rule 4 does, because it stems from `deathDate`.
   const flagsCoherent = areAutopsyFlagsMutuallyExclusive(isAutopsyPerformed, isAutopsyScheduled);
   const autopsyDateCoherent = isAutopsyDateRequirementMet(isAutopsyPerformed, autopsyDate);
   const scheduledDateCoherent = isScheduledAutopsyDateRequirementMet(
@@ -146,9 +146,9 @@ export function AutopsyFields({
               checked={field.value === true}
               onCheckedChange={(checked) => {
                 field.onChange(checked);
-                // Limpia el contrario al tocarse (§3.5 C): con la autopsia hecha, la programada
-                // deja de tener sentido y de estar visible — las reglas 1 a 3 no llegan a
-                // dispararse porque nunca queda un valor huérfano detrás.
+                // Clears its counterpart on toggle (§3.5 C): with the autopsy done, the
+                // scheduled one stops making sense and stops being visible — rules 1 to 3 never
+                // fire because no orphaned value is left behind.
                 if (checked) {
                   form.setValue('isAutopsyScheduled', null, { shouldValidate: true });
                   form.setValue('scheduledAutopsyDate', null, { shouldValidate: true });

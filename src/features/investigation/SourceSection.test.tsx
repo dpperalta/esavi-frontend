@@ -127,7 +127,7 @@ describe('SourceSection — «otra fuente» (SPEC FE13a §3.5 B)', () => {
 
     await user.click(screen.getByRole('switch', { name: 'Otro' }));
     await user.type(screen.getByLabelText('Especifique ¿cuál?'), 'Registro clínico externo');
-    // Apagar «otra fuente» vuelve a ocultar el textarea (§3.5 B).
+    // Turning off "other source" hides the textarea again (§3.5 B).
     await user.click(screen.getByRole('switch', { name: 'Otro' }));
     expect(screen.queryByLabelText('Especifique ¿cuál?')).not.toBeInTheDocument();
 
@@ -180,9 +180,9 @@ describe('SourceSection — 409 de fila ya existente (SPEC FE13a §3.5 E)', () =
       }),
     );
 
-    // La query por caso necesita un observador activo para que `invalidateQueries` dispare un
-    // refetch de verdad — en la pantalla real ese observador es `InvestigationStep`, aquí se
-    // simula compartiendo el mismo `queryClient` con un `renderHook` propio.
+    // The by-case query needs an active observer for `invalidateQueries` to trigger a real
+    // refetch — on the real screen that observer is `InvestigationStep`; here it's simulated by
+    // sharing the same `queryClient` with a dedicated `renderHook`.
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const Wrapper = ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -208,7 +208,7 @@ describe('SourceSection — 409 de fila ya existente (SPEC FE13a §3.5 E)', () =
 
     await waitFor(() => expect(getCount).toBe(2));
     expect(postCount).toBe(1);
-    // No avanza la sección sobre un conflicto: `onSaved` es sólo para el camino feliz.
+    // Doesn't advance the section on a conflict: `onSaved` is only for the happy path.
     expect(onSaved).not.toHaveBeenCalled();
   });
 });

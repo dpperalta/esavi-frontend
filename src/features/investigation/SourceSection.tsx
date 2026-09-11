@@ -17,8 +17,8 @@ import { Button } from '@/shared/components/ui/button';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
 
-// Las ocho fuentes de `ESAVI-FORM.md` §1, en orden — el noveno renglón (`otherDescription`) es
-// condicional y se pinta aparte, no en esta lista.
+// The eight sources from `ESAVI-FORM.md` §1, in order — the ninth row (`otherDescription`) is
+// conditional and rendered separately, not in this list.
 const SOURCE_SWITCHES = [
   { name: 'history', labelKey: 'investigation.source.history' },
   { name: 'interviewVaccinatedPerson', labelKey: 'investigation.source.interviewVaccinatedPerson' },
@@ -53,23 +53,23 @@ export interface SourceSectionProps {
   investigationId: string;
   investigationSource: InvestigationSourceDetail | null;
   disabled?: boolean;
-  // Sólo la sección 1 lleva botón mientras el paso no se completó una vez (SPEC FE13a §3.6); al
-  // reentrar en un paso que ya existía, `InvestigationStep` lo oculta y todo queda visible.
+  // Only section 1 carries a button while the step hasn't completed once (SPEC FE13a §3.6); on
+  // re-entering a step that already existed, `InvestigationStep` hides it and everything shows.
   showSaveButton: boolean;
   onSaved: () => void;
-  // El borrador contra el cierre de pestaña (§3.4) vive combinado en `InvestigationStep`, bajo la
-  // única clave `'investigation'` del contrato de estado — esta sección no toca `localStorage`
-  // directamente. `draftValues` gana sobre `investigationSource` sólo al montar (mismo criterio
-  // que la restauración de FE12a); `onValuesChange` informa cada cambio para que el padre lo
-  // junte con las otras dos secciones y lo escriba con un solo rebote de 500 ms.
+  // The draft against accidental tab closing (§3.4) lives combined in `InvestigationStep`, under
+  // the single `'investigation'` key of the state contract — this section never touches
+  // `localStorage` directly. `draftValues` wins over `investigationSource` only on mount (same
+  // criterion as FE12a's restoration); `onValuesChange` reports every change so the parent can
+  // merge it with the other two sections and write it with a single 500ms debounce.
   draftValues?: InvestigationSourceFormValues;
   onValuesChange?: (values: InvestigationSourceFormValues) => void;
 }
 
-// Sección 1 del paso 5 (SPEC FE13a §3.5 B): las ocho banderas tri-estado de `investigationSource`
-// y el texto detrás de `other`. Es la forma de `VerificationSourceSection.tsx` con ocho banderas
-// en vez de seis (§1 "Por qué existe este spec") — mismo `<Switch>` que nace sin tocar (`null`, no
-// desmarcado), mismo `aria-live` alrededor del bloque condicional.
+// Section 1 of step 5 (SPEC FE13a §3.5 B): the eight tri-state flags of `investigationSource`
+// plus the text behind `other`. It's the shape of `VerificationSourceSection.tsx` with eight
+// flags instead of six (§1 "Why this spec exists") — same `<Switch>` that's born untouched
+// (`null`, not unchecked), same `aria-live` around the conditional block.
 export function SourceSection({
   caseId,
   investigationId,
@@ -104,9 +104,9 @@ export function SourceSection({
   const otherDescriptionCoherent = isOtherSourceDescriptionRequirementMet(other, otherDescription);
 
   async function handleValidSubmit(values: InvestigationSourceFormValues) {
-    // Al apagar «otra fuente» la pantalla limpia el campo y deja de enviarlo (§3.5 B, §7.3): lo
-    // que nunca se envía es la fuente apagada y el texto a la vez, aunque el textarea oculto
-    // todavía conserve algo escrito antes de esconderse.
+    // Turning off "other source" clears the field and stops sending it (§3.5 B, §7.3): what's
+    // never sent is the disabled source and the text at the same time, even if the hidden
+    // textarea still holds something typed before hiding.
     const payload: InvestigationSourceFormValues =
       values.other === true ? values : { ...values, otherDescription: null };
 
@@ -124,8 +124,8 @@ export function SourceSection({
       if (!(err instanceof EsaviApiError)) {
         throw err;
       }
-      // La fila 1:1 ya existe (§3.5 E): relee en vez de reintentar el `POST` — duplicarlo no es
-      // una opción sobre una clave que ES el `investigationId`.
+      // The 1:1 row already exists (§3.5 E): re-read instead of retrying the `POST` — duplicating
+      // it isn't an option over a key that IS the `investigationId`.
       if (err.code === 'INVSRC_001_ALREADY_EXISTS') {
         await queryClient.invalidateQueries({ queryKey: investigationSourceByCaseKey(caseId) });
         toast.error(getErrorMessage(err));
@@ -164,8 +164,8 @@ export function SourceSection({
                   checked={field.value === true}
                   onCheckedChange={(checked) => {
                     field.onChange(checked);
-                    // Apagar «otra fuente» limpia el campo ahí mismo (§3.5 B) — validar contra un
-                    // texto todavía presente bloquearía un "Guardar y continuar" legítimo.
+                    // Turning off "other source" clears the field right there (§3.5 B) —
+                    // validating against text still present would block a legitimate save.
                     if (name === 'other' && !checked) {
                       form.setValue('otherDescription', null, { shouldValidate: true });
                     }
@@ -180,7 +180,7 @@ export function SourceSection({
         ))}
       </fieldset>
 
-      {/* Visible sólo con `other === true` (§3.5 B) — aparece por un cambio en otro control. */}
+      {/* Visible only when `other === true` (§3.5 B) — appears due to a change in another control. */}
       <div aria-live="polite">
         {showsOtherDescription && (
           <Controller

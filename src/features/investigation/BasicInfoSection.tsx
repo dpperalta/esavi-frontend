@@ -45,9 +45,9 @@ function buildDefaultValues(investigation: InvestigationDetail | null): Investig
   };
 }
 
-// SPEC FE13a §3.4: `deathDate` se precarga una vez, al construir `defaultValues`, y desde ahí es
-// de RHF. El `GET` de autopsia manda sobre la precarga en cuanto la fila existe — sólo cae a
-// `notification.deathDate` mientras no hay fila propia todavía.
+// SPEC FE13a §3.4: `deathDate` is preloaded once, when building `defaultValues`, and from there
+// it's RHF's. The autopsy `GET` overrides the preload as soon as the row exists — it only falls
+// back to `notification.deathDate` while there's no own row yet.
 function buildAutopsyDefaultValues(
   autopsy: InvestigationAutopsyDetail | null,
   notificationDeathDate: string | null,
@@ -55,8 +55,8 @@ function buildAutopsyDefaultValues(
   return {
     isDeath: true,
     deathDate: autopsy?.deathDate ?? notificationDeathDate ?? '',
-    // El `GET` devuelve `HH:mm:ss` (contracts/declared/investigationAutopsy.ts); el schema y
-    // `<TimeField>` hablan `HH:mm` — se recorta aquí, en el único sitio del mapeo.
+    // The `GET` returns `HH:mm:ss` (contracts/declared/investigationAutopsy.ts); the schema and
+    // `<TimeField>` speak `HH:mm` — trimmed here, the single mapping spot.
     deathTime: autopsy?.deathTime ? autopsy.deathTime.slice(0, 5) : null,
     isAutopsyPerformed: autopsy?.isAutopsyPerformed ?? null,
     autopsyDate: autopsy?.autopsyDate ?? null,
@@ -72,13 +72,13 @@ export interface BasicInfoSectionProps {
   investigationId: string;
   investigation: InvestigationDetail | null;
   investigationAutopsy: InvestigationAutopsyDetail | null;
-  // Sólo para la precarga de `deathDate` y el aviso de §6.6 — se lee, no se duplica (§3.4).
+  // Only for `deathDate` preload and the §6.6 warning — read, never duplicated (§3.4).
   notification: NotificationDetail | null;
   disabled?: boolean;
   showSaveButton: boolean;
   onSaved: () => void;
-  // Mismo mecanismo combinado que `SourceSection` (§3.4): `InvestigationStep` junta las tres
-  // secciones bajo la única clave `'investigation'` del borrador, esta no toca `localStorage`.
+  // Same combined mechanism as `SourceSection` (§3.4): `InvestigationStep` merges the three
+  // sections under the single `'investigation'` draft key; this one never touches `localStorage`.
   draftValues?: {
     basicInfo: InvestigationFormValues;
     autopsy: InvestigationAutopsyFormValues;
@@ -89,12 +89,12 @@ export interface BasicInfoSectionProps {
   }) => void;
 }
 
-// Sección A1 del paso 5 (SPEC FE13a §3.5 A y C): las diez columnas de `investigation` más, dentro
-// del mismo bloque, las nueve de `investigationAutopsy` cuando el estado resuelve a `DEATH`. Sigue
-// autocontenida como `SourceSection` — un único "Guardar y continuar" — pero aquí ese botón escribe
-// dos tablas (§3.6: "el PUT de la cabecera y, si el bloque de muerte está visible, el POST/PUT de
-// investigationAutopsy"), con dos formularios de RHF independientes porque son dos schemas y dos
-// entidades distintas.
+// Section A1 of step 5 (SPEC FE13a §3.5 A and C): the ten columns of `investigation` plus, inside
+// the same block, the nine of `investigationAutopsy` when the status resolves to `DEATH`. Just as
+// self-contained as `SourceSection` — a single "Guardar y continuar" — but here that button writes
+// two tables (§3.6: "the header's PUT and, if the death block is visible, the POST/PUT of
+// investigationAutopsy"), with two independent RHF forms because they're two schemas and two
+// different entities.
 export function BasicInfoSection({
   caseId,
   investigationId,
@@ -113,10 +113,10 @@ export function BasicInfoSection({
   const autopsyCreate = investigationAutopsyResource.useCreate();
   const autopsyUpdate = investigationAutopsyResource.useUpdate();
   const statusItems = useCatalogItemsByTypeCode('investigationStatus');
-  // Resuelto por reentrada (§3.3: la respuesta trae el objeto `vaccinationHealthFacility`, no
-  // sólo el id) — mismo patrón que `VaccinationBackgroundSection`.
+  // Resolved on re-entry (§3.3: the response carries the `vaccinationHealthFacility` object, not
+  // just the id) — same pattern as `VaccinationBackgroundSection`.
   const [selectedFacilityLabel, setSelectedFacilityLabel] = useState<string | null>(null);
-  // "Descartado en esta sesión" (§3.4): vuelve a aparecer al recargar, a propósito.
+  // "Dismissed for this session" (§3.4): reappears on reload, deliberately.
   const [deathWarningDismissed, setDeathWarningDismissed] = useState(false);
 
   const form = useForm<InvestigationFormValues>({
@@ -149,18 +149,17 @@ export function BasicInfoSection({
   const vaccinationLongitude = form.watch('vaccinationLongitude');
   const autopsyDeathDate = autopsyForm.watch('deathDate');
 
-  // La compuerta del bloque de muerte va contra `status.value`, nunca contra `code` ni `name`
-  // (SPEC FE13a §6, decisión) y se deriva en render — no hay una bandera `showAutopsy` en ningún
-  // sitio.
+  // The death block's gate checks `status.value`, never `code` or `name` (SPEC FE13a §6,
+  // decision), and is derived in render — there's no `showAutopsy` flag anywhere.
   const isDeath =
     statusItems.rows.find((row) => row.catalogItemId === statusItemId)?.value === 'DEATH';
 
-  // Aviso de §6.6 (CASE-PROCESS.md): sólo con la notificación ya cargada — "callar es correcto;
-  // avisar de una divergencia que no se ha comprobado, no" — y sólo mientras el bloque de muerte
-  // está visible. No bloquea, no propaga nada.
-  // Al ocultarse el bloque de muerte, `<AutopsyFields>` deja de estar montado y sus propios
-  // `<Switch>` no pueden limpiar nada — la limpieza vive aquí, en lo que dispara el cierre. No
-  // toca `deathDate` (no anulable, §3.5 C) ni `notes` (no depende de ninguna bandera).
+  // §6.6 warning (CASE-PROCESS.md): only once the notification has loaded — "staying silent is
+  // correct; warning about an unverified divergence is not" — and only while the death block is
+  // visible. It never blocks, never propagates anything.
+  // When the death block hides, `<AutopsyFields>` unmounts and its own `<Switch>` controls can't
+  // clear anything — the cleanup lives here, in whatever triggers the hide. It never touches
+  // `deathDate` (not nullable, §3.5 C) nor `notes` (doesn't depend on any flag).
   const wasDeathRef = useRef(isDeath);
   useEffect(() => {
     if (wasDeathRef.current && !isDeath) {
@@ -182,8 +181,8 @@ export function BasicInfoSection({
     !deathWarningDismissed &&
     (!outcomeIsDeath || notificationDeathDate !== autopsyDeathDate);
 
-  // El centro inicial del mapa, derivado del `geoLocation` elegido (§3.7) — nunca geolocalización
-  // del navegador. Sólo se usa mientras no hay un punto propio todavía (`value === null`).
+  // The map's initial center, derived from the chosen `geoLocation` (§3.7) — never the browser's
+  // geolocation. Only used while there's no own point yet (`value === null`).
   const geoLocation = geoLocationResource.useOne(vaccinationGeoLocationId ?? '');
   const fallbackCenter: LatLng | undefined =
     geoLocation.data?.latitude != null && geoLocation.data?.longitude != null
@@ -202,9 +201,9 @@ export function BasicInfoSection({
 
   async function handleSave() {
     const investigationValid = await form.trigger();
-    // Sin fila de autopsia y sin `DEATH`, no hay nada que escribir ni que limpiar (§3.5 C: "una
-    // fila de autopsia sólo existe sobre una muerte"). Con fila ya existente, cambiar el estado a
-    // uno que no es muerte sigue escribiendo — es la limpieza del criterio de aceptación.
+    // Without an autopsy row and without `DEATH`, there's nothing to write or clear (§3.5 C: "an
+    // autopsy row only exists over a death"). With an existing row, changing the status to a
+    // non-death one still writes — that's the acceptance criterion's cleanup.
     const shouldWriteAutopsy = isDeath || investigationAutopsy !== null;
     const autopsyValid = shouldWriteAutopsy ? await autopsyForm.trigger() : true;
     if (!investigationValid || !autopsyValid) {
@@ -218,16 +217,16 @@ export function BasicInfoSection({
       if (!(err instanceof EsaviApiError)) {
         throw err;
       }
-      // El ítem elegido se desactivó mientras la pantalla estaba abierta (§3.5 E) — el número de
-      // operación entre `STATUS` y `NOT_FOUND` no está fijado en el spec, así que se compara por
-      // sufijo, igual que `isRefreshTokenReused` en `client.ts`.
+      // The chosen item got deactivated while the screen was open (§3.5 E) — the operation number
+      // between `STATUS` and `NOT_FOUND` isn't fixed in the spec, so it's compared by suffix,
+      // same as `isRefreshTokenReused` in `client.ts`.
       if (err.code.endsWith('_STATUS_NOT_FOUND')) {
         form.setError('statusItemId', { type: 'server', message: err.message });
         return;
       }
       if (err.code.endsWith('_DEFAULT_STATUS_MISSING')) {
-        // Despliegue sin sembrar, no un error del usuario (§3.5 E) — se nombra como tal en vez
-        // de un toast genérico.
+        // An unseeded deployment, not a user error (§3.5 E) — named as such instead of a generic
+        // toast.
         toast.error(t('investigation.error.defaultStatusMissing'));
         return;
       }
@@ -237,9 +236,9 @@ export function BasicInfoSection({
     form.reset(values);
 
     if (shouldWriteAutopsy) {
-      // Si el bloque se ocultó, `autopsyForm` ya trae sus campos en `null` desde que el
-      // `<Switch>` correspondiente los limpió al tocarse — este `PUT` los persiste sin borrar la
-      // fila (§3.5 C, criterio de aceptación).
+      // If the block got hidden, `autopsyForm` already carries its fields as `null` since the
+      // matching `<Switch>` cleared them on toggle — this `PUT` persists them without deleting
+      // the row (§3.5 C, acceptance criterion).
       const autopsyValues = autopsyForm.getValues();
       try {
         if (investigationAutopsy) {
@@ -252,14 +251,14 @@ export function BasicInfoSection({
         if (!(err instanceof EsaviApiError)) {
           throw err;
         }
-        // La fila 1:1 ya existe (§3.5 E): relee en vez de reintentar el `POST`.
+        // The 1:1 row already exists (§3.5 E): re-read instead of retrying the `POST`.
         if (err.code === 'INVAUT_001_ALREADY_EXISTS') {
           await queryClient.invalidateQueries({ queryKey: investigationAutopsyByCaseKey(caseId) });
           toast.error(getErrorMessage(err));
           return;
         }
-        // El orden de las comparaciones importa: `..._SCHEDULED_AUTOPSY_DATE_NOT_ALLOWED` también
-        // termina en `..._AUTOPSY_DATE_NOT_ALLOWED`, así que la variante más específica va primero.
+        // Comparison order matters: `..._SCHEDULED_AUTOPSY_DATE_NOT_ALLOWED` also ends in
+        // `..._AUTOPSY_DATE_NOT_ALLOWED`, so the more specific variant goes first.
         if (err.code.endsWith('_SCHEDULED_AUTOPSY_DATE_NOT_ALLOWED')) {
           autopsyForm.setError('scheduledAutopsyDate', { type: 'server', message: err.message });
           return;
@@ -273,7 +272,7 @@ export function BasicInfoSection({
           return;
         }
         if (err.code.endsWith('_AUTOPSY_DATE_BEFORE_DEATH')) {
-          // El error se ancla en las dos fechas a la vez (§3.5 C).
+          // The error anchors on both dates at once (§3.5 C).
           autopsyForm.setError('deathDate', { type: 'server', message: err.message });
           autopsyForm.setError('autopsyDate', { type: 'server', message: err.message });
           return;
@@ -346,8 +345,8 @@ export function BasicInfoSection({
               resolvedLabel={
                 investigation?.vaccinationHealthFacility?.name ?? selectedFacilityLabel
               }
-              // Sólo comprueba `isActive` (§3.5 A): a diferencia del paso 2, esta columna no
-              // valida alcance geográfico.
+              // Only checks `isActive` (§3.5 A): unlike step 2, this column doesn't validate
+              // geographic scope.
               scoped={false}
               onChange={(option) => {
                 field.onChange(option?.id ?? null);
@@ -443,8 +442,8 @@ export function BasicInfoSection({
         )}
       />
 
-      {/* Bloque 6.1–6.7, visible sólo con `status.value === 'DEATH'` (§3.5 C) — aparece por un
-        cambio en el propio `<CatalogSelect>` de arriba. */}
+      {/* Block 6.1–6.7, visible only when `status.value === 'DEATH'` (§3.5 C) — appears due to a
+        change in the `<CatalogSelect>` above. */}
       <div aria-live="polite">
         {isDeath && (
           <AutopsyFields

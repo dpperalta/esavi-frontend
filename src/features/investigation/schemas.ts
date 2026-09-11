@@ -9,10 +9,10 @@ const timeRegex = /^\d{2}:\d{2}$/;
 const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
 
 // ---------------------------------------------------------------------------------------------
-// A — Cabecera (SPEC FE13a §3.5 A). Ninguna columna de datos es obligatoria: la fila nace del
-// `POST` vacío al entrar al paso (§2), y "Guardar y continuar" nunca tiene nada que bloquear.
-// `hospitalizationDate`/`investigationStartDate` no llevan la regla "no futura" aquí — la aplica
-// `<DateField allowFuture={false}>` en la pantalla, igual que en el resto del asistente.
+// A — Header (SPEC FE13a §3.5 A). No data column is required: the row is born from the empty
+// `POST` on entering the step (§2), so "Guardar y continuar" never has anything to block on.
+// `hospitalizationDate`/`investigationStartDate` don't carry the "not future" rule here — the
+// screen's `<DateField allowFuture={false}>` applies it, same as the rest of the wizard.
 // ---------------------------------------------------------------------------------------------
 
 export type InvestigationFormValues = Omit<CreateInvestigationInput, 'caseId' | 'isActive'>;
@@ -24,14 +24,14 @@ export const investigationSaveSchema = z.object({
   vaccinationGeoLocationId: z.string().uuid().nullable().optional(),
   hospitalizationDate: z.string().regex(isoDateRegex).nullable().optional(),
   investigationStartDate: z.string().regex(isoDateRegex).nullable().optional(),
-  // `numeric(10,7)` (§3.7): el rango es el de una coordenada real, el máximo de 7 decimales ya lo
-  // impone `<MapPointPicker>` al emitir — el schema no lo repite.
+  // `numeric(10,7)` (§3.7): the range matches a real coordinate; `<MapPointPicker>` already
+  // enforces the 7-decimal max on emit, so the schema doesn't repeat it.
   vaccinationLatitude: z.number().min(-90).max(90).nullable().optional(),
   vaccinationLongitude: z.number().min(-180).max(180).nullable().optional(),
   notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
 });
 
-// Nunca invocada, sólo comprueba tipos — misma técnica que `_assertSchemaMatchesContract` de
+// Never invoked, type-check only — same technique as `_assertSchemaMatchesContract` in
 // `features/notification/schemas.ts`.
 function _assertInvestigationSchemaMatchesContract(
   value: z.infer<typeof investigationSaveSchema>,
@@ -41,14 +41,14 @@ function _assertInvestigationSchemaMatchesContract(
 void _assertInvestigationSchemaMatchesContract;
 
 // ---------------------------------------------------------------------------------------------
-// B — Fuentes de información (SPEC FE13a §3.5 B). Ocho banderas tri-estado (`null` = "no se
-// recogió", `false` = un "no" deliberado) más el texto detrás de `other`.
+// B — Sources of information (SPEC FE13a §3.5 B). Eight tri-state flags (`null` = "not
+// collected", `false` = a deliberate "no") plus the free text behind `other`.
 // ---------------------------------------------------------------------------------------------
 
 export type InvestigationSourceFormValues = Omit<CreateInvestigationSourceInput, 'investigationId'>;
 
-// `otherDescription`: visible sólo con `other === true` — misma firma que
-// `isOtherSourceDescriptionRequirementMet` de `features/notification/schemas.ts`, entidad distinta.
+// `otherDescription`: visible only when `other === true` — same signature as
+// `isOtherSourceDescriptionRequirementMet` in `features/notification/schemas.ts`, a different entity.
 export function isOtherSourceDescriptionRequirementMet(
   other: boolean | null | undefined,
   otherDescription: string | null | undefined,
@@ -96,14 +96,14 @@ function _assertInvestigationSourceSchemaMatchesContract(
 void _assertInvestigationSourceSchemaMatchesContract;
 
 // ---------------------------------------------------------------------------------------------
-// C — Autopsia (SPEC FE13a §3.5 C). Bloque 6.1–6.7, visible con `status.value === 'DEATH'`.
-// `isDeath` viaja siempre `true` y nunca se ofrece como control; `deathDate` es obligatoria y
-// **no anulable** — un solo schema para alta y edición, como el resto de los satélites del paso 5.
+// C — Autopsy (SPEC FE13a §3.5 C). Block 6.1–6.7, visible when `status.value === 'DEATH'`.
+// `isDeath` always travels `true` and is never offered as a control; `deathDate` is required and
+// **not nullable** — a single schema for create and update, like the rest of step 5's satellites.
 // ---------------------------------------------------------------------------------------------
 
 export type InvestigationAutopsyFormValues = Omit<CreateInvestigationAutopsyInput, 'investigationId'>;
 
-// Regla 1 — `INVAUT_00X_AUTOPSY_FLAGS_EXCLUSIVE`: los dos no pueden ser `true` a la vez.
+// Rule 1 — `INVAUT_00X_AUTOPSY_FLAGS_EXCLUSIVE`: both can't be `true` at once.
 export function areAutopsyFlagsMutuallyExclusive(
   isAutopsyPerformed: boolean | null | undefined,
   isAutopsyScheduled: boolean | null | undefined,
@@ -111,8 +111,8 @@ export function areAutopsyFlagsMutuallyExclusive(
   return !(isAutopsyPerformed === true && isAutopsyScheduled === true);
 }
 
-// Regla 2 — `INVAUT_00X_AUTOPSY_DATE_NOT_ALLOWED`: sin `isAutopsyPerformed === true`, prohibida.
-// Con la bandera en `true` la fecha sigue siendo opcional — no hay obligación en sentido inverso.
+// Rule 2 — `INVAUT_00X_AUTOPSY_DATE_NOT_ALLOWED`: forbidden without `isAutopsyPerformed === true`.
+// With the flag `true` the date stays optional — there's no obligation the other way around.
 export function isAutopsyDateRequirementMet(
   isAutopsyPerformed: boolean | null | undefined,
   autopsyDate: string | null | undefined,
@@ -121,7 +121,7 @@ export function isAutopsyDateRequirementMet(
   return !autopsyDate;
 }
 
-// Regla 3 — `INVAUT_00X_SCHEDULED_AUTOPSY_DATE_NOT_ALLOWED`: espejo exacto de la regla 2, sobre
+// Rule 3 — `INVAUT_00X_SCHEDULED_AUTOPSY_DATE_NOT_ALLOWED`: exact mirror of rule 2, over
 // `isAutopsyScheduled`/`scheduledAutopsyDate`.
 export function isScheduledAutopsyDateRequirementMet(
   isAutopsyScheduled: boolean | null | undefined,
@@ -131,10 +131,10 @@ export function isScheduledAutopsyDateRequirementMet(
   return !scheduledAutopsyDate;
 }
 
-// Regla 4 — `INVAUT_00X_AUTOPSY_DATE_BEFORE_DEATH`: la única de las cuatro que sí puede dispararse
-// desde un campo que no es el suyo (§3.5 C) — corregir sólo `deathDate` puede dejar detrás una
-// `autopsyDate` ya guardada. Comparación lexicográfica sobre `YYYY-MM-DD`, igual que el resto del
-// repositorio. `null` en cualquiera de las dos partes no es un desacuerdo — nada que comparar.
+// Rule 4 — `INVAUT_00X_AUTOPSY_DATE_BEFORE_DEATH`: the only one of the four that can fire from a
+// field that isn't its own (§3.5 C) — fixing only `deathDate` can leave a stale `autopsyDate`
+// behind. Lexicographic comparison over `YYYY-MM-DD`, same as the rest of the repository. `null`
+// on either side isn't a disagreement — nothing to compare.
 export function isAutopsyDateNotBeforeDeath(
   autopsyDate: string | null | undefined,
   deathDate: string | null | undefined,
@@ -150,8 +150,8 @@ export const investigationAutopsySaveSchema = z
     deathTime: z.preprocess(emptyToUndefined, z.string().regex(timeRegex).nullable().optional()),
     isAutopsyPerformed: z.boolean().nullable().optional(),
     autopsyDate: z.string().regex(isoDateRegex).nullable().optional(),
-    // Sin la regla "no futura" (§3.5 C): a diferencia de `autopsyDate`, una autopsia programada
-    // dentro de unos días es el caso normal.
+    // No "not future" rule here (§3.5 C): unlike `autopsyDate`, an autopsy scheduled a few days
+    // out is the normal case.
     isAutopsyScheduled: z.boolean().nullable().optional(),
     scheduledAutopsyDate: z.string().regex(isoDateRegex).nullable().optional(),
     autopsyComments: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
@@ -176,8 +176,8 @@ export const investigationAutopsySaveSchema = z
       });
     }
     if (!isAutopsyDateNotBeforeDeath(data.autopsyDate, data.deathDate)) {
-      // Se ancla en las dos fechas a la vez (§3.5 C): quien mire sólo `deathDate` o sólo
-      // `autopsyDate` tiene que ver el error igual.
+      // Anchored on both dates at once (§3.5 C): whoever looks at only `deathDate` or only
+      // `autopsyDate` still has to see the error.
       ctx.addIssue({ code: 'custom', message: 'autopsyDateBeforeDeath', path: ['deathDate'] });
       ctx.addIssue({ code: 'custom', message: 'autopsyDateBeforeDeath', path: ['autopsyDate'] });
     }
@@ -191,16 +191,16 @@ function _assertInvestigationAutopsySchemaMatchesContract(
 void _assertInvestigationAutopsySchemaMatchesContract;
 
 // ---------------------------------------------------------------------------------------------
-// D — Miembro del equipo (SPEC FE13a §3.5 D). Diálogo de alta y edición, un solo schema para
-// las dos operaciones — el `004` consume el mismo `Partial<CreateInvestigationTeamMemberInput>`.
+// D — Team member (SPEC FE13a §3.5 D). Create/edit dialog, a single schema for both
+// operations — `004` consumes the same `Partial<CreateInvestigationTeamMemberInput>`.
 // ---------------------------------------------------------------------------------------------
 
 export type TeamMemberFormValues = Omit<CreateInvestigationTeamMemberInput, 'investigationId'>;
 
 export const teamMemberSaveSchema = z.object({
   fullName: z.string().trim().min(1).max(250),
-  // No se normaliza en el cliente (§3.5 D): `MINSAL` no debe volver `Minsal`, y el backend es
-  // quien decide si `fullName` sí se pasa a Title Case.
+  // Not normalized on the client (§3.5 D): `MINSAL` shouldn't come back as `Minsal`, and the
+  // backend is the one that decides whether `fullName` is passed through Title Case.
   institutionName: z.preprocess(emptyToUndefined, z.string().trim().max(500).nullable().optional()),
   email: z.preprocess(emptyToUndefined, z.string().trim().email().nullable().optional()),
   phone: z.preprocess(emptyToUndefined, z.string().trim().max(50).nullable().optional()),
@@ -214,8 +214,8 @@ function _assertTeamMemberSchemaMatchesContract(
 }
 void _assertTeamMemberSchemaMatchesContract;
 
-// SPEC FE13a §3.5 E — el duplicado se detecta sobre `fullName` normalizado, en las dos
-// operaciones de escritura (`API-ROUTES.md`: `001` alta, `004` corrección).
+// SPEC FE13a §3.5 E — the duplicate is detected over normalized `fullName`, on both write
+// operations (`API-ROUTES.md`: `001` create, `004` update).
 export const teamMemberErrorFieldMap: Partial<Record<string, keyof TeamMemberFormValues>> = {
   INVTEAM_001_ALREADY_EXISTS: 'fullName',
   INVTEAM_004_ALREADY_EXISTS: 'fullName',

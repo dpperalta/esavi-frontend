@@ -66,8 +66,8 @@ function mockList(rows: ReturnType<typeof memberRow>[]) {
   );
 }
 
-// Lista con estado propio: el alta invalida `['investigationTeamMember']` y provoca un refetch
-// de verdad — un handler fijo devolvería siempre la misma foto y no probaría nada.
+// List with its own state: creation invalidates `['investigationTeamMember']` and triggers a
+// real refetch — a fixed handler would always return the same snapshot and prove nothing.
 function mockStatefulList(initialRows: ReturnType<typeof memberRow>[]) {
   const rows = [...initialRows];
   server.use(
@@ -104,8 +104,8 @@ describe('TeamMemberList — sección A2 del paso 5 (SPEC FE13a §4 paso 10)', (
       http.post('http://localhost:4500/api/investigation-team-members', async ({ request }) => {
         const body = (await request.json()) as Record<string, unknown>;
         expect(body).toMatchObject({ fullName: 'ANA PÉREZ', investigationId: INVESTIGATION_1 });
-        // El backend normaliza a Title Case (SPEC FE13a §3.5 D) — la pantalla debe mostrar lo
-        // devuelto, nunca lo escrito.
+        // The backend normalizes to Title Case (SPEC FE13a §3.5 D) — the screen must show
+        // what's returned, never what was typed.
         const created = memberRow({ fullName: 'Ana Pérez' });
         rows.push(created);
         return HttpResponse.json({ ok: true, message: 'ok', data: created }, { status: 201 });
@@ -118,8 +118,8 @@ describe('TeamMemberList — sección A2 del paso 5 (SPEC FE13a §4 paso 10)', (
     await user.type(await screen.findByLabelText('Nombres y apellidos'), 'ANA PÉREZ');
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
-    // Tras el alta, la lista se releyó (invalidación implícita en `createResource`) y muestra el
-    // nombre devuelto, en Title Case — no "ANA PÉREZ".
+    // After creation, the list was re-read (implicit invalidation in `createResource`) and shows
+    // the returned name, in Title Case — not "ANA PÉREZ".
     await waitFor(() => expect(toastSuccess).toHaveBeenCalled());
     expect(await screen.findAllByText('Ana Pérez')).not.toHaveLength(0);
     expect(screen.queryByText('ANA PÉREZ')).not.toBeInTheDocument();
@@ -144,7 +144,7 @@ describe('TeamMemberList — sección A2 del paso 5 (SPEC FE13a §4 paso 10)', (
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
     expect(await screen.findByText('Ya hay un miembro con ese nombre.')).toBeInTheDocument();
-    // El diálogo se queda abierto — el campo sigue en pantalla, no vuelve a la lista.
+    // The dialog stays open — the field remains on screen, it doesn't go back to the list.
     expect(screen.getByLabelText('Nombres y apellidos')).toBeInTheDocument();
     expect(toastError).not.toHaveBeenCalled();
   });

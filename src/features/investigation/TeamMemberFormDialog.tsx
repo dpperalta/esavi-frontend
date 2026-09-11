@@ -20,7 +20,7 @@ export interface TeamMemberFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   investigationId: string;
-  // `null` significa «crear» — mismo precedente que `PregnancyComplicationFormDialog`.
+  // `null` means "create" — same precedent as `PregnancyComplicationFormDialog`.
   memberId: string | null;
 }
 
@@ -118,10 +118,10 @@ function TeamMemberFormFields({ form }: TeamMemberFormFieldsProps) {
   );
 }
 
-// El diálogo de alta y edición de la sección A2 (SPEC FE13a §3.5 D). Sin variante para el
-// duplicado: `fullName` normalizado repetido entre los miembros activos es un `409` que el
-// backend decide, y el diálogo se queda abierto con el mensaje del servidor anclado en ese campo
-// — nunca "parecido", porque no es lo que promete la guarda (§3.5 D).
+// Create/edit dialog for section A2 (SPEC FE13a §3.5 D). No variant for the duplicate case:
+// a normalized `fullName` repeated among active members is a `409` the backend decides, and the
+// dialog stays open with the server's message anchored on that field — never "similar", because
+// that's not what the guard promises (§3.5 D).
 export function TeamMemberFormDialog({
   open,
   onOpenChange,
@@ -135,7 +135,7 @@ export function TeamMemberFormDialog({
   const update = investigationTeamMemberResource.useUpdate();
   const mutation = isEditing ? update : create;
 
-  // CONVENTIONS.md §10.7 — el llamador nunca desmonta este diálogo, sólo alterna `open`.
+  // CONVENTIONS.md §10.7 — the caller never unmounts this dialog, only toggles `open`.
   function handleOpenChange(nextOpen: boolean) {
     if (!nextOpen) {
       create.reset();

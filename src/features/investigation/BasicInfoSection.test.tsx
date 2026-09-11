@@ -10,9 +10,9 @@ import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { BasicInfoSection } from './BasicInfoSection';
 
-// Leaflet manipula el DOM real con medidas de layout que jsdom no calcula — mismo doble mínimo
-// que `MapPointPicker.test.tsx` (paso 3). Aquí sólo hace falta el campo numérico de latitud, que
-// no depende del mapa en sí.
+// Leaflet manipulates the real DOM with layout measurements jsdom doesn't compute — same minimal
+// double as `MapPointPicker.test.tsx` (step 3). Only the numeric latitude field is needed here,
+// which doesn't depend on the map itself.
 vi.mock('leaflet', () => {
   class FakeHandler {
     enable() {}
@@ -83,9 +83,9 @@ beforeEach(() => {
 
 function mockEmptyCatalogAndSearch() {
   server.use(
-    // El catálogo `investigationStatus` real, no vacío (SPEC FE13a §6): la compuerta del bloque
-    // de muerte se deriva de `catalogItem.value`, así que el paso 9 necesita un ítem `DEATH` de
-    // verdad detrás de `<CatalogSelect>`, no la lista vacía que bastaba antes del paso 9.
+    // The real, non-empty `investigationStatus` catalog (SPEC FE13a §6): the death block's gate
+    // is derived from `catalogItem.value`, so step 9 needs a real `DEATH` item behind
+    // `<CatalogSelect>`, not the empty list that sufficed before step 9.
     http.get('http://localhost:4500/api/catalog-types', () =>
       HttpResponse.json({
         ok: true,
@@ -114,8 +114,9 @@ function mockEmptyCatalogAndSearch() {
     http.get('http://localhost:4500/api/health-facilities/search', () =>
       HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
     ),
-    // Subconsultas de `<HealthFacilitySelect scoped={false}>` y `<GeoLocationPicker>` que esta
-    // sección no ejercita — se mockean vacías para no ensuciar la salida con "unhandled request".
+    // Sub-queries from `<HealthFacilitySelect scoped={false}>` and `<GeoLocationPicker>` that
+    // this section doesn't exercise — mocked empty so as not to pollute the output with
+    // "unhandled request".
     http.get('http://localhost:4500/api/users/me', () =>
       HttpResponse.json({
         ok: true,
@@ -135,11 +136,11 @@ function mockEmptyCatalogAndSearch() {
   );
 }
 
-// Los cuatro ids resueltos tienen que parecer UUID de verdad: `investigationSaveSchema` valida
-// `z.string().uuid()` y un id como `'geo-1'` fallaría la validación en el cliente antes de llegar
-// a la red — no es lo que este test quiere comprobar. `STATUS_OTHER` es deliberadamente distinto
-// de `STATUS_DEATH` (usado por los tests del paso 9): estos tres tests sólo comprueban que se
-// manda el id y no el objeto resuelto, y no deben abrir el bloque de muerte.
+// The four resolved ids have to look like real UUIDs: `investigationSaveSchema` validates
+// `z.string().uuid()` and an id like `'geo-1'` would fail client-side validation before reaching
+// the network — not what this test wants to check. `STATUS_OTHER` is deliberately distinct from
+// `STATUS_DEATH` (used by step 9's tests): these three tests only check that the id is sent and
+// not the resolved object, and must not open the death block.
 const STATUS_OTHER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const SITE_HOME = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const HFAC_1 = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -155,8 +156,8 @@ const investigationWithResolvedObjects = {
   vaccinationGeoLocation: { geoLocationId: GEO_1, name: 'Quito', level: 2 },
   hospitalizationDate: '2026-09-02',
   investigationStartDate: '2026-09-03',
-  // `numeric(10,7)` llega como cadena, no como número (SPEC FE13a §3.3) — el mapeo del formulario
-  // hace la conversión, en un solo sitio.
+  // `numeric(10,7)` arrives as a string, not a number (SPEC FE13a §3.3) — the form's mapping
+  // does the conversion, in a single spot.
   vaccinationLatitude: '-0.1807000',
   vaccinationLongitude: '-78.4678000',
   notes: 'Notas previas',
@@ -227,7 +228,7 @@ describe('BasicInfoSection — nunca reenvía objetos resueltos (SPEC FE13a §4 
       vaccinationHealthFacilityId: HFAC_1,
       vaccinationGeoLocationId: GEO_1,
     });
-    // Ninguna clave del cuerpo es un objeto — nunca `status: {...}` ni ningún otro resuelto.
+    // No body key is an object — never `status: {...}` nor any other resolved value.
     for (const value of Object.values(receivedBody!)) {
       expect(typeof value === 'object' && value !== null).toBe(false);
     }
@@ -244,8 +245,8 @@ describe('BasicInfoSection — nunca reenvía objetos resueltos (SPEC FE13a §4 
     const user = setupUser();
     renderBasicInfoSection({ investigation: investigationWithResolvedObjects });
 
-    // `<MapPointPicker>` es quien redondea (SPEC FE13a §3.7) — se escribe un octavo decimal en el
-    // campo numérico y se comprueba que lo que sale en el `PUT` ya viene recortado a siete.
+    // `<MapPointPicker>` is the one that rounds (SPEC FE13a §3.7) — an eighth decimal is typed
+    // into the numeric field and the `PUT` is checked to already come trimmed to seven.
     fireEvent.change(screen.getByLabelText('Latitud'), { target: { value: '-0.180712345' } });
     await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
 
@@ -349,8 +350,8 @@ describe('BasicInfoSection — el bloque de muerte y autopsia (SPEC FE13a §4 pa
     await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
 
     await waitFor(() => expect(autopsyBody).not.toBeNull());
-    // No borra la fila (§3.5 C, criterio de aceptación): un `PUT`, nunca un `DELETE` — que ni
-    // siquiera está mockeado, así que MSW lo habría hecho fallar por "unhandled request".
+    // Doesn't delete the row (§3.5 C, acceptance criterion): a `PUT`, never a `DELETE` — which
+    // isn't even mocked, so MSW would have failed it as "unhandled request".
     expect(investigationBody).toMatchObject({ statusItemId: STATUS_RECOVERED });
     expect(autopsyBody).toMatchObject({
       isDeath: true,

@@ -7,8 +7,7 @@ import { SatelliteList, type SatelliteListColumn } from '@/shared/components/Sat
 
 export interface TeamMemberListProps {
   investigationId: string;
-  // Expediente cerrado (SPEC FE08, §3.6 de los demás satélites del paso 5): sin «Añadir» y sin
-  // acción de editar.
+  // Closed case (SPEC FE08, §3.6 of step 5's other satellites): no "Añadir" and no edit action.
   disabled?: boolean;
 }
 
@@ -16,12 +15,12 @@ function teamMemberLabel(row: InvestigationTeamMemberDetail): string {
   return row.fullName;
 }
 
-// Sección A2 del paso 5 (SPEC FE13a §3.5 D, §2). Sobre `<SatelliteList>`, sin `onDelete`: la
-// operación de baja de este listado exige ADMIN mientras las catorce entidades del paso 5
-// escriben como USER — el botón no se pinta hasta que ese requisito de rol baje (misma deuda de
-// `CASE-PROCESS.md` §10 que bloqueó el borrado en FE12b y FE12c). `phone` no lleva `card`: sale
-// en la tabla de escritorio pero no en la tarjeta móvil, que muestra sólo nombre, institución y
-// correo (§4 paso 10, criterio de aceptación).
+// Section A2 of step 5 (SPEC FE13a §3.5 D, §2). Built on `<SatelliteList>`, without `onDelete`:
+// this listing's delete operation requires ADMIN while step 5's fourteen entities write as USER
+// — the button doesn't render until that role requirement comes down (same debt from
+// `CASE-PROCESS.md` §10 that blocked delete in FE12b and FE12c). `phone` carries no `card`: it
+// shows in the desktop table but not the mobile card, which shows only name, institution and
+// email (§4 step 10, acceptance criterion).
 export function TeamMemberList({ investigationId, disabled }: TeamMemberListProps) {
   const members = investigationTeamMemberResource.useListByParent!(investigationId, {
     pageSize: 100,

@@ -21,9 +21,9 @@ vi.mock('sonner', () => ({
   },
 }));
 
-// Leaflet manipula el DOM real con medidas de layout que jsdom no calcula — mismo doble mínimo
-// que `MapPointPicker.test.tsx` y `BasicInfoSection.test.tsx`: aquí `<BasicInfoSection>` se monta
-// de verdad en cuanto la sección 2 es visible.
+// Leaflet manipulates the real DOM with layout measurements jsdom doesn't compute — same minimal
+// double as `MapPointPicker.test.tsx` and `BasicInfoSection.test.tsx`: here `<BasicInfoSection>`
+// really mounts as soon as section 2 is visible.
 vi.mock('leaflet', () => {
   class FakeHandler {
     enable() {}
@@ -92,10 +92,10 @@ beforeEach(() => {
   mockSectionDependencies();
 });
 
-// Todo lo que las tres secciones tocan en cuanto se montan de verdad, independientemente de lo
-// que cada test quiera comprobar sobre la cabecera — mismo criterio que `mockEmptyCatalogAndSearch`
-// de `BasicInfoSection.test.tsx`: vacío por defecto, para no ensuciar la salida con "unhandled
-// request" cuando ninguna de estas rutas es lo que el test examina.
+// Everything the three sections touch once they really mount, regardless of what each test
+// wants to check about the header — same criterion as `mockEmptyCatalogAndSearch` in
+// `BasicInfoSection.test.tsx`: empty by default, so as not to pollute the output with "unhandled
+// request" when none of these routes are what the test examines.
 function mockSectionDependencies() {
   server.use(
     http.get(`http://localhost:4500/api/investigation-sources/case/${CASE_1}`, () =>
@@ -218,10 +218,10 @@ function investigationDetail(overrides: Partial<Record<string, unknown>> = {}) {
   };
 }
 
-// El workflow como lo ve la propia invalidación que dispara el `POST` de la cabecera al tener
-// éxito: `investigation.exists` pasa a `true` en cuanto `postCount` sube, sin esperar un segundo
-// mock por test — mismo mecanismo que el primer test de "vacío pero vivo", extraído para
-// reutilizarlo en el revelado progresivo.
+// The workflow as seen by the header `POST`'s own invalidation on success: `investigation.exists`
+// flips to `true` as soon as `postCount` rises, without waiting for a second mock per test —
+// same mechanism as the first "empty but alive" test, extracted for reuse in the progressive
+// reveal.
 function mockWorkflowDynamic(getInvestigationExists: () => boolean) {
   server.use(
     http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
@@ -328,8 +328,8 @@ describe('InvestigationStep — vacío pero vivo (SPEC FE13a §4 paso 6)', () =>
     await waitFor(() => expect(postCount).toBe(1));
     expect(receivedBody).toEqual({ caseId: CASE_1 });
 
-    // Se mantiene en 1 aunque el workflow se refresque y confirme `exists:true` (la invalidación
-    // que dispara el propio `POST` al tener éxito).
+    // Stays at 1 even if the workflow refreshes and confirms `exists:true` (the invalidation
+    // the `POST` itself triggers on success).
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(postCount).toBe(1);
   });
@@ -418,7 +418,7 @@ describe('InvestigationStep — revelado progresivo y borrador (SPEC FE13a §4 p
     expect(
       await screen.findByRole('button', { name: 'Guardar y continuar' }),
     ).toBeInTheDocument();
-    // Sólo un botón — nada de la sección 2 ni de la 3 todavía.
+    // Only one button — nothing from section 2 or 3 yet.
     expect(screen.getAllByRole('button', { name: 'Guardar y continuar' })).toHaveLength(1);
     expect(screen.queryByText('Información básica')).not.toBeInTheDocument();
     expect(screen.queryByText('Datos del equipo de investigación')).not.toBeInTheDocument();
@@ -433,15 +433,15 @@ describe('InvestigationStep — revelado progresivo y borrador (SPEC FE13a §4 p
     expect(await screen.findByText('Fuentes de información')).toBeInTheDocument();
     expect(await screen.findByText('Información básica')).toBeInTheDocument();
     expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
-    // Nada intermedio: al reentrar, `CaseWizardActionBar` es quien manda, no un botón de sección.
+    // Nothing intermediate: on re-entry, `CaseWizardActionBar` is in charge, not a section button.
     expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
   });
 
   it('un borrador más viejo que el updatedAt de la cabecera se descarta con aviso', async () => {
     mockWorkflow(true);
     mockInvestigationDetail({ updatedAt: '2026-02-01T00:00:00.000Z' });
-    // `baseUpdatedAt` del borrador no coincide con el `updatedAt` real de la fila — la regla de
-    // conflicto de `resolveDraftConflict` lo descarta (SPEC FE12a §3.4).
+    // The draft's `baseUpdatedAt` doesn't match the row's real `updatedAt` — `resolveDraftConflict`'s
+    // conflict rule discards it (SPEC FE12a §3.4).
     useDraftsStore.getState().set(CASE_1, 'investigation', { source: { other: true } }, '2026-01-01T00:00:00.000Z');
 
     renderInvestigationStep();

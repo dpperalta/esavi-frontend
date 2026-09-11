@@ -150,8 +150,8 @@ describe('investigationAutopsySaveSchema — C', () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       const paths = result.error.issues.map((issue) => issue.path.join('.'));
-      // Regla 2 (autopsyDate presente sin isAutopsyPerformed:true) y regla 4 (autopsyDate antes
-      // que deathDate) disparan a la vez sobre el mismo caso — el usuario ve las dos, no una.
+      // Rule 2 (autopsyDate present without isAutopsyPerformed:true) and rule 4 (autopsyDate
+      // before deathDate) fire at once over the same case — the user sees both, not one.
       expect(paths).toContain('autopsyDate');
       expect(paths).toContain('deathDate');
     }
