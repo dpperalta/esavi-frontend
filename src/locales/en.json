@@ -1131,6 +1131,11 @@
       "confirm": "Deactivate «{{name}}»? This action can't be undone from here."
     }
   },
+  "investigation": {
+    "error": {
+      "createFailed": "Could not start the investigation."
+    }
+  },
   "whodrugTreePicker": {
     "level": {
       "abbreviation": "Abbreviation",

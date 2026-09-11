@@ -1131,6 +1131,11 @@
       "confirm": "¿Dar de baja «{{name}}»? Esta acción no se puede deshacer desde aquí."
     }
   },
+  "investigation": {
+    "error": {
+      "createFailed": "No se pudo iniciar la investigación."
+    }
+  },
   "whodrugTreePicker": {
     "level": {
       "abbreviation": "Abreviatura",

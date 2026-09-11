@@ -13,6 +13,7 @@ import { CaseWizardProvider } from './CaseWizardContext';
 import { CaseWizardHeader } from './CaseWizardHeader';
 import { CaseWizardStepper } from './CaseWizardStepper';
 import { ClassificationStep } from './ClassificationStep';
+import { InvestigationStep } from './InvestigationStep';
 import { NotificationStep } from './NotificationStep';
 import {
   CaseWorkflowErrorScreen,
@@ -133,10 +134,12 @@ export function CaseWizardPage() {
           {step === 'case-opening' && <CaseOpeningStep />}
           {step === 'classification' && <ClassificationStep caseId={id} />}
           {step === 'notification' && <NotificationStep caseId={id} />}
+          {step === 'investigation' && <InvestigationStep caseId={id} />}
           {step !== 'patient' &&
             step !== 'case-opening' &&
             step !== 'classification' &&
-            step !== 'notification' && (
+            step !== 'notification' &&
+            step !== 'investigation' && (
               <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
                 {step}
               </div>
