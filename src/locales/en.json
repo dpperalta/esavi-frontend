@@ -69,6 +69,11 @@
     "numberField": {
       "invalid": "The number is not valid."
     },
+    "mapPointPicker": {
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "clearPoint": "Clear point"
+    },
     "satelliteList": {
       "add": "Add",
       "edit": "Edit {{name}}",
@@ -1124,6 +1129,74 @@
     },
     "delete": {
       "confirm": "Deactivate «{{name}}»? This action can't be undone from here."
+    }
+  },
+  "investigation": {
+    "error": {
+      "createFailed": "Could not start the investigation.",
+      "defaultStatusMissing": "The investigation status catalog has no default item configured. Contact the system administrator."
+    },
+    "fields": {
+      "notes": "Notes"
+    },
+    "basicInfo": {
+      "title": "Basic information",
+      "statusItemId": "Status of the person at the time of the investigation",
+      "vaccinationSiteItemId": "Vaccination site",
+      "vaccinationHealthFacilityId": "Vaccination facility",
+      "vaccinationGeoLocationId": "Subnational geographic level",
+      "mapLabel": "Full address of the vaccination site",
+      "hospitalizationDate": "Hospitalization date",
+      "investigationStartDate": "Investigation start date"
+    },
+    "source": {
+      "title": "Information sources",
+      "intro": "Indicate the information sources consulted to gather information for the following investigation (check all that apply).",
+      "legend": "Information sources consulted",
+      "history": "Medical record",
+      "interviewVaccinatedPerson": "Interview with the vaccinated person",
+      "interviewHealthWorker": "Interview with the health worker",
+      "vaccinationRecord": "Vaccination records",
+      "autopsyRecord": "Autopsy report",
+      "verbalAutopsyRecord": "Verbal autopsy report",
+      "investigationReport": "Community investigation report",
+      "other": "Other",
+      "otherDescription": "Please specify",
+      "otherDescriptionRequired": "Specify the other source before saving."
+    },
+    "autopsy": {
+      "sectionTitle": "Death and autopsy",
+      "deathDate": "If the person died, enter the date of death",
+      "deathTime": "Time of death",
+      "isAutopsyPerformed": "An autopsy was performed",
+      "autopsyDate": "Autopsy date",
+      "autopsyComments": "Record the autopsy findings",
+      "isAutopsyScheduled": "An autopsy date has been scheduled",
+      "scheduledAutopsyDate": "Scheduled autopsy date",
+      "flagsExclusive": "“An autopsy was performed” and “autopsy scheduled” cannot both be active.",
+      "autopsyDateNotAllowed": "The autopsy date only applies if the autopsy was performed.",
+      "scheduledAutopsyDateNotAllowed": "The scheduled autopsy date only applies if an autopsy is scheduled.",
+      "autopsyDateBeforeDeath": "The autopsy date cannot be earlier than the date of death.",
+      "deathWarning": "This case's notification does not record a death outcome, or its date of death does not match this investigation's.",
+      "deathWarningLink": "Review step 4",
+      "dismissWarning": "Dismiss warning"
+    },
+    "team": {
+      "sectionTitle": "Investigation team information",
+      "field": {
+        "fullName": "Full name",
+        "institutionName": "Institution and role",
+        "email": "Email",
+        "phone": "Phone"
+      },
+      "form": {
+        "createTitle": "Add team member",
+        "editTitle": "Edit team member"
+      }
+    },
+    "draft": {
+      "restored": "Recovered unsaved changes from an earlier session.",
+      "discarded": "Discarded unsaved changes: the case was edited somewhere else."
     }
   },
   "whodrugTreePicker": {

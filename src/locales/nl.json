@@ -69,6 +69,11 @@
     "numberField": {
       "invalid": "Het getal is niet geldig."
     },
+    "mapPointPicker": {
+      "latitude": "Breedtegraad",
+      "longitude": "Lengtegraad",
+      "clearPoint": "Punt wissen"
+    },
     "satelliteList": {
       "add": "Toevoegen",
       "edit": "{{name}} bewerken",
@@ -1124,6 +1129,74 @@
     },
     "delete": {
       "confirm": "«{{name}}» deactiveren? Deze actie kan hier niet ongedaan worden gemaakt."
+    }
+  },
+  "investigation": {
+    "error": {
+      "createFailed": "Het onderzoek kon niet gestart worden.",
+      "defaultStatusMissing": "De catalogus van onderzoeksstatussen heeft geen standaarditem geconfigureerd. Neem contact op met de systeembeheerder."
+    },
+    "fields": {
+      "notes": "Opmerkingen"
+    },
+    "basicInfo": {
+      "title": "Basisinformatie",
+      "statusItemId": "Status van de persoon op het moment van het onderzoek",
+      "vaccinationSiteItemId": "Vaccinatieplaats",
+      "vaccinationHealthFacilityId": "Vaccinatie-instelling",
+      "vaccinationGeoLocationId": "Subnationaal geografisch niveau",
+      "mapLabel": "Volledig adres van de vaccinatieplaats",
+      "hospitalizationDate": "Datum van ziekenhuisopname",
+      "investigationStartDate": "Startdatum van het onderzoek"
+    },
+    "source": {
+      "title": "Informatiebronnen",
+      "intro": "Geef de informatiebronnen aan die zijn geraadpleegd om informatie te verzamelen voor het volgende onderzoek (vink alles aan wat van toepassing is).",
+      "legend": "Geraadpleegde informatiebronnen",
+      "history": "Medisch dossier",
+      "interviewVaccinatedPerson": "Interview met de gevaccineerde persoon",
+      "interviewHealthWorker": "Interview met de zorgverlener",
+      "vaccinationRecord": "Vaccinatieregisters",
+      "autopsyRecord": "Autopsierapport",
+      "verbalAutopsyRecord": "Verbaal autopsierapport",
+      "investigationReport": "Rapport van gemeenschapsonderzoek",
+      "other": "Andere",
+      "otherDescription": "Specificeer welke",
+      "otherDescriptionRequired": "Specificeer de andere bron voordat je opslaat."
+    },
+    "autopsy": {
+      "sectionTitle": "Overlijden en autopsie",
+      "deathDate": "Als de persoon is overleden, vul de datum van overlijden in",
+      "deathTime": "Tijdstip van overlijden",
+      "isAutopsyPerformed": "Er is een autopsie uitgevoerd",
+      "autopsyDate": "Datum van de autopsie",
+      "autopsyComments": "Noteer de resultaten van de autopsie",
+      "isAutopsyScheduled": "Er is een datum gepland voor de autopsie",
+      "scheduledAutopsyDate": "Geplande datum van de autopsie",
+      "flagsExclusive": "“Er is een autopsie uitgevoerd” en “autopsie gepland” kunnen niet allebei actief zijn.",
+      "autopsyDateNotAllowed": "De datum van de autopsie is alleen van toepassing als de autopsie is uitgevoerd.",
+      "scheduledAutopsyDateNotAllowed": "De geplande datum van de autopsie is alleen van toepassing als er een autopsie gepland is.",
+      "autopsyDateBeforeDeath": "De datum van de autopsie kan niet vóór de datum van overlijden liggen.",
+      "deathWarning": "De melding van deze zaak registreert geen overlijden als uitkomst, of de datum van overlijden komt niet overeen met die van dit onderzoek.",
+      "deathWarningLink": "Stap 4 bekijken",
+      "dismissWarning": "Melding negeren"
+    },
+    "team": {
+      "sectionTitle": "Gegevens van het onderzoeksteam",
+      "field": {
+        "fullName": "Volledige naam",
+        "institutionName": "Instelling en functie",
+        "email": "E-mailadres",
+        "phone": "Telefoon"
+      },
+      "form": {
+        "createTitle": "Teamlid toevoegen",
+        "editTitle": "Teamlid bewerken"
+      }
+    },
+    "draft": {
+      "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
+      "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
     }
   },
   "whodrugTreePicker": {

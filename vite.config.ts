@@ -37,6 +37,9 @@ export default defineConfig({
       // Matches .env.example / .env.development — the fallback useCountryIsoCode reads when
       // ESAVI_APP_COUNTRY_ISO_CODE hasn't been seeded yet (SPEC FE10 §3.2, §10.1).
       VITE_ESAVI_APP_COUNTRY_ISO_CODE: 'ECU',
+      // Matches .env.example / .env.development — read once by <MapPointPicker> (SPEC FE13a §3.7).
+      VITE_MAP_TILE_URL: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      VITE_MAP_DEFAULT_CENTER: '-0.1807,-78.4678',
     },
   },
 });

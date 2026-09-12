@@ -56,6 +56,13 @@ const SYNC_MAP = [
     source: 'notificationMedicalHistory/notificationMedicalHistory.types.ts',
     dest: 'notificationMedicalHistory.ts',
   },
+  { source: 'investigation/investigation.types.ts', dest: 'investigation.ts' },
+  { source: 'investigation/investigationSource.types.ts', dest: 'investigationSource.ts' },
+  {
+    source: 'investigation/investigationTeamMember.types.ts',
+    dest: 'investigationTeamMember.ts',
+  },
+  { source: 'investigation/investigationAutopsy.types.ts', dest: 'investigationAutopsy.ts' },
 ];
 
 // notification.types.ts and severeNotification.types.ts are the first mirrored files that import
