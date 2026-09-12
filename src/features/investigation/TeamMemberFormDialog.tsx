@@ -55,8 +55,11 @@ function TeamMemberFormFields({ form }: TeamMemberFormFieldsProps) {
             <FormLabel>{t('investigation.team.field.institutionName')}</FormLabel>
             <FormControl>
               <Input
+                name={field.name}
+                ref={field.ref}
                 value={field.value ?? ''}
                 onChange={(event) => field.onChange(event.target.value || null)}
+                onBlur={field.onBlur}
               />
             </FormControl>
             <FormMessage />
@@ -73,8 +76,11 @@ function TeamMemberFormFields({ form }: TeamMemberFormFieldsProps) {
             <FormControl>
               <Input
                 type="email"
+                name={field.name}
+                ref={field.ref}
                 value={field.value ?? ''}
                 onChange={(event) => field.onChange(event.target.value || null)}
+                onBlur={field.onBlur}
               />
             </FormControl>
             <FormMessage />
@@ -90,8 +96,11 @@ function TeamMemberFormFields({ form }: TeamMemberFormFieldsProps) {
             <FormLabel>{t('investigation.team.field.phone')}</FormLabel>
             <FormControl>
               <Input
+                name={field.name}
+                ref={field.ref}
                 value={field.value ?? ''}
                 onChange={(event) => field.onChange(event.target.value || null)}
+                onBlur={field.onBlur}
               />
             </FormControl>
             <FormMessage />
@@ -107,8 +116,11 @@ function TeamMemberFormFields({ form }: TeamMemberFormFieldsProps) {
             <FormLabel>{t('investigation.fields.notes')}</FormLabel>
             <FormControl>
               <Textarea
+                name={field.name}
+                ref={field.ref}
                 value={field.value ?? ''}
                 onChange={(event) => field.onChange(event.target.value || null)}
+                onBlur={field.onBlur}
               />
             </FormControl>
           </FormItem>

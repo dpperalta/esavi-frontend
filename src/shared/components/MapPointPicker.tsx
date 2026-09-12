@@ -242,7 +242,10 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
         ref={containerRef}
         role="application"
         aria-label={ariaLabel}
-        className={cn('aspect-[16/10] w-full rounded-md border', disabled && 'pointer-events-none')}
+        className={cn(
+          'isolate aspect-[16/10] w-full rounded-md border',
+          disabled && 'pointer-events-none',
+        )}
       />
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input

@@ -149,6 +149,20 @@ describe('TeamMemberList — sección A2 del paso 5 (SPEC FE13a §4 paso 10)', (
     expect(toastError).not.toHaveBeenCalled();
   });
 
+  it('un correo mal formado muestra el error al salir del campo, sin necesidad de enviar', async () => {
+    const user = setupUser();
+    mockList([]);
+
+    renderList();
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir' }));
+    await user.type(await screen.findByLabelText('Correo electrónico'), 'julio.bustos@');
+    await user.tab();
+
+    expect(await screen.findByText('Escribe un correo electrónico válido.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Correo electrónico')).toHaveAttribute('aria-invalid', 'true');
+  });
+
   it('la tarjeta móvil muestra nombre, institución y correo, y no el teléfono', async () => {
     mockList([memberRow()]);
     const { container } = renderList();
