@@ -1222,6 +1222,20 @@
         "editTitle": "Editar miembro del equipo"
       }
     },
+    "newbornCondition": {
+      "title": "Afecciones médicas del recién nacido",
+      "term": "Describa la afección médica del recién nacido",
+      "conditionCode": "Código",
+      "add": "Añadir afección",
+      "empty": "No se han registrado afecciones médicas del recién nacido.",
+      "missingHistory": "Falta la ficha de antecedentes.",
+      "createHistory": "Crear la ficha",
+      "meddraUnavailable": "El diccionario MedDRA no está disponible en este momento. Escribe el nombre directamente.",
+      "form": {
+        "createTitle": "Añadir afección médica del recién nacido",
+        "editTitle": "Editar afección médica del recién nacido"
+      }
+    },
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."

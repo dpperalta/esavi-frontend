@@ -29,6 +29,11 @@ export interface SatelliteListColumn<T> {
 
 export interface SatelliteListProps<T> {
   titleKey: string;
+  // Defaults to the generic «Añadir» (SPEC FE12b §2): a list whose title alone doesn't say what
+  // gets added — SPEC FE13b §3.8's «Añadir afección», next to a section that already says
+  // "Afecciones médicas del recién nacido" two levels up — overrides it instead of duplicating
+  // the whole component.
+  addLabel?: string;
   columns: SatelliteListColumn<T>[];
   rows: T[];
   idField: keyof T;
@@ -61,6 +66,7 @@ const SKELETON_ROWS = 3;
 // same instance backs all fourteen satellite lists of the wizard (SPEC FE12b §2, §4 paso 4).
 export function SatelliteList<T>({
   titleKey,
+  addLabel = 'common.satelliteList.add',
   columns,
   rows,
   idField,
@@ -84,7 +90,7 @@ export function SatelliteList<T>({
         {onAdd && (
           <Button type="button" onClick={onAdd} size="sm">
             <PlusIcon aria-hidden="true" />
-            {t('common.satelliteList.add')}
+            {t(addLabel)}
           </Button>
         )}
       </div>

@@ -151,6 +151,86 @@ describe('PregnancySection — la compuerta interior (SPEC FE13b §3.5 A)', () =
   });
 });
 
+describe('PregnancySection — B2 (SPEC FE13b §4 paso 7)', () => {
+  const PREGNANCY_OUTCOME_TYPE = 'pregnancy-outcome-type';
+  const OUTCOME_LIVE_WITH_CONDITION = 'outcome-live-with-condition';
+  const OUTCOME_OTHER = 'outcome-other';
+
+  function mockPregnancyOutcomeCatalog() {
+    server.use(
+      http.get('http://localhost:4500/api/catalog-types', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 1,
+            rows: [{ catalogTypeId: PREGNANCY_OUTCOME_TYPE, code: 'pregnancyOutcome', name: 'Desenlace' }],
+          },
+        }),
+      ),
+      http.get(`http://localhost:4500/api/catalog-items/type/${PREGNANCY_OUTCOME_TYPE}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 2,
+            rows: [
+              {
+                catalogItemId: OUTCOME_LIVE_WITH_CONDITION,
+                code: 'LIVE_WITH_CONDITION',
+                name: 'Nacido vivo con afección médica al nacer',
+                value: '2',
+              },
+              { catalogItemId: OUTCOME_OTHER, code: 'OTHER', name: 'Otro', value: '1' },
+            ],
+          },
+        }),
+      ),
+      http.get('http://localhost:4500/api/users/me', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { userId: 'user-1', roles: [{ roleId: 'r1', name: 'USER', code: 'USER', level: 25 }] },
+        }),
+      ),
+      http.get(
+        `http://localhost:4500/api/investigation-pregnancy-conditions/investigation/${INVESTIGATION_1}`,
+        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+  }
+
+  it('elegir «Nacido vivo con afección médica al nacer» revela B2; cualquier otro la oculta', async () => {
+    mockPregnancyOutcomeCatalog();
+    const user = setupUser();
+    renderPregnancySection({
+      medicalHistory: { ...emptyMedicalHistoryDetail(), isPregnancyConfirmed: 'YES' },
+    });
+
+    expect(screen.queryByRole('heading', { name: 'Afecciones médicas del recién nacido' })).not.toBeInTheDocument();
+
+    await user.click(
+      await screen.findByRole('combobox', { name: '¿Cuál fue el desenlace del embarazo?' }),
+    );
+    await user.click(
+      await screen.findByRole('option', { name: 'Nacido vivo con afección médica al nacer' }),
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Afecciones médicas del recién nacido' }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('combobox', { name: '¿Cuál fue el desenlace del embarazo?' }));
+    await user.click(await screen.findByRole('option', { name: 'Otro' }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: 'Afecciones médicas del recién nacido' }),
+      ).not.toBeInTheDocument(),
+    );
+  });
+});
+
 describe('PregnancySection — guardado (SPEC FE13b §4 paso 6)', () => {
   it('bloque cerrado (isPregnancyConfirmed: NO) con semanas cargadas manda los nueve null', async () => {
     let receivedBody: Record<string, unknown> | null = null;

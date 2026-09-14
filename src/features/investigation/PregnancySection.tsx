@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import type { InvestigationMedicalHistoryDetail } from '@/contracts/declared/investigationMedicalHistory';
 import { investigationMedicalHistoryResource } from '@/features/investigation/api';
+import { NewbornConditionList } from '@/features/investigation/NewbornConditionList';
 import {
   isPregnancyBlockOpen,
   buildMedicalHistorySavePayload,
@@ -20,6 +21,7 @@ import { CatalogSelect } from '@/shared/components/CatalogSelect';
 import { NumberField } from '@/shared/components/NumberField';
 import { Button } from '@/shared/components/ui/button';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 
 // Independent `useForm` from `MedicalHistorySection`'s, hydrated from the same row (SPEC FE13b
 // §4 paso 6, decided while implementing): by the time B1 reveals, B's own save already went
@@ -96,6 +98,17 @@ export function PregnancySection({
   const isPregnancyConfirmed = form.watch('isPregnancyConfirmed');
   const blockOpen = isPregnancyBlockOpen(isPregnancyConfirmed);
   const hasPregnancyRiskFactor = form.watch('hasPregnancyRiskFactor');
+
+  // B2's gate (SPEC FE13b §3.5 C, §4 paso 7): resolved against the loaded catalog's `value`,
+  // never `code` (CASE-PROCESS.md §7.2) — the response object of `pregnancyOutcomeItemId` itself
+  // doesn't carry `value` (§3.3), which is exactly why this reads the same `<CatalogSelect>`
+  // catalog instead of the row.
+  const pregnancyOutcomeItemId = form.watch('pregnancyOutcomeItemId');
+  const pregnancyOutcomeCatalog = useCatalogItemsByTypeCode('pregnancyOutcome');
+  const showsNewbornConditions =
+    blockOpen &&
+    pregnancyOutcomeCatalog.rows.find((row) => row.catalogItemId === pregnancyOutcomeItemId)
+      ?.value === '2';
 
   async function handleValidSubmit(values: MedicalHistoryFormValues) {
     const payload = buildMedicalHistorySavePayload(values);
@@ -388,6 +401,13 @@ export function PregnancySection({
           )}
         </div>
       </fieldset>
+
+      {/* B2 (SPEC FE13b §4 paso 7) — appears from a change in `pregnancyOutcomeItemId` above. */}
+      <div aria-live="polite">
+        {showsNewbornConditions && (
+          <NewbornConditionList investigationId={investigationId} disabled={disabled} />
+        )}
+      </div>
 
       {showSaveButton && (
         <Button

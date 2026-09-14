@@ -1222,6 +1222,20 @@
         "editTitle": "Teamlid bewerken"
       }
     },
+    "newbornCondition": {
+      "title": "Medische aandoeningen van de pasgeborene",
+      "term": "Beschrijf de medische aandoening van de pasgeborene",
+      "conditionCode": "Code",
+      "add": "Aandoening toevoegen",
+      "empty": "Er zijn geen medische aandoeningen van de pasgeborene geregistreerd.",
+      "missingHistory": "Het dossier met de voorgeschiedenis ontbreekt.",
+      "createHistory": "Dossier aanmaken",
+      "meddraUnavailable": "Het MedDRA-woordenboek is nu niet beschikbaar. Typ de naam rechtstreeks in.",
+      "form": {
+        "createTitle": "Medische aandoening van de pasgeborene toevoegen",
+        "editTitle": "Medische aandoening van de pasgeborene bewerken"
+      }
+    },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."

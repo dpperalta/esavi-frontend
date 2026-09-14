@@ -1222,6 +1222,20 @@
         "editTitle": "Edit team member"
       }
     },
+    "newbornCondition": {
+      "title": "Newborn's medical conditions",
+      "term": "Describe the newborn's medical condition",
+      "conditionCode": "Code",
+      "add": "Add condition",
+      "empty": "No medical conditions of the newborn have been recorded.",
+      "missingHistory": "The medical history record is missing.",
+      "createHistory": "Create the record",
+      "meddraUnavailable": "The MedDRA dictionary isn't available right now. Type the name directly.",
+      "form": {
+        "createTitle": "Add newborn medical condition",
+        "editTitle": "Edit newborn medical condition"
+      }
+    },
     "draft": {
       "restored": "Recovered unsaved changes from an earlier session.",
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."
