@@ -3,10 +3,14 @@ import type { CreateInvestigationInput } from '@/contracts/investigation';
 import type { CreateInvestigationSourceInput } from '@/contracts/investigationSource';
 import type { CreateInvestigationAutopsyInput } from '@/contracts/investigationAutopsy';
 import type { CreateInvestigationTeamMemberInput } from '@/contracts/investigationTeamMember';
+import type { CreateInvestigationMedicalHistoryInput } from '@/contracts/investigationMedicalHistory';
+import type { CreateInvestigationPregnancyConditionInput } from '@/contracts/investigationPregnancyCondition';
 import type { InvestigationDetail } from '@/contracts/declared/investigation';
 import type { InvestigationSourceDetail } from '@/contracts/declared/investigationSource';
 import type { InvestigationAutopsyDetail } from '@/contracts/declared/investigationAutopsy';
 import type { InvestigationTeamMemberDetail } from '@/contracts/declared/investigationTeamMember';
+import type { InvestigationMedicalHistoryDetail } from '@/contracts/declared/investigationMedicalHistory';
+import type { InvestigationPregnancyConditionDetail } from '@/contracts/declared/investigationPregnancyCondition';
 import { client } from '@/shared/api/client';
 import { createResource } from '@/shared/api/createResource';
 import { EsaviApiError } from '@/shared/api/types';
@@ -159,3 +163,88 @@ export const investigationTeamMemberResource = createResource<
     segment: 'investigation/:parentId',
   },
 });
+
+// POST /api/investigation-medical-histories             ESAVI-INVMEDH-001  USER  create — carries `investigationId` in the body, no other field required (SPEC FE13b §2)
+// GET  /api/investigation-medical-histories/case/:id    ESAVI-INVMEDH-006  USER  by case, one object — hand-written below
+// PUT  /api/investigation-medical-histories/:id         ESAVI-INVMEDH-004  USER  update — `:id` IS the investigationId
+// Same 1:1 shape as investigationSource and investigationAutopsy above (SPEC FE13b §3.2).
+export const investigationMedicalHistoryResource = createResource<
+  InvestigationMedicalHistoryDetail,
+  CreateInvestigationMedicalHistoryInput,
+  Partial<CreateInvestigationMedicalHistoryInput>
+>({
+  key: 'investigationMedicalHistory',
+  path: 'investigation-medical-histories',
+  idField: 'investigationId',
+  inactiveMode: 'serverDecides',
+  hasActivate: false,
+});
+
+export function investigationMedicalHistoryByCaseKey(caseId: string) {
+  return ['investigationMedicalHistory', 'byCase', caseId] as const;
+}
+
+// ESAVI-INVMEDH-006 — one object, not a list. Unlike its two 1:1 siblings above,
+// `INVMEDH_006_NOT_FOUND` is the normal state before section B's opening `POST` and the only code
+// swallowed into `null`: `INVMEDH_006_INVESTIGATION_NOT_FOUND` (the header itself is missing) is
+// left to propagate, because that is a different failure — the screen sends the user back to the
+// top of the step, where FE13a creates the header (SPEC FE13b §3.5).
+export function useInvestigationMedicalHistoryByCase(
+  caseId: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: investigationMedicalHistoryByCaseKey(caseId ?? ''),
+    queryFn: async () => {
+      try {
+        const response = await client.get<InvestigationMedicalHistoryDetail>(
+          `investigation-medical-histories/case/${caseId}`,
+        );
+        return response.data;
+      } catch (err) {
+        if (err instanceof EsaviApiError && err.code === 'INVMEDH_006_NOT_FOUND') {
+          return null;
+        }
+        throw err;
+      }
+    },
+    enabled: enabled && caseId !== undefined,
+  });
+}
+
+// GET  /api/investigation-pregnancy-conditions/investigation/:id  ESAVI-INVPREG-002A  USER  active conditions, by the medical history's own id — `useListByParent` below
+// POST /api/investigation-pregnancy-conditions                    ESAVI-INVPREG-001   USER  add a condition
+// PUT  /api/investigation-pregnancy-conditions/:id                ESAVI-INVPREG-004   USER  edit a condition
+// `investigationId` names the medical history's own PK, not the investigation (SPEC FE13b §1 B) —
+// the cache operation reads `byMedicalHistory` on purpose, even though the URL segment is
+// `investigation/:parentId`, so the trap stays visible in the code (SPEC FE13b §3.4, §6). Out of
+// scope (SPEC FE13b §2): `-005A`/`-005B` (ADMIN, blocked on CASE-PROCESS.md §10), `-005C`
+// (SUPERADMIN purge).
+export const investigationPregnancyConditionResource = createResource<
+  InvestigationPregnancyConditionDetail,
+  CreateInvestigationPregnancyConditionInput,
+  Partial<CreateInvestigationPregnancyConditionInput>
+>({
+  key: 'investigationPregnancyCondition',
+  path: 'investigation-pregnancy-conditions',
+  idField: 'pregnancyConditionId',
+  inactiveMode: 'serverDecides',
+  hasActivate: false,
+  parent: {
+    operation: 'byMedicalHistory',
+    segment: 'investigation/:parentId',
+  },
+});
+
+// Wraps `useListByParent` with the explicit `enabled` the B2 gate needs: the list must not run
+// before the medical history exists, and an empty `parentId` is what keeps the factory's own
+// `enabled: !!parentId` off in that case (SPEC FE13b §4 paso 2).
+export function useNewbornConditionsByMedicalHistory(
+  investigationId: string | undefined,
+  enabled: boolean,
+) {
+  return investigationPregnancyConditionResource.useListByParent!(
+    enabled ? (investigationId ?? '') : '',
+    { pageSize: 100 },
+  );
+}
