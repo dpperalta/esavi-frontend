@@ -457,14 +457,16 @@ describe('PatientFormDialog — el bloqueo de embarazo del paso 13, sexo y fecha
     await waitFor(() => expect(saveButton).toBeEnabled());
     await user.click(saveButton);
 
-    expect(await screen.findByText('Hay datos de embarazo cargados')).toBeInTheDocument();
+    expect(await screen.findByText('Hay datos de embarazo cargados en el expediente')).toBeInTheDocument();
     expect(await screen.findByText(/No se puede guardar este cambio de sexo/)).toBeInTheDocument();
     expect(patientPutCalls).toBe(0);
 
     await user.click(screen.getByRole('button', { name: 'Vaciar el bloque de embarazo' }));
 
     await waitFor(() => expect(getPregnancyPutBody()).not.toBeNull());
-    await waitFor(() => expect(screen.queryByText('Hay datos de embarazo cargados')).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByText('Hay datos de embarazo cargados en el expediente')).not.toBeInTheDocument(),
+    );
 
     await waitFor(() => expect(saveButton).toBeEnabled());
     await user.click(saveButton);

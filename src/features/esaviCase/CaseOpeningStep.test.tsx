@@ -709,7 +709,7 @@ describe('CaseOpeningStep — el bloqueo de embarazo del paso 13 (SPEC FE12d §4
     await waitFor(() => expect(saveButton).toBeEnabled());
     await user.click(saveButton);
 
-    expect(await screen.findByText('Hay datos de embarazo cargados')).toBeInTheDocument();
+    expect(await screen.findByText('Hay datos de embarazo cargados en el expediente')).toBeInTheDocument();
     expect(esaviCasePutCalls).toBe(0);
 
     await user.click(screen.getByRole('button', { name: 'Vaciar el bloque de embarazo' }));
@@ -726,7 +726,9 @@ describe('CaseOpeningStep — el bloqueo de embarazo del paso 13 (SPEC FE12d §4
     // Sin `<Toaster>` montado en este árbol de render, el aviso no deja rastro visible (mismo
     // motivo que documenta `PatientFormDialog.test.tsx`) — la prueba real de que se desbloqueó es
     // que el segundo «Guardar» sí llega al `PUT` del caso.
-    await waitFor(() => expect(screen.queryByText('Hay datos de embarazo cargados')).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByText('Hay datos de embarazo cargados en el expediente')).not.toBeInTheDocument(),
+    );
 
     await waitFor(() => expect(saveButton).toBeEnabled());
     await user.click(saveButton);

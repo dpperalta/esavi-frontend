@@ -864,10 +864,9 @@
         "probableDeliveryDateSuggested": "Voorgesteld op basis van de laatste menstruatie (+280 dagen). Je kunt dit aanpassen."
       },
       "gate": {
-        "blockedTitle": "Er zijn zwangerschapsgegevens geregistreerd",
         "blocked": {
-          "sex": "Deze wijziging van geslacht kan niet worden opgeslagen: de patiënt heeft zwangerschapsgegevens geregistreerd in stap 4. Leeg eerst het zwangerschapsblok.",
-          "age": "Deze wijziging kan niet worden opgeslagen: de patiënt zou buiten de leeftijdsrange voor zwangerschap vallen, en heeft zwangerschapsgegevens geregistreerd in stap 4. Leeg eerst het zwangerschapsblok.",
+          "sex": "Deze wijziging van geslacht kan niet worden opgeslagen: er zijn zwangerschapsgegevens geregistreerd in dit dossier. Leeg eerst het betreffende blok.",
+          "age": "Deze wijziging kan niet worden opgeslagen: de patiënt zou buiten de leeftijdsrange voor zwangerschap vallen, en er zijn zwangerschapsgegevens geregistreerd in dit dossier. Leeg eerst het betreffende blok.",
           "complications": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Verwijder ze één voor één voordat het blok geleegd kan worden.",
           "complicationsNeedsAdmin": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Alleen een beheerder kan ze verwijderen voordat het blok geleegd kan worden."
         },
@@ -1132,6 +1131,13 @@
     }
   },
   "investigation": {
+    "pregnancy": {
+      "blockGuard": {
+        "title": "Er zijn zwangerschapsgegevens geregistreerd voor dit dossier",
+        "investigationBlock": "Zwangerschapsblok van het onderzoek (stap 5)",
+        "clearInvestigation": "Leeg het zwangerschapsblok van het onderzoek"
+      }
+    },
     "error": {
       "createFailed": "Het onderzoek kon niet gestart worden.",
       "defaultStatusMissing": "De catalogus van onderzoeksstatussen heeft geen standaarditem geconfigureerd. Neem contact op met de systeembeheerder."

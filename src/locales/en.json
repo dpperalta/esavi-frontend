@@ -864,10 +864,9 @@
         "probableDeliveryDateSuggested": "Suggested from the last menstruation (+280 days). You can edit it."
       },
       "gate": {
-        "blockedTitle": "There is pregnancy data on file",
         "blocked": {
-          "sex": "This sex change cannot be saved: the patient has pregnancy data recorded in step 4. Clear the pregnancy block first.",
-          "age": "This change cannot be saved: it would leave the patient outside the pregnancy age range, and the patient has pregnancy data recorded in step 4. Clear the pregnancy block first.",
+          "sex": "This sex change cannot be saved: there is pregnancy data recorded on this case. Clear the corresponding block first.",
+          "age": "This change cannot be saved: it would leave the patient outside the pregnancy age range, and there is pregnancy data recorded on this case. Clear the corresponding block first.",
           "complications": "There are {{count}} active complication(s) recorded. Remove them one by one before the block can be cleared.",
           "complicationsNeedsAdmin": "There are {{count}} active complication(s) recorded. Only an administrator can remove them before the block can be cleared."
         },
@@ -1132,6 +1131,13 @@
     }
   },
   "investigation": {
+    "pregnancy": {
+      "blockGuard": {
+        "title": "There is pregnancy data on file for this case",
+        "investigationBlock": "Investigation pregnancy block (step 5)",
+        "clearInvestigation": "Clear the investigation's pregnancy block"
+      }
+    },
     "error": {
       "createFailed": "Could not start the investigation.",
       "defaultStatusMissing": "The investigation status catalog has no default item configured. Contact the system administrator."

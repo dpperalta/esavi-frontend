@@ -864,10 +864,9 @@
         "probableDeliveryDateSuggested": "Sugerida a partir de la última menstruación (+280 días). Puedes editarla."
       },
       "gate": {
-        "blockedTitle": "Hay datos de embarazo cargados",
         "blocked": {
-          "sex": "No se puede guardar este cambio de sexo: el paciente tiene datos de embarazo registrados en el paso 4. Vacía primero el bloque de embarazo.",
-          "age": "No se puede guardar este cambio: dejaría al paciente fuera del rango de edad del embarazo, y tiene datos de embarazo registrados en el paso 4. Vacía primero el bloque de embarazo.",
+          "sex": "No se puede guardar este cambio de sexo: hay datos de embarazo registrados en el expediente. Vacía primero el bloque correspondiente.",
+          "age": "No se puede guardar este cambio: dejaría al paciente fuera del rango de edad del embarazo, y hay datos de embarazo registrados en el expediente. Vacía primero el bloque correspondiente.",
           "complications": "Hay {{count}} complicación(es) activa(s) registradas. Retíralas una a una antes de poder vaciar el bloque.",
           "complicationsNeedsAdmin": "Hay {{count}} complicación(es) activa(s) registradas. Sólo un administrador puede retirarlas antes de poder vaciar el bloque."
         },
@@ -1132,6 +1131,13 @@
     }
   },
   "investigation": {
+    "pregnancy": {
+      "blockGuard": {
+        "title": "Hay datos de embarazo cargados en el expediente",
+        "investigationBlock": "Bloque de embarazo de la investigación (paso 5)",
+        "clearInvestigation": "Vaciar el bloque de embarazo de la investigación"
+      }
+    },
     "error": {
       "createFailed": "No se pudo iniciar la investigación.",
       "defaultStatusMissing": "El catálogo de estados de investigación no tiene un ítem por defecto configurado. Contacta al administrador del sistema."
