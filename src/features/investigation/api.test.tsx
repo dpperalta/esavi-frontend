@@ -8,12 +8,16 @@ import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import {
   investigationAutopsyResource,
+  investigationMedicalHistoryResource,
+  investigationPregnancyConditionResource,
   investigationResource,
   investigationSourceResource,
   investigationTeamMemberResource,
   useInvestigationAutopsyByCase,
   useInvestigationByCase,
+  useInvestigationMedicalHistoryByCase,
   useInvestigationSourceByCase,
+  useNewbornConditionsByMedicalHistory,
 } from './api';
 
 const server = setupServer();
@@ -303,5 +307,222 @@ describe('investigationTeamMemberResource.useListByParent — ESAVI-INVTEAM-002A
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(hitUrl).toContain('/investigation-team-members/investigation/inv-1');
     expect(result.current.data?.rows[0].fullName).toBe('Ana Pérez');
+  });
+});
+
+const investigationMedicalHistoryDetail = {
+  investigationId: 'inv-1',
+  investigation: investigationSourceDetail.investigation,
+  hasPriorHospitalizationHistory: null,
+  priorHospitalizationObservations: null,
+  hasFamilyHistory: null,
+  familyHistoryObservations: null,
+  isPregnancyConfirmed: null,
+  gestationalWeeks: null,
+  gestationMethodItemId: null,
+  deliveryItemId: null,
+  birthItemId: null,
+  pregnancyOutcomeItemId: null,
+  hasPregnancyRiskFactor: null,
+  riskFactorDescription: null,
+  birthWeightGrams: null,
+  wasBreastfed: null,
+  notes: null,
+  gestationMethod: null,
+  delivery: null,
+  birth: null,
+  pregnancyOutcome: null,
+  createdAt: '2026-09-01T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+};
+
+describe('investigationMedicalHistoryResource — 1:1 con PK = FK (ESAVI-INVMEDH-001/004)', () => {
+  it('el POST lleva investigationId en el cuerpo, a secas', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-medical-histories', async ({ request }) => {
+        receivedBody = await request.json();
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationMedicalHistoryDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationMedicalHistoryResource.useCreate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toEqual({ investigationId: 'inv-1' });
+  });
+
+  it('el PUT va contra /:investigationId, no contra un id propio', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.put('http://localhost:4500/api/investigation-medical-histories/inv-1', ({ request }) => {
+        hitUrl = request.url;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationMedicalHistoryDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationMedicalHistoryResource.useUpdate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ id: 'inv-1', data: { notes: 'x' } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-medical-histories/inv-1');
+  });
+
+  it('antes de revelarse la sección, un 404 INVMEDH_006_NOT_FOUND resuelve null', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-medical-histories/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'INVMEDH_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationMedicalHistoryByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
+  });
+
+  it('con la cabecera de la investigación ausente, INVMEDH_006_INVESTIGATION_NOT_FOUND se propaga', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-medical-histories/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'sin cabecera', code: 'INVMEDH_006_INVESTIGATION_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationMedicalHistoryByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('investigationPregnancyConditionResource.useListByParent — ESAVI-INVPREG-002A', () => {
+  it('pide /investigation/:id con el investigationId de la ficha, no un id propio', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.get(
+        'http://localhost:4500/api/investigation-pregnancy-conditions/investigation/inv-1',
+        ({ request }) => {
+          hitUrl = request.url;
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 1,
+              rows: [
+                {
+                  pregnancyConditionId: 'cond-1',
+                  investigationId: 'inv-1',
+                  medicalHistory: {
+                    investigationId: 'inv-1',
+                    deletedAt: null,
+                    investigation: { investigationId: 'inv-1', isActive: true },
+                  },
+                  diagnosticTermId: null,
+                  diagnosticTerm: null,
+                  conditionRaw: 'Ictericia',
+                  sortOrder: 1,
+                  notes: null,
+                  isActive: true,
+                  createdAt: '2026-09-01T00:00:00.000Z',
+                  updatedAt: null,
+                  deletedAt: null,
+                  appDetails: [],
+                },
+              ],
+            },
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useNewbornConditionsByMedicalHistory('inv-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-pregnancy-conditions/investigation/inv-1');
+    expect(result.current.data?.rows[0].conditionRaw).toBe('Ictericia');
+  });
+
+  it('con enabled:false no dispara el GET', async () => {
+    let hit = false;
+    server.use(
+      http.get(
+        'http://localhost:4500/api/investigation-pregnancy-conditions/investigation/inv-1',
+        () => {
+          hit = true;
+          return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    renderHook(() => useNewbornConditionsByMedicalHistory('inv-1', false), { wrapper: Wrapper });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(hit).toBe(false);
+  });
+});
+
+describe('investigationPregnancyConditionResource — ESAVI-INVPREG-001/004', () => {
+  it('el POST lleva investigationId (de la madre) y conditionName', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post(
+        'http://localhost:4500/api/investigation-pregnancy-conditions',
+        async ({ request }) => {
+          receivedBody = await request.json();
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              pregnancyConditionId: 'cond-1',
+              investigationId: 'inv-1',
+              medicalHistory: {
+                investigationId: 'inv-1',
+                deletedAt: null,
+                investigation: { investigationId: 'inv-1', isActive: true },
+              },
+              diagnosticTermId: null,
+              diagnosticTerm: null,
+              conditionRaw: 'Ictericia',
+              sortOrder: 1,
+              notes: null,
+              isActive: true,
+              createdAt: '2026-09-01T00:00:00.000Z',
+              updatedAt: null,
+              deletedAt: null,
+              appDetails: [],
+            },
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationPregnancyConditionResource.useCreate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1', conditionName: 'Ictericia' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toMatchObject({ investigationId: 'inv-1', conditionName: 'Ictericia' });
   });
 });

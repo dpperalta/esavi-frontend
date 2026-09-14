@@ -1,6 +1,6 @@
 # SPEC FE13b — Paso 5: antecedentes de la persona vacunada y bloque de embarazo
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE08 (armazón del asistente, `CaseWizardActionBar`, sólo lectura si `CLOSED`), SPEC FE12a (la cadena guardar/completar de un paso y `<AnswerOptionField>`), SPEC FE12d (`usePregnancyGate`, `usePregnancyBlockGuard`, `<MeddraSearchField>` y el modal de complicación que este spec replica), SPEC FE12f (`useProgressiveSections`), SPEC FE13a (la cabecera de la investigación y `InvestigationStep.tsx`, donde este spec añade secciones), SPEC F58 del backend (la investigación y sus satélites)
 > **Fecha:** 2026-09-10
 > **Objetivo:** Añadir al paso 5 las secciones B, B1 y B2 del formulario — antecedentes del paciente, bloque de embarazo y afecciones del recién nacido — sobre `investigationMedicalHistory` y su nieta `investigationPregnancyCondition`.

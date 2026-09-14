@@ -864,10 +864,9 @@
         "probableDeliveryDateSuggested": "Voorgesteld op basis van de laatste menstruatie (+280 dagen). Je kunt dit aanpassen."
       },
       "gate": {
-        "blockedTitle": "Er zijn zwangerschapsgegevens geregistreerd",
         "blocked": {
-          "sex": "Deze wijziging van geslacht kan niet worden opgeslagen: de patiënt heeft zwangerschapsgegevens geregistreerd in stap 4. Leeg eerst het zwangerschapsblok.",
-          "age": "Deze wijziging kan niet worden opgeslagen: de patiënt zou buiten de leeftijdsrange voor zwangerschap vallen, en heeft zwangerschapsgegevens geregistreerd in stap 4. Leeg eerst het zwangerschapsblok.",
+          "sex": "Deze wijziging van geslacht kan niet worden opgeslagen: er zijn zwangerschapsgegevens geregistreerd in dit dossier. Leeg eerst het betreffende blok.",
+          "age": "Deze wijziging kan niet worden opgeslagen: de patiënt zou buiten de leeftijdsrange voor zwangerschap vallen, en er zijn zwangerschapsgegevens geregistreerd in dit dossier. Leeg eerst het betreffende blok.",
           "complications": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Verwijder ze één voor één voordat het blok geleegd kan worden.",
           "complicationsNeedsAdmin": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Alleen een beheerder kan ze verwijderen voordat het blok geleegd kan worden."
         },
@@ -1132,6 +1131,26 @@
     }
   },
   "investigation": {
+    "pregnancy": {
+      "title": "Vragen voor vrouwen",
+      "hint": "Voornamelijk tussen 12 en 49 jaar, of wanneer zwangerschap wordt vermoed",
+      "ifApplicable": "Indien van toepassing",
+      "isPregnancyConfirmed": "Bevestig of de vrouw zwanger was op het moment van vaccinatie",
+      "gestationalWeeks": "Zwangerschapsweken",
+      "gestationMethod": "Welke methode werd gebruikt om de zwangerschapsduur te berekenen?",
+      "hasPregnancyRiskFactor": "Werd er een risicofactor voor ernstige obstetrische complicaties vastgesteld?",
+      "riskFactorDescription": "Leg de risicofactor uit",
+      "delivery": "De bevalling was:",
+      "birth": "De geboorte was:",
+      "birthWeightGrams": "Geboortegewicht (in gram)",
+      "pregnancyOutcome": "Wat was de uitkomst van de zwangerschap?",
+      "wasBreastfed": "Kreeg de baby borstvoeding?",
+      "blockGuard": {
+        "title": "Er zijn zwangerschapsgegevens geregistreerd voor dit dossier",
+        "investigationBlock": "Zwangerschapsblok van het onderzoek (stap 5)",
+        "clearInvestigation": "Leeg het zwangerschapsblok van het onderzoek"
+      }
+    },
     "error": {
       "createFailed": "Het onderzoek kon niet gestart worden.",
       "defaultStatusMissing": "De catalogus van onderzoeksstatussen heeft geen standaarditem geconfigureerd. Neem contact op met de systeembeheerder."
@@ -1181,6 +1200,15 @@
       "deathWarningLink": "Stap 4 bekijken",
       "dismissWarning": "Melding negeren"
     },
+    "medicalHistory": {
+      "title": "Voorgeschiedenis van de gevaccineerde persoon",
+      "hasPriorHospitalizationHistory": "Ziekenhuisopname in de 30 dagen vóór de huidige vaccinatie",
+      "priorHospitalizationObservations": "Opmerkingen bij de eerdere ziekenhuisopname",
+      "hasFamilyHistory": "Familiegeschiedenis van een andere aandoening (relevant voor een ESAVI) of allergie",
+      "familyHistoryObservations": "Opmerkingen bij de familiegeschiedenis",
+      "notes": "Opmerkingen bij dit dossier",
+      "openFailed": "Het voorgeschiedenisdossier kon niet worden geopend."
+    },
     "team": {
       "sectionTitle": "Gegevens van het onderzoeksteam",
       "field": {
@@ -1192,6 +1220,25 @@
       "form": {
         "createTitle": "Teamlid toevoegen",
         "editTitle": "Teamlid bewerken"
+      }
+    },
+    "newbornCondition": {
+      "title": "Medische aandoeningen van de pasgeborene",
+      "term": "Beschrijf de medische aandoening van de pasgeborene",
+      "conditionCode": "Code",
+      "add": "Aandoening toevoegen",
+      "empty": "Er zijn geen medische aandoeningen van de pasgeborene geregistreerd.",
+      "missingHistory": "Het dossier met de voorgeschiedenis ontbreekt.",
+      "createHistory": "Dossier aanmaken",
+      "meddraUnavailable": "Het MedDRA-woordenboek is nu niet beschikbaar. Typ de naam rechtstreeks in.",
+      "outcomeLocked": {
+        "title": "De uitkomst kan niet worden gewijzigd",
+        "description_one": "Er is {{count}} medische aandoening van de pasgeborene geregistreerd. Alleen een beheerder kan deze verwijderen voordat de uitkomst gewijzigd kan worden naar iets anders dan «Levend geboren met medische aandoening bij de geboorte».",
+        "description_other": "Er zijn {{count}} medische aandoeningen van de pasgeborene geregistreerd. Alleen een beheerder kan ze verwijderen voordat de uitkomst gewijzigd kan worden naar iets anders dan «Levend geboren met medische aandoening bij de geboorte»."
+      },
+      "form": {
+        "createTitle": "Medische aandoening van de pasgeborene toevoegen",
+        "editTitle": "Medische aandoening van de pasgeborene bewerken"
       }
     },
     "draft": {

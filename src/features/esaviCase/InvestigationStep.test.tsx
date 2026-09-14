@@ -6,6 +6,7 @@ import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { AnswerOption } from '@/contracts/common';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { useDraftsStore } from '@/shared/stores/draftsStore';
@@ -78,6 +79,7 @@ const server = setupServer();
 const CASE_1 = 'case-1';
 const INVESTIGATION_1 = 'investigation-1';
 const NOTIFICATION_1 = 'notification-1';
+const PATIENT_1 = 'patient-1';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
@@ -86,6 +88,39 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+// Reset before every test (§4 paso 5's own opening `POST`): `null` until a test's own flow
+// creates it, exactly like `teamRows` further down for the team satellite.
+function emptyMedicalHistoryDetail() {
+  return {
+    investigationId: INVESTIGATION_1,
+    investigation: { investigationId: INVESTIGATION_1, isActive: true },
+    hasPriorHospitalizationHistory: null,
+    priorHospitalizationObservations: null,
+    hasFamilyHistory: null,
+    familyHistoryObservations: null,
+    isPregnancyConfirmed: null as AnswerOption | null,
+    gestationalWeeks: null as number | null,
+    gestationMethodItemId: null,
+    deliveryItemId: null,
+    birthItemId: null,
+    pregnancyOutcomeItemId: null as string | null,
+    hasPregnancyRiskFactor: null,
+    riskFactorDescription: null,
+    birthWeightGrams: null,
+    wasBreastfed: null,
+    notes: null,
+    gestationMethod: null,
+    delivery: null,
+    birth: null,
+    pregnancyOutcome: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: null,
+    deletedAt: null,
+    appDetails: [],
+  };
+}
+let medicalHistoryRow: ReturnType<typeof emptyMedicalHistoryDetail> | null = null;
+
 beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
@@ -93,6 +128,7 @@ beforeEach(() => {
   toastInfo.mockClear();
   toastSuccess.mockClear();
   toastError.mockClear();
+  medicalHistoryRow = null;
   mockSectionDependencies();
 });
 
@@ -113,6 +149,118 @@ function mockSectionDependencies() {
         { ok: false, message: 'no encontrado', code: 'INVAUT_006_NOT_FOUND' },
         { status: 404 },
       ),
+    ),
+    // Stateful, unlike the two above (SPEC FE13b §4 paso 5): the section opens the ficha itself
+    // with an empty `POST` as soon as it reveals, and the very next re-read has to see it, or
+    // the section is stuck disabled forever waiting for a row that "exists" only on the server's
+    // side of a mock that never remembers it.
+    http.get(`http://localhost:4500/api/investigation-medical-histories/case/${CASE_1}`, () =>
+      medicalHistoryRow
+        ? HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow })
+        : HttpResponse.json(
+            { ok: false, message: 'no encontrado', code: 'INVMEDH_006_NOT_FOUND' },
+            { status: 404 },
+          ),
+    ),
+    http.post('http://localhost:4500/api/investigation-medical-histories', () => {
+      medicalHistoryRow = emptyMedicalHistoryDetail();
+      return HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow });
+    }),
+    http.put(`http://localhost:4500/api/investigation-medical-histories/${INVESTIGATION_1}`, async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      medicalHistoryRow = { ...emptyMedicalHistoryDetail(), ...medicalHistoryRow, ...body };
+      return HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow });
+    }),
+    // The gate of §7.4 (SPEC FE13b §4 paso 6): a male patient by default so `pregnancyGate`
+    // resolves to `'hidden'` and every test written before this section existed keeps seeing
+    // exactly the four sections it always saw, without asserting anything about B1.
+    http.get('http://localhost:4500/api/system-configs/code/PREGNANCY_FEMALE_SEX_ITEM', () =>
+      HttpResponse.json(
+        { ok: false, message: 'no configurado', code: 'SYSCONF_006_NOT_FOUND' },
+        { status: 404 },
+      ),
+    ),
+    http.get(`http://localhost:4500/api/classifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          classificationId: 'classification-1',
+          age: 30,
+          firstConsultationDate: null,
+          isSeriousEvent: null,
+          causedDeath: null,
+          causedDisability: null,
+          causedCongenitalAnomaly: null,
+          causedFetalDeath: null,
+          causedLifeThreatening: null,
+          causedHospitalization: null,
+          causedAbortion: null,
+          causedOtherCondition: null,
+          otherSeriousConditionDescription: null,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: '2026-01-01', eventDate: '2026-01-15' },
+          ageUnit: null,
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/esavi-cases/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          caseId: CASE_1,
+          caseCode: 'ESAVI-2026-0001',
+          reportDate: '2026-01-01',
+          eventDate: '2026-01-15',
+          countryIsoCode: null,
+          reportFillingDate: null,
+          notificationOrganization: null,
+          details: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          patient: {
+            patientId: PATIENT_1,
+            names: 'Ana',
+            lastNames: 'Pérez',
+            documentNumber: '0102030405',
+            healthSystemCode: null,
+          },
+          healthFacility: { healthFacilityId: 'facility-1', localCode: 'F1', name: 'Hospital 1' },
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/patients/${PATIENT_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          patientId: PATIENT_1,
+          names: 'Ana',
+          lastNames: 'Pérez',
+          documentNumber: '0102030405',
+          passportNumber: null,
+          birthDate: null,
+          healthSystemCode: null,
+          email: null,
+          phoneNumber: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          sex: { catalogItemId: 'sex-male', code: 'MALE', name: 'Masculino', value: 'MALE' },
+          residence: null,
+        },
+      }),
     ),
     http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
       HttpResponse.json({
@@ -603,7 +751,15 @@ describe('InvestigationStep — el recorrido completo (SPEC FE13a §4 paso 13)',
     await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
 
     expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+    // `team` never gates anything and passes through on its own (SPEC FE13b §4 paso 5); what's
+    // left with a button now is `medicalHistory`, revealed right behind it — disabled until its
+    // opening `POST` resolves.
+    expect(
+      await screen.findByRole('heading', { name: 'Antecedentes de la persona vacunada' }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Guardar y continuar' })).toBeEnabled(),
+    );
 
     await user.click(screen.getByRole('button', { name: 'Añadir' }));
     await user.type(screen.getByLabelText('Nombres y apellidos'), 'Ana Pérez');
@@ -671,8 +827,13 @@ describe('InvestigationStep — el recorrido completo (SPEC FE13a §4 paso 13)',
 
     expect(await screen.findByRole('switch', { name: 'Historia clínica' })).toBeChecked();
     await screen.findByText('Información básica');
-    expect(document.getElementById('investigation-basicInfo-notes')).toHaveValue('Notas previas');
+    await waitFor(() =>
+      expect(document.getElementById('investigation-basicInfo-notes')).toHaveValue('Notas previas'),
+    );
     expect((await screen.findAllByText('Ana Pérez')).length).toBeGreaterThan(0);
+    // Full reveal on reentry means no frontier at all (SPEC FE13a §3.6, unchanged by this spec):
+    // `medicalHistory` opens its ficha silently in the background same as the other three
+    // sections show without one — none of the four gets a "Guardar y continuar" here.
     expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
   });
 
@@ -804,5 +965,392 @@ describe('InvestigationStep — el recorrido completo (SPEC FE13a §4 paso 13)',
     expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Añadir' })).not.toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Historia clínica' })).toBeDisabled();
+  });
+});
+
+// Los cuatro escenarios del recorrido de las tres secciones de embarazo (SPEC FE13b §4 paso 9):
+// alta desde cero, reentrada con todo revelado, cambio de desenlace con condiciones cargadas, y
+// expediente CLOSED. `mockSectionDependencies` deja al paciente MALE por defecto para no romper
+// los tests de FE13a de arriba — estos cuatro lo pisan con una mujer en edad fértil (30 años el
+// 2026-01-15, dentro de 15–49) para que la compuerta de §7.4 resuelva `visible`.
+const OUTCOME_LIVE_WITH_CONDITION = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1';
+const OUTCOME_OTHER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2';
+const PREGNANCY_OUTCOME_TYPE = 'ffffffff-ffff-4fff-8fff-fffffffffff1';
+
+function mockFemalePatient() {
+  server.use(
+    http.get(`http://localhost:4500/api/patients/${PATIENT_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          patientId: PATIENT_1,
+          names: 'Ana',
+          lastNames: 'Pérez',
+          documentNumber: '0102030405',
+          passportNumber: null,
+          birthDate: null,
+          healthSystemCode: null,
+          email: null,
+          phoneNumber: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          sex: { catalogItemId: 'sex-female', code: 'FEMALE', name: 'Femenino', value: 'FEMALE' },
+          residence: null,
+        },
+      }),
+    ),
+  );
+}
+
+function mockPregnancyOutcomeCatalog() {
+  server.use(
+    http.get('http://localhost:4500/api/catalog-types', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          count: 1,
+          rows: [{ catalogTypeId: PREGNANCY_OUTCOME_TYPE, code: 'pregnancyOutcome', name: 'Desenlace' }],
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/catalog-items/type/${PREGNANCY_OUTCOME_TYPE}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          count: 2,
+          rows: [
+            {
+              catalogItemId: OUTCOME_LIVE_WITH_CONDITION,
+              code: 'LIVE_WITH_CONDITION',
+              name: 'Nacido vivo con afección médica al nacer',
+              value: '2',
+            },
+            { catalogItemId: OUTCOME_OTHER, code: 'OTHER', name: 'Otro', value: '1' },
+          ],
+        },
+      }),
+    ),
+  );
+}
+
+// Datos ya guardados en las tres secciones de embarazo, para la reentrada y sus dos derivados
+// (cambio de desenlace, CLOSED). `activeConditionsCount` decide cuántas filas trae B2.
+function mockPregnancyReentryData(activeConditionsCount: number) {
+  medicalHistoryRow = {
+    ...emptyMedicalHistoryDetail(),
+    isPregnancyConfirmed: 'YES',
+    gestationalWeeks: 20,
+    pregnancyOutcomeItemId: OUTCOME_LIVE_WITH_CONDITION,
+  };
+  server.use(
+    http.get(`http://localhost:4500/api/investigation-sources/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          investigationId: INVESTIGATION_1,
+          history: true,
+          interviewVaccinatedPerson: null,
+          interviewHealthWorker: null,
+          vaccinationRecord: null,
+          autopsyRecord: null,
+          verbalAutopsyRecord: null,
+          investigationReport: null,
+          other: null,
+          otherDescription: null,
+          notes: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      }),
+    ),
+    http.get(
+      `http://localhost:4500/api/investigation-team-members/investigation/${INVESTIGATION_1}`,
+      () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 1,
+            rows: [
+              {
+                investigationTeamMemberId: 'member-1',
+                fullName: 'Ana Pérez',
+                institutionName: 'MINSAL',
+                email: null,
+                phone: null,
+                notes: null,
+                isActive: true,
+                createdAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: null,
+                deletedAt: null,
+                appDetails: [],
+              },
+            ],
+          },
+        }),
+    ),
+    http.get(
+      `http://localhost:4500/api/investigation-pregnancy-conditions/investigation/${INVESTIGATION_1}`,
+      () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: activeConditionsCount,
+            rows: Array.from({ length: activeConditionsCount }, (_, index) => ({
+              pregnancyConditionId: `condition-${index}`,
+              investigationId: INVESTIGATION_1,
+              diagnosticTermId: null,
+              diagnosticTerm: null,
+              conditionRaw: `Condición ${index}`,
+              sortOrder: index,
+              notes: null,
+              isActive: true,
+              createdAt: '2026-01-01T00:00:00.000Z',
+              updatedAt: null,
+              deletedAt: null,
+              appDetails: [],
+            })),
+          },
+        }),
+    ),
+  );
+}
+
+describe('InvestigationStep — recorrido de las tres secciones de embarazo (SPEC FE13b §4 paso 9)', () => {
+  it('alta desde cero: revelar B1 con la mujer confirmada y el desenlace correcto revela B2', async () => {
+    let postCount = 0;
+    mockWorkflowDynamic(() => postCount > 0);
+    mockInvestigationDetail();
+    mockFemalePatient();
+    mockPregnancyOutcomeCatalog();
+    server.use(
+      http.post('http://localhost:4500/api/investigations', () => {
+        postCount++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() });
+      }),
+      http.post('http://localhost:4500/api/investigation-sources', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { investigationId: INVESTIGATION_1, history: true },
+        }),
+      ),
+      http.put(`http://localhost:4500/api/investigations/${INVESTIGATION_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() }),
+      ),
+      http.get(
+        `http://localhost:4500/api/investigation-team-members/investigation/${INVESTIGATION_1}`,
+        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get(
+        `http://localhost:4500/api/investigation-pregnancy-conditions/investigation/${INVESTIGATION_1}`,
+        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+
+    const user = setupUser();
+    renderInvestigationStep();
+
+    await waitFor(() => expect(postCount).toBe(1));
+    await user.click(await screen.findByRole('button', { name: 'Guardar y continuar' }));
+
+    expect(await screen.findByText('Información básica')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    // `team` pasa de largo sin botón propio (§4 paso 5); lo que sigue con botón es `medicalHistory`.
+    expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Guardar y continuar' })).toBeEnabled(),
+    );
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    // El bloque de embarazo se reveló porque el paciente es mujer en edad fértil (§7.4) —
+    // `medicalHistory` era la última sección con botón antes de este spec, ahora es `pregnancy`.
+    expect(await screen.findByRole('heading', { name: 'Preguntas para mujeres' })).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('combobox', {
+        name: 'Confirme si la mujer estaba embarazada en el momento de la vacuna',
+      }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'Sí' }));
+
+    expect(
+      screen.queryByRole('heading', { name: 'Afecciones médicas del recién nacido' }),
+    ).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole('combobox', { name: '¿Cuál fue el desenlace del embarazo?' }),
+    );
+    await user.click(
+      await screen.findByRole('option', { name: 'Nacido vivo con afección médica al nacer' }),
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: 'Afecciones médicas del recién nacido' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('No se han registrado afecciones médicas del recién nacido.'),
+    ).toBeInTheDocument();
+  }, 60000);
+
+  it('reentrada con todo revelado: las cinco secciones muestran sus datos, sin ningún botón intermedio', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail();
+    mockFemalePatient();
+    mockPregnancyOutcomeCatalog();
+    mockPregnancyReentryData(1);
+
+    renderInvestigationStep();
+
+    await screen.findByRole('switch', { name: 'Historia clínica' });
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: 'Historia clínica' })).toBeChecked(),
+    );
+    expect((await screen.findAllByText('Ana Pérez')).length).toBeGreaterThan(0);
+    expect(
+      await screen.findByRole('heading', { name: 'Afecciones médicas del recién nacido' }),
+    ).toBeInTheDocument();
+    expect(await screen.findAllByText('Condición 0')).not.toHaveLength(0);
+    // Revelado completo (§3.6, igual que las tres secciones de FE13a): ninguna de las cinco
+    // secciones muestra «Guardar y continuar» en la reentrada.
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+  });
+
+  it('cambio de desenlace con condiciones cargadas: no manda ninguna petición y abre el diálogo de bloqueo', async () => {
+    // Deliberadamente NO es una reentrada (§3.6 no deja botón en ninguna sección una vez
+    // `revealAll` es verdadero, así que no hay forma de volver a guardar B1 desde esta pantalla
+    // una vez todo está revelado): la investigación sigue sin existir al montar —el mismo criterio
+    // de «alta desde cero»—, pero la ficha de antecedentes y sus dos condiciones ya están
+    // cargadas en el servidor, como si el investigador hubiera avanzado hasta aquí en una sesión
+    // anterior y volviera ahora a terminar el paso.
+    let postCount = 0;
+    mockWorkflowDynamic(() => postCount > 0);
+    mockInvestigationDetail();
+    mockFemalePatient();
+    mockPregnancyOutcomeCatalog();
+    medicalHistoryRow = {
+      ...emptyMedicalHistoryDetail(),
+      isPregnancyConfirmed: 'YES',
+      pregnancyOutcomeItemId: OUTCOME_LIVE_WITH_CONDITION,
+    };
+    let putCount = 0;
+    server.use(
+      http.post('http://localhost:4500/api/investigations', () => {
+        postCount++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() });
+      }),
+      http.post('http://localhost:4500/api/investigation-sources', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { investigationId: INVESTIGATION_1, history: true },
+        }),
+      ),
+      http.put(`http://localhost:4500/api/investigations/${INVESTIGATION_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() }),
+      ),
+      http.get(
+        `http://localhost:4500/api/investigation-team-members/investigation/${INVESTIGATION_1}`,
+        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get(
+        `http://localhost:4500/api/investigation-pregnancy-conditions/investigation/${INVESTIGATION_1}`,
+        () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 2,
+              rows: [0, 1].map((index) => ({
+                pregnancyConditionId: `condition-${index}`,
+                investigationId: INVESTIGATION_1,
+                diagnosticTermId: null,
+                diagnosticTerm: null,
+                conditionRaw: `Condición ${index}`,
+                sortOrder: index,
+                notes: null,
+                isActive: true,
+                createdAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: null,
+                deletedAt: null,
+                appDetails: [],
+              })),
+            },
+          }),
+      ),
+      http.put(`http://localhost:4500/api/investigation-medical-histories/${INVESTIGATION_1}`, () => {
+        putCount++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow });
+      }),
+    );
+
+    const user = setupUser();
+    renderInvestigationStep();
+
+    await waitFor(() => expect(postCount).toBe(1));
+    await user.click(await screen.findByRole('button', { name: 'Guardar y continuar' }));
+    expect(await screen.findByText('Información básica')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+    expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Guardar y continuar' })).toBeEnabled(),
+    );
+    // La ficha ya trae `isPregnancyConfirmed: 'YES'` — no hace falta tocar B, sólo avanzar. Ese
+    // «Guardar y continuar» es de la sección B (`medicalHistory`), que escribe el mismo recurso
+    // que B1 — de ahí que el conteo del bloqueo se tome a partir de aquí, no desde cero.
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    // Llegados a B1 con el desenlace ya en «Nacido vivo con afección médica al nacer» y sus dos
+    // condiciones cargadas — visibles sin haber tocado nada.
+    expect(
+      await screen.findByRole('heading', { name: 'Afecciones médicas del recién nacido' }),
+    ).toBeInTheDocument();
+    expect(await screen.findAllByText('Condición 0')).not.toHaveLength(0);
+    const putCountBeforeBlock = putCount;
+
+    await user.click(
+      screen.getByRole('combobox', { name: '¿Cuál fue el desenlace del embarazo?' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'Otro' }));
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'No se puede cambiar el desenlace' }),
+    ).toBeInTheDocument();
+    expect(putCount).toBe(putCountBeforeBlock);
+  }, 60000);
+
+  it('expediente CLOSED: las cinco secciones de embarazo se ven en sólo lectura, sin «Guardar» ni «Añadir afección»', async () => {
+    mockWorkflowClosed();
+    mockInvestigationDetail();
+    mockFemalePatient();
+    mockPregnancyOutcomeCatalog();
+    mockPregnancyReentryData(1);
+
+    renderInvestigationStep();
+
+    expect(await screen.findByRole('heading', { name: 'Preguntas para mujeres' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Afecciones médicas del recién nacido' }),
+    ).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Añadir afección' })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('combobox', {
+        name: 'Confirme si la mujer estaba embarazada en el momento de la vacuna',
+      }),
+    ).toBeDisabled();
   });
 });

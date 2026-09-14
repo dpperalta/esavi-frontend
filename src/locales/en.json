@@ -864,10 +864,9 @@
         "probableDeliveryDateSuggested": "Suggested from the last menstruation (+280 days). You can edit it."
       },
       "gate": {
-        "blockedTitle": "There is pregnancy data on file",
         "blocked": {
-          "sex": "This sex change cannot be saved: the patient has pregnancy data recorded in step 4. Clear the pregnancy block first.",
-          "age": "This change cannot be saved: it would leave the patient outside the pregnancy age range, and the patient has pregnancy data recorded in step 4. Clear the pregnancy block first.",
+          "sex": "This sex change cannot be saved: there is pregnancy data recorded on this case. Clear the corresponding block first.",
+          "age": "This change cannot be saved: it would leave the patient outside the pregnancy age range, and there is pregnancy data recorded on this case. Clear the corresponding block first.",
           "complications": "There are {{count}} active complication(s) recorded. Remove them one by one before the block can be cleared.",
           "complicationsNeedsAdmin": "There are {{count}} active complication(s) recorded. Only an administrator can remove them before the block can be cleared."
         },
@@ -1132,6 +1131,26 @@
     }
   },
   "investigation": {
+    "pregnancy": {
+      "title": "Questions for women",
+      "hint": "Mainly between 12 and 49 years old, or whenever pregnancy is suspected",
+      "ifApplicable": "If applicable",
+      "isPregnancyConfirmed": "Confirm whether the woman was pregnant at the time of vaccination",
+      "gestationalWeeks": "Gestational weeks",
+      "gestationMethod": "Which method was used to calculate gestational age?",
+      "hasPregnancyRiskFactor": "Was any risk factor for severe obstetric complications identified?",
+      "riskFactorDescription": "Explain the risk factor",
+      "delivery": "The delivery was:",
+      "birth": "The birth was:",
+      "birthWeightGrams": "Birth weight (in grams)",
+      "pregnancyOutcome": "What was the pregnancy outcome?",
+      "wasBreastfed": "Did the infant receive breastfeeding?",
+      "blockGuard": {
+        "title": "There is pregnancy data on file for this case",
+        "investigationBlock": "Investigation pregnancy block (step 5)",
+        "clearInvestigation": "Clear the investigation's pregnancy block"
+      }
+    },
     "error": {
       "createFailed": "Could not start the investigation.",
       "defaultStatusMissing": "The investigation status catalog has no default item configured. Contact the system administrator."
@@ -1181,6 +1200,15 @@
       "deathWarningLink": "Review step 4",
       "dismissWarning": "Dismiss warning"
     },
+    "medicalHistory": {
+      "title": "History of the vaccinated person",
+      "hasPriorHospitalizationHistory": "Hospitalization history in the 30 days before the current vaccination",
+      "priorHospitalizationObservations": "Observations on the prior hospitalization",
+      "hasFamilyHistory": "Family history of another disease (relevant to an ESAVI) or allergy",
+      "familyHistoryObservations": "Observations on family history",
+      "notes": "Observations for this record",
+      "openFailed": "Couldn't open the medical history record."
+    },
     "team": {
       "sectionTitle": "Investigation team information",
       "field": {
@@ -1192,6 +1220,25 @@
       "form": {
         "createTitle": "Add team member",
         "editTitle": "Edit team member"
+      }
+    },
+    "newbornCondition": {
+      "title": "Newborn's medical conditions",
+      "term": "Describe the newborn's medical condition",
+      "conditionCode": "Code",
+      "add": "Add condition",
+      "empty": "No medical conditions of the newborn have been recorded.",
+      "missingHistory": "The medical history record is missing.",
+      "createHistory": "Create the record",
+      "meddraUnavailable": "The MedDRA dictionary isn't available right now. Type the name directly.",
+      "outcomeLocked": {
+        "title": "The outcome can't be changed",
+        "description_one": "There is {{count}} newborn medical condition recorded. Only an administrator can remove it before the outcome can be changed to something other than \"Live born with medical condition at birth\".",
+        "description_other": "There are {{count}} newborn medical conditions recorded. Only an administrator can remove them before the outcome can be changed to something other than \"Live born with medical condition at birth\"."
+      },
+      "form": {
+        "createTitle": "Add newborn medical condition",
+        "editTitle": "Edit newborn medical condition"
       }
     },
     "draft": {

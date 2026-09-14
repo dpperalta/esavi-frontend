@@ -121,8 +121,15 @@ export function CaseOpeningStep() {
     toast.error(getErrorMessage(error));
   }
 
-  function handleClearPregnancyBlock() {
-    pregnancyGuard.clearBlock(() => {
+  function handleClearNotificationPregnancyBlock() {
+    pregnancyGuard.notificationBlock.clear(() => {
+      toast.success(t('notification.pregnancy.gate.cleared'));
+      setPregnancyBlockOpen(false);
+    });
+  }
+
+  function handleClearInvestigationPregnancyBlock() {
+    pregnancyGuard.investigationBlock.clear(() => {
       toast.success(t('notification.pregnancy.gate.cleared'));
       setPregnancyBlockOpen(false);
     });
@@ -341,9 +348,23 @@ export function CaseOpeningStep() {
           open={pregnancyBlockOpen}
           onOpenChange={setPregnancyBlockOpen}
           reason="age"
-          activeComplicationsCount={pregnancyGuard.activeComplicationsCount}
-          onClear={handleClearPregnancyBlock}
-          isClearing={pregnancyGuard.isClearing}
+          notificationBlock={
+            pregnancyGuard.notificationBlock.hasData
+              ? {
+                  activeComplicationsCount: pregnancyGuard.notificationBlock.activeComplicationsCount,
+                  onClear: handleClearNotificationPregnancyBlock,
+                  isClearing: pregnancyGuard.notificationBlock.isClearing,
+                }
+              : null
+          }
+          investigationBlock={
+            pregnancyGuard.investigationBlock.hasData
+              ? {
+                  onClear: handleClearInvestigationPregnancyBlock,
+                  isClearing: pregnancyGuard.investigationBlock.isClearing,
+                }
+              : null
+          }
         />
       )}
     </div>

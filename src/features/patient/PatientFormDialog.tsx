@@ -88,8 +88,15 @@ export function PatientFormDialog({ open, onOpenChange, patientId, caseId }: Pat
     toast.error(getErrorMessage(error));
   }
 
-  function handleClearBlock() {
-    guard.clearBlock(() => {
+  function handleClearNotificationBlock() {
+    guard.notificationBlock.clear(() => {
+      toast.success(t('notification.pregnancy.gate.cleared'));
+      setBlockDialog({ open: false, reason: null });
+    });
+  }
+
+  function handleClearInvestigationBlock() {
+    guard.investigationBlock.clear(() => {
       toast.success(t('notification.pregnancy.gate.cleared'));
       setBlockDialog({ open: false, reason: null });
     });
@@ -142,9 +149,23 @@ export function PatientFormDialog({ open, onOpenChange, patientId, caseId }: Pat
         open={blockDialog.open}
         onOpenChange={(next) => setBlockDialog((prev) => ({ ...prev, open: next }))}
         reason={blockDialog.reason}
-        activeComplicationsCount={guard.activeComplicationsCount}
-        onClear={handleClearBlock}
-        isClearing={guard.isClearing}
+        notificationBlock={
+          guard.notificationBlock.hasData
+            ? {
+                activeComplicationsCount: guard.notificationBlock.activeComplicationsCount,
+                onClear: handleClearNotificationBlock,
+                isClearing: guard.notificationBlock.isClearing,
+              }
+            : null
+        }
+        investigationBlock={
+          guard.investigationBlock.hasData
+            ? {
+                onClear: handleClearInvestigationBlock,
+                isClearing: guard.investigationBlock.isClearing,
+              }
+            : null
+        }
       />
     </>
   );

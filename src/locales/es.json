@@ -864,10 +864,9 @@
         "probableDeliveryDateSuggested": "Sugerida a partir de la última menstruación (+280 días). Puedes editarla."
       },
       "gate": {
-        "blockedTitle": "Hay datos de embarazo cargados",
         "blocked": {
-          "sex": "No se puede guardar este cambio de sexo: el paciente tiene datos de embarazo registrados en el paso 4. Vacía primero el bloque de embarazo.",
-          "age": "No se puede guardar este cambio: dejaría al paciente fuera del rango de edad del embarazo, y tiene datos de embarazo registrados en el paso 4. Vacía primero el bloque de embarazo.",
+          "sex": "No se puede guardar este cambio de sexo: hay datos de embarazo registrados en el expediente. Vacía primero el bloque correspondiente.",
+          "age": "No se puede guardar este cambio: dejaría al paciente fuera del rango de edad del embarazo, y hay datos de embarazo registrados en el expediente. Vacía primero el bloque correspondiente.",
           "complications": "Hay {{count}} complicación(es) activa(s) registradas. Retíralas una a una antes de poder vaciar el bloque.",
           "complicationsNeedsAdmin": "Hay {{count}} complicación(es) activa(s) registradas. Sólo un administrador puede retirarlas antes de poder vaciar el bloque."
         },
@@ -1132,6 +1131,26 @@
     }
   },
   "investigation": {
+    "pregnancy": {
+      "title": "Preguntas para mujeres",
+      "hint": "Principalmente entre 12 y 49 años, o cuando exista sospecha de embarazo",
+      "ifApplicable": "Si aplica",
+      "isPregnancyConfirmed": "Confirme si la mujer estaba embarazada en el momento de la vacuna",
+      "gestationalWeeks": "Semanas de gestación",
+      "gestationMethod": "¿Cuál método usó para el cálculo de la edad gestacional?",
+      "hasPregnancyRiskFactor": "¿Se identificó algún factor de riesgo de complicaciones obstétricas graves?",
+      "riskFactorDescription": "Explique cuál fue el factor de riesgo",
+      "delivery": "El parto fue:",
+      "birth": "El nacimiento fue:",
+      "birthWeightGrams": "Peso al nacer (en gramos)",
+      "pregnancyOutcome": "¿Cuál fue el desenlace del embarazo?",
+      "wasBreastfed": "¿Recibió lactancia materna?",
+      "blockGuard": {
+        "title": "Hay datos de embarazo cargados en el expediente",
+        "investigationBlock": "Bloque de embarazo de la investigación (paso 5)",
+        "clearInvestigation": "Vaciar el bloque de embarazo de la investigación"
+      }
+    },
     "error": {
       "createFailed": "No se pudo iniciar la investigación.",
       "defaultStatusMissing": "El catálogo de estados de investigación no tiene un ítem por defecto configurado. Contacta al administrador del sistema."
@@ -1181,6 +1200,15 @@
       "deathWarningLink": "Revisar el paso 4",
       "dismissWarning": "Descartar aviso"
     },
+    "medicalHistory": {
+      "title": "Antecedentes de la persona vacunada",
+      "hasPriorHospitalizationHistory": "Antecedentes de hospitalización en los 30 días previos a la vacunación actual",
+      "priorHospitalizationObservations": "Observaciones del antecedente de hospitalización",
+      "hasFamilyHistory": "Antecedentes familiares de otra enfermedad (relevantes para un ESAVI) o alergia",
+      "familyHistoryObservations": "Observaciones de antecedentes familiares",
+      "notes": "Observaciones de la ficha",
+      "openFailed": "No se pudo abrir la ficha de antecedentes."
+    },
     "team": {
       "sectionTitle": "Datos del equipo de investigación",
       "field": {
@@ -1192,6 +1220,25 @@
       "form": {
         "createTitle": "Añadir miembro del equipo",
         "editTitle": "Editar miembro del equipo"
+      }
+    },
+    "newbornCondition": {
+      "title": "Afecciones médicas del recién nacido",
+      "term": "Describa la afección médica del recién nacido",
+      "conditionCode": "Código",
+      "add": "Añadir afección",
+      "empty": "No se han registrado afecciones médicas del recién nacido.",
+      "missingHistory": "Falta la ficha de antecedentes.",
+      "createHistory": "Crear la ficha",
+      "meddraUnavailable": "El diccionario MedDRA no está disponible en este momento. Escribe el nombre directamente.",
+      "form": {
+        "createTitle": "Añadir afección médica del recién nacido",
+        "editTitle": "Editar afección médica del recién nacido"
+      },
+      "outcomeLocked": {
+        "title": "No se puede cambiar el desenlace",
+        "description_one": "Hay {{count}} afección médica del recién nacido registrada. Sólo un administrador puede retirarla antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer».",
+        "description_other": "Hay {{count}} afecciones médicas del recién nacido registradas. Sólo un administrador puede retirarlas antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer»."
       }
     },
     "draft": {
