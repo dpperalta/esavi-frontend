@@ -1,6 +1,6 @@
 # SPEC FE13a — Paso 5: cabecera de la investigación, fuentes, equipo y autopsia
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (armazón del asistente, `CaseWizardActionBar`, sólo lectura si `CLOSED`), SPEC FE12a (la cadena guardar/completar de un paso y `<AnswerOptionField>`), SPEC FE12e (`<SatelliteList>` y el patrón de diálogo satélite), SPEC FE12f (`useProgressiveSections`, el revelado por secciones que este spec replica), SPEC F58 del backend (la investigación y sus satélites)
 > **Fecha:** 2026-09-10
 > **Objetivo:** Que el paso 5 deje de ser un marcador de posición y abra la investigación con sus tres primeras secciones — fuentes de información, información básica con el bloque de muerte y autopsia, y equipo investigador.
