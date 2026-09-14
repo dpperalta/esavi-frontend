@@ -190,6 +190,7 @@ const USER_1 = '77777777-7777-4777-8777-777777777777';
 const CASE_1 = '88888888-8888-4888-8888-888888888888';
 const NOTIFICATION_1 = '99999999-9999-4999-8999-999999999999';
 const PREGNANCY_1 = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const INVESTIGATION_1 = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 const SEX_TYPE_1 = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const SEX_MALE_1 = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const SEX_FEMALE_1 = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
@@ -273,11 +274,22 @@ function mockSexCatalog() {
   );
 }
 
-// Todo lo que `usePregnancyBlockGuard` pide al montar (SPEC FE12d §4 paso 13, §3.4): el paciente
-// ya es mujer en edad fértil hoy (26 años el 2026-01-15) y el bloque de embarazo tiene datos
-// cargados — el escenario que dispara el bloqueo. `complicationCount` decide si «Vaciar» queda
-// disponible.
-function mockPregnancyBlockScenario(complicationCount: 0 | 1) {
+// El segundo bloque del guard ampliado (SPEC FE13b §4 paso 3, paso 9): la ficha de antecedentes
+// de la investigación con `isPregnancyConfirmed: 'YES'` y sus condiciones activas del recién
+// nacido. `undefined` deja el paso 5 sin empezar (`stages.investigation.exists: false`), igual
+// que antes de este spec — así los tres tests que no lo piden siguen sin tocar estas rutas.
+interface InvestigationBlockScenario {
+  activeConditionsCount: number;
+}
+
+// Todo lo que `usePregnancyBlockGuard` pide al montar (SPEC FE12d §4 paso 13, §3.4; ampliado por
+// SPEC FE13b §4 paso 3): el paciente ya es mujer en edad fértil hoy (26 años el 2026-01-15) y el
+// bloque de embarazo tiene datos cargados — el escenario que dispara el bloqueo. `complicationCount`
+// decide si «Vaciar» del paso 4 queda disponible; `investigationBlock` añade el bloque del paso 5.
+function mockPregnancyBlockScenario(
+  complicationCount: 0 | 1,
+  investigationBlock?: InvestigationBlockScenario,
+) {
   let pregnancyRow: Record<string, unknown> | null = {
     pregnancyId: PREGNANCY_1,
     notificationId: NOTIFICATION_1,
@@ -352,7 +364,15 @@ function mockPregnancyBlockScenario(complicationCount: 0 | 1) {
               endedAt: null,
               durationMinutes: null,
             },
-            investigation: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+            investigation: investigationBlock
+              ? {
+                  exists: true,
+                  id: INVESTIGATION_1,
+                  startedAt: '2026-01-03T00:00:00.000Z',
+                  endedAt: null,
+                  durationMinutes: null,
+                }
+              : { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
             finalClassification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
           },
           totalDurationMinutes: null,
@@ -417,7 +437,85 @@ function mockPregnancyBlockScenario(complicationCount: 0 | 1) {
         }),
     ),
   );
-  return { getPregnancyPutBody: () => pregnancyPutBody };
+
+  // Bloque del paso 5 (SPEC FE13b §4 paso 3, paso 9): sólo se registra cuando el test lo pide —
+  // `investigation-medical-histories/case/:id` y `investigation-pregnancy-conditions/investigation/:id`
+  // no existen para los tres tests que no tienen investigación abierta.
+  let medicalHistoryRow: Record<string, unknown> | null = investigationBlock
+    ? {
+        investigationId: INVESTIGATION_1,
+        investigation: { investigationId: INVESTIGATION_1, isActive: true },
+        hasPriorHospitalizationHistory: null,
+        priorHospitalizationObservations: null,
+        hasFamilyHistory: null,
+        familyHistoryObservations: null,
+        isPregnancyConfirmed: 'YES',
+        gestationalWeeks: 20,
+        gestationMethodItemId: null,
+        deliveryItemId: null,
+        birthItemId: null,
+        pregnancyOutcomeItemId: null,
+        hasPregnancyRiskFactor: null,
+        riskFactorDescription: null,
+        birthWeightGrams: null,
+        wasBreastfed: null,
+        notes: null,
+        gestationMethod: null,
+        delivery: null,
+        birth: null,
+        pregnancyOutcome: null,
+        createdAt: '2026-01-03T00:00:00.000Z',
+        updatedAt: null,
+        deletedAt: null,
+        appDetails: [],
+      }
+    : null;
+  let medicalHistoryPutBody: Record<string, unknown> | null = null;
+  if (investigationBlock) {
+    server.use(
+      http.get(`http://localhost:4500/api/investigation-medical-histories/case/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow }),
+      ),
+      http.put(
+        `http://localhost:4500/api/investigation-medical-histories/${INVESTIGATION_1}`,
+        async ({ request }) => {
+          medicalHistoryPutBody = (await request.json()) as Record<string, unknown>;
+          medicalHistoryRow = { ...medicalHistoryRow, ...medicalHistoryPutBody };
+          return HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow });
+        },
+      ),
+      http.get(
+        `http://localhost:4500/api/investigation-pregnancy-conditions/investigation/${INVESTIGATION_1}`,
+        () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: investigationBlock.activeConditionsCount,
+              rows: Array.from({ length: investigationBlock.activeConditionsCount }, (_, index) => ({
+                pregnancyConditionId: `condition-${index}`,
+                investigationId: INVESTIGATION_1,
+                diagnosticTermId: null,
+                diagnosticTerm: null,
+                conditionRaw: `Condición ${index}`,
+                sortOrder: index,
+                notes: null,
+                isActive: true,
+                createdAt: '2026-01-03T00:00:00.000Z',
+                updatedAt: null,
+                deletedAt: null,
+                appDetails: [],
+              })),
+            },
+          }),
+      ),
+    );
+  }
+
+  return {
+    getPregnancyPutBody: () => pregnancyPutBody,
+    getMedicalHistoryPutBody: () => medicalHistoryPutBody,
+  };
 }
 
 function renderDialogInCase() {
@@ -524,5 +622,66 @@ describe('PatientFormDialog — el bloqueo de embarazo del paso 13, sexo y fecha
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Vaciar el bloque de embarazo' })).toBeDisabled();
+  }, 60000);
+
+  it('con datos de embarazo en los dos pasos, el diálogo lista los dos bloques por separado (SPEC FE13b §4 paso 3, paso 9)', async () => {
+    const user = setupUser();
+    signInAs('ADMIN', 50);
+    mockSexCatalog();
+    mockGeoLocationPickerEmpty();
+    mockPatientDetail({
+      birthDate: '2000-01-15',
+      sex: { catalogItemId: SEX_FEMALE_1, code: 'FEMALE', name: 'Femenino', value: 'FEMALE' },
+    });
+    const { getPregnancyPutBody, getMedicalHistoryPutBody } = mockPregnancyBlockScenario(0, {
+      activeConditionsCount: 2,
+    });
+    let patientPutCalls = 0;
+    server.use(
+      http.put(`http://localhost:4500/api/patients/${PATIENT_1}`, async () => {
+        patientPutCalls++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: makePatient() });
+      }),
+    );
+
+    renderDialogInCase();
+
+    await user.click(await screen.findByRole('combobox', { name: 'Sexo' }));
+    await user.click(await screen.findByRole('option', { name: 'Masculino' }));
+
+    const saveButton = screen.getByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    // Los dos bloques, cada uno con su propio texto y su propio botón — nunca un único «Vaciar»
+    // que encadene dos escrituras (SPEC FE13b §4 paso 3, §6).
+    expect(await screen.findByText(/No se puede guardar este cambio de sexo/)).toBeInTheDocument();
+    expect(screen.getByText('Bloque de embarazo de la investigación (paso 5)')).toBeInTheDocument();
+    const clearNotificationButton = screen.getByRole('button', { name: 'Vaciar el bloque de embarazo' });
+    const clearInvestigationButton = screen.getByRole('button', {
+      name: 'Vaciar el bloque de embarazo de la investigación',
+    });
+    expect(clearNotificationButton).toBeInTheDocument();
+    expect(clearInvestigationButton).toBeInTheDocument();
+    expect(patientPutCalls).toBe(0);
+
+    await user.click(clearInvestigationButton);
+
+    await waitFor(() => expect(getMedicalHistoryPutBody()).not.toBeNull());
+    expect(getMedicalHistoryPutBody()).toMatchObject({
+      isPregnancyConfirmed: null,
+      gestationalWeeks: null,
+      gestationMethodItemId: null,
+      deliveryItemId: null,
+      birthItemId: null,
+      pregnancyOutcomeItemId: null,
+      hasPregnancyRiskFactor: null,
+      riskFactorDescription: null,
+      birthWeightGrams: null,
+      wasBreastfed: null,
+    });
+    // Vaciar el del paso 5 no toca `notificationPregnancy` — son dos escrituras independientes
+    // (SPEC FE13b §4 paso 3, verificación).
+    expect(getPregnancyPutBody()).toBeNull();
   }, 60000);
 });
