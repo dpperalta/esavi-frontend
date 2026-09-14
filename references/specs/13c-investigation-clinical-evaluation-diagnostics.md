@@ -1,6 +1,6 @@
 # SPEC FE13c — Paso 5: evaluación clínica, instituciones evaluadoras y diagnósticos
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE08 (armazón del asistente, `CaseWizardActionBar`, sólo lectura si `CLOSED`), SPEC FE12a (la cadena guardar/completar de un paso y `<AnswerOptionField>`), SPEC FE12b (el diálogo de `notificationEvent` y la resolución contra `diagnosticTerm` que este spec replica), SPEC FE12f (`useProgressiveSections`), SPEC FE13a (la cabecera de la investigación, `InvestigationStep.tsx` y el patrón de fila 1:1 sin `isActive`), SPEC FE13b (la primera nieta del expediente y el orden de creación madre → hija), SPEC F58 del backend (la investigación y sus satélites)
 > **Fecha:** 2026-09-10
 > **Objetivo:** Cerrar la sección C del formulario de investigación — la primera evaluación clínica, la lista de instituciones que evaluaron al paciente y la lista de diagnósticos finales o presuntivos.
