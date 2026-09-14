@@ -1276,6 +1276,33 @@
         "domesticViolenceExplanationNotAllowed": "Zonder vermoeden van huiselijk geweld wordt deze toelichting niet opgeslagen."
       }
     },
+    "evaluationInstitution": {
+      "title": "Instellingen die de patiënt hebben beoordeeld",
+      "description": "Is de instelling waar de patiënt voor het eerst werd behandeld anders dan de instelling waar hij de definitieve behandeling kreeg?",
+      "add": "Instelling toevoegen",
+      "empty": "Er zijn nog geen beoordelende instellingen geregistreerd.",
+      "missingClinicalEvaluation": "Het klinische-evaluatiedossier ontbreekt.",
+      "createClinicalEvaluation": "Dossier aanmaken",
+      "characterCount": "{{count}} van {{max}} tekens",
+      "charactersRemaining": "Nog {{count}} tekens.",
+      "fields": {
+        "evaluationInstitutionTypeItemId": "Is de instelling waar de patiënt voor het eerst werd behandeld anders dan de instelling waar hij de definitieve behandeling kreeg?",
+        "healthFacilityId": "Naam van de instelling die de eerste zorg verleende",
+        "institutionName": "Naam van de instelling (als deze niet in de zoekopdracht staat)",
+        "personName": "Naam van de persoon die de zorg verleende",
+        "personContact": "Contactgegevens van de persoon die de eerste zorg verleende",
+        "notes": "Opmerkingen"
+      },
+      "form": {
+        "createTitle": "Beoordelende instelling toevoegen",
+        "editTitle": "Beoordelende instelling bewerken"
+      },
+      "errors": {
+        "identification": "Geef de zorginstelling of de naam van de instelling op voordat u opslaat.",
+        "alreadyExists": "Deze zorginstelling staat al op de lijst.",
+        "missingClinicalEvaluation": "Het klinische-evaluatiedossier kon niet worden geopend."
+      }
+    },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."

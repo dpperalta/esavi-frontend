@@ -1276,6 +1276,33 @@
         "domesticViolenceExplanationNotAllowed": "Sin sospecha de violencia intrafamiliar, esta explicación no se guarda."
       }
     },
+    "evaluationInstitution": {
+      "title": "Instituciones que evaluaron al paciente",
+      "description": "¿La institución en la que fue atendido por primera vez es diferente a la institución en donde recibió el tratamiento definitivo?",
+      "add": "Añadir institución",
+      "empty": "No se han registrado instituciones evaluadoras.",
+      "missingClinicalEvaluation": "Falta la ficha de evaluación clínica.",
+      "createClinicalEvaluation": "Crear la ficha",
+      "characterCount": "{{count}} de {{max}} caracteres",
+      "charactersRemaining": "Quedan {{count}} caracteres.",
+      "fields": {
+        "evaluationInstitutionTypeItemId": "¿La institución en la que fue atendido por primera vez es diferente a la institución en donde recibió el tratamiento definitivo?",
+        "healthFacilityId": "Nombre de la institución de atención inicial",
+        "institutionName": "Nombre de la institución (si no está en el buscador)",
+        "personName": "Nombre de la persona que realizó la atención",
+        "personContact": "Contacto de la persona que realizó la atención inicial",
+        "notes": "Observaciones"
+      },
+      "form": {
+        "createTitle": "Añadir institución evaluadora",
+        "editTitle": "Editar institución evaluadora"
+      },
+      "errors": {
+        "identification": "Indica la unidad de salud o el nombre de la institución antes de guardar.",
+        "alreadyExists": "Esta unidad de salud ya está en la lista.",
+        "missingClinicalEvaluation": "No se pudo abrir la ficha de evaluación clínica."
+      }
+    },
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."

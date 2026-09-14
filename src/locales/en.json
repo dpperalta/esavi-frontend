@@ -1276,6 +1276,33 @@
         "domesticViolenceExplanationNotAllowed": "Without a suspicion of domestic violence, this explanation isn't saved."
       }
     },
+    "evaluationInstitution": {
+      "title": "Institutions that evaluated the patient",
+      "description": "Is the institution where the patient was first attended different from the institution where they received definitive treatment?",
+      "add": "Add institution",
+      "empty": "No evaluating institutions have been recorded.",
+      "missingClinicalEvaluation": "The clinical evaluation record is missing.",
+      "createClinicalEvaluation": "Create the record",
+      "characterCount": "{{count}} of {{max}} characters",
+      "charactersRemaining": "{{count}} characters left.",
+      "fields": {
+        "evaluationInstitutionTypeItemId": "Is the institution where the patient was first attended different from the institution where they received definitive treatment?",
+        "healthFacilityId": "Name of the institution that provided initial care",
+        "institutionName": "Institution name (if not found in the search)",
+        "personName": "Name of the person who provided care",
+        "personContact": "Contact of the person who provided initial care",
+        "notes": "Notes"
+      },
+      "form": {
+        "createTitle": "Add evaluating institution",
+        "editTitle": "Edit evaluating institution"
+      },
+      "errors": {
+        "identification": "Enter the health facility or the institution name before saving.",
+        "alreadyExists": "This health facility is already on the list.",
+        "missingClinicalEvaluation": "The clinical evaluation record could not be opened."
+      }
+    },
     "draft": {
       "restored": "Recovered unsaved changes from an earlier session.",
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."
