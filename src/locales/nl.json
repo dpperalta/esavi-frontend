@@ -1132,6 +1132,19 @@
   },
   "investigation": {
     "pregnancy": {
+      "title": "Vragen voor vrouwen",
+      "hint": "Voornamelijk tussen 12 en 49 jaar, of wanneer zwangerschap wordt vermoed",
+      "ifApplicable": "Indien van toepassing",
+      "isPregnancyConfirmed": "Bevestig of de vrouw zwanger was op het moment van vaccinatie",
+      "gestationalWeeks": "Zwangerschapsweken",
+      "gestationMethod": "Welke methode werd gebruikt om de zwangerschapsduur te berekenen?",
+      "hasPregnancyRiskFactor": "Werd er een risicofactor voor ernstige obstetrische complicaties vastgesteld?",
+      "riskFactorDescription": "Leg de risicofactor uit",
+      "delivery": "De bevalling was:",
+      "birth": "De geboorte was:",
+      "birthWeightGrams": "Geboortegewicht (in gram)",
+      "pregnancyOutcome": "Wat was de uitkomst van de zwangerschap?",
+      "wasBreastfed": "Kreeg de baby borstvoeding?",
       "blockGuard": {
         "title": "Er zijn zwangerschapsgegevens geregistreerd voor dit dossier",
         "investigationBlock": "Zwangerschapsblok van het onderzoek (stap 5)",

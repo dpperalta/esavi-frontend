@@ -78,6 +78,7 @@ const server = setupServer();
 const CASE_1 = 'case-1';
 const INVESTIGATION_1 = 'investigation-1';
 const NOTIFICATION_1 = 'notification-1';
+const PATIENT_1 = 'patient-1';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
@@ -169,6 +170,97 @@ function mockSectionDependencies() {
       medicalHistoryRow = { ...emptyMedicalHistoryDetail(), ...medicalHistoryRow, ...body };
       return HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow });
     }),
+    // The gate of §7.4 (SPEC FE13b §4 paso 6): a male patient by default so `pregnancyGate`
+    // resolves to `'hidden'` and every test written before this section existed keeps seeing
+    // exactly the four sections it always saw, without asserting anything about B1.
+    http.get('http://localhost:4500/api/system-configs/code/PREGNANCY_FEMALE_SEX_ITEM', () =>
+      HttpResponse.json(
+        { ok: false, message: 'no configurado', code: 'SYSCONF_006_NOT_FOUND' },
+        { status: 404 },
+      ),
+    ),
+    http.get(`http://localhost:4500/api/classifications/case/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          classificationId: 'classification-1',
+          age: 30,
+          firstConsultationDate: null,
+          isSeriousEvent: null,
+          causedDeath: null,
+          causedDisability: null,
+          causedCongenitalAnomaly: null,
+          causedFetalDeath: null,
+          causedLifeThreatening: null,
+          causedHospitalization: null,
+          causedAbortion: null,
+          causedOtherCondition: null,
+          otherSeriousConditionDescription: null,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: '2026-01-01', eventDate: '2026-01-15' },
+          ageUnit: null,
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/esavi-cases/${CASE_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          caseId: CASE_1,
+          caseCode: 'ESAVI-2026-0001',
+          reportDate: '2026-01-01',
+          eventDate: '2026-01-15',
+          countryIsoCode: null,
+          reportFillingDate: null,
+          notificationOrganization: null,
+          details: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          patient: {
+            patientId: PATIENT_1,
+            names: 'Ana',
+            lastNames: 'Pérez',
+            documentNumber: '0102030405',
+            healthSystemCode: null,
+          },
+          healthFacility: { healthFacilityId: 'facility-1', localCode: 'F1', name: 'Hospital 1' },
+        },
+      }),
+    ),
+    http.get(`http://localhost:4500/api/patients/${PATIENT_1}`, () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          patientId: PATIENT_1,
+          names: 'Ana',
+          lastNames: 'Pérez',
+          documentNumber: '0102030405',
+          passportNumber: null,
+          birthDate: null,
+          healthSystemCode: null,
+          email: null,
+          phoneNumber: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          sex: { catalogItemId: 'sex-male', code: 'MALE', name: 'Masculino', value: 'MALE' },
+          residence: null,
+        },
+      }),
+    ),
     http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
       HttpResponse.json({
         ok: true,

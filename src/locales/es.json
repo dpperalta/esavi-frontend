@@ -1132,6 +1132,19 @@
   },
   "investigation": {
     "pregnancy": {
+      "title": "Preguntas para mujeres",
+      "hint": "Principalmente entre 12 y 49 años, o cuando exista sospecha de embarazo",
+      "ifApplicable": "Si aplica",
+      "isPregnancyConfirmed": "Confirme si la mujer estaba embarazada en el momento de la vacuna",
+      "gestationalWeeks": "Semanas de gestación",
+      "gestationMethod": "¿Cuál método usó para el cálculo de la edad gestacional?",
+      "hasPregnancyRiskFactor": "¿Se identificó algún factor de riesgo de complicaciones obstétricas graves?",
+      "riskFactorDescription": "Explique cuál fue el factor de riesgo",
+      "delivery": "El parto fue:",
+      "birth": "El nacimiento fue:",
+      "birthWeightGrams": "Peso al nacer (en gramos)",
+      "pregnancyOutcome": "¿Cuál fue el desenlace del embarazo?",
+      "wasBreastfed": "¿Recibió lactancia materna?",
       "blockGuard": {
         "title": "Hay datos de embarazo cargados en el expediente",
         "investigationBlock": "Bloque de embarazo de la investigación (paso 5)",

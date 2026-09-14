@@ -1132,6 +1132,19 @@
   },
   "investigation": {
     "pregnancy": {
+      "title": "Questions for women",
+      "hint": "Mainly between 12 and 49 years old, or whenever pregnancy is suspected",
+      "ifApplicable": "If applicable",
+      "isPregnancyConfirmed": "Confirm whether the woman was pregnant at the time of vaccination",
+      "gestationalWeeks": "Gestational weeks",
+      "gestationMethod": "Which method was used to calculate gestational age?",
+      "hasPregnancyRiskFactor": "Was any risk factor for severe obstetric complications identified?",
+      "riskFactorDescription": "Explain the risk factor",
+      "delivery": "The delivery was:",
+      "birth": "The birth was:",
+      "birthWeightGrams": "Birth weight (in grams)",
+      "pregnancyOutcome": "What was the pregnancy outcome?",
+      "wasBreastfed": "Did the infant receive breastfeeding?",
       "blockGuard": {
         "title": "There is pregnancy data on file for this case",
         "investigationBlock": "Investigation pregnancy block (step 5)",

@@ -29,7 +29,13 @@ beforeEach(() => {
 function emptyMedicalHistoryDetail() {
   return {
     investigationId: INVESTIGATION_1,
-    investigation: { investigationId: INVESTIGATION_1, isActive: true },
+    investigation: {
+      investigationId: INVESTIGATION_1,
+      isActive: true,
+      investigationStartDate: null,
+      status: null,
+      case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: null },
+    },
     hasPriorHospitalizationHistory: null,
     priorHospitalizationObservations: null,
     hasFamilyHistory: null,

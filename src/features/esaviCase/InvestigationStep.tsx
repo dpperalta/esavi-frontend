@@ -8,8 +8,11 @@ import type { InvestigationMedicalHistoryDetail } from '@/contracts/declared/inv
 import type { InvestigationSourceDetail } from '@/contracts/declared/investigationSource';
 import type { NotificationDetail } from '@/contracts/declared/notification';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
+import { useClassificationByCase } from '@/features/classification/api';
+import { esaviCaseResource } from '@/features/esaviCase/api';
 import { BasicInfoSection } from '@/features/investigation/BasicInfoSection';
 import { MedicalHistorySection } from '@/features/investigation/MedicalHistorySection';
+import { PregnancySection } from '@/features/investigation/PregnancySection';
 import { SourceSection } from '@/features/investigation/SourceSection';
 import { TeamMemberList } from '@/features/investigation/TeamMemberList';
 import {
@@ -27,10 +30,13 @@ import type {
   MedicalHistoryFormValues,
 } from '@/features/investigation/schemas';
 import { useNotificationByCase } from '@/features/notification/api';
+import type { PregnancyGateState } from '@/features/notification/schemas';
+import { patientResource } from '@/features/patient/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { usePregnancyGate } from '@/shared/hooks/usePregnancyGate';
 import { useProgressiveSections } from '@/shared/hooks/useProgressiveSections';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 
@@ -67,8 +73,8 @@ function InvestigationCreateErrorState({ error, onRetry }: InvestigationCreateEr
   );
 }
 
-type InvestigationSectionId = 'source' | 'basicInfo' | 'team' | 'medicalHistory';
-const SECTIONS: InvestigationSectionId[] = ['source', 'basicInfo', 'team', 'medicalHistory'];
+type InvestigationSectionId = 'source' | 'basicInfo' | 'team' | 'medicalHistory' | 'pregnancy';
+const BASE_SECTIONS: InvestigationSectionId[] = ['source', 'basicInfo', 'team', 'medicalHistory'];
 
 // The combined draft (§3.4): a single `'investigation'` key, even though four self-contained
 // sections write into it — every field is optional because the user may have touched only one
@@ -78,6 +84,9 @@ interface InvestigationDraftValues {
   basicInfo?: InvestigationFormValues;
   autopsy?: InvestigationAutopsyFormValues;
   medicalHistory?: MedicalHistoryFormValues;
+  // Independent from `medicalHistory` above even though both are `MedicalHistoryFormValues` over
+  // the same row (§4 paso 6): two separate `useForm` instances, two separate draft slots.
+  pregnancy?: MedicalHistoryFormValues;
 }
 
 interface InvestigationStepBodyProps {
@@ -88,6 +97,10 @@ interface InvestigationStepBodyProps {
   investigationAutopsy: InvestigationAutopsyDetail | null;
   medicalHistory: InvestigationMedicalHistoryDetail | null;
   notification: NotificationDetail | null;
+  // Resolved once by `InvestigationStep`, already `!== undefined` by the time the body mounts
+  // (§4 paso 6, criterio de `readyToRenderForm` en `NotificationStep`): B1 either doesn't exist
+  // at all (`'hidden'`) or exists with or without the "Si aplica" mark.
+  pregnancyGate: PregnancyGateState;
   // `stages.investigation.exists` as `InvestigationStep` read it before its own `POST`
   // (SPEC FE12f §3.1, adapted): a fresh step is walked through section by section; one that
   // already existed shows in full from the first render.
@@ -103,6 +116,7 @@ function InvestigationStepBody({
   investigationAutopsy,
   medicalHistory,
   notification,
+  pregnancyGate,
   existedOnMount,
   isClosed,
 }: InvestigationStepBodyProps) {
@@ -163,11 +177,20 @@ function InvestigationStepBody({
     useDraftsStore.getState().clear(caseId, 'investigation');
   }
 
+  // Five identifiers with the gate open, four with it closed (SPEC FE13b §4 paso 6): `pregnancy`
+  // is simply absent from the list, not merely hidden by CSS — a male patient's stepper has one
+  // fewer section, and `lastWithButton` follows it so `medicalHistory` keeps its own button when
+  // there's nothing of B1 to reveal after it.
+  const sections =
+    pregnancyGate === 'hidden' ? BASE_SECTIONS : [...BASE_SECTIONS, 'pregnancy' as const];
+  const lastWithButton: InvestigationSectionId =
+    pregnancyGate === 'hidden' ? 'medicalHistory' : 'pregnancy';
+
   const revealAllRef = useRef(existedOnMount || isClosed);
   const { isVisible, frontier, advance } = useProgressiveSections<InvestigationSectionId>({
-    sections: SECTIONS,
+    sections,
     revealAll: revealAllRef.current,
-    lastWithButton: 'medicalHistory',
+    lastWithButton,
   });
 
   // `team` never gates anything — it's a satellite list with its own add dialog, not a
@@ -247,6 +270,24 @@ function InvestigationStepBody({
           }
         />
       )}
+
+      {isVisible('pregnancy') && (
+        <PregnancySection
+          investigationId={investigationId}
+          medicalHistory={medicalHistory}
+          pregnancyGate={pregnancyGate}
+          disabled={isClosed}
+          showSaveButton={frontier === 'pregnancy'}
+          onSaved={() => {
+            clearDraft();
+            advance();
+          }}
+          draftValues={restoredValues.pregnancy}
+          onValuesChange={(values) =>
+            setPendingDraftValues((current) => ({ ...current, pregnancy: values }))
+          }
+        />
+      )}
     </div>
   );
 }
@@ -270,6 +311,23 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
   const notificationStageExists = workflow.data?.stages.notification.exists === true;
   const notification = useNotificationByCase(caseId, notificationStageExists);
   const create = investigationResource.useCreate();
+
+  // The gate of §7.4 (SPEC FE13b §4 paso 6, same hook FE12d already shares with the notification
+  // step): reads three queries this step hasn't fetched before, so the section is gated on their
+  // own readiness the same way `NotificationStep` waits for `patient` before trusting it — the
+  // hook itself has no "loading" state, and trusting a transient `visibleIfApplicable` before
+  // `patient`/`classification` resolve would flash B1 open for a patient the data will turn out
+  // to be male.
+  const classificationStageExists = workflow.data?.stages.classification.exists === true;
+  const classification = useClassificationByCase(caseId, classificationStageExists);
+  const esaviCase = esaviCaseResource.useOne(caseId);
+  const patientId = esaviCase.data?.patient.patientId;
+  const patient = patientResource.useOne(patientId ?? '');
+  const pregnancyGate = usePregnancyGate(caseId);
+  const pregnancyGateReady =
+    !!esaviCase.data &&
+    (!!patient.data || patient.isError) &&
+    (!classificationStageExists || !!classification.data);
 
   // Guards against a second `POST` on the same mount — StrictMode's double effect in dev, or a
   // new render while the mutation is still in flight (§5 criterion: "a single POST"). Cleared by
@@ -333,7 +391,8 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
     !investigation.data ||
     investigationSource.isLoading ||
     investigationAutopsy.isLoading ||
-    medicalHistory.isLoading
+    medicalHistory.isLoading ||
+    !pregnancyGateReady
   ) {
     return <InvestigationStepSkeleton />;
   }
@@ -347,6 +406,7 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
       investigationAutopsy={investigationAutopsy.data ?? null}
       medicalHistory={medicalHistory.data ?? null}
       notification={notification.data ?? null}
+      pregnancyGate={pregnancyGate}
       existedOnMount={existedOnMountRef.current ?? false}
       isClosed={workflow.data.status.code === 'CLOSED'}
     />
