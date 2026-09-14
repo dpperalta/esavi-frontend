@@ -1241,6 +1241,40 @@
         "editTitle": "Edit newborn medical condition"
       }
     },
+    "clinicalEvaluation": {
+      "title": "Details of the first clinical evaluation of the ESAVI",
+      "sourcesLegend": "Source of information (check all that apply)",
+      "suspicionsLegend": "Suspicions",
+      "narrativeLegend": "Clinical narrative",
+      "notChecked": "Not checked",
+      "markNotChecked": "Mark as not checked",
+      "error": "The clinical evaluation could not be loaded.",
+      "fields": {
+        "receivedMedicalAttention": "Did the person receive medical attention for the ESAVI?",
+        "sourceExam": "Examination performed by the investigator",
+        "sourceDocuments": "Documents",
+        "sourceVerbalAutopsy": "Verbal autopsy",
+        "sourceOther": "Other",
+        "otherDescription": "Which one?",
+        "clinicalDetailsPersonName": "Name and contact information of the person or people who know the clinical details",
+        "suspectedChildAbuse": "If the ESAVI occurred in a child under five years of age, is there suspicion of child abuse?",
+        "childAbuseExplanation": "Explain",
+        "suspectedDomesticViolence": "If the ESAVI occurred in an adolescent or adult, is there evidence of domestic violence?",
+        "domesticViolenceExplanation": "Explain",
+        "otherSocialBackground": "Other social background relevant to the case",
+        "signsAndSymptoms": "Signs and symptoms in chronological order from the moment of vaccination",
+        "familyClinicalDetails": "Name and contact information of the person or family members with the clinical details",
+        "completeClinicalSummary": "Provide a complete summary of the case's clinical and paraclinical data, highlighting what is most relevant for the analysis of the event. Please scan the physical evidence of the case and save it in your digital file in an organized way"
+      },
+      "errors": {
+        "otherDescriptionRequired": "Specify the other source before saving.",
+        "otherDescriptionNotAllowed": "With \"other\" turned off, this explanation isn't saved.",
+        "childAbuseExplanationRequired": "Explain the suspicion of child abuse before saving.",
+        "childAbuseExplanationNotAllowed": "Without a suspicion of child abuse, this explanation isn't saved.",
+        "domesticViolenceExplanationRequired": "Explain the suspicion of domestic violence before saving.",
+        "domesticViolenceExplanationNotAllowed": "Without a suspicion of domestic violence, this explanation isn't saved."
+      }
+    },
     "draft": {
       "restored": "Recovered unsaved changes from an earlier session.",
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."

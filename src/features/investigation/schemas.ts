@@ -408,6 +408,23 @@ export function isFlagExplanationRequirementMet(
   return flag === true ? trimmed.length > 0 : trimmed.length === 0;
 }
 
+// Declares the state of the three pairs instead of letting the `PUT` body depend on what the
+// form happened to leave behind (§1.D, same criterion as `buildMedicalHistorySavePayload` above):
+// with a pair closed, its explanation travels as explicit `null`, and the differential update
+// skips the `UPDATE` if it was already empty.
+export function buildClinicalEvaluationSavePayload(
+  values: InvestigationClinicalEvaluationFormValues,
+): InvestigationClinicalEvaluationFormValues {
+  return {
+    ...values,
+    otherDescription: values.sourceOther === true ? values.otherDescription : null,
+    childAbuseExplanation:
+      values.suspectedChildAbuse === true ? values.childAbuseExplanation : null,
+    domesticViolenceExplanation:
+      values.suspectedDomesticViolence === true ? values.domesticViolenceExplanation : null,
+  };
+}
+
 export const investigationClinicalEvaluationSaveSchema = z
   .object({
     // Does not gate anything that follows (§6 decision 9): the five sources below are always

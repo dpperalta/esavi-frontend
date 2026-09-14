@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   areAutopsyFlagsMutuallyExclusive,
+  buildClinicalEvaluationSavePayload,
   buildMedicalHistorySavePayload,
   ENCRYPTED_FIELD_SCREEN_LIMIT,
   evaluationInstitutionErrorFieldMap,
@@ -424,6 +425,51 @@ describe('isFlagExplanationRequirementMet — G (SPEC FE13c §1.D)', () => {
   it('bandera cerrada con explicación heredada no cumple', () => {
     expect(isFlagExplanationRequirementMet(false, 'texto viejo')).toBe(false);
     expect(isFlagExplanationRequirementMet(null, 'texto viejo')).toBe(false);
+  });
+});
+
+describe('buildClinicalEvaluationSavePayload — G (SPEC FE13c §3.5 A)', () => {
+  const base = {
+    receivedMedicalAttention: null,
+    sourceExam: null,
+    sourceDocuments: null,
+    sourceVerbalAutopsy: null,
+    sourceOther: null,
+    otherDescription: null,
+    suspectedChildAbuse: null,
+    childAbuseExplanation: null,
+    suspectedDomesticViolence: null,
+    domesticViolenceExplanation: null,
+    clinicalDetailsPersonName: null,
+    familyClinicalDetails: null,
+    completeClinicalSummary: null,
+    signsAndSymptoms: null,
+    otherSocialBackground: null,
+    notes: null,
+  };
+
+  it('con las tres banderas cerradas, fuerza las tres explicaciones a null aunque el campo tenga texto', () => {
+    const payload = buildClinicalEvaluationSavePayload({
+      ...base,
+      sourceOther: false,
+      otherDescription: 'texto heredado',
+      suspectedChildAbuse: null,
+      childAbuseExplanation: 'texto heredado',
+      suspectedDomesticViolence: false,
+      domesticViolenceExplanation: 'texto heredado',
+    });
+    expect(payload.otherDescription).toBeNull();
+    expect(payload.childAbuseExplanation).toBeNull();
+    expect(payload.domesticViolenceExplanation).toBeNull();
+  });
+
+  it('con una bandera abierta, conserva su explicación', () => {
+    const payload = buildClinicalEvaluationSavePayload({
+      ...base,
+      sourceOther: true,
+      otherDescription: 'Registro clínico externo',
+    });
+    expect(payload.otherDescription).toBe('Registro clínico externo');
   });
 });
 

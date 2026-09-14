@@ -1241,6 +1241,40 @@
         "description_other": "Hay {{count}} afecciones médicas del recién nacido registradas. Sólo un administrador puede retirarlas antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer»."
       }
     },
+    "clinicalEvaluation": {
+      "title": "Detalles de la primera evaluación clínica del ESAVI",
+      "sourcesLegend": "Fuente de información (marque todas las opciones que sea necesario)",
+      "suspicionsLegend": "Sospechas",
+      "narrativeLegend": "Relato clínico",
+      "notChecked": "Sin comprobar",
+      "markNotChecked": "Marcar como sin comprobar",
+      "error": "No se pudo cargar la evaluación clínica.",
+      "fields": {
+        "receivedMedicalAttention": "¿Ha recibido la persona atención médica para el ESAVI?",
+        "sourceExam": "Examen realizado por el investigador",
+        "sourceDocuments": "Documentos",
+        "sourceVerbalAutopsy": "Autopsia verbal",
+        "sourceOther": "Otro",
+        "otherDescription": "¿Cuál?",
+        "clinicalDetailsPersonName": "Nombre e información de contacto de la persona o personas que conocen los detalles clínicos",
+        "suspectedChildAbuse": "Si el ESAVI se presentó en un menor de cinco años de edad, ¿hay sospecha de maltrato infantil?",
+        "childAbuseExplanation": "Explique",
+        "suspectedDomesticViolence": "Si el ESAVI se presentó en una persona adolescente o adulta, ¿hay evidencia de violencia intrafamiliar?",
+        "domesticViolenceExplanation": "Explique",
+        "otherSocialBackground": "Otros antecedentes sociales relevantes del caso",
+        "signsAndSymptoms": "Signos y síntomas en orden cronológico desde el momento de la vacunación",
+        "familyClinicalDetails": "Nombre e información de contacto de la persona o familiares de la persona, con los detalles clínicos",
+        "completeClinicalSummary": "Haga un resumen completo de los datos clínicos y paraclínicos del caso, resaltando lo más relevante para el análisis del evento. Por favor, escanee las pruebas físicas del caso y guárdelas organizadamente en su archivo digital"
+      },
+      "errors": {
+        "otherDescriptionRequired": "Especifica cuál es la otra fuente antes de guardar.",
+        "otherDescriptionNotAllowed": "Con «otro» apagado, esta explicación no se guarda.",
+        "childAbuseExplanationRequired": "Explica la sospecha de maltrato infantil antes de guardar.",
+        "childAbuseExplanationNotAllowed": "Sin sospecha de maltrato infantil, esta explicación no se guarda.",
+        "domesticViolenceExplanationRequired": "Explica la sospecha de violencia intrafamiliar antes de guardar.",
+        "domesticViolenceExplanationNotAllowed": "Sin sospecha de violencia intrafamiliar, esta explicación no se guarda."
+      }
+    },
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."

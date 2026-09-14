@@ -1241,6 +1241,40 @@
         "editTitle": "Medische aandoening van de pasgeborene bewerken"
       }
     },
+    "clinicalEvaluation": {
+      "title": "Details van de eerste klinische evaluatie van het ESAVI",
+      "sourcesLegend": "Informatiebron (vink alles aan wat van toepassing is)",
+      "suspicionsLegend": "Vermoedens",
+      "narrativeLegend": "Klinisch verslag",
+      "notChecked": "Niet gecontroleerd",
+      "markNotChecked": "Markeren als niet gecontroleerd",
+      "error": "De klinische evaluatie kon niet worden geladen.",
+      "fields": {
+        "receivedMedicalAttention": "Heeft de persoon medische zorg ontvangen voor het ESAVI?",
+        "sourceExam": "Onderzoek uitgevoerd door de onderzoeker",
+        "sourceDocuments": "Documenten",
+        "sourceVerbalAutopsy": "Mondelinge autopsie",
+        "sourceOther": "Andere",
+        "otherDescription": "Welke?",
+        "clinicalDetailsPersonName": "Naam en contactgegevens van de persoon of personen die de klinische details kennen",
+        "suspectedChildAbuse": "Als het ESAVI zich voordeed bij een kind jonger dan vijf jaar, is er dan een vermoeden van kindermishandeling?",
+        "childAbuseExplanation": "Leg uit",
+        "suspectedDomesticViolence": "Als het ESAVI zich voordeed bij een adolescent of volwassene, is er dan bewijs van huiselijk geweld?",
+        "domesticViolenceExplanation": "Leg uit",
+        "otherSocialBackground": "Andere relevante sociale achtergrond van het geval",
+        "signsAndSymptoms": "Tekenen en symptomen in chronologische volgorde vanaf het moment van vaccinatie",
+        "familyClinicalDetails": "Naam en contactgegevens van de persoon of familieleden met de klinische details",
+        "completeClinicalSummary": "Geef een volledige samenvatting van de klinische en paraklinische gegevens van het geval, met de nadruk op wat het meest relevant is voor de analyse van de gebeurtenis. Scan het fysieke bewijs van het geval en bewaar het op een overzichtelijke manier in uw digitale dossier"
+      },
+      "errors": {
+        "otherDescriptionRequired": "Geef de andere bron op voordat u opslaat.",
+        "otherDescriptionNotAllowed": "Met «andere» uitgeschakeld wordt deze toelichting niet opgeslagen.",
+        "childAbuseExplanationRequired": "Leg het vermoeden van kindermishandeling uit voordat u opslaat.",
+        "childAbuseExplanationNotAllowed": "Zonder vermoeden van kindermishandeling wordt deze toelichting niet opgeslagen.",
+        "domesticViolenceExplanationRequired": "Leg het vermoeden van huiselijk geweld uit voordat u opslaat.",
+        "domesticViolenceExplanationNotAllowed": "Zonder vermoeden van huiselijk geweld wordt deze toelichting niet opgeslagen."
+      }
+    },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
