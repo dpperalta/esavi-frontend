@@ -4,10 +4,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { InvestigationDetail } from '@/contracts/declared/investigation';
 import type { InvestigationAutopsyDetail } from '@/contracts/declared/investigationAutopsy';
+import type { InvestigationMedicalHistoryDetail } from '@/contracts/declared/investigationMedicalHistory';
 import type { InvestigationSourceDetail } from '@/contracts/declared/investigationSource';
 import type { NotificationDetail } from '@/contracts/declared/notification';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { BasicInfoSection } from '@/features/investigation/BasicInfoSection';
+import { MedicalHistorySection } from '@/features/investigation/MedicalHistorySection';
 import { SourceSection } from '@/features/investigation/SourceSection';
 import { TeamMemberList } from '@/features/investigation/TeamMemberList';
 import {
@@ -15,12 +17,14 @@ import {
   investigationResource,
   useInvestigationAutopsyByCase,
   useInvestigationByCase,
+  useInvestigationMedicalHistoryByCase,
   useInvestigationSourceByCase,
 } from '@/features/investigation/api';
 import type {
   InvestigationAutopsyFormValues,
   InvestigationFormValues,
   InvestigationSourceFormValues,
+  MedicalHistoryFormValues,
 } from '@/features/investigation/schemas';
 import { useNotificationByCase } from '@/features/notification/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -63,16 +67,17 @@ function InvestigationCreateErrorState({ error, onRetry }: InvestigationCreateEr
   );
 }
 
-type InvestigationSectionId = 'source' | 'basicInfo' | 'team';
-const SECTIONS: InvestigationSectionId[] = ['source', 'basicInfo', 'team'];
+type InvestigationSectionId = 'source' | 'basicInfo' | 'team' | 'medicalHistory';
+const SECTIONS: InvestigationSectionId[] = ['source', 'basicInfo', 'team', 'medicalHistory'];
 
-// The combined draft (§3.4): a single `'investigation'` key, even though three self-contained
+// The combined draft (§3.4): a single `'investigation'` key, even though four self-contained
 // sections write into it — every field is optional because the user may have touched only one
 // section before the accidental tab close.
 interface InvestigationDraftValues {
   source?: InvestigationSourceFormValues;
   basicInfo?: InvestigationFormValues;
   autopsy?: InvestigationAutopsyFormValues;
+  medicalHistory?: MedicalHistoryFormValues;
 }
 
 interface InvestigationStepBodyProps {
@@ -81,6 +86,7 @@ interface InvestigationStepBodyProps {
   investigation: InvestigationDetail;
   investigationSource: InvestigationSourceDetail | null;
   investigationAutopsy: InvestigationAutopsyDetail | null;
+  medicalHistory: InvestigationMedicalHistoryDetail | null;
   notification: NotificationDetail | null;
   // `stages.investigation.exists` as `InvestigationStep` read it before its own `POST`
   // (SPEC FE12f §3.1, adapted): a fresh step is walked through section by section; one that
@@ -95,6 +101,7 @@ function InvestigationStepBody({
   investigation,
   investigationSource,
   investigationAutopsy,
+  medicalHistory,
   notification,
   existedOnMount,
   isClosed,
@@ -160,8 +167,19 @@ function InvestigationStepBody({
   const { isVisible, frontier, advance } = useProgressiveSections<InvestigationSectionId>({
     sections: SECTIONS,
     revealAll: revealAllRef.current,
-    lastWithButton: 'basicInfo',
+    lastWithButton: 'medicalHistory',
   });
+
+  // `team` never gates anything — it's a satellite list with its own add dialog, not a
+  // "Guardar y continuar" of its own (SPEC FE13a §3.6) — but §4.3's order (`ESAVI-FORM.md`
+  // Sección A2 before B) keeps it ahead of `medicalHistory` in `SECTIONS`. Passing through it
+  // automatically is what lets `medicalHistory` become the next gated frontier instead of
+  // getting stuck behind a section with no button to press.
+  useEffect(() => {
+    if (frontier === 'team') {
+      advance();
+    }
+  }, [frontier, advance]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -211,6 +229,24 @@ function InvestigationStepBody({
       )}
 
       {isVisible('team') && <TeamMemberList investigationId={investigationId} disabled={isClosed} />}
+
+      {isVisible('medicalHistory') && (
+        <MedicalHistorySection
+          caseId={caseId}
+          investigationId={investigationId}
+          medicalHistory={medicalHistory}
+          disabled={isClosed}
+          showSaveButton={frontier === 'medicalHistory'}
+          onSaved={() => {
+            clearDraft();
+            advance();
+          }}
+          draftValues={restoredValues.medicalHistory}
+          onValuesChange={(values) =>
+            setPendingDraftValues((current) => ({ ...current, medicalHistory: values }))
+          }
+        />
+      )}
     </div>
   );
 }
@@ -230,6 +266,7 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
   const investigation = useInvestigationByCase(caseId, stageExists);
   const investigationSource = useInvestigationSourceByCase(caseId, stageExists);
   const investigationAutopsy = useInvestigationAutopsyByCase(caseId, stageExists);
+  const medicalHistory = useInvestigationMedicalHistoryByCase(caseId, stageExists);
   const notificationStageExists = workflow.data?.stages.notification.exists === true;
   const notification = useNotificationByCase(caseId, notificationStageExists);
   const create = investigationResource.useCreate();
@@ -295,7 +332,8 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
     investigation.isLoading ||
     !investigation.data ||
     investigationSource.isLoading ||
-    investigationAutopsy.isLoading
+    investigationAutopsy.isLoading ||
+    medicalHistory.isLoading
   ) {
     return <InvestigationStepSkeleton />;
   }
@@ -307,6 +345,7 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
       investigation={investigation.data}
       investigationSource={investigationSource.data ?? null}
       investigationAutopsy={investigationAutopsy.data ?? null}
+      medicalHistory={medicalHistory.data ?? null}
       notification={notification.data ?? null}
       existedOnMount={existedOnMountRef.current ?? false}
       isClosed={workflow.data.status.code === 'CLOSED'}

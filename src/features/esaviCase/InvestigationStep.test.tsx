@@ -86,6 +86,39 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+// Reset before every test (§4 paso 5's own opening `POST`): `null` until a test's own flow
+// creates it, exactly like `teamRows` further down for the team satellite.
+function emptyMedicalHistoryDetail() {
+  return {
+    investigationId: INVESTIGATION_1,
+    investigation: { investigationId: INVESTIGATION_1, isActive: true },
+    hasPriorHospitalizationHistory: null,
+    priorHospitalizationObservations: null,
+    hasFamilyHistory: null,
+    familyHistoryObservations: null,
+    isPregnancyConfirmed: null,
+    gestationalWeeks: null,
+    gestationMethodItemId: null,
+    deliveryItemId: null,
+    birthItemId: null,
+    pregnancyOutcomeItemId: null,
+    hasPregnancyRiskFactor: null,
+    riskFactorDescription: null,
+    birthWeightGrams: null,
+    wasBreastfed: null,
+    notes: null,
+    gestationMethod: null,
+    delivery: null,
+    birth: null,
+    pregnancyOutcome: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: null,
+    deletedAt: null,
+    appDetails: [],
+  };
+}
+let medicalHistoryRow: ReturnType<typeof emptyMedicalHistoryDetail> | null = null;
+
 beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
@@ -93,6 +126,7 @@ beforeEach(() => {
   toastInfo.mockClear();
   toastSuccess.mockClear();
   toastError.mockClear();
+  medicalHistoryRow = null;
   mockSectionDependencies();
 });
 
@@ -114,6 +148,27 @@ function mockSectionDependencies() {
         { status: 404 },
       ),
     ),
+    // Stateful, unlike the two above (SPEC FE13b §4 paso 5): the section opens the ficha itself
+    // with an empty `POST` as soon as it reveals, and the very next re-read has to see it, or
+    // the section is stuck disabled forever waiting for a row that "exists" only on the server's
+    // side of a mock that never remembers it.
+    http.get(`http://localhost:4500/api/investigation-medical-histories/case/${CASE_1}`, () =>
+      medicalHistoryRow
+        ? HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow })
+        : HttpResponse.json(
+            { ok: false, message: 'no encontrado', code: 'INVMEDH_006_NOT_FOUND' },
+            { status: 404 },
+          ),
+    ),
+    http.post('http://localhost:4500/api/investigation-medical-histories', () => {
+      medicalHistoryRow = emptyMedicalHistoryDetail();
+      return HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow });
+    }),
+    http.put(`http://localhost:4500/api/investigation-medical-histories/${INVESTIGATION_1}`, async ({ request }) => {
+      const body = (await request.json()) as Record<string, unknown>;
+      medicalHistoryRow = { ...emptyMedicalHistoryDetail(), ...medicalHistoryRow, ...body };
+      return HttpResponse.json({ ok: true, message: 'ok', data: medicalHistoryRow });
+    }),
     http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
       HttpResponse.json({
         ok: true,
@@ -603,7 +658,15 @@ describe('InvestigationStep — el recorrido completo (SPEC FE13a §4 paso 13)',
     await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
 
     expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+    // `team` never gates anything and passes through on its own (SPEC FE13b §4 paso 5); what's
+    // left with a button now is `medicalHistory`, revealed right behind it — disabled until its
+    // opening `POST` resolves.
+    expect(
+      await screen.findByRole('heading', { name: 'Antecedentes de la persona vacunada' }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Guardar y continuar' })).toBeEnabled(),
+    );
 
     await user.click(screen.getByRole('button', { name: 'Añadir' }));
     await user.type(screen.getByLabelText('Nombres y apellidos'), 'Ana Pérez');
@@ -671,8 +734,13 @@ describe('InvestigationStep — el recorrido completo (SPEC FE13a §4 paso 13)',
 
     expect(await screen.findByRole('switch', { name: 'Historia clínica' })).toBeChecked();
     await screen.findByText('Información básica');
-    expect(document.getElementById('investigation-basicInfo-notes')).toHaveValue('Notas previas');
+    await waitFor(() =>
+      expect(document.getElementById('investigation-basicInfo-notes')).toHaveValue('Notas previas'),
+    );
     expect((await screen.findAllByText('Ana Pérez')).length).toBeGreaterThan(0);
+    // Full reveal on reentry means no frontier at all (SPEC FE13a §3.6, unchanged by this spec):
+    // `medicalHistory` opens its ficha silently in the background same as the other three
+    // sections show without one — none of the four gets a "Guardar y continuar" here.
     expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
   });
 

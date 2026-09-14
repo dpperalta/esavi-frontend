@@ -1187,6 +1187,15 @@
       "deathWarningLink": "Revisar el paso 4",
       "dismissWarning": "Descartar aviso"
     },
+    "medicalHistory": {
+      "title": "Antecedentes de la persona vacunada",
+      "hasPriorHospitalizationHistory": "Antecedentes de hospitalización en los 30 días previos a la vacunación actual",
+      "priorHospitalizationObservations": "Observaciones del antecedente de hospitalización",
+      "hasFamilyHistory": "Antecedentes familiares de otra enfermedad (relevantes para un ESAVI) o alergia",
+      "familyHistoryObservations": "Observaciones de antecedentes familiares",
+      "notes": "Observaciones de la ficha",
+      "openFailed": "No se pudo abrir la ficha de antecedentes."
+    },
     "team": {
       "sectionTitle": "Datos del equipo de investigación",
       "field": {

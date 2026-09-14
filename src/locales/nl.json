@@ -1187,6 +1187,15 @@
       "deathWarningLink": "Stap 4 bekijken",
       "dismissWarning": "Melding negeren"
     },
+    "medicalHistory": {
+      "title": "Voorgeschiedenis van de gevaccineerde persoon",
+      "hasPriorHospitalizationHistory": "Ziekenhuisopname in de 30 dagen vóór de huidige vaccinatie",
+      "priorHospitalizationObservations": "Opmerkingen bij de eerdere ziekenhuisopname",
+      "hasFamilyHistory": "Familiegeschiedenis van een andere aandoening (relevant voor een ESAVI) of allergie",
+      "familyHistoryObservations": "Opmerkingen bij de familiegeschiedenis",
+      "notes": "Opmerkingen bij dit dossier",
+      "openFailed": "Het voorgeschiedenisdossier kon niet worden geopend."
+    },
     "team": {
       "sectionTitle": "Gegevens van het onderzoeksteam",
       "field": {

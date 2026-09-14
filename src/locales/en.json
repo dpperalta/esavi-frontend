@@ -1187,6 +1187,15 @@
       "deathWarningLink": "Review step 4",
       "dismissWarning": "Dismiss warning"
     },
+    "medicalHistory": {
+      "title": "History of the vaccinated person",
+      "hasPriorHospitalizationHistory": "Hospitalization history in the 30 days before the current vaccination",
+      "priorHospitalizationObservations": "Observations on the prior hospitalization",
+      "hasFamilyHistory": "Family history of another disease (relevant to an ESAVI) or allergy",
+      "familyHistoryObservations": "Observations on family history",
+      "notes": "Observations for this record",
+      "openFailed": "Couldn't open the medical history record."
+    },
     "team": {
       "sectionTitle": "Investigation team information",
       "field": {
