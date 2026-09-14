@@ -1,11 +1,13 @@
 import '@/shared/config/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, renderHook, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import type { ReactNode } from 'react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
+import { useInvestigationClinicalEvaluationByCase } from './api';
 import { ClinicalEvaluationSection } from './ClinicalEvaluationSection';
 
 const server = setupServer();
@@ -243,12 +245,127 @@ describe('ClinicalEvaluationSection — clinicalDetailsPersonName cifrado (SPEC 
   });
 });
 
-describe('ClinicalEvaluationSection — deshabilitada sin ficha (SPEC FE13c §4 paso 5)', () => {
-  it('con clinicalEvaluation:null, el formulario está deshabilitado', () => {
+describe('ClinicalEvaluationSection — la ficha se crea al revelarse la sección (SPEC FE13c §4 paso 5)', () => {
+  it('revelar la sección sin ficha dispara un solo POST', async () => {
+    let postCount = 0;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-clinical-evaluations', () => {
+        postCount++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: emptyClinicalEvaluationDetail() });
+      }),
+    );
+    renderClinicalEvaluationSection({ clinicalEvaluation: null });
+
+    await waitFor(() => expect(postCount).toBe(1));
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(postCount).toBe(1);
+  });
+
+  it('el POST vacío sólo lleva investigationId', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-clinical-evaluations', async ({ request }) => {
+        receivedBody = await request.json();
+        return HttpResponse.json({ ok: true, message: 'ok', data: emptyClinicalEvaluationDetail() });
+      }),
+    );
+    renderClinicalEvaluationSection({ clinicalEvaluation: null });
+
+    await waitFor(() => expect(receivedBody).not.toBeNull());
+    expect(receivedBody).toEqual({ investigationId: INVESTIGATION_1 });
+  });
+
+  it('revelar la sección con una ficha ya existente no dispara ningún POST', () => {
+    let postCount = 0;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-clinical-evaluations', () => {
+        postCount++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: emptyClinicalEvaluationDetail() });
+      }),
+    );
+    renderClinicalEvaluationSection();
+
+    expect(postCount).toBe(0);
+  });
+
+  it('con clinicalEvaluation:null, el formulario está deshabilitado mientras la ficha no existe', () => {
+    server.use(
+      http.post(
+        'http://localhost:4500/api/investigation-clinical-evaluations',
+        () => new Promise(() => {}),
+      ),
+    );
     renderClinicalEvaluationSection({ clinicalEvaluation: null });
 
     expect(
       screen.getByRole('switch', { name: 'Examen realizado por el investigador' }),
     ).toBeDisabled();
+  });
+
+  it('con el POST en error, no se pinta el formulario y hay botón de reintentar', async () => {
+    server.use(
+      http.post('http://localhost:4500/api/investigation-clinical-evaluations', () =>
+        HttpResponse.json(
+          { ok: false, message: 'Error inesperado', code: 'INVCLIEV_001_CREATION_FAILED' },
+          { status: 500 },
+        ),
+      ),
+    );
+    renderClinicalEvaluationSection({ clinicalEvaluation: null });
+
+    await waitFor(() =>
+      expect(screen.getByText('No se pudo abrir la ficha de evaluación clínica.')).toBeInTheDocument(),
+    );
+    expect(
+      screen.queryByRole('switch', { name: 'Examen realizado por el investigador' }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+
+  it('un 409 INVCLIEV_001_ALREADY_EXISTS relee en vez de duplicar', async () => {
+    let postCount = 0;
+    let getCount = 0;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-clinical-evaluations', () => {
+        postCount++;
+        return HttpResponse.json(
+          { ok: false, message: 'Ya existe', code: 'INVCLIEV_001_ALREADY_EXISTS' },
+          { status: 409 },
+        );
+      }),
+      http.get(
+        `http://localhost:4500/api/investigation-clinical-evaluations/case/${CASE_1}`,
+        () => {
+          getCount++;
+          return HttpResponse.json({ ok: true, message: 'ok', data: emptyClinicalEvaluationDetail() });
+        },
+      ),
+    );
+
+    // The by-case query needs an active observer for `invalidateQueries` to trigger a real
+    // refetch — on the real screen that observer is `InvestigationStep`; here it's simulated by
+    // sharing the same `queryClient` with a dedicated `renderHook`, same as
+    // `SourceSection.test.tsx`'s equivalent test.
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const Wrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+    renderHook(() => useInvestigationClinicalEvaluationByCase(CASE_1, true), { wrapper: Wrapper });
+    await waitFor(() => expect(getCount).toBe(1));
+
+    render(
+      <Wrapper>
+        <ClinicalEvaluationSection
+          caseId={CASE_1}
+          investigationId={INVESTIGATION_1}
+          clinicalEvaluation={null}
+          showSaveButton
+          onSaved={vi.fn()}
+        />
+      </Wrapper>,
+    );
+
+    await waitFor(() => expect(postCount).toBe(1));
+    await waitFor(() => expect(getCount).toBe(2));
   });
 });

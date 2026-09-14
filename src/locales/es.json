@@ -1249,6 +1249,7 @@
       "notChecked": "Sin comprobar",
       "markNotChecked": "Marcar como sin comprobar",
       "error": "No se pudo cargar la evaluación clínica.",
+      "openFailed": "No se pudo abrir la ficha de evaluación clínica.",
       "fields": {
         "receivedMedicalAttention": "¿Ha recibido la persona atención médica para el ESAVI?",
         "sourceExam": "Examen realizado por el investigador",

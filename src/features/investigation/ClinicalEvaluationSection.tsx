@@ -1,10 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { InvestigationClinicalEvaluationDetail } from '@/contracts/declared/investigationClinicalEvaluation';
-import { investigationClinicalEvaluationResource } from '@/features/investigation/api';
+import {
+  investigationClinicalEvaluationByCaseKey,
+  investigationClinicalEvaluationResource,
+  useCreateInvestigationClinicalEvaluation,
+} from '@/features/investigation/api';
 import {
   buildClinicalEvaluationSavePayload,
   investigationClinicalEvaluationErrorFieldMap,
@@ -105,10 +110,11 @@ export interface ClinicalEvaluationSectionProps {
 
 // Section C of step 5 (SPEC FE13c §3.5 A) — the sixteen columns of `ESAVI-FORM.md` C.1–C.16,
 // minus C.7/7.1–7.3 (the institutions list, a section of its own below) and C.17 (the
-// diagnostics list). The ficha opens empty on the section's reveal — that wiring is added on top
-// of this component (§4 paso 5) — so `clinicalEvaluation === null` here simply means "not created
-// yet" and disables the whole form, the same gate `MedicalHistorySection` applies.
+// diagnostics list). The ficha opens the moment this section reveals, with an empty
+// `POST { investigationId }` (§2, §4 paso 5) — the same idea `MedicalHistorySection` applies to
+// its own row. Controls stay disabled until that resolves.
 export function ClinicalEvaluationSection({
+  caseId,
   investigationId,
   clinicalEvaluation,
   disabled,
@@ -118,7 +124,45 @@ export function ClinicalEvaluationSection({
   onValuesChange,
 }: ClinicalEvaluationSectionProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const create = useCreateInvestigationClinicalEvaluation();
   const update = investigationClinicalEvaluationResource.useUpdate();
+
+  // Guards the opening `POST` against a second attempt — StrictMode's double effect in dev, or a
+  // re-render while the mutation is still in flight — mirroring `attemptedRef` in
+  // `MedicalHistorySection`. Reset by hand only in `handleRetry`.
+  const attemptedRef = useRef(false);
+
+  function openClinicalEvaluation() {
+    attemptedRef.current = true;
+    create.mutate(
+      { investigationId },
+      {
+        onError: (err) => {
+          // The 1:1 row already exists (§1.B, a race between two tabs on the same case): re-read
+          // instead of retrying the `POST`, and swallow it — it isn't the investigator's error.
+          if (err instanceof EsaviApiError && err.code === 'INVCLIEV_001_ALREADY_EXISTS') {
+            create.reset();
+            void queryClient.invalidateQueries({
+              queryKey: investigationClinicalEvaluationByCaseKey(caseId),
+            });
+          }
+        },
+      },
+    );
+  }
+
+  useEffect(() => {
+    if (clinicalEvaluation !== null || attemptedRef.current) return;
+    openClinicalEvaluation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clinicalEvaluation]);
+
+  function handleRetry() {
+    attemptedRef.current = false;
+    create.reset();
+    openClinicalEvaluation();
+  }
 
   const form = useForm<InvestigationClinicalEvaluationFormValues>({
     resolver: zodResolver(
@@ -162,8 +206,29 @@ export function ClinicalEvaluationSection({
     }
   }
 
-  // Deshabilitado mientras la ficha aún no existe (§4 paso 5), además de por `CLOSED` o por lo
-  // que decida el llamador.
+  // La fila no existe todavía, o la `POST` de apertura falló de plano (§4 paso 5): sin ficha no
+  // hay formulario que pintar. `INVCLIEV_001_ALREADY_EXISTS` nunca llega hasta aquí — resetea la
+  // mutación y relee en vez de mostrarse como error.
+  if (clinicalEvaluation === null && create.isError) {
+    const message =
+      create.error instanceof EsaviApiError
+        ? getErrorMessage(create.error)
+        : t('common.errors.unexpected');
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border p-8 text-center">
+        <p className="text-sm font-medium text-foreground">
+          {t('investigation.clinicalEvaluation.openFailed')}
+        </p>
+        <p className="text-sm text-muted-foreground">{message}</p>
+        <Button variant="outline" onClick={handleRetry}>
+          {t('common.retry')}
+        </Button>
+      </div>
+    );
+  }
+
+  // Deshabilitado mientras la ficha aún no existe, además de por `CLOSED` o por lo que decida el
+  // llamador.
   const isDisabled = disabled || clinicalEvaluation === null;
 
   return (

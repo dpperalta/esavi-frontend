@@ -1249,6 +1249,7 @@
       "notChecked": "Niet gecontroleerd",
       "markNotChecked": "Markeren als niet gecontroleerd",
       "error": "De klinische evaluatie kon niet worden geladen.",
+      "openFailed": "Het dossier van de klinische evaluatie kon niet worden geopend.",
       "fields": {
         "receivedMedicalAttention": "Heeft de persoon medische zorg ontvangen voor het ESAVI?",
         "sourceExam": "Onderzoek uitgevoerd door de onderzoeker",

@@ -1249,6 +1249,7 @@
       "notChecked": "Not checked",
       "markNotChecked": "Mark as not checked",
       "error": "The clinical evaluation could not be loaded.",
+      "openFailed": "The clinical evaluation record could not be opened.",
       "fields": {
         "receivedMedicalAttention": "Did the person receive medical attention for the ESAVI?",
         "sourceExam": "Examination performed by the investigator",
