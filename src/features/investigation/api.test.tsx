@@ -3,18 +3,26 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import type { ReactNode } from 'react';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import {
+  evaluationInstitutionResource,
+  evaluationInstitutionsByInvestigationKey,
   investigationAutopsyResource,
+  investigationClinicalEvaluationResource,
+  investigationDiagnosticResource,
   investigationMedicalHistoryResource,
   investigationPregnancyConditionResource,
   investigationResource,
   investigationSourceResource,
   investigationTeamMemberResource,
+  useCreateInvestigationClinicalEvaluation,
+  useEvaluationInstitutionsByInvestigation,
   useInvestigationAutopsyByCase,
   useInvestigationByCase,
+  useInvestigationClinicalEvaluationByCase,
+  useInvestigationDiagnosticsByCase,
   useInvestigationMedicalHistoryByCase,
   useInvestigationSourceByCase,
   useNewbornConditionsByMedicalHistory,
@@ -524,5 +532,378 @@ describe('investigationPregnancyConditionResource — ESAVI-INVPREG-001/004', ()
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(receivedBody).toMatchObject({ investigationId: 'inv-1', conditionName: 'Ictericia' });
+  });
+});
+
+const investigationClinicalEvaluationDetail = {
+  investigationId: 'inv-1',
+  investigation: investigationSourceDetail.investigation,
+  receivedMedicalAttention: null,
+  sourceExam: null,
+  sourceDocuments: null,
+  sourceVerbalAutopsy: null,
+  sourceOther: null,
+  otherDescription: null,
+  suspectedChildAbuse: null,
+  childAbuseExplanation: null,
+  suspectedDomesticViolence: null,
+  domesticViolenceExplanation: null,
+  clinicalDetailsPersonName: null,
+  familyClinicalDetails: null,
+  completeClinicalSummary: null,
+  signsAndSymptoms: null,
+  otherSocialBackground: null,
+  notes: null,
+  createdAt: '2026-09-01T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+};
+
+describe('useInvestigationClinicalEvaluationByCase — ESAVI-INVCLIEV-006', () => {
+  it('antes de revelarse la sección C, un 404 INVCLIEV_006_NOT_FOUND resuelve null', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-clinical-evaluations/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'INVCLIEV_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(
+      () => useInvestigationClinicalEvaluationByCase('case-1', true),
+      { wrapper: Wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
+  });
+
+  it('con la cabecera de la investigación ausente, INVCLIEV_006_INVESTIGATION_NOT_FOUND se propaga', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-clinical-evaluations/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'sin cabecera', code: 'INVCLIEV_006_INVESTIGATION_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(
+      () => useInvestigationClinicalEvaluationByCase('case-1', true),
+      { wrapper: Wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('investigationClinicalEvaluationResource.useUpdate — ESAVI-INVCLIEV-004', () => {
+  it('el PUT va contra /:investigationId, no contra un id propio', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.put(
+        'http://localhost:4500/api/investigation-clinical-evaluations/inv-1',
+        ({ request }) => {
+          hitUrl = request.url;
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: investigationClinicalEvaluationDetail,
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationClinicalEvaluationResource.useUpdate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ id: 'inv-1', data: { notes: 'x' } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-clinical-evaluations/inv-1');
+  });
+});
+
+describe('useCreateInvestigationClinicalEvaluation — ESAVI-INVCLIEV-001', () => {
+  it('el POST vacío sólo lleva investigationId', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post(
+        'http://localhost:4500/api/investigation-clinical-evaluations',
+        async ({ request }) => {
+          receivedBody = await request.json();
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: investigationClinicalEvaluationDetail,
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useCreateInvestigationClinicalEvaluation(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toEqual({ investigationId: 'inv-1' });
+  });
+
+  it('invalida también la clave de las instituciones, aunque no cree ninguna', async () => {
+    server.use(
+      http.post('http://localhost:4500/api/investigation-clinical-evaluations', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: investigationClinicalEvaluationDetail,
+        }),
+      ),
+    );
+    const { Wrapper, queryClient } = createWrapper();
+    const { result } = renderHook(() => useCreateInvestigationClinicalEvaluation(), {
+      wrapper: Wrapper,
+    });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+    result.current.mutate({ investigationId: 'inv-1' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(invalidateSpy).toHaveBeenCalledWith({
+      queryKey: evaluationInstitutionsByInvestigationKey('inv-1'),
+    });
+  });
+});
+
+const evaluationInstitutionDetail = {
+  evaluationInstitutionId: 'evalinst-1',
+  investigationId: 'inv-1',
+  sortOrder: 1,
+  healthFacilityId: null,
+  institutionName: 'Hospital San Juan',
+  personName: null,
+  personContact: null,
+  evaluationInstitutionTypeItemId: null,
+  notes: null,
+  isActive: true,
+  healthFacility: null,
+  institutionType: null,
+  createdAt: '2026-09-01T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+};
+
+describe('useEvaluationInstitutionsByInvestigation — ESAVI-EVALINST-002A', () => {
+  it('pide /investigation/:id con el investigationId de la ficha, no un id propio', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.get(
+        'http://localhost:4500/api/evaluation-institutions/investigation/inv-1',
+        ({ request }) => {
+          hitUrl = request.url;
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: { count: 1, rows: [evaluationInstitutionDetail] },
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useEvaluationInstitutionsByInvestigation('inv-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/evaluation-institutions/investigation/inv-1');
+    expect(result.current.data?.rows[0].institutionName).toBe('Hospital San Juan');
+  });
+
+  it('con enabled:false no dispara el GET', async () => {
+    let hit = false;
+    server.use(
+      http.get('http://localhost:4500/api/evaluation-institutions/investigation/inv-1', () => {
+        hit = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    renderHook(() => useEvaluationInstitutionsByInvestigation('inv-1', false), {
+      wrapper: Wrapper,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(hit).toBe(false);
+  });
+});
+
+describe('evaluationInstitutionResource — ESAVI-EVALINST-001/004', () => {
+  it('el POST lleva investigationId (la PK de la ficha de evaluación) en el cuerpo', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post('http://localhost:4500/api/evaluation-institutions', async ({ request }) => {
+        receivedBody = await request.json();
+        return HttpResponse.json({ ok: true, message: 'ok', data: evaluationInstitutionDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => evaluationInstitutionResource.useCreate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1', institutionName: 'Hospital San Juan' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toEqual({
+      investigationId: 'inv-1',
+      institutionName: 'Hospital San Juan',
+    });
+    expect((receivedBody as Record<string, unknown>).sortOrder).toBeUndefined();
+  });
+
+  it('el PUT va contra /:evaluationInstitutionId', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.put(
+        'http://localhost:4500/api/evaluation-institutions/evalinst-1',
+        ({ request }) => {
+          hitUrl = request.url;
+          return HttpResponse.json({ ok: true, message: 'ok', data: evaluationInstitutionDetail });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => evaluationInstitutionResource.useUpdate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ id: 'evalinst-1', data: { notes: 'x' } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/evaluation-institutions/evalinst-1');
+  });
+});
+
+const investigationDiagnosticDetail = {
+  diagnosticId: 'diag-1',
+  investigationId: 'inv-1',
+  diagnosticTermId: null,
+  diagnosticTerm: null,
+  diagnosticRaw: 'Fiebre',
+  diagnosticDate: null,
+  diagnosticTypeItemId: null,
+  diagnosticType: null,
+  sortOrder: 1,
+  notes: null,
+  isActive: true,
+  createdAt: '2026-09-01T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+};
+
+describe('useInvestigationDiagnosticsByCase — ESAVI-INVDIAG-006', () => {
+  it('lee por caseId, no por investigationId', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.get(
+        'http://localhost:4500/api/investigation-diagnostics/case/case-1',
+        ({ request }) => {
+          hitUrl = request.url;
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: { count: 1, rows: [investigationDiagnosticDetail] },
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationDiagnosticsByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-diagnostics/case/case-1');
+    expect(result.current.data?.rows[0].diagnosticRaw).toBe('Fiebre');
+  });
+
+  it('con enabled:false no dispara el GET', async () => {
+    let hit = false;
+    server.use(
+      http.get('http://localhost:4500/api/investigation-diagnostics/case/case-1', () => {
+        hit = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    renderHook(() => useInvestigationDiagnosticsByCase('case-1', false), { wrapper: Wrapper });
+
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(hit).toBe(false);
+  });
+
+  it('un 404 INVDIAG_006_INVESTIGATION_NOT_FOUND se propaga como error', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-diagnostics/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'sin investigación', code: 'INVDIAG_006_INVESTIGATION_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationDiagnosticsByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+describe('investigationDiagnosticResource — ESAVI-INVDIAG-001/004', () => {
+  it('el POST lleva investigationId y diagnosticName, sin sortOrder', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-diagnostics', async ({ request }) => {
+        receivedBody = await request.json();
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationDiagnosticDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationDiagnosticResource.useCreate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1', diagnosticName: 'Fiebre' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toEqual({ investigationId: 'inv-1', diagnosticName: 'Fiebre' });
+    expect((receivedBody as Record<string, unknown>).sortOrder).toBeUndefined();
+    expect((receivedBody as Record<string, unknown>).diagnosticTermId).toBeUndefined();
+  });
+
+  it('el PUT va contra /:diagnosticId', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.put('http://localhost:4500/api/investigation-diagnostics/diag-1', ({ request }) => {
+        hitUrl = request.url;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationDiagnosticDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationDiagnosticResource.useUpdate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ id: 'diag-1', data: { notes: 'x' } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-diagnostics/diag-1');
   });
 });
