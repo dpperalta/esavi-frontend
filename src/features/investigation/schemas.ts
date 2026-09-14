@@ -1,8 +1,13 @@
 import { z } from 'zod';
+import { ANSWER_OPTIONS, TERM_SOURCES, type AnswerOption } from '@/contracts/common';
 import type { CreateInvestigationInput } from '@/contracts/investigation';
 import type { CreateInvestigationSourceInput } from '@/contracts/investigationSource';
 import type { CreateInvestigationAutopsyInput } from '@/contracts/investigationAutopsy';
 import type { CreateInvestigationTeamMemberInput } from '@/contracts/investigationTeamMember';
+import type { CreateInvestigationMedicalHistoryInput } from '@/contracts/investigationMedicalHistory';
+import type { CreateInvestigationPregnancyConditionInput } from '@/contracts/investigationPregnancyCondition';
+
+const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const timeRegex = /^\d{2}:\d{2}$/;
@@ -219,4 +224,134 @@ void _assertTeamMemberSchemaMatchesContract;
 export const teamMemberErrorFieldMap: Partial<Record<string, keyof TeamMemberFormValues>> = {
   INVTEAM_001_ALREADY_EXISTS: 'fullName',
   INVTEAM_004_ALREADY_EXISTS: 'fullName',
+};
+
+// ---------------------------------------------------------------------------------------------
+// E — Medical history, sections B and B1 (SPEC FE13b §3.5 A). One form, one write: B and B1 are
+// screen sections carved out by progressive disclosure, not two rows or two schemas — both save
+// through the same `PUT`. No column is required (`investigationId` comes from context, same as
+// the header in §A above), so a single schema covers both `001` (open, empty) and `004`.
+// ---------------------------------------------------------------------------------------------
+
+export type MedicalHistoryFormValues = Omit<CreateInvestigationMedicalHistoryInput, 'investigationId'>;
+
+// The nine columns `isPregnancyConfirmed` governs (§3.5, the interior gate of §7.4). Strict
+// against `'YES'` — never a truthy check — because the other four `AnswerOption` values
+// (`'NO'`, `'UNKNOWN'`, `'NOT_APPLICABLE'`, `'NO_ANSWER'`) are truthy strings too and would open
+// the block by accident.
+export function isPregnancyBlockOpen(isPregnancyConfirmed: AnswerOption | null | undefined): boolean {
+  return isPregnancyConfirmed === 'YES';
+}
+
+// Mirrors `hasContent` in `investigationMedicalHistory.service.ts:181-186`: `null` and the blank
+// string are absence, and any number — `0` included — is content. `gestationalWeeks: 0` and
+// `birthWeightGrams: 0` are real clinical values, not "nothing entered".
+export function hasPregnancyFieldContent(value: string | number | null | undefined): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  return true;
+}
+
+// Declares the state of the block instead of letting the `PUT` body depend on what the form
+// happened to omit (§3.5 point 3): with the block closed, the nine governed columns travel as
+// explicit `null`, and the differential update skips the `UPDATE` if they were already empty.
+export function buildMedicalHistorySavePayload(
+  values: MedicalHistoryFormValues,
+): MedicalHistoryFormValues {
+  if (isPregnancyBlockOpen(values.isPregnancyConfirmed)) return values;
+  return {
+    ...values,
+    gestationalWeeks: null,
+    gestationMethodItemId: null,
+    hasPregnancyRiskFactor: null,
+    riskFactorDescription: null,
+    deliveryItemId: null,
+    birthItemId: null,
+    birthWeightGrams: null,
+    pregnancyOutcomeItemId: null,
+    wasBreastfed: null,
+  };
+}
+
+export const medicalHistorySaveSchema = z.object({
+  hasPriorHospitalizationHistory: answerOptionSchema.nullable().optional(),
+  priorHospitalizationObservations: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  hasFamilyHistory: answerOptionSchema.nullable().optional(),
+  familyHistoryObservations: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  isPregnancyConfirmed: answerOptionSchema.nullable().optional(),
+  // `esaviapp.sql:1045`'s `CHECK`, replicated: an integer between 0 and 45. `0` is valid.
+  gestationalWeeks: z.number().int().min(0).max(45).nullable().optional(),
+  gestationMethodItemId: z.string().uuid().nullable().optional(),
+  hasPregnancyRiskFactor: answerOptionSchema.nullable().optional(),
+  riskFactorDescription: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  deliveryItemId: z.string().uuid().nullable().optional(),
+  birthItemId: z.string().uuid().nullable().optional(),
+  // `numeric(8,2)`, `isFloat` in the backend validator. `0` is valid.
+  birthWeightGrams: z.number().min(0).max(6000).nullable().optional(),
+  pregnancyOutcomeItemId: z.string().uuid().nullable().optional(),
+  wasBreastfed: answerOptionSchema.nullable().optional(),
+  notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+});
+
+function _assertMedicalHistorySchemaMatchesContract(
+  value: z.infer<typeof medicalHistorySaveSchema>,
+): MedicalHistoryFormValues {
+  return value;
+}
+void _assertMedicalHistorySchemaMatchesContract;
+
+// SPEC FE13b §3.5 A — anchored by suffix, since the prefix carries the operation and the same
+// error has a different code on `001` and on `004`.
+export const medicalHistoryErrorFieldMap: Partial<Record<string, keyof MedicalHistoryFormValues>> = {
+  INVMEDH_001_PREGNANCY_FIELDS_NOT_ALLOWED: 'isPregnancyConfirmed',
+  INVMEDH_004_PREGNANCY_FIELDS_NOT_ALLOWED: 'isPregnancyConfirmed',
+  INVMEDH_001_GESTATION_METHOD_NOT_FOUND: 'gestationMethodItemId',
+  INVMEDH_004_GESTATION_METHOD_NOT_FOUND: 'gestationMethodItemId',
+  INVMEDH_001_DELIVERY_NOT_FOUND: 'deliveryItemId',
+  INVMEDH_004_DELIVERY_NOT_FOUND: 'deliveryItemId',
+  INVMEDH_001_BIRTH_NOT_FOUND: 'birthItemId',
+  INVMEDH_004_BIRTH_NOT_FOUND: 'birthItemId',
+  INVMEDH_001_PREGNANCY_OUTCOME_NOT_FOUND: 'pregnancyOutcomeItemId',
+  INVMEDH_004_PREGNANCY_OUTCOME_NOT_FOUND: 'pregnancyOutcomeItemId',
+  // `001_ALREADY_EXISTS` and both `006_...NOT_FOUND` carry no field (§3.5 A): they're screen
+  // states of their own — refresh and continue, or send back to the top of the step — not form
+  // errors.
+};
+
+// ---------------------------------------------------------------------------------------------
+// F — Newborn condition, section B2 (SPEC FE13b §3.5 B). Create/edit dialog for
+// `investigationPregnancyCondition`, the same shape as `PregnancyComplicationFormDialog` minus
+// the type `<CatalogSelect>` — same `<MeddraSearchField>`, same resolution, same three branches,
+// but a different table: nothing preloads from step 4's complications into this one (§1).
+// ---------------------------------------------------------------------------------------------
+
+export type NewbornConditionFormValues = Omit<
+  CreateInvestigationPregnancyConditionInput,
+  'investigationId' | 'isActive'
+>;
+
+// `conditionName` is the only blocking field (§3.5 B); `conditionCode`/`source` are filled by the
+// term picker's resolution, not typed directly.
+export const newbornConditionSaveSchema = z.object({
+  conditionName: z.string().trim().min(1).max(500),
+  conditionCode: z.preprocess(emptyToUndefined, z.string().trim().max(100).nullable().optional()),
+  source: z.enum(TERM_SOURCES).optional(),
+  notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+});
+
+function _assertNewbornConditionSchemaMatchesContract(
+  value: z.infer<typeof newbornConditionSaveSchema>,
+): NewbornConditionFormValues {
+  return value;
+}
+void _assertNewbornConditionSchemaMatchesContract;
+
+// SPEC FE13b §3.5 B. `INVPREG_00X_MEDICAL_HISTORY_NOT_FOUND` (404) is not here on purpose — same
+// reasoning as `notificationPregnancyComplicationErrorFieldMap`'s missing `DIAGTERM_NOT_FOUND`
+// branch: it has its own screen state (a "Crear la ficha" button), not a field to anchor on.
+export const newbornConditionErrorFieldMap: Partial<Record<string, keyof NewbornConditionFormValues>> = {
+  INVPREG_001_DIAGTERM_NOT_FOUND: 'conditionName',
+  INVPREG_004_DIAGTERM_NOT_FOUND: 'conditionName',
+  INVPREG_001_ALREADY_EXISTS: 'conditionName',
+  INVPREG_004_ALREADY_EXISTS: 'conditionName',
 };

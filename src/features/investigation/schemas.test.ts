@@ -1,14 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import {
   areAutopsyFlagsMutuallyExclusive,
+  buildMedicalHistorySavePayload,
+  hasPregnancyFieldContent,
   investigationAutopsySaveSchema,
   investigationSaveSchema,
   investigationSourceSaveSchema,
   isAutopsyDateNotBeforeDeath,
   isAutopsyDateRequirementMet,
   isOtherSourceDescriptionRequirementMet,
+  isPregnancyBlockOpen,
   isScheduledAutopsyDateRequirementMet,
+  medicalHistorySaveSchema,
+  newbornConditionSaveSchema,
   teamMemberSaveSchema,
+  type MedicalHistoryFormValues,
 } from './schemas';
 
 describe('investigationSaveSchema — A (SPEC FE13a §3.5 A)', () => {
@@ -195,6 +201,104 @@ describe('teamMemberSaveSchema — D (SPEC FE13a §3.5 D)', () => {
       fullName: 'Ana Pérez',
       phone: 'ext. 234 / +593 99 000 0000',
     });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('isPregnancyBlockOpen — E (SPEC FE13b §3.5 A, compuerta interior de §7.4)', () => {
+  it('solo YES abre el bloque — comparación estricta, no veracidad', () => {
+    expect(isPregnancyBlockOpen('YES')).toBe(true);
+    expect(isPregnancyBlockOpen('NO')).toBe(false);
+    expect(isPregnancyBlockOpen('UNKNOWN')).toBe(false);
+    expect(isPregnancyBlockOpen('NOT_APPLICABLE')).toBe(false);
+    expect(isPregnancyBlockOpen('NO_ANSWER')).toBe(false);
+    expect(isPregnancyBlockOpen(null)).toBe(false);
+    expect(isPregnancyBlockOpen(undefined)).toBe(false);
+  });
+});
+
+describe('hasPregnancyFieldContent — E (equivalente de hasContent del backend)', () => {
+  it('null y la cadena en blanco son ausencia', () => {
+    expect(hasPregnancyFieldContent(null)).toBe(false);
+    expect(hasPregnancyFieldContent(undefined)).toBe(false);
+    expect(hasPregnancyFieldContent('')).toBe(false);
+    expect(hasPregnancyFieldContent('   ')).toBe(false);
+  });
+
+  it('el 0 es contenido, no ausencia', () => {
+    expect(hasPregnancyFieldContent(0)).toBe(true);
+  });
+
+  it('cualquier texto o número no vacío es contenido', () => {
+    expect(hasPregnancyFieldContent('texto')).toBe(true);
+    expect(hasPregnancyFieldContent(37)).toBe(true);
+  });
+});
+
+describe('buildMedicalHistorySavePayload — E (SPEC FE13b §3.5 A punto 3)', () => {
+  const withPregnancyData: MedicalHistoryFormValues = {
+    isPregnancyConfirmed: 'NO',
+    gestationalWeeks: 12,
+    gestationMethodItemId: 'gm-1',
+    hasPregnancyRiskFactor: 'YES',
+    riskFactorDescription: 'Hipertensión',
+    deliveryItemId: 'dv-1',
+    birthItemId: 'bc-1',
+    birthWeightGrams: 0,
+    pregnancyOutcomeItemId: 'po-1',
+    wasBreastfed: 'YES',
+  };
+
+  it('bloque cerrado: las nueve columnas viajan null explícito, no se omiten', () => {
+    const result = buildMedicalHistorySavePayload(withPregnancyData);
+    expect(result).toMatchObject({
+      isPregnancyConfirmed: 'NO',
+      gestationalWeeks: null,
+      gestationMethodItemId: null,
+      hasPregnancyRiskFactor: null,
+      riskFactorDescription: null,
+      deliveryItemId: null,
+      birthItemId: null,
+      birthWeightGrams: null,
+      pregnancyOutcomeItemId: null,
+      wasBreastfed: null,
+    });
+  });
+
+  it('bloque abierto: los valores se envían tal cual, el 0 sobrevive', () => {
+    const result = buildMedicalHistorySavePayload({
+      ...withPregnancyData,
+      isPregnancyConfirmed: 'YES',
+    });
+    expect(result.birthWeightGrams).toBe(0);
+    expect(result.gestationalWeeks).toBe(12);
+  });
+});
+
+describe('medicalHistorySaveSchema — E', () => {
+  it('ninguna columna es obligatoria: un objeto vacío pasa', () => {
+    expect(medicalHistorySaveSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('gestationalWeeks acepta 0 y rechaza fuera de 0-45', () => {
+    expect(medicalHistorySaveSchema.safeParse({ gestationalWeeks: 0 }).success).toBe(true);
+    expect(medicalHistorySaveSchema.safeParse({ gestationalWeeks: 46 }).success).toBe(false);
+  });
+
+  it('birthWeightGrams acepta 0 y rechaza fuera de 0-6000', () => {
+    expect(medicalHistorySaveSchema.safeParse({ birthWeightGrams: 0 }).success).toBe(true);
+    expect(medicalHistorySaveSchema.safeParse({ birthWeightGrams: 6001 }).success).toBe(false);
+  });
+});
+
+describe('newbornConditionSaveSchema — F (SPEC FE13b §3.5 B)', () => {
+  it('conditionName es obligatorio', () => {
+    expect(newbornConditionSaveSchema.safeParse({}).success).toBe(false);
+    expect(newbornConditionSaveSchema.safeParse({ conditionName: '' }).success).toBe(false);
+  });
+
+  it('un conditionName con contenido, sin más campos, valida', () => {
+    const result = newbornConditionSaveSchema.safeParse({ conditionName: 'Ictericia neonatal' });
     expect(result.success).toBe(true);
   });
 });
