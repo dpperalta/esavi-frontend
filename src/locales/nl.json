@@ -1231,6 +1231,11 @@
       "missingHistory": "Het dossier met de voorgeschiedenis ontbreekt.",
       "createHistory": "Dossier aanmaken",
       "meddraUnavailable": "Het MedDRA-woordenboek is nu niet beschikbaar. Typ de naam rechtstreeks in.",
+      "outcomeLocked": {
+        "title": "De uitkomst kan niet worden gewijzigd",
+        "description_one": "Er is {{count}} medische aandoening van de pasgeborene geregistreerd. Alleen een beheerder kan deze verwijderen voordat de uitkomst gewijzigd kan worden naar iets anders dan «Levend geboren met medische aandoening bij de geboorte».",
+        "description_other": "Er zijn {{count}} medische aandoeningen van de pasgeborene geregistreerd. Alleen een beheerder kan ze verwijderen voordat de uitkomst gewijzigd kan worden naar iets anders dan «Levend geboren met medische aandoening bij de geboorte»."
+      },
       "form": {
         "createTitle": "Medische aandoening van de pasgeborene toevoegen",
         "editTitle": "Medische aandoening van de pasgeborene bewerken"

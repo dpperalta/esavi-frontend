@@ -1231,6 +1231,11 @@
       "missingHistory": "The medical history record is missing.",
       "createHistory": "Create the record",
       "meddraUnavailable": "The MedDRA dictionary isn't available right now. Type the name directly.",
+      "outcomeLocked": {
+        "title": "The outcome can't be changed",
+        "description_one": "There is {{count}} newborn medical condition recorded. Only an administrator can remove it before the outcome can be changed to something other than \"Live born with medical condition at birth\".",
+        "description_other": "There are {{count}} newborn medical conditions recorded. Only an administrator can remove them before the outcome can be changed to something other than \"Live born with medical condition at birth\"."
+      },
       "form": {
         "createTitle": "Add newborn medical condition",
         "editTitle": "Edit newborn medical condition"

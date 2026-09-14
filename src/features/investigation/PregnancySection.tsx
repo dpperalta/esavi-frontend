@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import type { InvestigationMedicalHistoryDetail } from '@/contracts/declared/investigationMedicalHistory';
-import { investigationMedicalHistoryResource } from '@/features/investigation/api';
+import { investigationMedicalHistoryResource, useNewbornConditionsByMedicalHistory } from '@/features/investigation/api';
 import { NewbornConditionList } from '@/features/investigation/NewbornConditionList';
 import {
   isPregnancyBlockOpen,
@@ -20,6 +20,7 @@ import { AnswerOptionField } from '@/shared/components/AnswerOptionField';
 import { CatalogSelect } from '@/shared/components/CatalogSelect';
 import { NumberField } from '@/shared/components/NumberField';
 import { Button } from '@/shared/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 
@@ -110,8 +111,29 @@ export function PregnancySection({
     pregnancyOutcomeCatalog.rows.find((row) => row.catalogItemId === pregnancyOutcomeItemId)
       ?.value === '2';
 
+  // Hoisted out of `NewbornConditionList` (SPEC FE13b §4 paso 8): the block below needs the
+  // active count even while B2 isn't mounted — the investigator can flip the outcome away from
+  // "value === '2'" in the same keystroke that would unmount it, and the count has to survive
+  // that render to still block the save. Same `queryKey` as the list's own hook, so this doesn't
+  // add a second network round trip once both are mounted — TanStack Query dedupes it.
+  const newbornConditions = useNewbornConditionsByMedicalHistory(investigationId, true);
+  const activeNewbornConditionsCount = newbornConditions.data?.rows.length ?? 0;
+  const [outcomeLockOpen, setOutcomeLockOpen] = useState(false);
+
   async function handleValidSubmit(values: MedicalHistoryFormValues) {
     const payload = buildMedicalHistorySavePayload(values);
+
+    // The block of §3.5 C, §4 paso 8: the resulting outcome is read off the payload just built —
+    // it's already `null` if the pregnancy block closed — never off the still-mounted `<CatalogSelect>`
+    // value, so closing the outer block counts as "changing the outcome away" too.
+    const resultingOutcomeIsLiveWithCondition =
+      pregnancyOutcomeCatalog.rows.find((row) => row.catalogItemId === payload.pregnancyOutcomeItemId)
+        ?.value === '2';
+    if (activeNewbornConditionsCount > 0 && !resultingOutcomeIsLiveWithCondition) {
+      setOutcomeLockOpen(true);
+      return;
+    }
+
     try {
       await update.mutateAsync({ id: investigationId, data: payload });
       toast.success(t('common.toast.updated'));
@@ -419,6 +441,26 @@ export function PregnancySection({
           {t('caseWizard.actions.saveAndContinue')}
         </Button>
       )}
+
+      {/* §3.5 C, §4 paso 8: no ofrece "Vaciar" ni "Retirar" — B2 no tiene borrado desde esta
+        pantalla, con o sin ADMIN (§2). Sólo explica por qué el guardado no salió y cierra. */}
+      <Dialog open={outcomeLockOpen} onOpenChange={setOutcomeLockOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('investigation.newbornCondition.outcomeLocked.title')}</DialogTitle>
+          </DialogHeader>
+          <p role="alert" className="text-sm text-foreground">
+            {t('investigation.newbornCondition.outcomeLocked.description', {
+              count: activeNewbornConditionsCount,
+            })}
+          </p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOutcomeLockOpen(false)}>
+              {t('common.close')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

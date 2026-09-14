@@ -1234,6 +1234,11 @@
       "form": {
         "createTitle": "Añadir afección médica del recién nacido",
         "editTitle": "Editar afección médica del recién nacido"
+      },
+      "outcomeLocked": {
+        "title": "No se puede cambiar el desenlace",
+        "description_one": "Hay {{count}} afección médica del recién nacido registrada. Sólo un administrador puede retirarla antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer».",
+        "description_other": "Hay {{count}} afecciones médicas del recién nacido registradas. Sólo un administrador puede retirarlas antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer»."
       }
     },
     "draft": {

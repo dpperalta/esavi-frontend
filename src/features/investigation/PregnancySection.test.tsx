@@ -153,10 +153,12 @@ describe('PregnancySection — la compuerta interior (SPEC FE13b §3.5 A)', () =
 
 describe('PregnancySection — B2 (SPEC FE13b §4 paso 7)', () => {
   const PREGNANCY_OUTCOME_TYPE = 'pregnancy-outcome-type';
-  const OUTCOME_LIVE_WITH_CONDITION = 'outcome-live-with-condition';
-  const OUTCOME_OTHER = 'outcome-other';
+  // `pregnancyOutcomeItemId` is `.uuid()` in `medicalHistorySaveSchema` — a non-UUID id here
+  // fails validation silently on submit and the test hangs waiting for a `PUT` that never fires.
+  const OUTCOME_LIVE_WITH_CONDITION = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1';
+  const OUTCOME_OTHER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2';
 
-  function mockPregnancyOutcomeCatalog() {
+  function mockPregnancyOutcomeCatalog(activeConditionsCount = 0) {
     server.use(
       http.get('http://localhost:4500/api/catalog-types', () =>
         HttpResponse.json({
@@ -195,7 +197,28 @@ describe('PregnancySection — B2 (SPEC FE13b §4 paso 7)', () => {
       ),
       http.get(
         `http://localhost:4500/api/investigation-pregnancy-conditions/investigation/${INVESTIGATION_1}`,
-        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+        () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: activeConditionsCount,
+              rows: Array.from({ length: activeConditionsCount }, (_, index) => ({
+                pregnancyConditionId: `condition-${index}`,
+                investigationId: INVESTIGATION_1,
+                diagnosticTermId: null,
+                diagnosticTerm: null,
+                conditionRaw: `Condición ${index}`,
+                sortOrder: index,
+                notes: null,
+                isActive: true,
+                createdAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: null,
+                deletedAt: null,
+                appDetails: [],
+              })),
+            },
+          }),
       ),
     );
   }
@@ -228,6 +251,80 @@ describe('PregnancySection — B2 (SPEC FE13b §4 paso 7)', () => {
         screen.queryByRole('heading', { name: 'Afecciones médicas del recién nacido' }),
       ).not.toBeInTheDocument(),
     );
+  });
+
+  it('con condiciones activas, cambiar el desenlace no manda ninguna petición y abre el diálogo de bloqueo', async () => {
+    mockPregnancyOutcomeCatalog(2);
+    let putCalled = false;
+    server.use(
+      http.put(
+        `http://localhost:4500/api/investigation-medical-histories/${INVESTIGATION_1}`,
+        () => {
+          putCalled = true;
+          return HttpResponse.json({ ok: true, message: 'ok', data: emptyMedicalHistoryDetail() });
+        },
+      ),
+    );
+    const user = setupUser();
+    renderPregnancySection({
+      medicalHistory: {
+        ...emptyMedicalHistoryDetail(),
+        isPregnancyConfirmed: 'YES',
+        pregnancyOutcomeItemId: OUTCOME_LIVE_WITH_CONDITION,
+      },
+    });
+
+    await user.click(
+      await screen.findByRole('combobox', { name: '¿Cuál fue el desenlace del embarazo?' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'Otro' }));
+
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'No se puede cambiar el desenlace' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Hay 2 afecciones médicas del recién nacido registradas. Sólo un administrador puede retirarlas antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer».',
+      ),
+    ).toBeInTheDocument();
+    expect(putCalled).toBe(false);
+  });
+
+  it('sin condiciones activas, el mismo cambio de desenlace se guarda sin fricción', async () => {
+    mockPregnancyOutcomeCatalog(0);
+    let putCalled = false;
+    server.use(
+      http.put(
+        `http://localhost:4500/api/investigation-medical-histories/${INVESTIGATION_1}`,
+        () => {
+          putCalled = true;
+          return HttpResponse.json({ ok: true, message: 'ok', data: emptyMedicalHistoryDetail() });
+        },
+      ),
+    );
+    const user = setupUser();
+    const { onSaved } = renderPregnancySection({
+      medicalHistory: {
+        ...emptyMedicalHistoryDetail(),
+        isPregnancyConfirmed: 'YES',
+        pregnancyOutcomeItemId: OUTCOME_LIVE_WITH_CONDITION,
+      },
+    });
+
+    await user.click(
+      await screen.findByRole('combobox', { name: '¿Cuál fue el desenlace del embarazo?' }),
+    );
+    await user.click(await screen.findByRole('option', { name: 'Otro' }));
+
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(putCalled).toBe(true);
+    expect(
+      screen.queryByRole('heading', { name: 'No se puede cambiar el desenlace' }),
+    ).not.toBeInTheDocument();
   });
 });
 
