@@ -1303,6 +1303,27 @@
         "missingClinicalEvaluation": "No se pudo abrir la ficha de evaluación clínica."
       }
     },
+    "diagnostic": {
+      "title": "Diagnóstico final o presuntivo",
+      "add": "Añadir diagnóstico",
+      "empty": "No se han registrado diagnósticos.",
+      "fields": {
+        "diagnosticName": "Diagnóstico final o presuntivo",
+        "diagnosticCode": "Código",
+        "diagnosticDate": "Fecha del diagnóstico",
+        "diagnosticTypeItemId": "Tipo de diagnóstico",
+        "notes": "Observaciones"
+      },
+      "form": {
+        "createTitle": "Añadir diagnóstico",
+        "editTitle": "Editar diagnóstico"
+      },
+      "errors": {
+        "alreadyExists": "Este diagnóstico ya está en la lista. Para confirmarlo, edita el diagnóstico existente.",
+        "futureDate": "La fecha del diagnóstico no puede ser futura.",
+        "noInvestigation": "Todavía no existe la investigación de este caso."
+      }
+    },
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."

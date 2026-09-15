@@ -1303,6 +1303,27 @@
         "missingClinicalEvaluation": "Het klinische-evaluatiedossier kon niet worden geopend."
       }
     },
+    "diagnostic": {
+      "title": "Definitieve of vermoedelijke diagnose",
+      "add": "Diagnose toevoegen",
+      "empty": "Er zijn nog geen diagnoses geregistreerd.",
+      "fields": {
+        "diagnosticName": "Definitieve of vermoedelijke diagnose",
+        "diagnosticCode": "Code",
+        "diagnosticDate": "Datum van de diagnose",
+        "diagnosticTypeItemId": "Type diagnose",
+        "notes": "Opmerkingen"
+      },
+      "form": {
+        "createTitle": "Diagnose toevoegen",
+        "editTitle": "Diagnose bewerken"
+      },
+      "errors": {
+        "alreadyExists": "Deze diagnose staat al op de lijst. Bewerk de bestaande diagnose om deze te bevestigen.",
+        "futureDate": "De datum van de diagnose kan niet in de toekomst liggen.",
+        "noInvestigation": "Het onderzoek van dit dossier bestaat nog niet."
+      }
+    },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."

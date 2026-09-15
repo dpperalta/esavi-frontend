@@ -1303,6 +1303,27 @@
         "missingClinicalEvaluation": "The clinical evaluation record could not be opened."
       }
     },
+    "diagnostic": {
+      "title": "Final or presumptive diagnosis",
+      "add": "Add diagnosis",
+      "empty": "No diagnoses have been recorded.",
+      "fields": {
+        "diagnosticName": "Final or presumptive diagnosis",
+        "diagnosticCode": "Code",
+        "diagnosticDate": "Diagnosis date",
+        "diagnosticTypeItemId": "Diagnosis type",
+        "notes": "Notes"
+      },
+      "form": {
+        "createTitle": "Add diagnosis",
+        "editTitle": "Edit diagnosis"
+      },
+      "errors": {
+        "alreadyExists": "This diagnosis is already on the list. To confirm it, edit the existing diagnosis.",
+        "futureDate": "The diagnosis date cannot be in the future.",
+        "noInvestigation": "This case's investigation doesn't exist yet."
+      }
+    },
     "draft": {
       "restored": "Recovered unsaved changes from an earlier session.",
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."
