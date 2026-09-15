@@ -1273,7 +1273,8 @@
         "childAbuseExplanationRequired": "Explica la sospecha de maltrato infantil antes de guardar.",
         "childAbuseExplanationNotAllowed": "Sin sospecha de maltrato infantil, esta explicación no se guarda.",
         "domesticViolenceExplanationRequired": "Explica la sospecha de violencia intrafamiliar antes de guardar.",
-        "domesticViolenceExplanationNotAllowed": "Sin sospecha de violencia intrafamiliar, esta explicación no se guarda."
+        "domesticViolenceExplanationNotAllowed": "Sin sospecha de violencia intrafamiliar, esta explicación no se guarda.",
+        "saveFailed": "No se pudo guardar la evaluación clínica."
       }
     },
     "evaluationInstitution": {
@@ -1300,7 +1301,8 @@
       "errors": {
         "identification": "Indica la unidad de salud o el nombre de la institución antes de guardar.",
         "alreadyExists": "Esta unidad de salud ya está en la lista.",
-        "missingClinicalEvaluation": "No se pudo abrir la ficha de evaluación clínica."
+        "missingClinicalEvaluation": "No se pudo abrir la ficha de evaluación clínica.",
+        "saveFailed": "No se pudo guardar la institución evaluadora."
       }
     },
     "diagnostic": {
@@ -1321,7 +1323,9 @@
       "errors": {
         "alreadyExists": "Este diagnóstico ya está en la lista. Para confirmarlo, edita el diagnóstico existente.",
         "futureDate": "La fecha del diagnóstico no puede ser futura.",
-        "noInvestigation": "Todavía no existe la investigación de este caso."
+        "noInvestigation": "Todavía no existe la investigación de este caso.",
+        "saveFailed": "No se pudo guardar el diagnóstico.",
+        "caseNotFound": "El caso no existe."
       }
     },
     "draft": {

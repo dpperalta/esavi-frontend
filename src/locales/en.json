@@ -1273,7 +1273,8 @@
         "childAbuseExplanationRequired": "Explain the suspicion of child abuse before saving.",
         "childAbuseExplanationNotAllowed": "Without a suspicion of child abuse, this explanation isn't saved.",
         "domesticViolenceExplanationRequired": "Explain the suspicion of domestic violence before saving.",
-        "domesticViolenceExplanationNotAllowed": "Without a suspicion of domestic violence, this explanation isn't saved."
+        "domesticViolenceExplanationNotAllowed": "Without a suspicion of domestic violence, this explanation isn't saved.",
+        "saveFailed": "The clinical evaluation could not be saved."
       }
     },
     "evaluationInstitution": {
@@ -1300,7 +1301,8 @@
       "errors": {
         "identification": "Enter the health facility or the institution name before saving.",
         "alreadyExists": "This health facility is already on the list.",
-        "missingClinicalEvaluation": "The clinical evaluation record could not be opened."
+        "missingClinicalEvaluation": "The clinical evaluation record could not be opened.",
+        "saveFailed": "The evaluating institution could not be saved."
       }
     },
     "diagnostic": {
@@ -1321,7 +1323,9 @@
       "errors": {
         "alreadyExists": "This diagnosis is already on the list. To confirm it, edit the existing diagnosis.",
         "futureDate": "The diagnosis date cannot be in the future.",
-        "noInvestigation": "This case's investigation doesn't exist yet."
+        "noInvestigation": "This case's investigation doesn't exist yet.",
+        "saveFailed": "The diagnosis could not be saved.",
+        "caseNotFound": "This case doesn't exist."
       }
     },
     "draft": {

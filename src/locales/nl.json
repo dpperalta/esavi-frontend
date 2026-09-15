@@ -1273,7 +1273,8 @@
         "childAbuseExplanationRequired": "Leg het vermoeden van kindermishandeling uit voordat u opslaat.",
         "childAbuseExplanationNotAllowed": "Zonder vermoeden van kindermishandeling wordt deze toelichting niet opgeslagen.",
         "domesticViolenceExplanationRequired": "Leg het vermoeden van huiselijk geweld uit voordat u opslaat.",
-        "domesticViolenceExplanationNotAllowed": "Zonder vermoeden van huiselijk geweld wordt deze toelichting niet opgeslagen."
+        "domesticViolenceExplanationNotAllowed": "Zonder vermoeden van huiselijk geweld wordt deze toelichting niet opgeslagen.",
+        "saveFailed": "De klinische evaluatie kon niet worden opgeslagen."
       }
     },
     "evaluationInstitution": {
@@ -1300,7 +1301,8 @@
       "errors": {
         "identification": "Geef de zorginstelling of de naam van de instelling op voordat u opslaat.",
         "alreadyExists": "Deze zorginstelling staat al op de lijst.",
-        "missingClinicalEvaluation": "Het klinische-evaluatiedossier kon niet worden geopend."
+        "missingClinicalEvaluation": "Het klinische-evaluatiedossier kon niet worden geopend.",
+        "saveFailed": "De beoordelende instelling kon niet worden opgeslagen."
       }
     },
     "diagnostic": {
@@ -1321,7 +1323,9 @@
       "errors": {
         "alreadyExists": "Deze diagnose staat al op de lijst. Bewerk de bestaande diagnose om deze te bevestigen.",
         "futureDate": "De datum van de diagnose kan niet in de toekomst liggen.",
-        "noInvestigation": "Het onderzoek van dit dossier bestaat nog niet."
+        "noInvestigation": "Het onderzoek van dit dossier bestaat nog niet.",
+        "saveFailed": "De diagnose kon niet worden opgeslagen.",
+        "caseNotFound": "Dit dossier bestaat niet."
       }
     },
     "draft": {
