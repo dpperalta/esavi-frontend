@@ -1,6 +1,6 @@
 import '@/shared/config/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
@@ -142,7 +142,7 @@ function emptyClinicalEvaluationDetail() {
     completeClinicalSummary: null,
     signsAndSymptoms: null,
     otherSocialBackground: null,
-    notes: null,
+    notes: null as string | null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: null,
     deletedAt: null,
@@ -1490,5 +1490,278 @@ describe('InvestigationStep — recorrido de las tres secciones de embarazo (SPE
         name: 'Confirme si la mujer estaba embarazada en el momento de la vacuna',
       }),
     ).toBeDisabled();
+  });
+});
+
+// El recorrido completo del tramo C (SPEC FE13c §4 paso 10): alta desde cero, reentrada,
+// apagado de una bandera con explicación escrita, 409 en las dos listas, y expediente CLOSED.
+// La entrada a la sección C reutiliza exactamente los mismos cuatro clics que la primera prueba
+// del paso 8 (fuentes → información básica → equipo → antecedentes) — factorizados aquí porque
+// tres de las cinco pruebas la necesitan.
+async function walkToClinicalEvaluation() {
+  let postCount = 0;
+  mockWorkflowDynamic(() => postCount > 0);
+  mockInvestigationDetail();
+  server.use(
+    http.post('http://localhost:4500/api/investigations', () => {
+      postCount++;
+      return HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() });
+    }),
+    http.post('http://localhost:4500/api/investigation-sources', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { investigationId: INVESTIGATION_1, history: true } }),
+    ),
+    http.put(`http://localhost:4500/api/investigations/${INVESTIGATION_1}`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() }),
+    ),
+  );
+
+  const user = setupUser();
+  renderInvestigationStep();
+
+  await waitFor(() => expect(postCount).toBe(1));
+  await user.click(await screen.findByRole('button', { name: 'Guardar y continuar' }));
+  expect(await screen.findByText('Información básica')).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+  expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Guardar y continuar' })).toBeEnabled());
+  await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+  expect(
+    (await screen.findAllByText('Detalles de la primera evaluación clínica del ESAVI')).length,
+  ).toBeGreaterThan(0);
+
+  return user;
+}
+
+describe('InvestigationStep — el recorrido completo del tramo C (SPEC FE13c §4 paso 10)', () => {
+  it('alta desde cero: guarda la evaluación clínica y añade una institución evaluadora', async () => {
+    const user = await walkToClinicalEvaluation();
+
+    const institutionRows: Array<Record<string, unknown>> = [];
+    server.use(
+      http.get(
+        `http://localhost:4500/api/evaluation-institutions/investigation/${INVESTIGATION_1}`,
+        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: institutionRows.length, rows: institutionRows } }),
+      ),
+      http.post('http://localhost:4500/api/evaluation-institutions', async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        expect(body).toMatchObject({ investigationId: INVESTIGATION_1, institutionName: 'Clínica Norte' });
+        const created = { evaluationInstitutionId: 'new-institution', ...body };
+        institutionRows.push(created);
+        return HttpResponse.json({ ok: true, message: 'ok', data: created }, { status: 201 });
+      }),
+    );
+
+    // Section C's own opening `POST` already fired inside `walkToClinicalEvaluation` (the ficha
+    // is created the moment the section reveals, §4 paso 5). Saving here is the `PUT`.
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+    await waitFor(() => expect(clinicalEvaluationRow).not.toBeNull());
+
+    // `evaluationInstitutions` is next, with its own bare "Siguiente" (§6 decisión 5, §4 paso 8) —
+    // no save semantics of its own, it's a satellite list.
+    expect(await screen.findByText('Instituciones que evaluaron al paciente')).toBeInTheDocument();
+    expect(screen.queryByText('Diagnóstico final o presuntivo')).not.toBeInTheDocument();
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir institución' }));
+    await user.type(
+      await screen.findByLabelText('Nombre de la institución (si no está en el buscador)'),
+      'Clínica Norte',
+    );
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(institutionRows).toHaveLength(1));
+    expect(await screen.findAllByText('Clínica Norte')).not.toHaveLength(0);
+
+    // The last advance reveals diagnostics automatically, with no button of its own (§4 paso 8).
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }));
+    expect(await screen.findByText('Diagnóstico final o presuntivo')).toBeInTheDocument();
+    expect(screen.getByText('No se han registrado diagnósticos.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Siguiente' })).not.toBeInTheDocument();
+  }, 30000);
+
+  it('reentrada: las tres secciones muestran los datos ya guardados', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail();
+    clinicalEvaluationRow = {
+      ...emptyClinicalEvaluationDetail(),
+      receivedMedicalAttention: 'YES',
+      notes: 'Nota clínica de la evaluación',
+    };
+    server.use(
+      http.get(
+        `http://localhost:4500/api/evaluation-institutions/investigation/${INVESTIGATION_1}`,
+        () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 1,
+              rows: [
+                {
+                  evaluationInstitutionId: 'institution-1',
+                  investigationId: INVESTIGATION_1,
+                  sortOrder: 1,
+                  healthFacilityId: null,
+                  institutionName: 'Clínica del Valle',
+                  personName: null,
+                  personContact: null,
+                  evaluationInstitutionTypeItemId: null,
+                  notes: null,
+                  isActive: true,
+                  healthFacility: null,
+                  institutionType: null,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: null,
+                  deletedAt: null,
+                  appDetails: [],
+                },
+              ],
+            },
+          }),
+      ),
+      http.get(`http://localhost:4500/api/investigation-diagnostics/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 1,
+            rows: [
+              {
+                diagnosticId: 'diagnostic-1',
+                investigationId: INVESTIGATION_1,
+                sortOrder: 1,
+                diagnosticTermId: 'term-1',
+                diagnosticRaw: 'Fiebre alta persistente',
+                diagnosticDate: null,
+                diagnosticTypeItemId: null,
+                notes: null,
+                isActive: true,
+                diagnosticTerm: { diagnosticTermId: 'term-1', name: 'Fiebre', code: 'F001', source: 'MEDDRA' },
+                diagnosticType: null,
+                createdAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: null,
+                deletedAt: null,
+                appDetails: [],
+              },
+            ],
+          },
+        }),
+      ),
+    );
+
+    renderInvestigationStep();
+
+    expect(await screen.findByDisplayValue('Nota clínica de la evaluación')).toBeInTheDocument();
+    expect(await screen.findAllByText('Clínica del Valle')).not.toHaveLength(0);
+    // `diagnosticRaw` is what's pinted, not `diagnosticTerm.name` (§3.5 C, §6 decisión 10).
+    expect(await screen.findAllByText('Fiebre alta persistente')).not.toHaveLength(0);
+    expect(screen.queryByText('Fiebre', { selector: 'td, span, p' })).not.toBeInTheDocument();
+  });
+
+  it('apagar sourceOther con una explicación ya escrita manda null explícito en el PUT', async () => {
+    const user = await walkToClinicalEvaluation();
+
+    // `SourceSection` (already revealed above) has its own "Otro" switch — this is
+    // `ClinicalEvaluationSection`'s `sourceOther`, the last "Otro" switch in the DOM.
+    const otherSwitches = screen.getAllByRole('switch', { name: 'Otro' });
+    const clinicalEvaluationOtherSwitch = otherSwitches[otherSwitches.length - 1];
+    await user.click(clinicalEvaluationOtherSwitch);
+    await user.type(
+      await screen.findByLabelText('¿Cuál?'),
+      'Consulta con especialista externo',
+    );
+    // Apagarlo otra vez antes de guardar: la explicación ya escrita no debe viajar (§3.5 A, §7.3).
+    await user.click(clinicalEvaluationOtherSwitch);
+    expect(screen.queryByLabelText('¿Cuál?')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+
+    await waitFor(() => expect(toastSuccess).toHaveBeenCalled());
+    expect(clinicalEvaluationRow).toMatchObject({ sourceOther: false, otherDescription: null });
+  }, 30000);
+
+  it('409 al añadir una institución duplicada deja el diálogo abierto con el error anclado en el buscador', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail();
+    clinicalEvaluationRow = emptyClinicalEvaluationDetail();
+    server.use(
+      http.post('http://localhost:4500/api/evaluation-institutions', () =>
+        HttpResponse.json(
+          { ok: false, message: 'Esta unidad de salud ya está en la lista.', code: 'EVALINST_001_ALREADY_EXISTS' },
+          { status: 409 },
+        ),
+      ),
+    );
+
+    const user = setupUser();
+    renderInvestigationStep();
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir institución' }));
+    await user.type(
+      await screen.findByLabelText('Nombre de la institución (si no está en el buscador)'),
+      'Clínica Norte',
+    );
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText('Esta unidad de salud ya está en la lista.')).toBeInTheDocument();
+    // Scoped to the dialog: reentry also reveals `BasicInfoSection`, which has its own field with
+    // the same accessible name.
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByLabelText('Unidad de salud')).toBeInTheDocument();
+    expect(toastError).not.toHaveBeenCalled();
+    // El 409 de diagnóstico duplicado (INVDIAG_00X_ALREADY_EXISTS) ya está cubierto a nivel de
+    // componente en `DiagnosticList.test.tsx` — reproducirlo aquí escribiría en
+    // `<MeddraSearchField>` dentro del árbol completo de `InvestigationStep`, el disparador
+    // confirmado del cuelgue de entorno documentado en el paso 7 (reproducido incluso en un test
+    // preexistente sin tocar). No se duplica esa interacción en este archivo, más pesado de montar.
+  });
+
+  it('expediente CLOSED: las tres secciones nuevas son de sólo lectura', async () => {
+    mockWorkflowClosed();
+    mockInvestigationDetail();
+    clinicalEvaluationRow = {
+      ...emptyClinicalEvaluationDetail(),
+      notes: 'Nota clínica de la evaluación',
+    };
+    server.use(
+      http.get(
+        `http://localhost:4500/api/evaluation-institutions/investigation/${INVESTIGATION_1}`,
+        () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 1,
+              rows: [
+                {
+                  evaluationInstitutionId: 'institution-1',
+                  investigationId: INVESTIGATION_1,
+                  sortOrder: 1,
+                  healthFacilityId: null,
+                  institutionName: 'Clínica del Valle',
+                  personName: null,
+                  personContact: null,
+                  evaluationInstitutionTypeItemId: null,
+                  notes: null,
+                  isActive: true,
+                  healthFacility: null,
+                  institutionType: null,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: null,
+                  deletedAt: null,
+                  appDetails: [],
+                },
+              ],
+            },
+          }),
+      ),
+    );
+
+    renderInvestigationStep();
+
+    expect(await screen.findByDisplayValue('Nota clínica de la evaluación')).toBeDisabled();
+    expect(await screen.findAllByText('Clínica del Valle')).not.toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Siguiente' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Añadir institución' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Añadir diagnóstico' })).not.toBeInTheDocument();
   });
 });
