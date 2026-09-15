@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { InvestigationDetail } from '@/contracts/declared/investigation';
 import type { InvestigationAutopsyDetail } from '@/contracts/declared/investigationAutopsy';
+import type { InvestigationClinicalEvaluationDetail } from '@/contracts/declared/investigationClinicalEvaluation';
 import type { InvestigationMedicalHistoryDetail } from '@/contracts/declared/investigationMedicalHistory';
 import type { InvestigationSourceDetail } from '@/contracts/declared/investigationSource';
 import type { NotificationDetail } from '@/contracts/declared/notification';
@@ -11,6 +12,9 @@ import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { esaviCaseResource } from '@/features/esaviCase/api';
 import { BasicInfoSection } from '@/features/investigation/BasicInfoSection';
+import { ClinicalEvaluationSection } from '@/features/investigation/ClinicalEvaluationSection';
+import { DiagnosticList } from '@/features/investigation/DiagnosticList';
+import { EvaluationInstitutionList } from '@/features/investigation/EvaluationInstitutionList';
 import { MedicalHistorySection } from '@/features/investigation/MedicalHistorySection';
 import { PregnancySection } from '@/features/investigation/PregnancySection';
 import { SourceSection } from '@/features/investigation/SourceSection';
@@ -20,11 +24,14 @@ import {
   investigationResource,
   useInvestigationAutopsyByCase,
   useInvestigationByCase,
+  investigationDiagnosticsByCaseKey,
+  useInvestigationClinicalEvaluationByCase,
   useInvestigationMedicalHistoryByCase,
   useInvestigationSourceByCase,
 } from '@/features/investigation/api';
 import type {
   InvestigationAutopsyFormValues,
+  InvestigationClinicalEvaluationFormValues,
   InvestigationFormValues,
   InvestigationSourceFormValues,
   MedicalHistoryFormValues,
@@ -73,7 +80,15 @@ function InvestigationCreateErrorState({ error, onRetry }: InvestigationCreateEr
   );
 }
 
-type InvestigationSectionId = 'source' | 'basicInfo' | 'team' | 'medicalHistory' | 'pregnancy';
+type InvestigationSectionId =
+  | 'source'
+  | 'basicInfo'
+  | 'team'
+  | 'medicalHistory'
+  | 'pregnancy'
+  | 'clinicalEvaluation'
+  | 'evaluationInstitutions'
+  | 'diagnostics';
 const BASE_SECTIONS: InvestigationSectionId[] = ['source', 'basicInfo', 'team', 'medicalHistory'];
 
 // The combined draft (§3.4): a single `'investigation'` key, even though four self-contained
@@ -87,6 +102,9 @@ interface InvestigationDraftValues {
   // Independent from `medicalHistory` above even though both are `MedicalHistoryFormValues` over
   // the same row (§4 paso 6): two separate `useForm` instances, two separate draft slots.
   pregnancy?: MedicalHistoryFormValues;
+  // Section C (SPEC FE13c §4 paso 8) — `evaluationInstitutions` and `diagnostics` are satellite
+  // lists that persist on every add/edit, the same reason `team` never gets a draft slot.
+  clinicalEvaluation?: InvestigationClinicalEvaluationFormValues;
 }
 
 interface InvestigationStepBodyProps {
@@ -96,6 +114,7 @@ interface InvestigationStepBodyProps {
   investigationSource: InvestigationSourceDetail | null;
   investigationAutopsy: InvestigationAutopsyDetail | null;
   medicalHistory: InvestigationMedicalHistoryDetail | null;
+  clinicalEvaluation: InvestigationClinicalEvaluationDetail | null;
   notification: NotificationDetail | null;
   // Resolved once by `InvestigationStep`, already `!== undefined` by the time the body mounts
   // (§4 paso 6, criterio de `readyToRenderForm` en `NotificationStep`): B1 either doesn't exist
@@ -115,12 +134,14 @@ function InvestigationStepBody({
   investigationSource,
   investigationAutopsy,
   medicalHistory,
+  clinicalEvaluation,
   notification,
   pregnancyGate,
   existedOnMount,
   isClosed,
 }: InvestigationStepBodyProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
 
   // The header's `updatedAt` on mount (SPEC FE12a §3.4, adapted to a draft that covers three
   // sections at once): never recalculated, or the conflict rule would always compare against
@@ -177,14 +198,22 @@ function InvestigationStepBody({
     useDraftsStore.getState().clear(caseId, 'investigation');
   }
 
-  // Five identifiers with the gate open, four with it closed (SPEC FE13b §4 paso 6): `pregnancy`
-  // is simply absent from the list, not merely hidden by CSS — a male patient's stepper has one
-  // fewer section, and `lastWithButton` follows it so `medicalHistory` keeps its own button when
-  // there's nothing of B1 to reveal after it.
-  const sections =
-    pregnancyGate === 'hidden' ? BASE_SECTIONS : [...BASE_SECTIONS, 'pregnancy' as const];
-  const lastWithButton: InvestigationSectionId =
-    pregnancyGate === 'hidden' ? 'medicalHistory' : 'pregnancy';
+  // `pregnancy` is simply absent from the list when the gate is closed, not merely hidden by CSS
+  // (SPEC FE13b §4 paso 6) — a male patient's stepper has one fewer section. Section C's three
+  // identifiers (SPEC FE13c §4 paso 8) always follow, gate open or closed: `clinicalEvaluation`
+  // gets its own "Guardar y continuar" like every other form section, `evaluationInstitutions`
+  // gets a plain "Siguiente" — a list has nothing to save of its own, but §6 decision 5 rejected
+  // folding it into C's form because that would leave altas under a form that isn't saved yet —
+  // and `evaluationInstitutions` is `lastWithButton`: `diagnostics` reveals with that last advance,
+  // with no button of its own (§2, "los diagnósticos se revelan con el último avance").
+  const sections: InvestigationSectionId[] = [
+    ...BASE_SECTIONS,
+    ...(pregnancyGate === 'hidden' ? [] : (['pregnancy'] as const)),
+    'clinicalEvaluation',
+    'evaluationInstitutions',
+    'diagnostics',
+  ];
+  const lastWithButton: InvestigationSectionId = 'evaluationInstitutions';
 
   const revealAllRef = useRef(existedOnMount || isClosed);
   const { isVisible, frontier, advance } = useProgressiveSections<InvestigationSectionId>({
@@ -288,6 +317,49 @@ function InvestigationStepBody({
           }
         />
       )}
+
+      {isVisible('clinicalEvaluation') && (
+        <ClinicalEvaluationSection
+          caseId={caseId}
+          investigationId={investigationId}
+          clinicalEvaluation={clinicalEvaluation}
+          disabled={isClosed}
+          showSaveButton={frontier === 'clinicalEvaluation'}
+          onSaved={() => {
+            clearDraft();
+            advance();
+          }}
+          draftValues={restoredValues.clinicalEvaluation}
+          onValuesChange={(values) =>
+            setPendingDraftValues((current) => ({ ...current, clinicalEvaluation: values }))
+          }
+        />
+      )}
+
+      {isVisible('evaluationInstitutions') && (
+        <div className="flex flex-col gap-3">
+          <EvaluationInstitutionList investigationId={investigationId} disabled={isClosed} />
+          {frontier === 'evaluationInstitutions' && (
+            <Button type="button" className="min-h-11 w-full md:w-auto md:self-end" onClick={advance}>
+              {t('caseWizard.actions.next')}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {isVisible('diagnostics') && (
+        <DiagnosticList
+          caseId={caseId}
+          investigationId={investigationId}
+          disabled={isClosed}
+          // Defensive per SPEC FE13c §3.6/§4 paso 7: this step already guarantees the investigation
+          // header exists before this section can ever mount, so the retry just re-reads — there is
+          // nothing new to create.
+          onMissingInvestigation={() =>
+            void queryClient.invalidateQueries({ queryKey: investigationDiagnosticsByCaseKey(caseId) })
+          }
+        />
+      )}
     </div>
   );
 }
@@ -308,6 +380,7 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
   const investigationSource = useInvestigationSourceByCase(caseId, stageExists);
   const investigationAutopsy = useInvestigationAutopsyByCase(caseId, stageExists);
   const medicalHistory = useInvestigationMedicalHistoryByCase(caseId, stageExists);
+  const clinicalEvaluation = useInvestigationClinicalEvaluationByCase(caseId, stageExists);
   const notificationStageExists = workflow.data?.stages.notification.exists === true;
   const notification = useNotificationByCase(caseId, notificationStageExists);
   const create = investigationResource.useCreate();
@@ -392,6 +465,7 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
     investigationSource.isLoading ||
     investigationAutopsy.isLoading ||
     medicalHistory.isLoading ||
+    clinicalEvaluation.isLoading ||
     !pregnancyGateReady
   ) {
     return <InvestigationStepSkeleton />;
@@ -405,6 +479,7 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
       investigationSource={investigationSource.data ?? null}
       investigationAutopsy={investigationAutopsy.data ?? null}
       medicalHistory={medicalHistory.data ?? null}
+      clinicalEvaluation={clinicalEvaluation.data ?? null}
       notification={notification.data ?? null}
       pregnancyGate={pregnancyGate}
       existedOnMount={existedOnMountRef.current ?? false}
