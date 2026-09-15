@@ -166,6 +166,28 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   MEDDRA_006_AUTH_FAILED: 'notification.events.meddraUnavailable',
   WHODPROD_006_NOT_CONFIGURED: 'notification.medications.catalogUnavailable',
   WHODPROD_006_FETCH_FAILED: 'notification.medications.catalogUnavailable',
+  // SPEC FE13c §3.5, §7.D — the three write-path codes per entity that ought to be unreachable in
+  // normal use (the same criterion FE11/FE12a applied to `CLASSIF_*`/`NOTIFCN_*`): the `caseId`/
+  // `investigationId` the dialogs send always comes from state this screen already confirmed
+  // exists. `INVCLIEV_00X_*_REQUIRED`/`_NOT_ALLOWED`, `EVALINST_00X_ALREADY_EXISTS`/
+  // `_IDENTIFICATION_REQUIRED` and `INVDIAG_00X_DIAGTERM_NOT_FOUND`/`_ALREADY_EXISTS`/
+  // `_INVALID_DIAGNOSTIC_TYPE` aren't here — they go to a field via their `errorFieldMap`
+  // (`features/investigation/schemas.ts`). `EVALINST_00X_CLINICAL_EVALUATION_NOT_FOUND` isn't
+  // here either — `EvaluationInstitutionFormDialog` intercepts it before `getErrorMessage` to
+  // create the missing ficha and retry (§7 riesgo E).
+  INVCLIEV_001_CREATION_FAILED: 'investigation.clinicalEvaluation.errors.saveFailed',
+  INVCLIEV_004_UPDATE_FAILED: 'investigation.clinicalEvaluation.errors.saveFailed',
+  INVCLIEV_004_NOT_FOUND: 'investigation.clinicalEvaluation.errors.saveFailed',
+  EVALINST_001_CREATION_FAILED: 'investigation.evaluationInstitution.errors.saveFailed',
+  EVALINST_004_UPDATE_FAILED: 'investigation.evaluationInstitution.errors.saveFailed',
+  EVALINST_004_NOT_FOUND: 'investigation.evaluationInstitution.errors.saveFailed',
+  INVDIAG_001_CREATION_FAILED: 'investigation.diagnostic.errors.saveFailed',
+  INVDIAG_004_UPDATE_FAILED: 'investigation.diagnostic.errors.saveFailed',
+  INVDIAG_004_NOT_FOUND: 'investigation.diagnostic.errors.saveFailed',
+  // The one read-path code of §3.2's dual-404 table that IS an error (the sibling
+  // `INVDIAG_006_INVESTIGATION_NOT_FOUND` is the empty state `DiagnosticList` renders itself,
+  // never a toast).
+  INVDIAG_006_CASE_NOT_FOUND: 'investigation.diagnostic.errors.caseNotFound',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

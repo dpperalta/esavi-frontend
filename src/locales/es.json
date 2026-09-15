@@ -1241,6 +1241,96 @@
         "description_other": "Hay {{count}} afecciones médicas del recién nacido registradas. Sólo un administrador puede retirarlas antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer»."
       }
     },
+    "clinicalEvaluation": {
+      "title": "Detalles de la primera evaluación clínica del ESAVI",
+      "sourcesLegend": "Fuente de información (marque todas las opciones que sea necesario)",
+      "suspicionsLegend": "Sospechas",
+      "narrativeLegend": "Relato clínico",
+      "notChecked": "Sin comprobar",
+      "markNotChecked": "Marcar como sin comprobar",
+      "error": "No se pudo cargar la evaluación clínica.",
+      "openFailed": "No se pudo abrir la ficha de evaluación clínica.",
+      "fields": {
+        "receivedMedicalAttention": "¿Ha recibido la persona atención médica para el ESAVI?",
+        "sourceExam": "Examen realizado por el investigador",
+        "sourceDocuments": "Documentos",
+        "sourceVerbalAutopsy": "Autopsia verbal",
+        "sourceOther": "Otro",
+        "otherDescription": "¿Cuál?",
+        "clinicalDetailsPersonName": "Nombre e información de contacto de la persona o personas que conocen los detalles clínicos",
+        "suspectedChildAbuse": "Si el ESAVI se presentó en un menor de cinco años de edad, ¿hay sospecha de maltrato infantil?",
+        "childAbuseExplanation": "Explique",
+        "suspectedDomesticViolence": "Si el ESAVI se presentó en una persona adolescente o adulta, ¿hay evidencia de violencia intrafamiliar?",
+        "domesticViolenceExplanation": "Explique",
+        "otherSocialBackground": "Otros antecedentes sociales relevantes del caso",
+        "signsAndSymptoms": "Signos y síntomas en orden cronológico desde el momento de la vacunación",
+        "familyClinicalDetails": "Nombre e información de contacto de la persona o familiares de la persona, con los detalles clínicos",
+        "completeClinicalSummary": "Haga un resumen completo de los datos clínicos y paraclínicos del caso, resaltando lo más relevante para el análisis del evento. Por favor, escanee las pruebas físicas del caso y guárdelas organizadamente en su archivo digital"
+      },
+      "errors": {
+        "otherDescriptionRequired": "Especifica cuál es la otra fuente antes de guardar.",
+        "otherDescriptionNotAllowed": "Con «otro» apagado, esta explicación no se guarda.",
+        "childAbuseExplanationRequired": "Explica la sospecha de maltrato infantil antes de guardar.",
+        "childAbuseExplanationNotAllowed": "Sin sospecha de maltrato infantil, esta explicación no se guarda.",
+        "domesticViolenceExplanationRequired": "Explica la sospecha de violencia intrafamiliar antes de guardar.",
+        "domesticViolenceExplanationNotAllowed": "Sin sospecha de violencia intrafamiliar, esta explicación no se guarda.",
+        "saveFailed": "No se pudo guardar la evaluación clínica."
+      }
+    },
+    "evaluationInstitution": {
+      "title": "Instituciones que evaluaron al paciente",
+      "description": "¿La institución en la que fue atendido por primera vez es diferente a la institución en donde recibió el tratamiento definitivo?",
+      "add": "Añadir institución",
+      "columns": {
+        "type": "Tipo"
+      },
+      "empty": "No se han registrado instituciones evaluadoras.",
+      "missingClinicalEvaluation": "Falta la ficha de evaluación clínica.",
+      "createClinicalEvaluation": "Crear la ficha",
+      "characterCount": "{{count}} de {{max}} caracteres",
+      "charactersRemaining": "Quedan {{count}} caracteres.",
+      "fields": {
+        "evaluationInstitutionTypeItemId": "¿La institución en la que fue atendido por primera vez es diferente a la institución en donde recibió el tratamiento definitivo?",
+        "healthFacilityId": "Nombre de la institución de atención inicial",
+        "institutionName": "Nombre de la institución (si no está en el buscador)",
+        "personName": "Nombre de la persona que realizó la atención",
+        "personContact": "Contacto de la persona que realizó la atención inicial",
+        "notes": "Observaciones"
+      },
+      "form": {
+        "createTitle": "Añadir institución evaluadora",
+        "editTitle": "Editar institución evaluadora"
+      },
+      "errors": {
+        "identification": "Indica la unidad de salud o el nombre de la institución antes de guardar.",
+        "alreadyExists": "Esta unidad de salud ya está en la lista.",
+        "missingClinicalEvaluation": "No se pudo abrir la ficha de evaluación clínica.",
+        "saveFailed": "No se pudo guardar la institución evaluadora."
+      }
+    },
+    "diagnostic": {
+      "title": "Diagnóstico final o presuntivo",
+      "add": "Añadir diagnóstico",
+      "empty": "No se han registrado diagnósticos.",
+      "fields": {
+        "diagnosticName": "Diagnóstico final o presuntivo",
+        "diagnosticCode": "Código",
+        "diagnosticDate": "Fecha del diagnóstico",
+        "diagnosticTypeItemId": "Tipo de diagnóstico",
+        "notes": "Observaciones"
+      },
+      "form": {
+        "createTitle": "Añadir diagnóstico",
+        "editTitle": "Editar diagnóstico"
+      },
+      "errors": {
+        "alreadyExists": "Este diagnóstico ya está en la lista. Para confirmarlo, edita el diagnóstico existente.",
+        "futureDate": "La fecha del diagnóstico no puede ser futura.",
+        "noInvestigation": "Todavía no existe la investigación de este caso.",
+        "saveFailed": "No se pudo guardar el diagnóstico.",
+        "caseNotFound": "El caso no existe."
+      }
+    },
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."

@@ -1241,6 +1241,96 @@
         "editTitle": "Medische aandoening van de pasgeborene bewerken"
       }
     },
+    "clinicalEvaluation": {
+      "title": "Details van de eerste klinische evaluatie van het ESAVI",
+      "sourcesLegend": "Informatiebron (vink alles aan wat van toepassing is)",
+      "suspicionsLegend": "Vermoedens",
+      "narrativeLegend": "Klinisch verslag",
+      "notChecked": "Niet gecontroleerd",
+      "markNotChecked": "Markeren als niet gecontroleerd",
+      "error": "De klinische evaluatie kon niet worden geladen.",
+      "openFailed": "Het dossier van de klinische evaluatie kon niet worden geopend.",
+      "fields": {
+        "receivedMedicalAttention": "Heeft de persoon medische zorg ontvangen voor het ESAVI?",
+        "sourceExam": "Onderzoek uitgevoerd door de onderzoeker",
+        "sourceDocuments": "Documenten",
+        "sourceVerbalAutopsy": "Mondelinge autopsie",
+        "sourceOther": "Andere",
+        "otherDescription": "Welke?",
+        "clinicalDetailsPersonName": "Naam en contactgegevens van de persoon of personen die de klinische details kennen",
+        "suspectedChildAbuse": "Als het ESAVI zich voordeed bij een kind jonger dan vijf jaar, is er dan een vermoeden van kindermishandeling?",
+        "childAbuseExplanation": "Leg uit",
+        "suspectedDomesticViolence": "Als het ESAVI zich voordeed bij een adolescent of volwassene, is er dan bewijs van huiselijk geweld?",
+        "domesticViolenceExplanation": "Leg uit",
+        "otherSocialBackground": "Andere relevante sociale achtergrond van het geval",
+        "signsAndSymptoms": "Tekenen en symptomen in chronologische volgorde vanaf het moment van vaccinatie",
+        "familyClinicalDetails": "Naam en contactgegevens van de persoon of familieleden met de klinische details",
+        "completeClinicalSummary": "Geef een volledige samenvatting van de klinische en paraklinische gegevens van het geval, met de nadruk op wat het meest relevant is voor de analyse van de gebeurtenis. Scan het fysieke bewijs van het geval en bewaar het op een overzichtelijke manier in uw digitale dossier"
+      },
+      "errors": {
+        "otherDescriptionRequired": "Geef de andere bron op voordat u opslaat.",
+        "otherDescriptionNotAllowed": "Met «andere» uitgeschakeld wordt deze toelichting niet opgeslagen.",
+        "childAbuseExplanationRequired": "Leg het vermoeden van kindermishandeling uit voordat u opslaat.",
+        "childAbuseExplanationNotAllowed": "Zonder vermoeden van kindermishandeling wordt deze toelichting niet opgeslagen.",
+        "domesticViolenceExplanationRequired": "Leg het vermoeden van huiselijk geweld uit voordat u opslaat.",
+        "domesticViolenceExplanationNotAllowed": "Zonder vermoeden van huiselijk geweld wordt deze toelichting niet opgeslagen.",
+        "saveFailed": "De klinische evaluatie kon niet worden opgeslagen."
+      }
+    },
+    "evaluationInstitution": {
+      "title": "Instellingen die de patiënt hebben beoordeeld",
+      "description": "Is de instelling waar de patiënt voor het eerst werd behandeld anders dan de instelling waar hij de definitieve behandeling kreeg?",
+      "add": "Instelling toevoegen",
+      "columns": {
+        "type": "Type"
+      },
+      "empty": "Er zijn nog geen beoordelende instellingen geregistreerd.",
+      "missingClinicalEvaluation": "Het klinische-evaluatiedossier ontbreekt.",
+      "createClinicalEvaluation": "Dossier aanmaken",
+      "characterCount": "{{count}} van {{max}} tekens",
+      "charactersRemaining": "Nog {{count}} tekens.",
+      "fields": {
+        "evaluationInstitutionTypeItemId": "Is de instelling waar de patiënt voor het eerst werd behandeld anders dan de instelling waar hij de definitieve behandeling kreeg?",
+        "healthFacilityId": "Naam van de instelling die de eerste zorg verleende",
+        "institutionName": "Naam van de instelling (als deze niet in de zoekopdracht staat)",
+        "personName": "Naam van de persoon die de zorg verleende",
+        "personContact": "Contactgegevens van de persoon die de eerste zorg verleende",
+        "notes": "Opmerkingen"
+      },
+      "form": {
+        "createTitle": "Beoordelende instelling toevoegen",
+        "editTitle": "Beoordelende instelling bewerken"
+      },
+      "errors": {
+        "identification": "Geef de zorginstelling of de naam van de instelling op voordat u opslaat.",
+        "alreadyExists": "Deze zorginstelling staat al op de lijst.",
+        "missingClinicalEvaluation": "Het klinische-evaluatiedossier kon niet worden geopend.",
+        "saveFailed": "De beoordelende instelling kon niet worden opgeslagen."
+      }
+    },
+    "diagnostic": {
+      "title": "Definitieve of vermoedelijke diagnose",
+      "add": "Diagnose toevoegen",
+      "empty": "Er zijn nog geen diagnoses geregistreerd.",
+      "fields": {
+        "diagnosticName": "Definitieve of vermoedelijke diagnose",
+        "diagnosticCode": "Code",
+        "diagnosticDate": "Datum van de diagnose",
+        "diagnosticTypeItemId": "Type diagnose",
+        "notes": "Opmerkingen"
+      },
+      "form": {
+        "createTitle": "Diagnose toevoegen",
+        "editTitle": "Diagnose bewerken"
+      },
+      "errors": {
+        "alreadyExists": "Deze diagnose staat al op de lijst. Bewerk de bestaande diagnose om deze te bevestigen.",
+        "futureDate": "De datum van de diagnose kan niet in de toekomst liggen.",
+        "noInvestigation": "Het onderzoek van dit dossier bestaat nog niet.",
+        "saveFailed": "De diagnose kon niet worden opgeslagen.",
+        "caseNotFound": "Dit dossier bestaat niet."
+      }
+    },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."

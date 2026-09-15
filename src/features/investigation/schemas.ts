@@ -6,6 +6,9 @@ import type { CreateInvestigationAutopsyInput } from '@/contracts/investigationA
 import type { CreateInvestigationTeamMemberInput } from '@/contracts/investigationTeamMember';
 import type { CreateInvestigationMedicalHistoryInput } from '@/contracts/investigationMedicalHistory';
 import type { CreateInvestigationPregnancyConditionInput } from '@/contracts/investigationPregnancyCondition';
+import type { CreateInvestigationClinicalEvaluationInput } from '@/contracts/investigationClinicalEvaluation';
+import type { CreateEvaluationInstitutionInput } from '@/contracts/evaluationInstitution';
+import type { CreateInvestigationDiagnosticInput } from '@/contracts/investigationDiagnostic';
 
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
@@ -354,4 +357,261 @@ export const newbornConditionErrorFieldMap: Partial<Record<string, keyof Newborn
   INVPREG_004_DIAGTERM_NOT_FOUND: 'conditionName',
   INVPREG_001_ALREADY_EXISTS: 'conditionName',
   INVPREG_004_ALREADY_EXISTS: 'conditionName',
+};
+
+// ---------------------------------------------------------------------------------------------
+// G — Clinical evaluation, section C (SPEC FE13c §3.5 A). No column is required: the row is born
+// from the empty `POST` on the section's reveal (§2), same idea as the header in §A and the
+// medical history in §E. One schema covers both `001` and `004` — the form always sends the
+// whole resulting state, never a partial body.
+// ---------------------------------------------------------------------------------------------
+
+export type InvestigationClinicalEvaluationFormValues = Omit<
+  CreateInvestigationClinicalEvaluationInput,
+  'investigationId'
+>;
+
+// The three flag/explanation pairs (§1.D), declared once so the rule is applied parametrized
+// instead of written three times — mirrors `FLAG_EXPLANATION_PAIRS` in
+// `investigationClinicalEvaluation.service.ts`. Each pair keeps its own message key: the three
+// pairs are three different concepts, not one `{{field}}`-interpolated error.
+const CLINICAL_EVALUATION_FLAG_PAIRS = [
+  {
+    flag: 'sourceOther',
+    explanation: 'otherDescription',
+    requiredKey: 'otherDescriptionRequired',
+    notAllowedKey: 'otherDescriptionNotAllowed',
+  },
+  {
+    flag: 'suspectedChildAbuse',
+    explanation: 'childAbuseExplanation',
+    requiredKey: 'childAbuseExplanationRequired',
+    notAllowedKey: 'childAbuseExplanationNotAllowed',
+  },
+  {
+    flag: 'suspectedDomesticViolence',
+    explanation: 'domesticViolenceExplanation',
+    requiredKey: 'domesticViolenceExplanationRequired',
+    notAllowedKey: 'domesticViolenceExplanationNotAllowed',
+  },
+] as const;
+
+// Same comparison `assertFlagExplanationPairs` runs in the service: `=== true` and never
+// truthiness — over a nullable boolean, `false`, `null` and absent all close the pair the same
+// way. The form always sends its whole resulting state, so there is no "travels with content"
+// distinction to make on the client: a closed flag simply requires an empty explanation.
+export function isFlagExplanationRequirementMet(
+  flag: boolean | null | undefined,
+  explanation: string | null | undefined,
+): boolean {
+  const trimmed = (explanation ?? '').trim();
+  return flag === true ? trimmed.length > 0 : trimmed.length === 0;
+}
+
+// Declares the state of the three pairs instead of letting the `PUT` body depend on what the
+// form happened to leave behind (§1.D, same criterion as `buildMedicalHistorySavePayload` above):
+// with a pair closed, its explanation travels as explicit `null`, and the differential update
+// skips the `UPDATE` if it was already empty.
+export function buildClinicalEvaluationSavePayload(
+  values: InvestigationClinicalEvaluationFormValues,
+): InvestigationClinicalEvaluationFormValues {
+  return {
+    ...values,
+    otherDescription: values.sourceOther === true ? values.otherDescription : null,
+    childAbuseExplanation:
+      values.suspectedChildAbuse === true ? values.childAbuseExplanation : null,
+    domesticViolenceExplanation:
+      values.suspectedDomesticViolence === true ? values.domesticViolenceExplanation : null,
+  };
+}
+
+export const investigationClinicalEvaluationSaveSchema = z
+  .object({
+    // Does not gate anything that follows (§6 decision 9): the five sources below are always
+    // visible, whatever this answers.
+    receivedMedicalAttention: answerOptionSchema.nullable().optional(),
+    sourceExam: z.boolean().nullable().optional(),
+    sourceDocuments: z.boolean().nullable().optional(),
+    sourceVerbalAutopsy: z.boolean().nullable().optional(),
+    sourceOther: z.boolean().nullable().optional(),
+    otherDescription: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    suspectedChildAbuse: z.boolean().nullable().optional(),
+    childAbuseExplanation: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    suspectedDomesticViolence: z.boolean().nullable().optional(),
+    domesticViolenceExplanation: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    // `text`, not `varchar(n)` (§1.E) — no screen limit here, unlike the two encrypted fields of
+    // `evaluationInstitutionSaveSchema` below, which DO need one.
+    clinicalDetailsPersonName: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    familyClinicalDetails: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    completeClinicalSummary: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    signsAndSymptoms: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    otherSocialBackground: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    // All three evaluated in the same pass, never stopping at the first (§1.D): the backend cuts
+    // at the first offender, so a body breaking two pairs would only ever surface the second one
+    // on the following submit if the client stopped early too.
+    for (const pair of CLINICAL_EVALUATION_FLAG_PAIRS) {
+      if (!isFlagExplanationRequirementMet(data[pair.flag], data[pair.explanation])) {
+        ctx.addIssue({
+          code: 'custom',
+          message: data[pair.flag] === true ? pair.requiredKey : pair.notAllowedKey,
+          path: [pair.explanation],
+        });
+      }
+    }
+  });
+
+function _assertInvestigationClinicalEvaluationSchemaMatchesContract(
+  value: z.infer<typeof investigationClinicalEvaluationSaveSchema>,
+): InvestigationClinicalEvaluationFormValues {
+  return value;
+}
+void _assertInvestigationClinicalEvaluationSchemaMatchesContract;
+
+// SPEC FE13c §3.5 A — anchored on the explanation, the field the message is actually about; the
+// six codes carry the operation (`001`/`004`) as their prefix, same criterion as
+// `medicalHistoryErrorFieldMap` above.
+export const investigationClinicalEvaluationErrorFieldMap: Partial<
+  Record<string, keyof InvestigationClinicalEvaluationFormValues>
+> = {
+  INVCLIEV_001_OTHER_DESCRIPTION_REQUIRED: 'otherDescription',
+  INVCLIEV_004_OTHER_DESCRIPTION_REQUIRED: 'otherDescription',
+  INVCLIEV_001_OTHER_DESCRIPTION_NOT_ALLOWED: 'otherDescription',
+  INVCLIEV_004_OTHER_DESCRIPTION_NOT_ALLOWED: 'otherDescription',
+  INVCLIEV_001_CHILD_ABUSE_EXPLANATION_REQUIRED: 'childAbuseExplanation',
+  INVCLIEV_004_CHILD_ABUSE_EXPLANATION_REQUIRED: 'childAbuseExplanation',
+  INVCLIEV_001_CHILD_ABUSE_EXPLANATION_NOT_ALLOWED: 'childAbuseExplanation',
+  INVCLIEV_004_CHILD_ABUSE_EXPLANATION_NOT_ALLOWED: 'childAbuseExplanation',
+  INVCLIEV_001_DOMESTIC_VIOLENCE_EXPLANATION_REQUIRED: 'domesticViolenceExplanation',
+  INVCLIEV_004_DOMESTIC_VIOLENCE_EXPLANATION_REQUIRED: 'domesticViolenceExplanation',
+  INVCLIEV_001_DOMESTIC_VIOLENCE_EXPLANATION_NOT_ALLOWED: 'domesticViolenceExplanation',
+  INVCLIEV_004_DOMESTIC_VIOLENCE_EXPLANATION_NOT_ALLOWED: 'domesticViolenceExplanation',
+};
+
+// ---------------------------------------------------------------------------------------------
+// H — Evaluation institution, section C.7 (SPEC FE13c §3.5 B). Create/edit dialog, a single
+// schema for both operations, same shape as `teamMemberSaveSchema` above.
+// ---------------------------------------------------------------------------------------------
+
+export type EvaluationInstitutionFormValues = Omit<
+  CreateEvaluationInstitutionInput,
+  'investigationId' | 'isActive'
+>;
+
+// The 120 characters are NOT the `varchar(250)` copied from the DDL (§1.E, §6 decision 6): what
+// has to fit inside the column's 250 bytes is the ciphertext, longer than its plain text. This
+// number depends on how much the encryption scheme grows a string — if that scheme ever changes,
+// this is the one place to update it (§7.B).
+export const ENCRYPTED_FIELD_SCREEN_LIMIT = 120;
+
+// The identification guard of `001`/`004` (§3.5 B): at least one of the two must end up with a
+// value. Evaluated over the RESULTING state, same criterion as `assertIdentificationIsPresent` in
+// `evaluationInstitution.service.ts` — the form always sends its whole state, so "resulting" here
+// is simply "what the two fields hold right now".
+export function isInstitutionIdentified(
+  healthFacilityId: string | null | undefined,
+  institutionName: string | null | undefined,
+): boolean {
+  return !!healthFacilityId || (institutionName ?? '').trim().length > 0;
+}
+
+export const evaluationInstitutionSaveSchema = z
+  .object({
+    // The pregunta C.7, por fila (§1.C, §6 decision 1) — never compared against `code` anywhere
+    // in this schema or in the screen that consumes it.
+    evaluationInstitutionTypeItemId: z.string().uuid().nullable().optional(),
+    healthFacilityId: z.string().uuid().nullable().optional(),
+    institutionName: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().max(250).nullable().optional(),
+    ),
+    // Cifrado. Contador visible en pantalla (§3.7) — el tope es `ENCRYPTED_FIELD_SCREEN_LIMIT`,
+    // no el `varchar(250)` de la columna.
+    personName: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().max(ENCRYPTED_FIELD_SCREEN_LIMIT).nullable().optional(),
+    ),
+    personContact: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().max(ENCRYPTED_FIELD_SCREEN_LIMIT).nullable().optional(),
+    ),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (!isInstitutionIdentified(data.healthFacilityId, data.institutionName)) {
+      // Anchored on both fields at once (§2): whoever looks at only the search select or only
+      // the free-text name still has to see why the row can't save.
+      ctx.addIssue({ code: 'custom', message: 'identificationRequired', path: ['healthFacilityId'] });
+      ctx.addIssue({ code: 'custom', message: 'identificationRequired', path: ['institutionName'] });
+    }
+  });
+
+function _assertEvaluationInstitutionSchemaMatchesContract(
+  value: z.infer<typeof evaluationInstitutionSaveSchema>,
+): EvaluationInstitutionFormValues {
+  return value;
+}
+void _assertEvaluationInstitutionSchemaMatchesContract;
+
+// SPEC FE13c §3.5 B. The `404 EVALINST_00X_CLINICAL_EVALUATION_NOT_FOUND` is deliberately not
+// here: it names the missing ficha, not a field of this dialog, and gets its own screen state
+// (§3.2, §4 paso 5) instead of a field to anchor on.
+export const evaluationInstitutionErrorFieldMap: Partial<
+  Record<string, keyof EvaluationInstitutionFormValues>
+> = {
+  EVALINST_001_IDENTIFICATION_REQUIRED: 'institutionName',
+  EVALINST_004_IDENTIFICATION_REQUIRED: 'institutionName',
+  EVALINST_001_ALREADY_EXISTS: 'healthFacilityId',
+  EVALINST_004_ALREADY_EXISTS: 'healthFacilityId',
+};
+
+// ---------------------------------------------------------------------------------------------
+// I — Diagnostic, section C.17 (SPEC FE13c §3.5 C). Create/edit dialog — the twin of
+// `notificationEventSchema` above, minus `isMainEsavi`/`isOtherEsavi`: same term picker, same
+// resolution against a clinical master, same three branches, a different table entirely (§1.F —
+// nothing ties this list to step 4's events).
+// ---------------------------------------------------------------------------------------------
+
+export type InvestigationDiagnosticFormValues = Omit<
+  CreateInvestigationDiagnosticInput,
+  'investigationId' | 'isActive'
+>;
+
+// `diagnosticDate` carries no "not future" rule here (§3.5 C): same criterion as
+// `investigationSaveSchema` above — the screen's `<DateField allowFuture={false}>` applies it.
+// No cross-field rule exists for this entity: the three fixed dates of the investigation are
+// deliberately NOT compared against `diagnosticDate` (§2, out of scope; §5.5.6 of
+// `CASE-PROCESS.md`).
+export const investigationDiagnosticSaveSchema = z.object({
+  diagnosticName: z.string().trim().min(1).max(500),
+  diagnosticCode: z.preprocess(emptyToUndefined, z.string().trim().max(100).nullable().optional()),
+  source: z.enum(TERM_SOURCES).optional(),
+  diagnosticDate: z.string().regex(isoDateRegex).nullable().optional(),
+  // No default value (§6 decision 8): "presumptive" and "not stated" are not the same thing, and
+  // preselecting the catalog's first item would turn every unreviewed diagnosis into one.
+  diagnosticTypeItemId: z.string().uuid().nullable().optional(),
+  notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+});
+
+function _assertInvestigationDiagnosticSchemaMatchesContract(
+  value: z.infer<typeof investigationDiagnosticSaveSchema>,
+): InvestigationDiagnosticFormValues {
+  return value;
+}
+void _assertInvestigationDiagnosticSchemaMatchesContract;
+
+// SPEC FE13c §3.5 C. `INVDIAG_00X_DIAGTERM_NOT_FOUND` anchors on `diagnosticName` — the term
+// picker is what produced the code that failed to resolve. `ALREADY_EXISTS` anchors there too:
+// the message tells the investigator to edit the existing row instead of adding a new one (§2).
+export const investigationDiagnosticErrorFieldMap: Partial<
+  Record<string, keyof InvestigationDiagnosticFormValues>
+> = {
+  INVDIAG_001_DIAGTERM_NOT_FOUND: 'diagnosticName',
+  INVDIAG_004_DIAGTERM_NOT_FOUND: 'diagnosticName',
+  INVDIAG_001_ALREADY_EXISTS: 'diagnosticName',
+  INVDIAG_004_ALREADY_EXISTS: 'diagnosticName',
+  INVDIAG_001_INVALID_DIAGNOSTIC_TYPE: 'diagnosticTypeItemId',
+  INVDIAG_004_INVALID_DIAGNOSTIC_TYPE: 'diagnosticTypeItemId',
 };

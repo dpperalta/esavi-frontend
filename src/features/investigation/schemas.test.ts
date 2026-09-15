@@ -1,13 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import {
   areAutopsyFlagsMutuallyExclusive,
+  buildClinicalEvaluationSavePayload,
   buildMedicalHistorySavePayload,
+  ENCRYPTED_FIELD_SCREEN_LIMIT,
+  evaluationInstitutionErrorFieldMap,
+  evaluationInstitutionSaveSchema,
   hasPregnancyFieldContent,
   investigationAutopsySaveSchema,
+  investigationClinicalEvaluationErrorFieldMap,
+  investigationClinicalEvaluationSaveSchema,
+  investigationDiagnosticErrorFieldMap,
+  investigationDiagnosticSaveSchema,
   investigationSaveSchema,
   investigationSourceSaveSchema,
   isAutopsyDateNotBeforeDeath,
   isAutopsyDateRequirementMet,
+  isFlagExplanationRequirementMet,
+  isInstitutionIdentified,
   isOtherSourceDescriptionRequirementMet,
   isPregnancyBlockOpen,
   isScheduledAutopsyDateRequirementMet,
@@ -394,5 +404,247 @@ describe('newbornConditionSaveSchema — F (SPEC FE13b §3.5 B)', () => {
   it('un conditionName con contenido, sin más campos, valida', () => {
     const result = newbornConditionSaveSchema.safeParse({ conditionName: 'Ictericia neonatal' });
     expect(result.success).toBe(true);
+  });
+});
+
+describe('isFlagExplanationRequirementMet — G (SPEC FE13c §1.D)', () => {
+  it('bandera:true sin explicación no cumple', () => {
+    expect(isFlagExplanationRequirementMet(true, null)).toBe(false);
+    expect(isFlagExplanationRequirementMet(true, '  ')).toBe(false);
+  });
+
+  it('bandera:true con explicación cumple', () => {
+    expect(isFlagExplanationRequirementMet(true, 'Se sospechó maltrato')).toBe(true);
+  });
+
+  it('bandera cerrada (false o null) sin explicación cumple', () => {
+    expect(isFlagExplanationRequirementMet(false, null)).toBe(true);
+    expect(isFlagExplanationRequirementMet(null, null)).toBe(true);
+  });
+
+  it('bandera cerrada con explicación heredada no cumple', () => {
+    expect(isFlagExplanationRequirementMet(false, 'texto viejo')).toBe(false);
+    expect(isFlagExplanationRequirementMet(null, 'texto viejo')).toBe(false);
+  });
+});
+
+describe('buildClinicalEvaluationSavePayload — G (SPEC FE13c §3.5 A)', () => {
+  const base = {
+    receivedMedicalAttention: null,
+    sourceExam: null,
+    sourceDocuments: null,
+    sourceVerbalAutopsy: null,
+    sourceOther: null,
+    otherDescription: null,
+    suspectedChildAbuse: null,
+    childAbuseExplanation: null,
+    suspectedDomesticViolence: null,
+    domesticViolenceExplanation: null,
+    clinicalDetailsPersonName: null,
+    familyClinicalDetails: null,
+    completeClinicalSummary: null,
+    signsAndSymptoms: null,
+    otherSocialBackground: null,
+    notes: null,
+  };
+
+  it('con las tres banderas cerradas, fuerza las tres explicaciones a null aunque el campo tenga texto', () => {
+    const payload = buildClinicalEvaluationSavePayload({
+      ...base,
+      sourceOther: false,
+      otherDescription: 'texto heredado',
+      suspectedChildAbuse: null,
+      childAbuseExplanation: 'texto heredado',
+      suspectedDomesticViolence: false,
+      domesticViolenceExplanation: 'texto heredado',
+    });
+    expect(payload.otherDescription).toBeNull();
+    expect(payload.childAbuseExplanation).toBeNull();
+    expect(payload.domesticViolenceExplanation).toBeNull();
+  });
+
+  it('con una bandera abierta, conserva su explicación', () => {
+    const payload = buildClinicalEvaluationSavePayload({
+      ...base,
+      sourceOther: true,
+      otherDescription: 'Registro clínico externo',
+    });
+    expect(payload.otherDescription).toBe('Registro clínico externo');
+  });
+});
+
+describe('investigationClinicalEvaluationSaveSchema — G', () => {
+  it('ninguna columna es obligatoria: un objeto vacío pasa', () => {
+    expect(investigationClinicalEvaluationSaveSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('un cuerpo que rompe los tres pares produce los tres errores a la vez, no uno', () => {
+    const result = investigationClinicalEvaluationSaveSchema.safeParse({
+      sourceOther: true,
+      suspectedChildAbuse: true,
+      suspectedDomesticViolence: true,
+    });
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    const paths = result.error.issues.map((issue) => issue.path[0]);
+    expect(paths).toContain('otherDescription');
+    expect(paths).toContain('childAbuseExplanation');
+    expect(paths).toContain('domesticViolenceExplanation');
+    expect(result.error.issues).toHaveLength(3);
+  });
+
+  it('una explicación con la bandera en null no valida', () => {
+    const result = investigationClinicalEvaluationSaveSchema.safeParse({
+      suspectedChildAbuse: null,
+      childAbuseExplanation: 'texto que no debería viajar',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('receivedMedicalAttention en NO no oculta ni exige nada más (§6 decision 9)', () => {
+    const result = investigationClinicalEvaluationSaveSchema.safeParse({
+      receivedMedicalAttention: 'NO',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('clinicalDetailsPersonName no tiene tope — es text, no varchar(n)', () => {
+    const result = investigationClinicalEvaluationSaveSchema.safeParse({
+      clinicalDetailsPersonName: 'x'.repeat(1000),
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('investigationClinicalEvaluationErrorFieldMap — G (SPEC FE13c §3.5 A)', () => {
+  it('los seis códigos, en las dos operaciones, anclan en su propia explicación', () => {
+    expect(investigationClinicalEvaluationErrorFieldMap.INVCLIEV_001_OTHER_DESCRIPTION_REQUIRED).toBe(
+      'otherDescription',
+    );
+    expect(investigationClinicalEvaluationErrorFieldMap.INVCLIEV_004_OTHER_DESCRIPTION_NOT_ALLOWED).toBe(
+      'otherDescription',
+    );
+    expect(
+      investigationClinicalEvaluationErrorFieldMap.INVCLIEV_001_CHILD_ABUSE_EXPLANATION_REQUIRED,
+    ).toBe('childAbuseExplanation');
+    expect(
+      investigationClinicalEvaluationErrorFieldMap.INVCLIEV_004_DOMESTIC_VIOLENCE_EXPLANATION_NOT_ALLOWED,
+    ).toBe('domesticViolenceExplanation');
+  });
+});
+
+describe('isInstitutionIdentified — H (SPEC FE13c §3.5 B)', () => {
+  it('sin healthFacilityId y sin institutionName no cumple', () => {
+    expect(isInstitutionIdentified(null, null)).toBe(false);
+    expect(isInstitutionIdentified(null, '   ')).toBe(false);
+  });
+
+  it('con sólo uno de los dos cumple', () => {
+    expect(isInstitutionIdentified('facility-1', null)).toBe(true);
+    expect(isInstitutionIdentified(null, 'Hospital San Juan')).toBe(true);
+  });
+
+  it('con los dos cumple', () => {
+    expect(isInstitutionIdentified('facility-1', 'Hospital San Juan')).toBe(true);
+  });
+});
+
+describe('evaluationInstitutionSaveSchema — H', () => {
+  it('una institución sin healthFacilityId y sin institutionName no valida', () => {
+    const result = evaluationInstitutionSaveSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it('con sólo uno de los dos valida', () => {
+    expect(
+      evaluationInstitutionSaveSchema.safeParse({ healthFacilityId: crypto.randomUUID() }).success,
+    ).toBe(true);
+    expect(
+      evaluationInstitutionSaveSchema.safeParse({ institutionName: 'Hospital San Juan' }).success,
+    ).toBe(true);
+  });
+
+  it(`personContact corta en ${ENCRYPTED_FIELD_SCREEN_LIMIT} caracteres, no en 250`, () => {
+    const base = { institutionName: 'Hospital San Juan' };
+    expect(
+      evaluationInstitutionSaveSchema.safeParse({
+        ...base,
+        personContact: 'x'.repeat(ENCRYPTED_FIELD_SCREEN_LIMIT),
+      }).success,
+    ).toBe(true);
+    expect(
+      evaluationInstitutionSaveSchema.safeParse({
+        ...base,
+        personContact: 'x'.repeat(ENCRYPTED_FIELD_SCREEN_LIMIT + 1),
+      }).success,
+    ).toBe(false);
+  });
+
+  it('institutionName corta en 250 caracteres', () => {
+    expect(
+      evaluationInstitutionSaveSchema.safeParse({ institutionName: 'x'.repeat(250) }).success,
+    ).toBe(true);
+    expect(
+      evaluationInstitutionSaveSchema.safeParse({ institutionName: 'x'.repeat(251) }).success,
+    ).toBe(false);
+  });
+});
+
+describe('evaluationInstitutionErrorFieldMap — H (SPEC FE13c §3.5 B)', () => {
+  it('el 404 de la ficha no está mapeado — tiene su propio estado de pantalla', () => {
+    expect(
+      evaluationInstitutionErrorFieldMap.EVALINST_001_CLINICAL_EVALUATION_NOT_FOUND,
+    ).toBeUndefined();
+  });
+
+  it('IDENTIFICATION_REQUIRED y ALREADY_EXISTS anclan en un campo, en las dos operaciones', () => {
+    expect(evaluationInstitutionErrorFieldMap.EVALINST_001_IDENTIFICATION_REQUIRED).toBeDefined();
+    expect(evaluationInstitutionErrorFieldMap.EVALINST_004_IDENTIFICATION_REQUIRED).toBeDefined();
+    expect(evaluationInstitutionErrorFieldMap.EVALINST_001_ALREADY_EXISTS).toBe('healthFacilityId');
+    expect(evaluationInstitutionErrorFieldMap.EVALINST_004_ALREADY_EXISTS).toBe('healthFacilityId');
+  });
+});
+
+describe('investigationDiagnosticSaveSchema — I (SPEC FE13c §3.5 C)', () => {
+  it('diagnosticName es obligatorio', () => {
+    expect(investigationDiagnosticSaveSchema.safeParse({}).success).toBe(false);
+    expect(investigationDiagnosticSaveSchema.safeParse({ diagnosticName: '' }).success).toBe(false);
+  });
+
+  it('un diagnosticName con contenido, sin más campos, valida', () => {
+    const result = investigationDiagnosticSaveSchema.safeParse({ diagnosticName: 'Fiebre' });
+    expect(result.success).toBe(true);
+  });
+
+  it('acepta una fecha anterior al inicio de la investigación — no hay cruce de fechas (§2)', () => {
+    const result = investigationDiagnosticSaveSchema.safeParse({
+      diagnosticName: 'Fiebre',
+      diagnosticDate: '2000-01-01',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('diagnosticTypeItemId no tiene valor por defecto — undefined es válido (§6 decision 8)', () => {
+    const result = investigationDiagnosticSaveSchema.safeParse({ diagnosticName: 'Fiebre' });
+    expect(result.success && result.data.diagnosticTypeItemId).toBeUndefined();
+  });
+});
+
+describe('investigationDiagnosticErrorFieldMap — I (SPEC FE13c §3.5 C)', () => {
+  it('DIAGTERM_NOT_FOUND y ALREADY_EXISTS anclan en diagnosticName, en el 001 y en el 004', () => {
+    expect(investigationDiagnosticErrorFieldMap.INVDIAG_001_DIAGTERM_NOT_FOUND).toBe(
+      'diagnosticName',
+    );
+    expect(investigationDiagnosticErrorFieldMap.INVDIAG_004_DIAGTERM_NOT_FOUND).toBe(
+      'diagnosticName',
+    );
+    expect(investigationDiagnosticErrorFieldMap.INVDIAG_001_ALREADY_EXISTS).toBe('diagnosticName');
+    expect(investigationDiagnosticErrorFieldMap.INVDIAG_004_ALREADY_EXISTS).toBe('diagnosticName');
+  });
+
+  it('INVALID_DIAGNOSTIC_TYPE ancla en diagnosticTypeItemId', () => {
+    expect(investigationDiagnosticErrorFieldMap.INVDIAG_001_INVALID_DIAGNOSTIC_TYPE).toBe(
+      'diagnosticTypeItemId',
+    );
   });
 });
