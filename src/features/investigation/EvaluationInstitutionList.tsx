@@ -40,8 +40,11 @@ export function EvaluationInstitutionList({ investigationId, disabled = false }:
       card: 'primary',
     },
     {
+      // The field's own label is the literal C.7 question (§3.5 B) — appropriate above the
+      // selector in the dialog, but the table header only has room for a short word: the same
+      // "fields label vs. column header" split `healthFacility.columns.type` already uses.
       key: 'type',
-      header: 'investigation.evaluationInstitution.fields.evaluationInstitutionTypeItemId',
+      header: 'investigation.evaluationInstitution.columns.type',
       render: (row) => row.institutionType?.name,
       card: 'secondary',
     },
@@ -56,11 +59,8 @@ export function EvaluationInstitutionList({ investigationId, disabled = false }:
       header: 'investigation.evaluationInstitution.fields.personName',
       render: (row) => row.personName,
     },
-    {
-      key: 'notes',
-      header: 'investigation.evaluationInstitution.fields.notes',
-      render: (row) => row.notes,
-    },
+    // `notes` is deliberately absent from the list — free text with no length cap widens the
+    // table without limit. It's still fully editable, just only from the edit dialog.
   ];
 
   const isEmpty =

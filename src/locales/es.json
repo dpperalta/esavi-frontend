@@ -1281,6 +1281,9 @@
       "title": "Instituciones que evaluaron al paciente",
       "description": "¿La institución en la que fue atendido por primera vez es diferente a la institución en donde recibió el tratamiento definitivo?",
       "add": "Añadir institución",
+      "columns": {
+        "type": "Tipo"
+      },
       "empty": "No se han registrado instituciones evaluadoras.",
       "missingClinicalEvaluation": "Falta la ficha de evaluación clínica.",
       "createClinicalEvaluation": "Crear la ficha",

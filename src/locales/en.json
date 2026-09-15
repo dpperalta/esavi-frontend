@@ -1281,6 +1281,9 @@
       "title": "Institutions that evaluated the patient",
       "description": "Is the institution where the patient was first attended different from the institution where they received definitive treatment?",
       "add": "Add institution",
+      "columns": {
+        "type": "Type"
+      },
       "empty": "No evaluating institutions have been recorded.",
       "missingClinicalEvaluation": "The clinical evaluation record is missing.",
       "createClinicalEvaluation": "Create the record",

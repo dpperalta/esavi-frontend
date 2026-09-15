@@ -1281,6 +1281,9 @@
       "title": "Instellingen die de patiënt hebben beoordeeld",
       "description": "Is de instelling waar de patiënt voor het eerst werd behandeld anders dan de instelling waar hij de definitieve behandeling kreeg?",
       "add": "Instelling toevoegen",
+      "columns": {
+        "type": "Type"
+      },
       "empty": "Er zijn nog geen beoordelende instellingen geregistreerd.",
       "missingClinicalEvaluation": "Het klinische-evaluatiedossier ontbreekt.",
       "createClinicalEvaluation": "Dossier aanmaken",
