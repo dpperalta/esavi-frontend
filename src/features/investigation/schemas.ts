@@ -12,6 +12,8 @@ import type { CreateInvestigationDiagnosticInput } from '@/contracts/investigati
 import type { CreateInvestigationVaccinationContextInput } from '@/contracts/investigationVaccinationContext';
 import type { CreateInvestigationColdChainInput } from '@/contracts/investigationColdChain';
 import type { CreateInvestigationVaccineAdministeredInput } from '@/contracts/investigationVaccineAdministered';
+import type { CreateInvestigationAdministrationErrorInput } from '@/contracts/investigationAdministrationError';
+import type { CreateInvestigationCommunityInput } from '@/contracts/investigationCommunity';
 
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
@@ -864,3 +866,223 @@ function _assertInvestigationColdChainSchemaMatchesContract(
   return value;
 }
 void _assertInvestigationColdChainSchemaMatchesContract;
+
+// ---------------------------------------------------------------------------------------------
+// L — Administration error, sections F and F2 (SPEC FE13e §3.5 A/B/C). One form for the syringe
+// block, reconstitution and the six `had*`/`*Notes` pairs: no column is required, so a single
+// schema covers both `001` (open, empty) and `004`. F and F2 save together, one `PUT`, at the end
+// of F2 (§3.5, §6 decision 4).
+// ---------------------------------------------------------------------------------------------
+
+export type InvestigationAdministrationErrorFormValues = Omit<
+  CreateInvestigationAdministrationErrorInput,
+  'investigationId'
+>;
+
+// THE ONLY INVERTED GATE OF THE REPOSITORY (SPEC FE13e §1.A): only `'NO'` opens the block over
+// the four syringe types. `'YES'`, `'UNKNOWN'`, `'NOT_APPLICABLE'`, `'NO_ANSWER'` and `null` close
+// it alike. Writing `=== 'YES'` here would pass every manual test except the one that matters.
+// Mirrors `isSyringeBlockOpen` in `investigationAdministrationError.service.ts`.
+export function isSyringeBlockOpen(
+  usedAutoDisableSyringes: AnswerOption | null | undefined,
+): boolean {
+  return usedAutoDisableSyringes === 'NO';
+}
+
+// THE FOUR SYRINGE TYPES OF THE BLOCK, declared once so the minimum rule is written a single time
+// instead of as four loose comparisons (mirrors `SYRINGE_TYPE_FIELDS` server-side). The order
+// means nothing: there is no precedence, only a check that some of them results `true`.
+export const SYRINGE_TYPE_FIELDS = [
+  'usedGlassSyringes',
+  'usedDisposableSyringes',
+  'usedRecycledDisposableSyringes',
+  'usedOtherSyringes',
+] as const;
+
+// THE MINIMUM RULE (SPEC FE13e §1.B, `INVADMER_00X_SYRINGE_TYPE_REQUIRED`), evaluated over the
+// four types themselves — the caller passes the RESULTING state, not the body, so re-saving a row
+// already populated never fails. `false` does NOT count as a declaration: the four in `false` is
+// the same omission as the four untouched.
+export function isSyringeTypeDeclared(
+  values: Pick<InvestigationAdministrationErrorFormValues, (typeof SYRINGE_TYPE_FIELDS)[number]>,
+): boolean {
+  return SYRINGE_TYPE_FIELDS.some((field) => values[field] === true);
+}
+
+// Declares the state of the block instead of letting the `PUT` body depend on what the form
+// happened to leave behind (SPEC FE13e §1.D, §3.5: "salida del bloque en una sola petición" —
+// same criterion as `buildColdChainSavePayload` above). With the block closed, the four types and
+// the description travel as explicit `null` in the SAME request that closes the gate — never two
+// writes. With the block open but `usedOtherSyringes` not `true`, only the description is forced
+// to `null`: it is never required, only gated by its own flag (§1.C, decision 3).
+export function buildAdministrationErrorSavePayload(
+  values: InvestigationAdministrationErrorFormValues,
+): InvestigationAdministrationErrorFormValues {
+  if (!isSyringeBlockOpen(values.usedAutoDisableSyringes)) {
+    return {
+      ...values,
+      usedGlassSyringes: null,
+      usedDisposableSyringes: null,
+      usedRecycledDisposableSyringes: null,
+      usedOtherSyringes: null,
+      otherSyringesDescription: null,
+    };
+  }
+  if (values.usedOtherSyringes !== true) {
+    return { ...values, otherSyringesDescription: null };
+  }
+  return values;
+}
+
+export const investigationAdministrationErrorSaveSchema = z
+  .object({
+    usedAutoDisableSyringes: answerOptionSchema.nullable().optional(),
+    // The four types are `boolean`, NOT `AnswerOption` (SPEC FE13e §1.A) — three states, not
+    // five, the same asymmetry `investigationColdChainSaveSchema` carries on its own table.
+    usedGlassSyringes: z.boolean().nullable().optional(),
+    usedDisposableSyringes: z.boolean().nullable().optional(),
+    usedRecycledDisposableSyringes: z.boolean().nullable().optional(),
+    usedOtherSyringes: z.boolean().nullable().optional(),
+    // Never required (SPEC FE13e §1.C, §6 decision 3) — `usedOtherSyringes: true` without a
+    // description is a valid save, on create and on update.
+    otherSyringesDescription: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    // Outside the block despite the shared prefix (SPEC FE13e §1.C — the fourth misleading name
+    // of step 5, after the `storage*`/`*InThermos` pair of FE13d).
+    syringesKeyFindings: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    // The five reconstitution answers, not exclusive (SPEC FE13e §3.5 B): all five may be `'YES'`
+    // at once, each describes a distinct practice.
+    reconstitutionUsedSameSyringe: answerOptionSchema.nullable().optional(),
+    reconstitutionUsedSameSyringeDifferentVaccine: answerOptionSchema.nullable().optional(),
+    reconstitutionUsedDifferentSyringeSameVial: answerOptionSchema.nullable().optional(),
+    reconstitutionUsedDifferentSyringeDifferentVaccine: answerOptionSchema.nullable().optional(),
+    reconstitutionFollowedManufacturerRecommendation: answerOptionSchema.nullable().optional(),
+    reconstitutionKeyFindings: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    // The six `had*`/`*Notes` pairs, TWELVE independent columns (SPEC FE13e §3.5 C). No note
+    // hangs from its flag: a `'NO'` with the reason written is a valid record, never cleared.
+    hadPrescriptionError: answerOptionSchema.nullable().optional(),
+    prescriptionErrorNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    hadContaminatedVaccine: answerOptionSchema.nullable().optional(),
+    contaminatedVaccineNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    hadAbnormalVaccineConditions: answerOptionSchema.nullable().optional(),
+    abnormalConditionsNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    hadPreparationError: answerOptionSchema.nullable().optional(),
+    preparationErrorNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    hadHandlingError: answerOptionSchema.nullable().optional(),
+    handlingErrorNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    hadImproperAdministration: answerOptionSchema.nullable().optional(),
+    improperAdministrationNotes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (isSyringeBlockOpen(data.usedAutoDisableSyringes) && !isSyringeTypeDeclared(data)) {
+      // Anchored on all four at once (same criterion as `identificationRequired` above): the
+      // `<fieldset>` around the four is what carries the message, not a single control.
+      for (const field of SYRINGE_TYPE_FIELDS) {
+        ctx.addIssue({ code: 'custom', message: 'syringeTypeRequired', path: [field] });
+      }
+    }
+  });
+
+function _assertInvestigationAdministrationErrorSchemaMatchesContract(
+  value: z.infer<typeof investigationAdministrationErrorSaveSchema>,
+): InvestigationAdministrationErrorFormValues {
+  return value;
+}
+void _assertInvestigationAdministrationErrorSchemaMatchesContract;
+
+// ---------------------------------------------------------------------------------------------
+// M — Community, section G (SPEC FE13e §3.5 D). The home coordinates over `<MapPointPicker>`,
+// the similar-event gate and its four optional counters, plus the two free texts outside it.
+// ---------------------------------------------------------------------------------------------
+
+export type InvestigationCommunityFormValues = Omit<CreateInvestigationCommunityInput, 'investigationId'>;
+
+// THE NORMAL POLARITY, unlike the syringe gate above: strict `'YES'` opens the block. `'NO'`,
+// `'UNKNOWN'`, `'NOT_APPLICABLE'`, `'NO_ANSWER'` and `null` close it alike. Mirrors
+// `isSimilarEventBlockOpen` in `investigationCommunity.service.ts`.
+export function isSimilarEventBlockOpen(hadSimilarEvent: AnswerOption | null | undefined): boolean {
+  return hadSimilarEvent === 'YES';
+}
+
+// THE ONLY OBLIGATION OF STEP 5 (SPEC FE13e §1.E, `INVCOMM_00X_SIMILAR_EVENT_DESCRIPTION_REQUIRED`):
+// with the block open, the description cannot be blank. The four counters stay optional — the
+// breakdown may not exist yet — and are never validated against each other.
+export function isSimilarEventDescriptionMet(
+  hadSimilarEvent: AnswerOption | null | undefined,
+  similarEventDescription: string | null | undefined,
+): boolean {
+  if (!isSimilarEventBlockOpen(hadSimilarEvent)) return true;
+  return (similarEventDescription ?? '').trim().length > 0;
+}
+
+// Composes the exit of the block in one request (SPEC FE13e §1.E, §3.5: closing the gate and
+// emptying the description happen in the SAME `PUT` — a `PUT { similarEventDescription: null }`
+// with the block still open is a `400`). With the block closed the five fields travel as explicit
+// `null`; open, they are untouched.
+export function buildCommunitySavePayload(
+  values: InvestigationCommunityFormValues,
+): InvestigationCommunityFormValues {
+  if (isSimilarEventBlockOpen(values.hadSimilarEvent)) return values;
+  return {
+    ...values,
+    similarEventDescription: null,
+    similarEventCount: null,
+    affectedVaccinated: null,
+    affectedUnvaccinated: null,
+    affectedUnknown: null,
+  };
+}
+
+export const investigationCommunitySaveSchema = z
+  .object({
+    // `numeric(10,7)` (§1.F, §3.5 D) — the range matches a real coordinate, same shape as
+    // `investigationSaveSchema`'s pair above. `<MapPointPicker>` enforces the 7-decimal max on
+    // emit; the schema doesn't repeat it.
+    patientLatitude: z.number().min(-90).max(90).nullable().optional(),
+    patientLongitude: z.number().min(-180).max(180).nullable().optional(),
+    hadSimilarEvent: answerOptionSchema.nullable().optional(),
+    similarEventDescription: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    // The `smallint` ceiling shared with §J's five counters (SPEC FE13e §3.5 D) — `0` is content,
+    // never absence: "none of the affected were vaccinated" is a legitimate answer.
+    similarEventCount: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    affectedVaccinated: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    affectedUnvaccinated: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    affectedUnknown: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    // Outside the block (SPEC FE13e §3.5 D).
+    otherComments: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (!isSimilarEventDescriptionMet(data.hadSimilarEvent, data.similarEventDescription)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'similarEventDescriptionRequired',
+        path: ['similarEventDescription'],
+      });
+    }
+  });
+
+function _assertInvestigationCommunitySchemaMatchesContract(
+  value: z.infer<typeof investigationCommunitySaveSchema>,
+): InvestigationCommunityFormValues {
+  return value;
+}
+void _assertInvestigationCommunitySchemaMatchesContract;
+
+// ---------------------------------------------------------------------------------------------
+// N — Other findings, section H (SPEC FE13e §3.5 E). Writes against the header (`investigation`),
+// not either of the two new satellites — the only field of step 5 that saves against the header
+// after A1. Its own `useForm`, picked off `investigationSaveSchema` so the one column stays a
+// single source of truth instead of a parallel declaration.
+// ---------------------------------------------------------------------------------------------
+
+export type OtherFindingsFormValues = Pick<InvestigationFormValues, 'notes'>;
+
+export const otherFindingsSaveSchema = investigationSaveSchema.pick({ notes: true });
+
+function _assertOtherFindingsSchemaMatchesContract(
+  value: z.infer<typeof otherFindingsSaveSchema>,
+): OtherFindingsFormValues {
+  return value;
+}
+void _assertOtherFindingsSchemaMatchesContract;

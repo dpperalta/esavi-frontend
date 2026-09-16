@@ -2,18 +2,22 @@ import { describe, expect, it } from 'vitest';
 import {
   areAutopsyFlagsMutuallyExclusive,
   areTransportContainersExclusive,
+  buildAdministrationErrorSavePayload,
   buildClinicalEvaluationSavePayload,
   buildColdChainSavePayload,
+  buildCommunitySavePayload,
   buildMedicalHistorySavePayload,
   buildVaccinationContextSavePayload,
   ENCRYPTED_FIELD_SCREEN_LIMIT,
   evaluationInstitutionErrorFieldMap,
   evaluationInstitutionSaveSchema,
   hasPregnancyFieldContent,
+  investigationAdministrationErrorSaveSchema,
   investigationAutopsySaveSchema,
   investigationClinicalEvaluationErrorFieldMap,
   investigationClinicalEvaluationSaveSchema,
   investigationColdChainSaveSchema,
+  investigationCommunitySaveSchema,
   investigationDiagnosticErrorFieldMap,
   investigationDiagnosticSaveSchema,
   investigationSaveSchema,
@@ -29,13 +33,19 @@ import {
   isPregnancyBlockOpen,
   isSameVialCountRequirementMet,
   isScheduledAutopsyDateRequirementMet,
+  isSimilarEventBlockOpen,
+  isSimilarEventDescriptionMet,
   isStorageBlockOpen,
+  isSyringeBlockOpen,
+  isSyringeTypeDeclared,
   medicalHistoryErrorFieldMap,
   medicalHistorySaveSchema,
   newbornConditionErrorFieldMap,
   newbornConditionSaveSchema,
   teamMemberSaveSchema,
+  type InvestigationAdministrationErrorFormValues,
   type InvestigationColdChainFormValues,
+  type InvestigationCommunityFormValues,
   type InvestigationVaccinationContextFormValues,
   type MedicalHistoryFormValues,
 } from './schemas';
@@ -960,6 +970,342 @@ describe('investigationColdChainSaveSchema — K', () => {
   it('transportTypeThermo acepta exactamente 250 caracteres', () => {
     const result = investigationColdChainSaveSchema.safeParse({
       transportTypeThermo: 'x'.repeat(250),
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('isSyringeBlockOpen — L (SPEC FE13e §1.A, la única compuerta invertida)', () => {
+  it('sólo NO abre el bloque; YES, UNKNOWN, NOT_APPLICABLE, NO_ANSWER y null lo cierran igual', () => {
+    expect(isSyringeBlockOpen('NO')).toBe(true);
+    expect(isSyringeBlockOpen('YES')).toBe(false);
+    expect(isSyringeBlockOpen('UNKNOWN')).toBe(false);
+    expect(isSyringeBlockOpen('NOT_APPLICABLE')).toBe(false);
+    expect(isSyringeBlockOpen('NO_ANSWER')).toBe(false);
+    expect(isSyringeBlockOpen(null)).toBe(false);
+    expect(isSyringeBlockOpen(undefined)).toBe(false);
+  });
+});
+
+describe('isSyringeTypeDeclared — L (SPEC FE13e §1.B, la regla de mínimo)', () => {
+  it('los cuatro en false no satisfacen el mínimo — la misma omisión que los cuatro ausentes', () => {
+    expect(
+      isSyringeTypeDeclared({
+        usedGlassSyringes: false,
+        usedDisposableSyringes: false,
+        usedRecycledDisposableSyringes: false,
+        usedOtherSyringes: false,
+      }),
+    ).toBe(false);
+  });
+
+  it('los cuatro ausentes (undefined) tampoco satisfacen el mínimo', () => {
+    expect(
+      isSyringeTypeDeclared({
+        usedGlassSyringes: undefined,
+        usedDisposableSyringes: undefined,
+        usedRecycledDisposableSyringes: undefined,
+        usedOtherSyringes: undefined,
+      }),
+    ).toBe(false);
+  });
+
+  it('uno solo en true satisface el mínimo', () => {
+    expect(
+      isSyringeTypeDeclared({
+        usedGlassSyringes: true,
+        usedDisposableSyringes: false,
+        usedRecycledDisposableSyringes: null,
+        usedOtherSyringes: undefined,
+      }),
+    ).toBe(true);
+  });
+});
+
+describe('buildAdministrationErrorSavePayload — L (SPEC FE13e §1.D, §3.5 A)', () => {
+  const withSyringeData: InvestigationAdministrationErrorFormValues = {
+    usedAutoDisableSyringes: 'NO',
+    usedGlassSyringes: true,
+    usedDisposableSyringes: false,
+    usedRecycledDisposableSyringes: null,
+    usedOtherSyringes: true,
+    otherSyringesDescription: 'jeringa retráctil',
+    syringesKeyFindings: 'hallazgo',
+    reconstitutionUsedSameSyringe: null,
+    reconstitutionUsedSameSyringeDifferentVaccine: null,
+    reconstitutionUsedDifferentSyringeSameVial: null,
+    reconstitutionUsedDifferentSyringeDifferentVaccine: null,
+    reconstitutionFollowedManufacturerRecommendation: null,
+    reconstitutionKeyFindings: null,
+    hadPrescriptionError: null,
+    prescriptionErrorNotes: null,
+    hadContaminatedVaccine: null,
+    contaminatedVaccineNotes: null,
+    hadAbnormalVaccineConditions: null,
+    abnormalConditionsNotes: null,
+    hadPreparationError: null,
+    preparationErrorNotes: null,
+    hadHandlingError: null,
+    handlingErrorNotes: null,
+    hadImproperAdministration: null,
+    improperAdministrationNotes: null,
+    notes: null,
+  };
+
+  it('bloque cerrado: la bandera y los cinco campos limpios viajan en la misma petición', () => {
+    const result = buildAdministrationErrorSavePayload({
+      ...withSyringeData,
+      usedAutoDisableSyringes: 'YES',
+    });
+    expect(result.usedAutoDisableSyringes).toBe('YES');
+    expect(result.usedGlassSyringes).toBeNull();
+    expect(result.usedDisposableSyringes).toBeNull();
+    expect(result.usedRecycledDisposableSyringes).toBeNull();
+    expect(result.usedOtherSyringes).toBeNull();
+    expect(result.otherSyringesDescription).toBeNull();
+  });
+
+  it('syringesKeyFindings, fuera del bloque, no se toca al cerrarlo', () => {
+    const result = buildAdministrationErrorSavePayload({
+      ...withSyringeData,
+      usedAutoDisableSyringes: 'UNKNOWN',
+    });
+    expect(result.syringesKeyFindings).toBe('hallazgo');
+  });
+
+  it('bloque abierto con usedOtherSyringes:true conserva la descripción', () => {
+    const result = buildAdministrationErrorSavePayload(withSyringeData);
+    expect(result.otherSyringesDescription).toBe('jeringa retráctil');
+  });
+
+  it('bloque abierto con usedOtherSyringes en false limpia sólo la descripción, no los otros tres', () => {
+    const result = buildAdministrationErrorSavePayload({
+      ...withSyringeData,
+      usedOtherSyringes: false,
+    });
+    expect(result.otherSyringesDescription).toBeNull();
+    expect(result.usedGlassSyringes).toBe(true);
+  });
+});
+
+describe('investigationAdministrationErrorSaveSchema — L', () => {
+  it('un objeto vacío valida — ningún campo es obligatorio (§2, la ficha nace vacía)', () => {
+    expect(investigationAdministrationErrorSaveSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('los cuatro tipos aceptan boolean, nunca AnswerOption', () => {
+    const result = investigationAdministrationErrorSaveSchema.safeParse({
+      usedAutoDisableSyringes: 'NO',
+      usedGlassSyringes: true,
+    });
+    expect(result.success).toBe(true);
+    const wrongType = investigationAdministrationErrorSaveSchema.safeParse({
+      usedGlassSyringes: 'YES',
+    });
+    expect(wrongType.success).toBe(false);
+  });
+
+  it('bloque abierto (NO) con los cuatro en false no valida — el error se ancla en los cuatro', () => {
+    const result = investigationAdministrationErrorSaveSchema.safeParse({
+      usedAutoDisableSyringes: 'NO',
+      usedGlassSyringes: false,
+      usedDisposableSyringes: false,
+      usedRecycledDisposableSyringes: false,
+      usedOtherSyringes: false,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const paths = result.error.issues.map((issue) => issue.path[0]);
+      expect(paths).toEqual(
+        expect.arrayContaining([
+          'usedGlassSyringes',
+          'usedDisposableSyringes',
+          'usedRecycledDisposableSyringes',
+          'usedOtherSyringes',
+        ]),
+      );
+    }
+  });
+
+  it('bloque abierto (NO) con los cuatro ausentes tampoco valida', () => {
+    const result = investigationAdministrationErrorSaveSchema.safeParse({
+      usedAutoDisableSyringes: 'NO',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('bloque abierto (NO) con un tipo en true valida', () => {
+    const result = investigationAdministrationErrorSaveSchema.safeParse({
+      usedAutoDisableSyringes: 'NO',
+      usedGlassSyringes: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('bloque cerrado (YES) con los cuatro en false valida — la regla de mínimo no aplica', () => {
+    const result = investigationAdministrationErrorSaveSchema.safeParse({
+      usedAutoDisableSyringes: 'YES',
+      usedGlassSyringes: false,
+      usedDisposableSyringes: false,
+      usedRecycledDisposableSyringes: false,
+      usedOtherSyringes: false,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('usedOtherSyringes:true sin descripción valida — nunca se exige (§1.C, decisión 3)', () => {
+    const result = investigationAdministrationErrorSaveSchema.safeParse({
+      usedAutoDisableSyringes: 'NO',
+      usedOtherSyringes: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('las cinco de reconstitución admiten YES las cinco a la vez', () => {
+    const result = investigationAdministrationErrorSaveSchema.safeParse({
+      reconstitutionUsedSameSyringe: 'YES',
+      reconstitutionUsedSameSyringeDifferentVaccine: 'YES',
+      reconstitutionUsedDifferentSyringeSameVial: 'YES',
+      reconstitutionUsedDifferentSyringeDifferentVaccine: 'YES',
+      reconstitutionFollowedManufacturerRecommendation: 'YES',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('un had* en NO con su *Notes escrita valida — un registro válido, no se estorba', () => {
+    const result = investigationAdministrationErrorSaveSchema.safeParse({
+      hadPrescriptionError: 'NO',
+      prescriptionErrorNotes: 'se registró el motivo',
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('isSimilarEventBlockOpen — M (SPEC FE13e §1.E, polaridad normal)', () => {
+  it('sólo YES estricto abre el bloque', () => {
+    expect(isSimilarEventBlockOpen('YES')).toBe(true);
+    expect(isSimilarEventBlockOpen('NO')).toBe(false);
+    expect(isSimilarEventBlockOpen('UNKNOWN')).toBe(false);
+    expect(isSimilarEventBlockOpen('NOT_APPLICABLE')).toBe(false);
+    expect(isSimilarEventBlockOpen('NO_ANSWER')).toBe(false);
+    expect(isSimilarEventBlockOpen(null)).toBe(false);
+    expect(isSimilarEventBlockOpen(undefined)).toBe(false);
+  });
+});
+
+describe('isSimilarEventDescriptionMet — M (SPEC FE13e §1.E, la única obligación de step 5)', () => {
+  it('con el bloque cerrado, la descripción vacía no es un problema', () => {
+    expect(isSimilarEventDescriptionMet('NO', null)).toBe(true);
+    expect(isSimilarEventDescriptionMet(null, undefined)).toBe(true);
+  });
+
+  it('con el bloque abierto, la descripción vacía o en blanco no satisface la obligación', () => {
+    expect(isSimilarEventDescriptionMet('YES', null)).toBe(false);
+    expect(isSimilarEventDescriptionMet('YES', '   ')).toBe(false);
+    expect(isSimilarEventDescriptionMet('YES', undefined)).toBe(false);
+  });
+
+  it('con el bloque abierto, una descripción no vacía sí la satisface', () => {
+    expect(isSimilarEventDescriptionMet('YES', 'se investigaron dos casos más')).toBe(true);
+  });
+});
+
+describe('buildCommunitySavePayload — M (SPEC FE13e §1.E, §3.5 D)', () => {
+  const withCommunityData: InvestigationCommunityFormValues = {
+    patientLatitude: -0.22985,
+    patientLongitude: -78.52495,
+    hadSimilarEvent: 'YES',
+    similarEventDescription: 'se investigaron dos casos más',
+    similarEventCount: 12,
+    affectedVaccinated: 5,
+    affectedUnvaccinated: 4,
+    affectedUnknown: 0,
+    otherComments: 'comentario',
+    notes: 'nota',
+  };
+
+  it('bloque abierto: los cinco campos del bloque sobreviven tal cual', () => {
+    const result = buildCommunitySavePayload(withCommunityData);
+    expect(result.similarEventDescription).toBe('se investigaron dos casos más');
+    expect(result.similarEventCount).toBe(12);
+  });
+
+  it('bloque cerrado: los cinco campos viajan como null explícito, en la misma petición', () => {
+    const result = buildCommunitySavePayload({ ...withCommunityData, hadSimilarEvent: 'NO' });
+    expect(result.similarEventDescription).toBeNull();
+    expect(result.similarEventCount).toBeNull();
+    expect(result.affectedVaccinated).toBeNull();
+    expect(result.affectedUnvaccinated).toBeNull();
+    expect(result.affectedUnknown).toBeNull();
+  });
+
+  it('las coordenadas y los dos textos libres, fuera del bloque, no se tocan al cerrarlo', () => {
+    const result = buildCommunitySavePayload({ ...withCommunityData, hadSimilarEvent: 'NO' });
+    expect(result.patientLatitude).toBe(-0.22985);
+    expect(result.otherComments).toBe('comentario');
+    expect(result.notes).toBe('nota');
+  });
+});
+
+describe('investigationCommunitySaveSchema — M', () => {
+  it('un objeto vacío valida — ningún campo es obligatorio (§2, la ficha nace vacía)', () => {
+    expect(investigationCommunitySaveSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('una latitud de 500 se rechaza — fuera de ±90', () => {
+    const result = investigationCommunitySaveSchema.safeParse({ patientLatitude: 500 });
+    expect(result.success).toBe(false);
+  });
+
+  it('una longitud de 200 se rechaza — fuera de ±180', () => {
+    const result = investigationCommunitySaveSchema.safeParse({ patientLongitude: 200 });
+    expect(result.success).toBe(false);
+  });
+
+  it('una latitud y longitud dentro de rango validan', () => {
+    const result = investigationCommunitySaveSchema.safeParse({
+      patientLatitude: -0.22985,
+      patientLongitude: -78.52495,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('bloque abierto (YES) sin descripción no valida — la única obligación de step 5', () => {
+    const result = investigationCommunitySaveSchema.safeParse({ hadSimilarEvent: 'YES' });
+    expect(result.success).toBe(false);
+  });
+
+  it('bloque abierto (YES) con descripción valida', () => {
+    const result = investigationCommunitySaveSchema.safeParse({
+      hadSimilarEvent: 'YES',
+      similarEventDescription: 'se investigaron dos casos más',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('bloque cerrado (NO) sin descripción valida — la obligación no aplica', () => {
+    const result = investigationCommunitySaveSchema.safeParse({ hadSimilarEvent: 'NO' });
+    expect(result.success).toBe(true);
+  });
+
+  it('el contador similarEventCount acepta 0 — es contenido, no ausencia', () => {
+    const result = investigationCommunitySaveSchema.safeParse({ similarEventCount: 0 });
+    expect(result.success).toBe(true);
+  });
+
+  it('un contador de 40000 se rechaza — el techo smallint replicado en el cliente', () => {
+    const result = investigationCommunitySaveSchema.safeParse({ affectedVaccinated: 40000 });
+    expect(result.success).toBe(false);
+  });
+
+  it('los cuatro contadores informados no se validan entre sí — la suma puede no coincidir', () => {
+    const result = investigationCommunitySaveSchema.safeParse({
+      hadSimilarEvent: 'YES',
+      similarEventDescription: 'x',
+      similarEventCount: 12,
+      affectedVaccinated: 5,
+      affectedUnvaccinated: 4,
+      affectedUnknown: 0,
     });
     expect(result.success).toBe(true);
   });

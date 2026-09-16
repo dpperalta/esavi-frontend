@@ -89,9 +89,36 @@ function renderList(disabled = false) {
 }
 
 describe('TeamMemberList — sección A2 del paso 5 (SPEC FE13a §4 paso 10)', () => {
-  it('sin botón de borrar, ni con filas activas', async () => {
+  it('dar de baja pide confirmación nombrando la fila y llama al DELETE sólo tras confirmar', async () => {
+    const user = setupUser();
     mockList([memberRow()]);
+    let deleteCalls = 0;
+    server.use(
+      http.delete(`http://localhost:4500/api/investigation-team-members/${MEMBER_1}`, () => {
+        deleteCalls++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: null });
+      }),
+    );
+
     renderList();
+
+    const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Ana Pérez' });
+    await user.click(deleteButton);
+
+    expect(
+      await screen.findByText('¿Dar de baja «Ana Pérez»? Esta acción no se puede deshacer desde aquí.'),
+    ).toBeInTheDocument();
+    expect(deleteCalls).toBe(0);
+
+    const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+    await user.click(confirmButton);
+
+    await waitFor(() => expect(deleteCalls).toBe(1));
+  });
+
+  it('con disabled, no hay botón de borrar ni de editar', async () => {
+    mockList([memberRow()]);
+    renderList(true);
 
     await screen.findAllByText('Ana Pérez');
     expect(screen.queryByRole('button', { name: /Eliminar/ })).not.toBeInTheDocument();

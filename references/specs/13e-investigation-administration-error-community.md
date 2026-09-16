@@ -1,6 +1,6 @@
 # SPEC FE13e — Paso 5: el error de administración, la investigación comunitaria y el cierre de la etapa
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE08 (armazón del asistente, `CaseWizardActionBar`, sólo lectura si `CLOSED`), SPEC FE11 (el `RadioGroup` Sí/No de dos vías sin retorno a `null`), SPEC FE12a (la cadena guardar/completar de un paso y `<AnswerOptionField>`), SPEC FE12f (`useProgressiveSections`), SPEC FE13a (la cabecera de la investigación, `InvestigationStep.tsx` y `<MapPointPicker>`, del que este spec es el segundo consumidor), SPEC FE13d (las cuatro secciones anteriores y los trece identificadores de revelado que aquí llegan a diecisiete), SPEC F58 del backend (la investigación y sus satélites)
 > **Fecha:** 2026-09-11
 > **Objetivo:** Cerrar §5.5.5 del `CASE-PROCESS.md` —las secciones F, F2, G y H del formulario— y con ellas el paso 5: es este spec el que monta «Completar etapa».

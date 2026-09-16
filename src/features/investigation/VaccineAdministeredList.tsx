@@ -1,9 +1,21 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import type { InvestigationVaccineAdministeredDetail } from '@/contracts/declared/investigationVaccineAdministered';
 import { investigationVaccineAdministeredResource, useWhodrugDictionaryAvailable } from '@/features/investigation/api';
 import { VaccineAdministeredFormDialog } from '@/features/investigation/VaccineAdministeredFormDialog';
+import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
 
 export interface VaccineAdministeredListProps {
@@ -20,19 +32,35 @@ function vaccineLabel(row: InvestigationVaccineAdministeredDetail): string {
 
 // Sección D.1–D.2 del paso 5 (SPEC FE13d §3.5, §4 paso 7): la única lista del expediente sin
 // rama cruda, y por eso la única que se deshabilita entera con su motivo en vez de mostrarse
-// vacía cuando el maestro WHODrug no está importado (§1.B, §3.6). Sin `onDelete`:
-// `ESAVI-INVVACAD-005A`/`-005B` exigen ADMIN mientras el paso 5 escribe como USER (§2), la misma
-// deuda de `CASE-PROCESS.md` §10 que el resto de listas del expediente.
+// vacía cuando el maestro WHODrug no está importado (§1.B, §3.6). Now with `onDelete`:
+// `ESAVI-INVVACAD-005A` dropped from `ADMIN` to `USER` (references/API-ROUTES.md, regenerated
+// 2026-09-16; `-005B` reactivation stays `ADMIN`), the same `CASE-PROCESS.md` §10 debt the rest
+// of this expediente's lists shared.
 export function VaccineAdministeredList({ investigationId, disabled = false }: VaccineAdministeredListProps) {
   const { t } = useTranslation();
   const vaccines = investigationVaccineAdministeredResource.useListByParent!(investigationId, {
     pageSize: 100,
   });
+  const deactivate = investigationVaccineAdministeredResource.useDeactivate();
   const dictionary = useWhodrugDictionaryAvailable();
   const [dialog, setDialog] = useState<{
     open: boolean;
     vaccineAdministered: InvestigationVaccineAdministeredDetail | null;
   }>({ open: false, vaccineAdministered: null });
+  const [removeTarget, setRemoveTarget] = useState<InvestigationVaccineAdministeredDetail | null>(
+    null,
+  );
+
+  function handleConfirmRemove() {
+    if (!removeTarget) return;
+    deactivate.mutate(removeTarget.vaccineAdministeredId, {
+      onSuccess: () => setRemoveTarget(null),
+      onError: (error) => {
+        setRemoveTarget(null);
+        toast.error(error instanceof EsaviApiError ? getErrorMessage(error) : t('common.errors.unexpected'));
+      },
+    });
+  }
 
   const columns: SatelliteListColumn<InvestigationVaccineAdministeredDetail>[] = [
     {
@@ -85,6 +113,7 @@ export function VaccineAdministeredList({ investigationId, disabled = false }: V
         onRetry={() => void vaccines.refetch()}
         onAdd={canAdd ? () => setDialog({ open: true, vaccineAdministered: null }) : undefined}
         onEdit={disabled ? undefined : (row) => setDialog({ open: true, vaccineAdministered: row })}
+        onDelete={disabled ? undefined : (row) => setRemoveTarget(row)}
       />
 
       {/* Sección deshabilitada con su motivo, no una lista vacía (§3.5, §3.6) — el sondeo del
@@ -105,6 +134,25 @@ export function VaccineAdministeredList({ investigationId, disabled = false }: V
         vaccineAdministered={dialog.vaccineAdministered}
         onOpenChange={(open) => setDialog((prev) => ({ ...prev, open }))}
       />
+
+      <AlertDialog open={removeTarget !== null} onOpenChange={(open) => !open && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('investigation.satellites.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('investigation.satellites.deleteConfirm', {
+                name: removeTarget ? vaccineLabel(removeTarget) : '',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleConfirmRemove}>
+              {t('investigation.satellites.deleteAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

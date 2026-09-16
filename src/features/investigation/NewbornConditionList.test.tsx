@@ -102,14 +102,49 @@ describe('NewbornConditionList — sección B2 (SPEC FE13b §4 paso 7)', () => {
     ).toBeInTheDocument();
   });
 
-  it('sin botón de borrar, aunque haya condiciones activas', async () => {
+  it('dar de baja pide confirmación nombrando la fila y llama al DELETE sólo tras confirmar', async () => {
     server.use(
       http.get(
         `http://localhost:4500/api/investigation-pregnancy-conditions/investigation/${INVESTIGATION_1}`,
         () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [conditionRow()] } }),
       ),
     );
+    let deleteCalls = 0;
+    server.use(
+      http.delete(`http://localhost:4500/api/investigation-pregnancy-conditions/${CONDITION_1}`, () => {
+        deleteCalls++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: null });
+      }),
+    );
+    const user = setupUser();
     renderList();
+
+    const [deleteButton] = await screen.findAllByRole('button', {
+      name: 'Eliminar Ictericia neonatal',
+    });
+    await user.click(deleteButton);
+
+    expect(
+      await screen.findByText(
+        '¿Dar de baja «Ictericia neonatal»? Esta acción no se puede deshacer desde aquí.',
+      ),
+    ).toBeInTheDocument();
+    expect(deleteCalls).toBe(0);
+
+    const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+    await user.click(confirmButton);
+
+    await waitFor(() => expect(deleteCalls).toBe(1));
+  });
+
+  it('con disabled, no hay botón de borrar', async () => {
+    server.use(
+      http.get(
+        `http://localhost:4500/api/investigation-pregnancy-conditions/investigation/${INVESTIGATION_1}`,
+        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [conditionRow()] } }),
+      ),
+    );
+    renderList({ disabled: true });
 
     await screen.findAllByText('Ictericia neonatal');
     expect(

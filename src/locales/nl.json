@@ -1159,6 +1159,11 @@
     "fields": {
       "notes": "Opmerkingen"
     },
+    "satellites": {
+      "deleteTitle": "Buiten gebruik stellen",
+      "deleteConfirm": "\"{{name}}\" buiten gebruik stellen? Deze actie kan hier niet ongedaan worden gemaakt.",
+      "deleteAction": "Buiten gebruik stellen"
+    },
     "basicInfo": {
       "title": "Basisinformatie",
       "statusItemId": "Status van de persoon op het moment van het onderzoek",
@@ -1412,6 +1417,88 @@
       "errors": {
         "saveFailed": "De koudeketen kon niet worden opgeslagen."
       }
+    },
+    "administrationError": {
+      "openFailed": "Het dossier van de toedieningsfout kon niet worden geopend.",
+      "title": "Toedieningsfout",
+      "syringes": {
+        "title": "Spuiten en naalden",
+        "typesLegend": "Gebruikt type spuit",
+        "minimumRequired": "Geef ten minste één gebruikt type spuit aan",
+        "field": {
+          "usedAutoDisableSyringes": "Werden zelfvernietigende (AD) spuiten gebruikt?",
+          "usedGlassSyringes": "Glas",
+          "usedDisposableSyringes": "Wegwerp",
+          "usedRecycledDisposableSyringes": "Gerecyclede wegwerp",
+          "usedOtherSyringes": "Andere",
+          "otherSyringesDescription": "Welke?",
+          "syringesKeyFindings": "Geef de belangrijkste bevindingen, aanvullende opmerkingen of commentaar aan"
+        }
+      },
+      "practices": {
+        "title": "Reconstitutieprocedure",
+        "reconstitutionHeading": "Reconstitutie",
+        "administrationErrorsHeading": "Toedieningsfouten",
+        "field": {
+          "reconstitutionUsedSameSyringe": "Werd dezelfde spuit gebruikt om meerdere flacons van hetzelfde vaccin te reconstitueren?",
+          "reconstitutionUsedSameSyringeDifferentVaccine": "Werd dezelfde spuit gebruikt om verschillende vaccins te reconstitueren?",
+          "reconstitutionUsedDifferentSyringeSameVial": "Werd een andere spuit gebruikt om elke flacon van het vaccin te reconstitueren?",
+          "reconstitutionUsedDifferentSyringeDifferentVaccine": "Werd bij elke vaccinatie een andere spuit gebruikt voor de reconstitutie?",
+          "reconstitutionFollowedManufacturerRecommendation": "Zijn de gebruikte verdunningsmiddelen en vaccins dezelfde als die door de fabrikant worden aanbevolen?",
+          "reconstitutionKeyFindings": "Geef de belangrijkste bevindingen of aanvullende opmerkingen of commentaar aan",
+          "hadPrescriptionError": "Was er een fout in het voorschrift of niet-naleving van de gebruiksaanbevelingen van het vaccin? (indicaties, contra-indicaties, voorzorgsmaatregelen)",
+          "prescriptionErrorNotes": "Toelichting en opmerkingen",
+          "hadContaminatedVaccine": "Denkt u dat het toegediende vaccin besmet kan zijn geweest?",
+          "contaminatedVaccineNotes": "Toelichting en opmerkingen",
+          "hadAbnormalVaccineConditions": "Denkt u dat de fysieke toestand van het vaccin (kleur, troebelheid, vreemde stoffen, enz.) abnormaal was op het moment van toediening?",
+          "abnormalConditionsNotes": "Toelichting en opmerkingen",
+          "hadPreparationError": "Denkt u dat er een fout is gemaakt bij de bereiding of reconstitutie (verkeerd product, vaccin of verdunningsmiddel, menging, spuit of onjuiste vulling van de spuit, enz.) van het vaccin door de vaccinator?",
+          "preparationErrorNotes": "Toelichting en opmerkingen",
+          "hadHandlingError": "Denkt u dat er een fout is gemaakt bij de omgang met het vaccin (onderbreking van de koudeketen tijdens transport, opslag of de vaccinatiedag, enz.)?",
+          "handlingErrorNotes": "Toelichting en opmerkingen",
+          "hadImproperAdministration": "Denkt u dat het vaccin onjuist is toegediend (verkeerde dosis, plaats of toedieningsweg, verkeerde naaldmaat, niet volgen van goede injectiepraktijken, enz.)?",
+          "improperAdministrationNotes": "Toelichting en opmerkingen",
+          "notes": "Opmerkingen"
+        }
+      },
+      "errors": {
+        "saveFailed": "De toedieningsfout kon niet worden opgeslagen."
+      }
+    },
+    "community": {
+      "openFailed": "Het dossier van het gemeenschapsonderzoek kon niet worden geopend.",
+      "title": "Gemeenschapsonderzoek",
+      "intro": "Gemeenschapsonderzoek (bezoek de gemeenschap en interview de familie of buren van de getroffen persoon).",
+      "similarEventLegend": "Gemeld soortgelijk voorval",
+      "field": {
+        "map": "Woonplaats van de patiënt",
+        "hadSimilarEvent": "Werd er een soortgelijk voorval gemeld kort voor of na het ESAVI, in dezelfde gemeenschap?",
+        "similarEventDescription": "Als het antwoord \"ja\" is, beschrijf het",
+        "similarEventCount": "Als het antwoord \"ja\" is, hoeveel voorvallen of episodes werden er gemeld?",
+        "affectedVaccinated": "Van de getroffen personen, hoeveel zijn er gevaccineerd?",
+        "affectedUnvaccinated": "Van de getroffen personen, hoeveel zijn er niet gevaccineerd?",
+        "affectedUnknown": "Van de getroffen personen, hoeveel hebben een onbekende status?",
+        "otherComments": "Overige opmerkingen",
+        "notes": "Opmerkingen"
+      },
+      "countMismatch": "De uitsplitsing telt op tot {{breakdown}} en u heeft {{declared}} opgegeven.",
+      "errors": {
+        "saveFailed": "Het gemeenschapsonderzoek kon niet worden opgeslagen.",
+        "similarEventDescriptionRequired": "Beschrijf het gemelde soortgelijke voorval.",
+        "similarEventFieldsNotAllowed": "De gegevens van het soortgelijke voorval kunnen niet worden verzonden zonder het voorval te melden."
+      }
+    },
+    "map": {
+      "approximate": {
+        "notice": "Geschatte positie, afkomstig van het geregistreerde woonadres.",
+        "instruction": "Sleep de marker om het woonadres aan te geven."
+      }
+    },
+    "otherFindings": {
+      "title": "Overige constateringen, opmerkingen en commentaar"
+    },
+    "complete": {
+      "emptySections": "Deze secties zijn niet ingevuld: {{sections}}. U kunt de fase toch voltooien en ze later bewerken."
     },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",

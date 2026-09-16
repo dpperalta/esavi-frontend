@@ -1159,6 +1159,11 @@
     "fields": {
       "notes": "Notes"
     },
+    "satellites": {
+      "deleteTitle": "Deactivate",
+      "deleteConfirm": "Deactivate \"{{name}}\"? This action can't be undone from here.",
+      "deleteAction": "Deactivate"
+    },
     "basicInfo": {
       "title": "Basic information",
       "statusItemId": "Status of the person at the time of the investigation",
@@ -1412,6 +1417,88 @@
       "errors": {
         "saveFailed": "The cold chain could not be saved."
       }
+    },
+    "administrationError": {
+      "openFailed": "The administration error record could not be opened.",
+      "title": "Administration error",
+      "syringes": {
+        "title": "Syringes and needles",
+        "typesLegend": "Type of syringe used",
+        "minimumRequired": "Indicate at least one type of syringe used",
+        "field": {
+          "usedAutoDisableSyringes": "Were auto-disable (AD) syringes used?",
+          "usedGlassSyringes": "Glass",
+          "usedDisposableSyringes": "Disposable",
+          "usedRecycledDisposableSyringes": "Recycled disposable",
+          "usedOtherSyringes": "Other",
+          "otherSyringesDescription": "Which ones?",
+          "syringesKeyFindings": "Specify the key findings, additional observations or comments"
+        }
+      },
+      "practices": {
+        "title": "Reconstitution procedure",
+        "reconstitutionHeading": "Reconstitution",
+        "administrationErrorsHeading": "Administration errors",
+        "field": {
+          "reconstitutionUsedSameSyringe": "Was the same syringe used to reconstitute multiple vials of the same vaccine?",
+          "reconstitutionUsedSameSyringeDifferentVaccine": "Was the same syringe used to reconstitute different vaccines?",
+          "reconstitutionUsedDifferentSyringeSameVial": "Was a different syringe used to reconstitute each vial of the vaccine?",
+          "reconstitutionUsedDifferentSyringeDifferentVaccine": "Was a different syringe used to reconstitute at each vaccination?",
+          "reconstitutionFollowedManufacturerRecommendation": "Are the diluents and vaccines used the same ones recommended by the manufacturer?",
+          "reconstitutionKeyFindings": "Specify the key findings or additional observations or comments",
+          "hadPrescriptionError": "Was there an error in the prescription or non-adherence to the vaccine's usage recommendations? (indications, contraindications, precautions)",
+          "prescriptionErrorNotes": "Explanation and observations",
+          "hadContaminatedVaccine": "Do you consider that the administered vaccine could have been contaminated?",
+          "contaminatedVaccineNotes": "Explanation and observations",
+          "hadAbnormalVaccineConditions": "Do you consider that the vaccine's physical conditions (color, turbidity, foreign substances, etc.) were abnormal at the time of administration?",
+          "abnormalConditionsNotes": "Explanation and observations",
+          "hadPreparationError": "Do you consider that there was an error in the preparation or reconstitution (wrong product, vaccine or diluent, mixing, syringe or improper filling of the syringe, etc.) of the vaccine by the vaccinator?",
+          "preparationErrorNotes": "Explanation and observations",
+          "hadHandlingError": "Do you consider that there was an error in handling the vaccine (interruption of the cold chain during transport, storage or the vaccination day, etc.)?",
+          "handlingErrorNotes": "Explanation and observations",
+          "hadImproperAdministration": "Do you consider that the vaccine was administered incorrectly (wrong dose, site or route of administration, wrong needle size, failure to follow good injection practices, etc.)?",
+          "improperAdministrationNotes": "Explanation and observations",
+          "notes": "Notes"
+        }
+      },
+      "errors": {
+        "saveFailed": "The administration error could not be saved."
+      }
+    },
+    "community": {
+      "openFailed": "The community investigation record could not be opened.",
+      "title": "Community investigation",
+      "intro": "Community investigation (please visit the locality and interview the affected person's family or neighbors).",
+      "similarEventLegend": "Reported similar event",
+      "field": {
+        "map": "Patient's locality",
+        "hadSimilarEvent": "Was a similar event reported close in time to when the ESAVI occurred, in the same locality?",
+        "similarEventDescription": "If the answer is \"yes\", describe it",
+        "similarEventCount": "If the answer is \"yes\", how many events or episodes were reported?",
+        "affectedVaccinated": "Of the affected people, how many are vaccinated?",
+        "affectedUnvaccinated": "Of the affected people, how many are unvaccinated?",
+        "affectedUnknown": "Of the affected people, how many have an unknown status?",
+        "otherComments": "Other comments",
+        "notes": "Notes"
+      },
+      "countMismatch": "The breakdown adds up to {{breakdown}} and you declared {{declared}}.",
+      "errors": {
+        "saveFailed": "The community investigation could not be saved.",
+        "similarEventDescriptionRequired": "Describe the reported similar event.",
+        "similarEventFieldsNotAllowed": "The similar event data can't be sent without declaring the event."
+      }
+    },
+    "map": {
+      "approximate": {
+        "notice": "Approximate position, taken from the registered residence.",
+        "instruction": "Drag the marker to indicate the home address."
+      }
+    },
+    "otherFindings": {
+      "title": "Other findings, observations and comments"
+    },
+    "complete": {
+      "emptySections": "These sections were left blank: {{sections}}. You can still complete the stage and come back to edit them later."
     },
     "draft": {
       "restored": "Recovered unsaved changes from an earlier session.",

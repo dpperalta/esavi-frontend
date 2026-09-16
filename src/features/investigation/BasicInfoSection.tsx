@@ -29,7 +29,6 @@ import { HealthFacilitySelect } from '@/shared/components/HealthFacilitySelect';
 import { MapPointPicker, type LatLng } from '@/shared/components/MapPointPicker';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 import { Button } from '@/shared/components/ui/button';
-import { Textarea } from '@/shared/components/ui/textarea';
 
 function buildDefaultValues(investigation: InvestigationDetail | null): InvestigationFormValues {
   return {
@@ -415,27 +414,6 @@ export function BasicInfoSection({
               onChange={field.onChange}
               ariaLabel={t('investigation.basicInfo.investigationStartDate')}
               allowFuture={false}
-              disabled={disabled}
-            />
-          </div>
-        )}
-      />
-
-      <Controller
-        control={form.control}
-        name="notes"
-        render={({ field }) => (
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="investigation-basicInfo-notes"
-              className="text-sm font-medium text-foreground"
-            >
-              {t('investigation.fields.notes')}
-            </label>
-            <Textarea
-              id="investigation-basicInfo-notes"
-              value={field.value ?? ''}
-              onChange={(event) => field.onChange(event.target.value || null)}
               disabled={disabled}
             />
           </div>

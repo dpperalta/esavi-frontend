@@ -109,13 +109,14 @@ export function PregnancySection({
   const showsNewbornConditions =
     blockOpen &&
     pregnancyOutcomeCatalog.rows.find((row) => row.catalogItemId === pregnancyOutcomeItemId)
-      ?.value === '2';
+      ?.value === 'LIVE_BORN_WITH_COMPLICATIONS';
 
   // Hoisted out of `NewbornConditionList` (SPEC FE13b §4 paso 8): the block below needs the
   // active count even while B2 isn't mounted — the investigator can flip the outcome away from
-  // "value === '2'" in the same keystroke that would unmount it, and the count has to survive
-  // that render to still block the save. Same `queryKey` as the list's own hook, so this doesn't
-  // add a second network round trip once both are mounted — TanStack Query dedupes it.
+  // "value === 'LIVE_BORN_WITH_COMPLICATIONS'" in the same keystroke that would unmount it, and
+  // the count has to survive that render to still block the save. Same `queryKey` as the list's
+  // own hook, so this doesn't add a second network round trip once both are mounted — TanStack
+  // Query dedupes it.
   const newbornConditions = useNewbornConditionsByMedicalHistory(investigationId, true);
   const activeNewbornConditionsCount = newbornConditions.data?.rows.length ?? 0;
   const [outcomeLockOpen, setOutcomeLockOpen] = useState(false);
@@ -128,7 +129,7 @@ export function PregnancySection({
     // value, so closing the outer block counts as "changing the outcome away" too.
     const resultingOutcomeIsLiveWithCondition =
       pregnancyOutcomeCatalog.rows.find((row) => row.catalogItemId === payload.pregnancyOutcomeItemId)
-        ?.value === '2';
+        ?.value === 'LIVE_BORN_WITH_COMPLICATIONS';
     if (activeNewbornConditionsCount > 0 && !resultingOutcomeIsLiveWithCondition) {
       setOutcomeLockOpen(true);
       return;

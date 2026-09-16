@@ -119,9 +119,35 @@ function renderList(disabled = false) {
 }
 
 describe('DiagnosticList — C.17 (SPEC FE13c §4 paso 7)', () => {
-  it('sin botón de borrar, ni con filas activas', async () => {
+  it('dar de baja pide confirmación nombrando la fila y llama al DELETE sólo tras confirmar', async () => {
+    const user = setupUser();
     mockList([diagnosticRow()]);
+    let deleteCalls = 0;
+    server.use(
+      http.delete(`http://localhost:4500/api/investigation-diagnostics/${DIAGNOSTIC_1}`, () => {
+        deleteCalls++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: null });
+      }),
+    );
     renderList();
+
+    const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Fiebre alta' });
+    await user.click(deleteButton);
+
+    expect(
+      await screen.findByText('¿Dar de baja «Fiebre alta»? Esta acción no se puede deshacer desde aquí.'),
+    ).toBeInTheDocument();
+    expect(deleteCalls).toBe(0);
+
+    const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+    await user.click(confirmButton);
+
+    await waitFor(() => expect(deleteCalls).toBe(1));
+  });
+
+  it('con disabled, no hay botón de borrar', async () => {
+    mockList([diagnosticRow()]);
+    renderList(true);
 
     await screen.findAllByText('Fiebre alta');
     expect(screen.queryByRole('button', { name: /Eliminar/ })).not.toBeInTheDocument();

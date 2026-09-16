@@ -11,6 +11,8 @@ import type { CreateInvestigationDiagnosticInput } from '@/contracts/investigati
 import type { CreateInvestigationVaccinationContextInput } from '@/contracts/investigationVaccinationContext';
 import type { CreateInvestigationVaccineAdministeredInput } from '@/contracts/investigationVaccineAdministered';
 import type { CreateInvestigationColdChainInput } from '@/contracts/investigationColdChain';
+import type { CreateInvestigationAdministrationErrorInput } from '@/contracts/investigationAdministrationError';
+import type { CreateInvestigationCommunityInput } from '@/contracts/investigationCommunity';
 import type { InvestigationDetail } from '@/contracts/declared/investigation';
 import type { InvestigationSourceDetail } from '@/contracts/declared/investigationSource';
 import type { InvestigationAutopsyDetail } from '@/contracts/declared/investigationAutopsy';
@@ -23,6 +25,8 @@ import type { InvestigationDiagnosticDetail } from '@/contracts/declared/investi
 import type { InvestigationVaccinationContextDetail } from '@/contracts/declared/investigationVaccinationContext';
 import type { InvestigationVaccineAdministeredDetail } from '@/contracts/declared/investigationVaccineAdministered';
 import type { InvestigationColdChainDetail } from '@/contracts/declared/investigationColdChain';
+import type { InvestigationAdministrationErrorDetail } from '@/contracts/declared/investigationAdministrationError';
+import type { InvestigationCommunityDetail } from '@/contracts/declared/investigationCommunity';
 import type { PaginatedResponse } from '@/contracts/declared/pagination';
 import { useCountryIsoCode } from '@/features/systemConfig/api';
 import { client } from '@/shared/api/client';
@@ -547,6 +551,96 @@ export function useInvestigationColdChainByCase(caseId: string | undefined, enab
         return response.data;
       } catch (err) {
         if (err instanceof EsaviApiError && err.code === 'INVCOLD_006_NOT_FOUND') {
+          return null;
+        }
+        throw err;
+      }
+    },
+    enabled: enabled && caseId !== undefined,
+  });
+}
+
+// POST /api/investigation-administration-errors             ESAVI-INVADMER-001  USER  create the ficha, `{ investigationId }` only, on section F's reveal (SPEC FE13e §2)
+// GET  /api/investigation-administration-errors/case/:id    ESAVI-INVADMER-006  USER  by case, in reentry — hand-written below
+// PUT  /api/investigation-administration-errors/:id         ESAVI-INVADMER-004  USER  update — `:id` IS the investigationId
+// Same 1:1 shape as investigationColdChain above. F (syringes) and F2 (reconstitution +
+// administration errors) share this one row and one `useForm` (SPEC FE13e §3.5).
+export const investigationAdministrationErrorResource = createResource<
+  InvestigationAdministrationErrorDetail,
+  CreateInvestigationAdministrationErrorInput,
+  Partial<CreateInvestigationAdministrationErrorInput>
+>({
+  key: 'investigationAdministrationError',
+  path: 'investigation-administration-errors',
+  idField: 'investigationId',
+  inactiveMode: 'serverDecides',
+  hasActivate: false,
+});
+
+export function investigationAdministrationErrorByCaseKey(caseId: string) {
+  return ['investigationAdministrationError', 'byCase', caseId] as const;
+}
+
+// ESAVI-INVADMER-006 — one object, not a list. `INVADMER_006_NOT_FOUND` is the normal state before
+// section F's opening `POST` and the only code swallowed into `null`, same criterion as
+// investigationColdChain above: `INVADMER_006_INVESTIGATION_NOT_FOUND` and
+// `INVADMER_006_CASE_NOT_FOUND` are left to propagate (SPEC FE13e §3.2).
+export function useInvestigationAdministrationErrorByCase(caseId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: investigationAdministrationErrorByCaseKey(caseId ?? ''),
+    queryFn: async () => {
+      try {
+        const response = await client.get<InvestigationAdministrationErrorDetail>(
+          `investigation-administration-errors/case/${caseId}`,
+        );
+        return response.data;
+      } catch (err) {
+        if (err instanceof EsaviApiError && err.code === 'INVADMER_006_NOT_FOUND') {
+          return null;
+        }
+        throw err;
+      }
+    },
+    enabled: enabled && caseId !== undefined,
+  });
+}
+
+// POST /api/investigation-communities             ESAVI-INVCOMM-001  USER  create the ficha, `{ investigationId }` only, on section G's reveal (SPEC FE13e §2)
+// GET  /api/investigation-communities/case/:id    ESAVI-INVCOMM-006  USER  by case, in reentry — hand-written below
+// PUT  /api/investigation-communities/:id         ESAVI-INVCOMM-004  USER  update — `:id` IS the investigationId
+// Same 1:1 shape as investigationColdChain above. Section G alone — the map, the similar-event
+// gate and the four counters (SPEC FE13e §3.5).
+export const investigationCommunityResource = createResource<
+  InvestigationCommunityDetail,
+  CreateInvestigationCommunityInput,
+  Partial<CreateInvestigationCommunityInput>
+>({
+  key: 'investigationCommunity',
+  path: 'investigation-communities',
+  idField: 'investigationId',
+  inactiveMode: 'serverDecides',
+  hasActivate: false,
+});
+
+export function investigationCommunityByCaseKey(caseId: string) {
+  return ['investigationCommunity', 'byCase', caseId] as const;
+}
+
+// ESAVI-INVCOMM-006 — one object, not a list. `INVCOMM_006_NOT_FOUND` is the normal state before
+// section G's opening `POST` and the only code swallowed into `null`, same criterion as
+// investigationColdChain above: `INVCOMM_006_INVESTIGATION_NOT_FOUND` and
+// `INVCOMM_006_CASE_NOT_FOUND` are left to propagate (SPEC FE13e §3.2).
+export function useInvestigationCommunityByCase(caseId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: investigationCommunityByCaseKey(caseId ?? ''),
+    queryFn: async () => {
+      try {
+        const response = await client.get<InvestigationCommunityDetail>(
+          `investigation-communities/case/${caseId}`,
+        );
+        return response.data;
+      } catch (err) {
+        if (err instanceof EsaviApiError && err.code === 'INVCOMM_006_NOT_FOUND') {
           return null;
         }
         throw err;
