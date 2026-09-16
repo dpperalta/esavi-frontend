@@ -1459,6 +1459,35 @@
         "saveFailed": "The administration error could not be saved."
       }
     },
+    "community": {
+      "openFailed": "The community investigation record could not be opened.",
+      "title": "Community investigation",
+      "intro": "Community investigation (please visit the locality and interview the affected person's family or neighbors).",
+      "similarEventLegend": "Reported similar event",
+      "field": {
+        "map": "Patient's locality",
+        "hadSimilarEvent": "Was a similar event reported close in time to when the ESAVI occurred, in the same locality?",
+        "similarEventDescription": "If the answer is \"yes\", describe it",
+        "similarEventCount": "If the answer is \"yes\", how many events or episodes were reported?",
+        "affectedVaccinated": "Of the affected people, how many are vaccinated?",
+        "affectedUnvaccinated": "Of the affected people, how many are unvaccinated?",
+        "affectedUnknown": "Of the affected people, how many have an unknown status?",
+        "otherComments": "Other comments",
+        "notes": "Notes"
+      },
+      "countMismatch": "The breakdown adds up to {{breakdown}} and you declared {{declared}}.",
+      "errors": {
+        "saveFailed": "The community investigation could not be saved.",
+        "similarEventDescriptionRequired": "Describe the reported similar event.",
+        "similarEventFieldsNotAllowed": "The similar event data can't be sent without declaring the event."
+      }
+    },
+    "map": {
+      "approximate": {
+        "notice": "Approximate position, taken from the registered residence.",
+        "instruction": "Drag the marker to indicate the home address."
+      }
+    },
     "draft": {
       "restored": "Recovered unsaved changes from an earlier session.",
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."

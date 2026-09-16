@@ -1459,6 +1459,35 @@
         "saveFailed": "De toedieningsfout kon niet worden opgeslagen."
       }
     },
+    "community": {
+      "openFailed": "Het dossier van het gemeenschapsonderzoek kon niet worden geopend.",
+      "title": "Gemeenschapsonderzoek",
+      "intro": "Gemeenschapsonderzoek (bezoek de gemeenschap en interview de familie of buren van de getroffen persoon).",
+      "similarEventLegend": "Gemeld soortgelijk voorval",
+      "field": {
+        "map": "Woonplaats van de patiënt",
+        "hadSimilarEvent": "Werd er een soortgelijk voorval gemeld kort voor of na het ESAVI, in dezelfde gemeenschap?",
+        "similarEventDescription": "Als het antwoord \"ja\" is, beschrijf het",
+        "similarEventCount": "Als het antwoord \"ja\" is, hoeveel voorvallen of episodes werden er gemeld?",
+        "affectedVaccinated": "Van de getroffen personen, hoeveel zijn er gevaccineerd?",
+        "affectedUnvaccinated": "Van de getroffen personen, hoeveel zijn er niet gevaccineerd?",
+        "affectedUnknown": "Van de getroffen personen, hoeveel hebben een onbekende status?",
+        "otherComments": "Overige opmerkingen",
+        "notes": "Opmerkingen"
+      },
+      "countMismatch": "De uitsplitsing telt op tot {{breakdown}} en u heeft {{declared}} opgegeven.",
+      "errors": {
+        "saveFailed": "Het gemeenschapsonderzoek kon niet worden opgeslagen.",
+        "similarEventDescriptionRequired": "Beschrijf het gemelde soortgelijke voorval.",
+        "similarEventFieldsNotAllowed": "De gegevens van het soortgelijke voorval kunnen niet worden verzonden zonder het voorval te melden."
+      }
+    },
+    "map": {
+      "approximate": {
+        "notice": "Geschatte positie, afkomstig van het geregistreerde woonadres.",
+        "instruction": "Sleep de marker om het woonadres aan te geven."
+      }
+    },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."

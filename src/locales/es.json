@@ -1459,6 +1459,35 @@
         "saveFailed": "No se pudo guardar el error de administración."
       }
     },
+    "community": {
+      "openFailed": "No se pudo abrir la ficha de investigación comunitaria.",
+      "title": "Investigación comunitaria",
+      "intro": "Investigación comunitaria (por favor, visite la localidad y entreviste a los familiares o vecinos de la persona afectada).",
+      "similarEventLegend": "Evento similar notificado",
+      "field": {
+        "map": "Localidad del paciente",
+        "hadSimilarEvent": "¿Se notificó algún evento similar en un momento próximo al momento en el que ocurrió el ESAVI y en la misma localidad?",
+        "similarEventDescription": "Si la respuesta es \"sí\", descríbalo",
+        "similarEventCount": "Si la respuesta es \"sí\", ¿cuántos eventos o episodios se notificaron?",
+        "affectedVaccinated": "De las personas afectadas, ¿cuántas están vacunadas?",
+        "affectedUnvaccinated": "De las personas afectadas, ¿cuántas están sin vacunar?",
+        "affectedUnknown": "De las personas afectadas, ¿cuántas tienen estado desconocido?",
+        "otherComments": "Otros comentarios",
+        "notes": "Observaciones"
+      },
+      "countMismatch": "El desglose suma {{breakdown}} y has declarado {{declared}}.",
+      "errors": {
+        "saveFailed": "No se pudo guardar la investigación comunitaria.",
+        "similarEventDescriptionRequired": "Describe el evento similar notificado.",
+        "similarEventFieldsNotAllowed": "Los datos del evento similar no se pueden enviar sin declarar el evento."
+      }
+    },
+    "map": {
+      "approximate": {
+        "notice": "Posición aproximada, tomada de la residencia registrada.",
+        "instruction": "Arrastra el marcador para indicar el domicilio."
+      }
+    },
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
