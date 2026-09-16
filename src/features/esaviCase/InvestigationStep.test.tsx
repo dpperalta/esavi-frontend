@@ -945,7 +945,7 @@ describe('InvestigationStep — el recorrido completo (SPEC FE13a §4 paso 13)',
 
   it('reentrada: las tres secciones muestran los datos ya guardados', async () => {
     mockWorkflow(true);
-    mockInvestigationDetail({ notes: 'Notas previas' });
+    mockInvestigationDetail();
     server.use(
       http.get(`http://localhost:4500/api/investigation-sources/case/${CASE_1}`, () =>
         HttpResponse.json({
@@ -1001,10 +1001,10 @@ describe('InvestigationStep — el recorrido completo (SPEC FE13a §4 paso 13)',
     renderInvestigationStep();
 
     expect(await screen.findByRole('switch', { name: 'Historia clínica' })).toBeChecked();
+    // `notes` moved out of A1 to section H (SPEC FE13e §8) — H isn't mounted by
+    // `InvestigationStep` until that spec's step 9, so its reentry coverage lives in
+    // `OtherFindingsSection.test.tsx`, not here.
     await screen.findByText('Información básica');
-    await waitFor(() =>
-      expect(document.getElementById('investigation-basicInfo-notes')).toHaveValue('Notas previas'),
-    );
     expect((await screen.findAllByText('Ana Pérez')).length).toBeGreaterThan(0);
     // Full reveal on reentry means no frontier at all (SPEC FE13a §3.6, unchanged by this spec):
     // `medicalHistory` opens its ficha silently in the background same as the other three
