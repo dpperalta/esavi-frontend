@@ -22,6 +22,13 @@ afterAll(() => server.close());
 
 beforeEach(() => {
   localStorage.clear();
+  // `momentItemId`/`multidoseItemId` van por `<CatalogSelect typeCode="vaccinationMoment">`
+  // (SPEC FE13d §3.2) — vacío por defecto, ningún test de esta sección lo necesita con datos.
+  server.use(
+    http.get('http://localhost:4500/api/catalog-types', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+  );
 });
 
 function emptyVaccinationContextDetail() {
@@ -99,7 +106,7 @@ describe('VaccinationContextSection — apertura de la ficha (SPEC FE13d §4 pas
     );
     renderSection({ vaccinationContext: emptyVaccinationContextDetail() });
 
-    await screen.findByRole('heading', { name: 'investigation.vaccinationContext.title' });
+    await screen.findByRole('heading', { name: 'Contexto de la vacunación' });
     expect(postCount).toBe(0);
   });
 });
@@ -110,7 +117,7 @@ describe('VaccinationContextSection — la compuerta del conglomerado (SPEC FE13
       vaccinationContext: { ...emptyVaccinationContextDetail(), isCluster: 'NO' },
     });
 
-    expect(screen.queryByLabelText('investigation.cluster.field.identificationNumber')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Número de identificación del conglomerado')).not.toBeInTheDocument();
   });
 
   it('con isCluster en YES, las cuatro columnas del conglomerado se pintan', async () => {
@@ -118,7 +125,7 @@ describe('VaccinationContextSection — la compuerta del conglomerado (SPEC FE13
       vaccinationContext: { ...emptyVaccinationContextDetail(), isCluster: 'YES' },
     });
 
-    expect(await screen.findByLabelText('investigation.cluster.field.identificationNumber')).toBeInTheDocument();
+    expect(await screen.findByLabelText('Número de identificación del conglomerado')).toBeInTheDocument();
   });
 });
 
@@ -205,7 +212,9 @@ describe('VaccinationContextSection — guardado (SPEC FE13d §4 paso 8)', () =>
 
     await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
 
-    expect(await screen.findByText('investigation.cluster.sameVialCountRequired')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Indica cuántos casos usaron el mismo vial antes de guardar.'),
+    ).toBeInTheDocument();
     await new Promise((resolve) => setTimeout(resolve, 30));
     expect(putCount).toBe(0);
   });

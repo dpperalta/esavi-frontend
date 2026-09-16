@@ -99,7 +99,7 @@ describe('ColdChainSection — apertura de la ficha (SPEC FE13d §4 paso 9)', ()
     );
     renderSection({ coldChain: emptyColdChainDetail() });
 
-    await screen.findByRole('heading', { name: 'investigation.coldChain.storage.title' });
+    await screen.findByRole('heading', { name: 'Cadena de frío' });
     expect(postCount).toBe(0);
   });
 });
@@ -109,9 +109,9 @@ describe('ColdChainSection — E1/E2, dos identificadores y un solo guardado (SP
     renderSection({ coldChain: emptyColdChainDetail(), transportRevealed: false });
 
     expect(
-      screen.queryByRole('heading', { name: 'investigation.coldChain.transport.title' }),
+      screen.queryByRole('heading', { name: 'Transporte' }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'caseWizard.actions.continue' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeInTheDocument();
   });
 
   it('pulsar «Continuar» llama a onRevealTransport sin disparar ninguna petición', async () => {
@@ -128,7 +128,7 @@ describe('ColdChainSection — E1/E2, dos identificadores y un solo guardado (SP
       transportRevealed: false,
     });
 
-    await user.click(screen.getByRole('button', { name: 'caseWizard.actions.continue' }));
+    await user.click(screen.getByRole('button', { name: 'Continuar' }));
 
     expect(onRevealTransport).toHaveBeenCalledTimes(1);
     expect(putCount).toBe(0);
@@ -138,7 +138,7 @@ describe('ColdChainSection — E1/E2, dos identificadores y un solo guardado (SP
     renderSection({ coldChain: emptyColdChainDetail(), transportRevealed: true });
 
     expect(
-      screen.getByRole('heading', { name: 'investigation.coldChain.transport.title' }),
+      screen.getByRole('heading', { name: 'Transporte' }),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Guardar y continuar' })).toHaveLength(1);
   });
@@ -186,13 +186,13 @@ describe('ColdChainSection — guardado (SPEC FE13d §4 paso 9)', () => {
     });
 
     await user.click(
-      screen.getByRole('combobox', { name: 'investigation.coldChain.transport.field.usedColdPack' }),
+      screen.getByRole('combobox', { name: '¿Se usó paquete frío?' }),
     );
     await user.click(await screen.findByRole('option', { name: 'Sí' }));
 
     await waitFor(() =>
       expect(
-        screen.getByRole('combobox', { name: 'investigation.coldChain.transport.field.usedThermos' }),
+        screen.getByRole('combobox', { name: '¿Se usó termo?' }),
       ).toHaveTextContent('No'),
     );
     expect(putCount).toBe(0);
@@ -205,13 +205,15 @@ describe('ColdChainSection — guardado (SPEC FE13d §4 paso 9)', () => {
     });
 
     const status = await screen.findByRole('status');
-    expect(status).toHaveTextContent('investigation.coldChain.transport.inheritedTieWarning');
+    expect(status).toHaveTextContent(
+      'Esta ficha tenía los dos contenedores marcados. Se ha conservado el termo; al guardar quedará corregido.',
+    );
 
     expect(
-      screen.getByRole('combobox', { name: 'investigation.coldChain.transport.field.usedThermos' }),
+      screen.getByRole('combobox', { name: '¿Se usó termo?' }),
     ).toHaveTextContent('Sí');
     expect(
-      screen.getByRole('combobox', { name: 'investigation.coldChain.transport.field.usedColdPack' }),
+      screen.getByRole('combobox', { name: '¿Se usó paquete frío?' }),
     ).toHaveTextContent('No');
   });
 

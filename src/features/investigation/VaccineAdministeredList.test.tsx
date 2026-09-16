@@ -106,16 +106,16 @@ describe('VaccineAdministeredList — SPEC FE13d §4 paso 7', () => {
     renderList();
 
     expect(
-      await screen.findByText('investigation.vaccinesAdministered.dictionaryMissing'),
+      await screen.findByText(
+        'El diccionario WHODrug no está importado en este despliegue. Esta sección sólo admite vacunas codificadas y no puede rellenarse hasta que un administrador lo importe.',
+      ),
     ).toBeInTheDocument();
-    // `investigation.vaccinesAdministered.add` aún no tiene traducción — llega en el paso 11 — así
-    // que `t()` devuelve la clave literal, y es contra eso que se compara mientras tanto.
     expect(
-      screen.queryByRole('button', { name: /vaccinesAdministered\.add/ }),
+      screen.queryByRole('button', { name: 'Añadir vacuna' }),
     ).not.toBeInTheDocument();
     // El motivo reemplaza al vacío genérico — no salen los dos textos a la vez.
     expect(
-      screen.queryByText('investigation.vaccinesAdministered.empty'),
+      screen.queryByText('Aún no se ha añadido ninguna vacuna administrada.'),
     ).not.toBeInTheDocument();
   });
 
@@ -126,13 +126,15 @@ describe('VaccineAdministeredList — SPEC FE13d §4 paso 7', () => {
     renderList();
 
     expect(
-      await screen.findByText('investigation.vaccinesAdministered.empty'),
+      await screen.findByText('Aún no se ha añadido ninguna vacuna administrada.'),
     ).toBeInTheDocument();
     expect(
-      await screen.findByRole('button', { name: /vaccinesAdministered\.add/ }),
+      await screen.findByRole('button', { name: 'Añadir vacuna' }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText('investigation.vaccinesAdministered.dictionaryMissing'),
+      screen.queryByText(
+        'El diccionario WHODrug no está importado en este despliegue. Esta sección sólo admite vacunas codificadas y no puede rellenarse hasta que un administrador lo importe.',
+      ),
     ).not.toBeInTheDocument();
   });
 
@@ -156,7 +158,7 @@ describe('VaccineAdministeredList — SPEC FE13d §4 paso 7', () => {
 
     await waitFor(() => expect(screen.getAllByText('BCG vaccine').length).toBeGreaterThan(0));
     expect(
-      screen.queryByRole('button', { name: /vaccinesAdministered\.add/ }),
+      screen.queryByRole('button', { name: 'Añadir vacuna' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Editar/ })).not.toBeInTheDocument();
   });
