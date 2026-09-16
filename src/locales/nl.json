@@ -1159,6 +1159,11 @@
     "fields": {
       "notes": "Opmerkingen"
     },
+    "satellites": {
+      "deleteTitle": "Buiten gebruik stellen",
+      "deleteConfirm": "\"{{name}}\" buiten gebruik stellen? Deze actie kan hier niet ongedaan worden gemaakt.",
+      "deleteAction": "Buiten gebruik stellen"
+    },
     "basicInfo": {
       "title": "Basisinformatie",
       "statusItemId": "Status van de persoon op het moment van het onderzoek",

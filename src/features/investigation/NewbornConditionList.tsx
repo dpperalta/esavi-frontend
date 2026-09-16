@@ -1,10 +1,26 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import type { InvestigationPregnancyConditionDetail } from '@/contracts/declared/investigationPregnancyCondition';
+import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
 import { Button } from '@/shared/components/ui/button';
-import { investigationMedicalHistoryResource, useNewbornConditionsByMedicalHistory } from './api';
+import {
+  investigationMedicalHistoryResource,
+  investigationPregnancyConditionResource,
+  useNewbornConditionsByMedicalHistory,
+} from './api';
 import { NewbornConditionFormDialog } from './NewbornConditionFormDialog';
 
 export interface NewbornConditionListProps {
@@ -21,18 +37,33 @@ function conditionLabel(row: InvestigationPregnancyConditionDetail): string {
 // La sección B2 (SPEC FE13b §4 paso 7), montada sólo con
 // `pregnancyOutcome.value === 'LIVE_BORN_WITH_COMPLICATIONS'`
 // (`PregnancySection` decide eso, no este componente). Sobre `<SatelliteList>`, igual que
-// `TeamMemberList` y `PregnancyComplicationList` — pero **sin botón de borrar** (§2): que un
-// `USER` pueda retirar una condición que él cargó depende de que `ESAVI-INVPREG-005A` baje de
-// `ADMIN`, la deuda de §10 de `CASE-PROCESS.md` que comparte con `INVTEAM-005A`.
+// `TeamMemberList` y `PregnancyComplicationList` — now with `onDelete`: `ESAVI-INVPREG-005A`
+// dropped from `ADMIN` to `USER` (references/API-ROUTES.md, regenerated 2026-09-16), the same
+// `CASE-PROCESS.md` §10 debt it shared with `INVTEAM-005A`, resolved.
 export function NewbornConditionList({ investigationId, disabled = false }: NewbornConditionListProps) {
   const { t } = useTranslation();
   const conditions = useNewbornConditionsByMedicalHistory(investigationId, true);
   const openMedicalHistory = investigationMedicalHistoryResource.useCreate();
+  const deactivate = investigationPregnancyConditionResource.useDeactivate();
 
   const [dialog, setDialog] = useState<{ open: boolean; conditionId: string | null }>({
     open: false,
     conditionId: null,
   });
+  const [removeTarget, setRemoveTarget] = useState<InvestigationPregnancyConditionDetail | null>(
+    null,
+  );
+
+  function handleConfirmRemove() {
+    if (!removeTarget) return;
+    deactivate.mutate(removeTarget.pregnancyConditionId, {
+      onSuccess: () => setRemoveTarget(null),
+      onError: (error) => {
+        setRemoveTarget(null);
+        toast.error(error instanceof EsaviApiError ? getErrorMessage(error) : t('common.errors.unexpected'));
+      },
+    });
+  }
   // La carrera de la nieta (§3.5 B, §3.6): la ficha de antecedentes desapareció entre que esta
   // lista cargó y el diálogo intentó escribir. Reemplaza la lista entera — no hay nada que listar
   // sin una ficha a la que colgarse.
@@ -94,6 +125,7 @@ export function NewbornConditionList({ investigationId, disabled = false }: Newb
         onRetry={() => void conditions.refetch()}
         onAdd={disabled ? undefined : () => setDialog({ open: true, conditionId: null })}
         onEdit={disabled ? undefined : (row) => setDialog({ open: true, conditionId: row.pregnancyConditionId })}
+        onDelete={disabled ? undefined : (row) => setRemoveTarget(row)}
       />
 
       {/* Único texto de estado vacío entre las catorce listas satélite (§3.6): B2 es contenido
@@ -110,6 +142,25 @@ export function NewbornConditionList({ investigationId, disabled = false }: Newb
         onOpenChange={(open) => setDialog((prev) => ({ ...prev, open }))}
         onMissingHistory={() => setMissingHistory(true)}
       />
+
+      <AlertDialog open={removeTarget !== null} onOpenChange={(open) => !open && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('investigation.satellites.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('investigation.satellites.deleteConfirm', {
+                name: removeTarget ? conditionLabel(removeTarget) : '',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleConfirmRemove}>
+              {t('investigation.satellites.deleteAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1159,6 +1159,11 @@
     "fields": {
       "notes": "Notes"
     },
+    "satellites": {
+      "deleteTitle": "Deactivate",
+      "deleteConfirm": "Deactivate \"{{name}}\"? This action can't be undone from here.",
+      "deleteAction": "Deactivate"
+    },
     "basicInfo": {
       "title": "Basic information",
       "statusItemId": "Status of the person at the time of the investigation",

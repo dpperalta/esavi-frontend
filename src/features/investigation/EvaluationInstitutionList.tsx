@@ -1,10 +1,22 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import type { EvaluationInstitutionDetail } from '@/contracts/declared/evaluationInstitution';
-import { useEvaluationInstitutionsByInvestigation } from '@/features/investigation/api';
+import { evaluationInstitutionResource, useEvaluationInstitutionsByInvestigation } from '@/features/investigation/api';
 import { EvaluationInstitutionFormDialog } from '@/features/investigation/EvaluationInstitutionFormDialog';
+import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
 
 export interface EvaluationInstitutionListProps {
   // Names the clinical evaluation ficha, whose PK equals `investigation.investigationId`
@@ -19,18 +31,32 @@ function institutionLabel(row: EvaluationInstitutionDetail): string {
 }
 
 // Section C.7 (SPEC FE13c §4 paso 6), built on `<SatelliteList>` like every other satellite list
-// of the wizard — but without `onDelete`: `ESAVI-EVALINST-005A` requires ADMIN while step 5 writes
-// as USER (§2, same debt as `TeamMemberList` and `NewbornConditionList`). No missing-ficha guard
-// here — unlike `NewbornConditionList`, this list only mounts once `InvestigationStep.tsx` (§4
-// paso 8) confirms the clinical evaluation ficha exists, so the 404 of §3.2/§7 riesgo E is a write
-// race the dialog resolves on its own, not a state this list has to render.
+// of the wizard — now with `onDelete`: `ESAVI-EVALINST-005A` dropped from ADMIN to USER
+// (references/API-ROUTES.md, regenerated 2026-09-16), the same debt as `TeamMemberList` and
+// `NewbornConditionList`, resolved. No missing-ficha guard here — unlike `NewbornConditionList`,
+// this list only mounts once `InvestigationStep.tsx` (§4 paso 8) confirms the clinical evaluation
+// ficha exists, so the 404 of §3.2/§7 riesgo E is a write race the dialog resolves on its own, not
+// a state this list has to render.
 export function EvaluationInstitutionList({ investigationId, disabled = false }: EvaluationInstitutionListProps) {
   const { t } = useTranslation();
   const institutions = useEvaluationInstitutionsByInvestigation(investigationId, true);
+  const deactivate = evaluationInstitutionResource.useDeactivate();
   const [dialog, setDialog] = useState<{ open: boolean; institution: EvaluationInstitutionDetail | null }>({
     open: false,
     institution: null,
   });
+  const [removeTarget, setRemoveTarget] = useState<EvaluationInstitutionDetail | null>(null);
+
+  function handleConfirmRemove() {
+    if (!removeTarget) return;
+    deactivate.mutate(removeTarget.evaluationInstitutionId, {
+      onSuccess: () => setRemoveTarget(null),
+      onError: (error) => {
+        setRemoveTarget(null);
+        toast.error(error instanceof EsaviApiError ? getErrorMessage(error) : t('common.errors.unexpected'));
+      },
+    });
+  }
 
   const columns: SatelliteListColumn<EvaluationInstitutionDetail>[] = [
     {
@@ -81,6 +107,7 @@ export function EvaluationInstitutionList({ investigationId, disabled = false }:
         onRetry={() => void institutions.refetch()}
         onAdd={disabled ? undefined : () => setDialog({ open: true, institution: null })}
         onEdit={disabled ? undefined : (row) => setDialog({ open: true, institution: row })}
+        onDelete={disabled ? undefined : (row) => setRemoveTarget(row)}
       />
 
       {isEmpty && (
@@ -93,6 +120,25 @@ export function EvaluationInstitutionList({ investigationId, disabled = false }:
         institution={dialog.institution}
         onOpenChange={(open) => setDialog((prev) => ({ ...prev, open }))}
       />
+
+      <AlertDialog open={removeTarget !== null} onOpenChange={(open) => !open && setRemoveTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('investigation.satellites.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('investigation.satellites.deleteConfirm', {
+                name: removeTarget ? institutionLabel(removeTarget) : '',
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleConfirmRemove}>
+              {t('investigation.satellites.deleteAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -35,8 +35,13 @@ export function AppShell() {
       <AppSidebar />
       <SidebarInset>
         <Topbar />
+        {/* No page constrained its own width (checked: none does), so on a wide monitor every
+            screen stretched edge to edge with nothing to center it — `max-w-screen-2xl` caps it
+            at a comfortable reading/working width and `mx-auto` centers the margin on both sides. */}
         <main className="flex-1 p-4">
-          <Outlet />
+          <div className="mx-auto max-w-screen-2xl">
+            <Outlet />
+          </div>
         </main>
       </SidebarInset>
       <RequiredPasswordChangeDialog />

@@ -1,6 +1,7 @@
 import '@/shared/config/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -138,7 +139,7 @@ describe('VaccineAdministeredList — SPEC FE13d §4 paso 7', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('con filas, se pintan la vacuna, la dosis y las notas — sin botón de retirar', async () => {
+  it('con filas, se pintan la vacuna, la dosis y las notas', async () => {
     mockDictionary(5);
     mockList([vaccineAdministeredRow({ doseNumber: 2, notes: 'Refuerzo' })]);
 
@@ -147,10 +148,40 @@ describe('VaccineAdministeredList — SPEC FE13d §4 paso 7', () => {
     await waitFor(() => expect(screen.getAllByText('BCG vaccine').length).toBeGreaterThan(0));
     expect(screen.getAllByText('2').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Refuerzo').length).toBeGreaterThan(0);
-    expect(screen.queryByRole('button', { name: /Eliminar/ })).not.toBeInTheDocument();
   });
 
-  it('disabled:true no pinta «Añadir» ni el botón de editar de ninguna fila', async () => {
+  it('dar de baja pide confirmación nombrando la fila y llama al DELETE sólo tras confirmar', async () => {
+    const user = setupUser();
+    mockDictionary(5);
+    mockList([vaccineAdministeredRow()]);
+    let deleteCalls = 0;
+    server.use(
+      http.delete(
+        `http://localhost:4500/api/investigation-vaccines-administered/${VACCINE_ADMINISTERED_1}`,
+        () => {
+          deleteCalls++;
+          return HttpResponse.json({ ok: true, message: 'ok', data: null });
+        },
+      ),
+    );
+
+    renderList();
+
+    const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar BCG vaccine' });
+    await user.click(deleteButton);
+
+    expect(
+      await screen.findByText('¿Dar de baja «BCG vaccine»? Esta acción no se puede deshacer desde aquí.'),
+    ).toBeInTheDocument();
+    expect(deleteCalls).toBe(0);
+
+    const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+    await user.click(confirmButton);
+
+    await waitFor(() => expect(deleteCalls).toBe(1));
+  });
+
+  it('disabled:true no pinta «Añadir» ni los botones de editar o eliminar de ninguna fila', async () => {
     mockDictionary(5);
     mockList([vaccineAdministeredRow({})]);
 
@@ -161,5 +192,6 @@ describe('VaccineAdministeredList — SPEC FE13d §4 paso 7', () => {
       screen.queryByRole('button', { name: 'Añadir vacuna' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Editar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Eliminar/ })).not.toBeInTheDocument();
   });
 });

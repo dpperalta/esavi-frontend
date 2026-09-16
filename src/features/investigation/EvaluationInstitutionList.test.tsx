@@ -129,9 +129,35 @@ function renderList(disabled = false) {
 }
 
 describe('EvaluationInstitutionList — C.7 (SPEC FE13c §4 paso 6)', () => {
-  it('sin botón de borrar, ni con filas activas', async () => {
+  it('dar de baja pide confirmación nombrando la fila y llama al DELETE sólo tras confirmar', async () => {
+    const user = setupUser();
     mockList([institutionRow()]);
+    let deleteCalls = 0;
+    server.use(
+      http.delete(`http://localhost:4500/api/evaluation-institutions/${INSTITUTION_1}`, () => {
+        deleteCalls++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: null });
+      }),
+    );
     renderList();
+
+    const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Clínica del Valle' });
+    await user.click(deleteButton);
+
+    expect(
+      await screen.findByText('¿Dar de baja «Clínica del Valle»? Esta acción no se puede deshacer desde aquí.'),
+    ).toBeInTheDocument();
+    expect(deleteCalls).toBe(0);
+
+    const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+    await user.click(confirmButton);
+
+    await waitFor(() => expect(deleteCalls).toBe(1));
+  });
+
+  it('con disabled, no hay botón de borrar', async () => {
+    mockList([institutionRow()]);
+    renderList(true);
 
     await screen.findAllByText('Clínica del Valle');
     expect(screen.queryByRole('button', { name: /Eliminar/ })).not.toBeInTheDocument();

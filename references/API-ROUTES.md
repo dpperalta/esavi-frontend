@@ -1,8 +1,9 @@
 # Inventario de rutas del backend
 
 > **Fuente:** `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES`
-> **Generado:** 2026-09-08 · **354 rutas** en **46 grupos**
-> **Verificado:** 2026-09-08 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Generado:** 2026-09-16 · **354 rutas** en **46 grupos**
+> **Verificado:** 2026-09-16 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Cambios de la regeneración del 2026-09-16:** cinco `DELETE .../:id` de satélites de la investigación bajaron de `ADMIN` a `USER` — `ESAVI-INVTEAM-005A`, `ESAVI-INVPREG-005A`, `ESAVI-EVALINST-005A`, `ESAVI-INVVACAD-005A` e `ESAVI-INVDIAG-005A`. Ningún grupo ni ruta nuevos; mismo total de 354/46 que la regeneración anterior.
 > **Cambios de la regeneración del 2026-09-08:** dos grupos nuevos, nueve rutas cada uno, ambos satélites con el mismo contrato (`001`, `002A`/`002B` por padre, `003`, `004`, `005A`/`005B`/`005C`, y un `006` que resuelve por caso):
 > - **`MEDHIST`** — `/api/notification-medical-histories`: los antecedentes médicos del paciente en la **notificación**. Escritura en `USER` (`001`/`004`), baja en `ADMIN`, reactivación en `SUPERADMIN`
 > - **`INVDIAG`** — `/api/investigation-diagnostics`: los diagnósticos finales o presuntivos de la **investigación**. Escritura en `USER` (`001`/`004`), baja en `ADMIN`, reactivación también en `ADMIN`
@@ -190,7 +191,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `PATCH` | `/api/evaluation-institutions/activate/:id` | ADMIN | `ESAVI-EVALINST-005B` |
 | `GET` | `/api/evaluation-institutions/:id` | USER | `ESAVI-EVALINST-003` |
 | `PUT` | `/api/evaluation-institutions/:id` | USER | `ESAVI-EVALINST-004` |
-| `DELETE` | `/api/evaluation-institutions/:id` | ADMIN | `ESAVI-EVALINST-005A` |
+| `DELETE` | `/api/evaluation-institutions/:id` | USER | `ESAVI-EVALINST-005A` |
 
 ### FINCLASS
 
@@ -315,7 +316,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `PATCH` | `/api/investigation-diagnostics/activate/:id` | ADMIN | `ESAVI-INVDIAG-005B` |
 | `GET` | `/api/investigation-diagnostics/:id` | USER | `ESAVI-INVDIAG-003` |
 | `PUT` | `/api/investigation-diagnostics/:id` | USER | `ESAVI-INVDIAG-004` |
-| `DELETE` | `/api/investigation-diagnostics/:id` | ADMIN | `ESAVI-INVDIAG-005A` |
+| `DELETE` | `/api/investigation-diagnostics/:id` | USER | `ESAVI-INVDIAG-005A` |
 
 ### INVESTGN
 
@@ -327,7 +328,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/investigations/case/:id` | USER | `ESAVI-INVESTGN-006` |
 | `GET` | `/api/investigations/:id` | USER | `ESAVI-INVESTGN-003` |
 | `PUT` | `/api/investigations/:id` | USER | `ESAVI-INVESTGN-004` |
-| `DELETE` | `/api/investigations/:id` | ADMIN | `ESAVI-INVESTGN-005A` |
+| `DELETE` | `/api/investigations/:id` | USER | `ESAVI-INVESTGN-005A` |
 | `PATCH` | `/api/investigations/activate/:id` | SUPERADMIN | `ESAVI-INVESTGN-005B` |
 | `DELETE` | `/api/investigations/purge/:id` | SUPERADMIN | `ESAVI-INVESTGN-005C` |
 
@@ -354,7 +355,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `PATCH` | `/api/investigation-pregnancy-conditions/activate/:id` | ADMIN | `ESAVI-INVPREG-005B` |
 | `GET` | `/api/investigation-pregnancy-conditions/:id` | USER | `ESAVI-INVPREG-003` |
 | `PUT` | `/api/investigation-pregnancy-conditions/:id` | USER | `ESAVI-INVPREG-004` |
-| `DELETE` | `/api/investigation-pregnancy-conditions/:id` | ADMIN | `ESAVI-INVPREG-005A` |
+| `DELETE` | `/api/investigation-pregnancy-conditions/:id` | USER | `ESAVI-INVPREG-005A` |
 
 ### INVSRC
 
@@ -380,7 +381,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `PATCH` | `/api/investigation-team-members/activate/:id` | ADMIN | `ESAVI-INVTEAM-005B` |
 | `GET` | `/api/investigation-team-members/:id` | USER | `ESAVI-INVTEAM-003` |
 | `PUT` | `/api/investigation-team-members/:id` | USER | `ESAVI-INVTEAM-004` |
-| `DELETE` | `/api/investigation-team-members/:id` | ADMIN | `ESAVI-INVTEAM-005A` |
+| `DELETE` | `/api/investigation-team-members/:id` | USER | `ESAVI-INVTEAM-005A` |
 
 ### INVVACAD
 
@@ -394,7 +395,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `PATCH` | `/api/investigation-vaccines-administered/activate/:id` | ADMIN | `ESAVI-INVVACAD-005B` |
 | `GET` | `/api/investigation-vaccines-administered/:id` | USER | `ESAVI-INVVACAD-003` |
 | `PUT` | `/api/investigation-vaccines-administered/:id` | USER | `ESAVI-INVVACAD-004` |
-| `DELETE` | `/api/investigation-vaccines-administered/:id` | ADMIN | `ESAVI-INVVACAD-005A` |
+| `DELETE` | `/api/investigation-vaccines-administered/:id` | USER | `ESAVI-INVVACAD-005A` |
 
 ### INVVACTX
 

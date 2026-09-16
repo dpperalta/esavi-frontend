@@ -1159,6 +1159,11 @@
     "fields": {
       "notes": "Observaciones"
     },
+    "satellites": {
+      "deleteTitle": "Dar de baja",
+      "deleteConfirm": "¿Dar de baja «{{name}}»? Esta acción no se puede deshacer desde aquí.",
+      "deleteAction": "Dar de baja"
+    },
     "basicInfo": {
       "title": "Información básica",
       "statusItemId": "Estado de la persona al momento de la investigación",
