@@ -1488,6 +1488,9 @@
         "instruction": "Sleep de marker om het woonadres aan te geven."
       }
     },
+    "otherFindings": {
+      "title": "Overige constateringen, opmerkingen en commentaar"
+    },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."

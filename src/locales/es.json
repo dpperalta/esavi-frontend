@@ -1488,6 +1488,9 @@
         "instruction": "Arrastra el marcador para indicar el domicilio."
       }
     },
+    "otherFindings": {
+      "title": "Otras constataciones, observaciones y comentarios"
+    },
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."

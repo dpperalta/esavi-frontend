@@ -1068,3 +1068,21 @@ function _assertInvestigationCommunitySchemaMatchesContract(
   return value;
 }
 void _assertInvestigationCommunitySchemaMatchesContract;
+
+// ---------------------------------------------------------------------------------------------
+// N — Other findings, section H (SPEC FE13e §3.5 E). Writes against the header (`investigation`),
+// not either of the two new satellites — the only field of step 5 that saves against the header
+// after A1. Its own `useForm`, picked off `investigationSaveSchema` so the one column stays a
+// single source of truth instead of a parallel declaration.
+// ---------------------------------------------------------------------------------------------
+
+export type OtherFindingsFormValues = Pick<InvestigationFormValues, 'notes'>;
+
+export const otherFindingsSaveSchema = investigationSaveSchema.pick({ notes: true });
+
+function _assertOtherFindingsSchemaMatchesContract(
+  value: z.infer<typeof otherFindingsSaveSchema>,
+): OtherFindingsFormValues {
+  return value;
+}
+void _assertOtherFindingsSchemaMatchesContract;
