@@ -1415,6 +1415,7 @@
     },
     "administrationError": {
       "openFailed": "The administration error record could not be opened.",
+      "title": "Administration error",
       "syringes": {
         "title": "Syringes and needles",
         "typesLegend": "Type of syringe used",
@@ -1490,6 +1491,9 @@
     },
     "otherFindings": {
       "title": "Other findings, observations and comments"
+    },
+    "complete": {
+      "emptySections": "These sections were left blank: {{sections}}. You can still complete the stage and come back to edit them later."
     },
     "draft": {
       "restored": "Recovered unsaved changes from an earlier session.",

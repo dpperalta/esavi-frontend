@@ -205,6 +205,69 @@ function emptyColdChainDetail() {
 }
 let coldChainRow: ReturnType<typeof emptyColdChainDetail> | null = null;
 
+// SPEC FE13e §4 paso 9 — same reset-before-every-test criterion as the three fichas above: F/F2
+// share this one row and it's born empty when section F reveals.
+function emptyAdministrationErrorDetail() {
+  return {
+    investigationId: INVESTIGATION_1,
+    investigation: { investigationId: INVESTIGATION_1, caseId: CASE_1, isActive: true },
+    usedAutoDisableSyringes: null as AnswerOption | null,
+    usedGlassSyringes: null as boolean | null,
+    usedDisposableSyringes: null,
+    usedRecycledDisposableSyringes: null,
+    usedOtherSyringes: null,
+    otherSyringesDescription: null,
+    syringesKeyFindings: null,
+    reconstitutionUsedSameSyringe: null,
+    reconstitutionUsedSameSyringeDifferentVaccine: null,
+    reconstitutionUsedDifferentSyringeSameVial: null,
+    reconstitutionUsedDifferentSyringeDifferentVaccine: null,
+    reconstitutionFollowedManufacturerRecommendation: null,
+    reconstitutionKeyFindings: null,
+    hadPrescriptionError: null,
+    prescriptionErrorNotes: null,
+    hadContaminatedVaccine: null,
+    contaminatedVaccineNotes: null,
+    hadAbnormalVaccineConditions: null,
+    abnormalConditionsNotes: null,
+    hadPreparationError: null,
+    preparationErrorNotes: null,
+    hadHandlingError: null,
+    handlingErrorNotes: null,
+    hadImproperAdministration: null,
+    improperAdministrationNotes: null,
+    notes: null as string | null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: null,
+    deletedAt: null,
+    appDetails: [],
+  };
+}
+let administrationErrorRow: ReturnType<typeof emptyAdministrationErrorDetail> | null = null;
+
+// Section G's own row (SPEC FE13e §4 paso 9), same criterion.
+function emptyCommunityDetail() {
+  return {
+    investigationId: INVESTIGATION_1,
+    investigation: { investigationId: INVESTIGATION_1, caseId: CASE_1, isActive: true },
+    patientLatitude: null as number | null,
+    patientLongitude: null as number | null,
+    hadSimilarEvent: null as AnswerOption | null,
+    similarEventDescription: null,
+    similarEventCount: null,
+    affectedVaccinated: null,
+    affectedUnvaccinated: null,
+    affectedUnknown: null,
+    otherComments: null as string | null,
+    notes: null as string | null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: null,
+    deletedAt: null,
+    appDetails: [],
+  };
+}
+let communityRow: ReturnType<typeof emptyCommunityDetail> | null = null;
+
 beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
@@ -216,6 +279,8 @@ beforeEach(() => {
   clinicalEvaluationRow = null;
   vaccinationContextRow = null;
   coldChainRow = null;
+  administrationErrorRow = null;
+  communityRow = null;
   mockSectionDependencies();
 });
 
@@ -334,6 +399,49 @@ function mockSectionDependencies() {
     http.get(
       `http://localhost:4500/api/investigation-vaccines-administered/investigation/${INVESTIGATION_1}`,
       () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    // F/F2 (SPEC FE13e §4 paso 9): same stateful criterion as `coldChainRow` above — the section
+    // opens its own ficha with an empty `POST` on reveal, and the very next re-read has to see it.
+    http.get(`http://localhost:4500/api/investigation-administration-errors/case/${CASE_1}`, () =>
+      administrationErrorRow
+        ? HttpResponse.json({ ok: true, message: 'ok', data: administrationErrorRow })
+        : HttpResponse.json(
+            { ok: false, message: 'no encontrado', code: 'INVADMER_006_NOT_FOUND' },
+            { status: 404 },
+          ),
+    ),
+    http.post('http://localhost:4500/api/investigation-administration-errors', () => {
+      administrationErrorRow = emptyAdministrationErrorDetail();
+      return HttpResponse.json({ ok: true, message: 'ok', data: administrationErrorRow }, { status: 201 });
+    }),
+    http.put(
+      `http://localhost:4500/api/investigation-administration-errors/${INVESTIGATION_1}`,
+      async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        administrationErrorRow = { ...emptyAdministrationErrorDetail(), ...administrationErrorRow, ...body };
+        return HttpResponse.json({ ok: true, message: 'ok', data: administrationErrorRow });
+      },
+    ),
+    // G (SPEC FE13e §4 paso 9): same stateful criterion.
+    http.get(`http://localhost:4500/api/investigation-communities/case/${CASE_1}`, () =>
+      communityRow
+        ? HttpResponse.json({ ok: true, message: 'ok', data: communityRow })
+        : HttpResponse.json(
+            { ok: false, message: 'no encontrado', code: 'INVCOMM_006_NOT_FOUND' },
+            { status: 404 },
+          ),
+    ),
+    http.post('http://localhost:4500/api/investigation-communities', () => {
+      communityRow = emptyCommunityDetail();
+      return HttpResponse.json({ ok: true, message: 'ok', data: communityRow }, { status: 201 });
+    }),
+    http.put(
+      `http://localhost:4500/api/investigation-communities/${INVESTIGATION_1}`,
+      async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        communityRow = { ...emptyCommunityDetail(), ...communityRow, ...body };
+        return HttpResponse.json({ ok: true, message: 'ok', data: communityRow });
+      },
     ),
     // El sondeo del diccionario (SPEC FE13d §3.1): vacío por defecto, igual que el resto de esta
     // función — los tests que necesitan una vacuna real lo sobrescriben.
@@ -2184,5 +2292,91 @@ describe('InvestigationStep — el recorrido completo del bloque D/E (SPEC FE13d
     expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Continuar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Añadir vacuna' })).not.toBeInTheDocument();
+  });
+});
+
+// F, F2, G, H and the stage closure (SPEC FE13e §4 paso 9): the last four sections of step 5,
+// seventeen in total. "Completar etapa" stays the generic button already covered by
+// `CaseWizardActionBar.test.tsx` (SPEC FE08) — this spec doesn't touch it, it only adds the
+// non-blocking empty-sections warning below H (§3.6).
+describe('InvestigationStep — F/F2/G/H: error de administración, comunidad y el aviso de cierre (SPEC FE13e §4 paso 9)', () => {
+  it('reentrada con todo revelado: las cuatro secciones nuevas muestran sus datos, sin ningún botón intermedio', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail({ notes: 'Hallazgo relevante para H' });
+    administrationErrorRow = {
+      ...emptyAdministrationErrorDetail(),
+      usedAutoDisableSyringes: 'NO',
+      usedGlassSyringes: true,
+    };
+    communityRow = { ...emptyCommunityDetail(), otherComments: 'Vecinos entrevistados' };
+
+    renderInvestigationStep();
+
+    expect(await screen.findByRole('heading', { name: 'Jeringas y agujas' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Procedimiento de reconstitución' }),
+    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Investigación comunitaria' })).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('Vecinos entrevistados')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Otras constataciones, observaciones y comentarios',
+      }),
+    ).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('Hallazgo relevante para H')).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+  });
+
+  it('expediente CLOSED: las cuatro secciones nuevas son de sólo lectura', async () => {
+    mockWorkflowClosed();
+    mockInvestigationDetail();
+    administrationErrorRow = emptyAdministrationErrorDetail();
+    communityRow = emptyCommunityDetail();
+
+    renderInvestigationStep();
+
+    expect(await screen.findByRole('heading', { name: 'Jeringas y agujas' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Investigación comunitaria' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', {
+        name: 'Otras constataciones, observaciones y comentarios',
+      }),
+    ).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+  });
+
+  it('el aviso no bloqueante lista las fichas nuevas sin rellenar', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail();
+    // Sin overrides: `administrationErrorRow`/`communityRow` nacen vacíos al revelarse F y G
+    // (el `POST` del propio componente), igual que el resto de fichas 1:1 de este paso.
+
+    renderInvestigationStep();
+
+    const warning = await screen.findByRole('status');
+    expect(warning).toHaveTextContent('Error de administración');
+    expect(warning).toHaveTextContent('Investigación comunitaria');
+    expect(warning).toHaveTextContent(
+      'Puedes completar la etapa igualmente y volver a editarlas después.',
+    );
+  });
+
+  it('con las dos fichas nuevas rellenas, el aviso ya no las nombra', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail();
+    administrationErrorRow = {
+      ...emptyAdministrationErrorDetail(),
+      usedAutoDisableSyringes: 'NO',
+      usedGlassSyringes: true,
+    };
+    communityRow = { ...emptyCommunityDetail(), otherComments: 'Vecinos entrevistados' };
+
+    renderInvestigationStep();
+
+    const warning = await screen.findByRole('status');
+    expect(warning).not.toHaveTextContent('Error de administración');
+    expect(warning).not.toHaveTextContent('Investigación comunitaria');
   });
 });

@@ -1415,6 +1415,7 @@
     },
     "administrationError": {
       "openFailed": "Het dossier van de toedieningsfout kon niet worden geopend.",
+      "title": "Toedieningsfout",
       "syringes": {
         "title": "Spuiten en naalden",
         "typesLegend": "Gebruikt type spuit",
@@ -1490,6 +1491,9 @@
     },
     "otherFindings": {
       "title": "Overige constateringen, opmerkingen en commentaar"
+    },
+    "complete": {
+      "emptySections": "Deze secties zijn niet ingevuld: {{sections}}. U kunt de fase toch voltooien en ze later bewerken."
     },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",

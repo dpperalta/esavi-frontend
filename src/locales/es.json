@@ -1415,6 +1415,7 @@
     },
     "administrationError": {
       "openFailed": "No se pudo abrir la ficha del error de administración.",
+      "title": "Error de administración",
       "syringes": {
         "title": "Jeringas y agujas",
         "typesLegend": "Tipo de jeringa utilizada",
@@ -1490,6 +1491,9 @@
     },
     "otherFindings": {
       "title": "Otras constataciones, observaciones y comentarios"
+    },
+    "complete": {
+      "emptySections": "Estas secciones quedaron sin rellenar: {{sections}}. Puedes completar la etapa igualmente y volver a editarlas después."
     },
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",

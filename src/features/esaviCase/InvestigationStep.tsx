@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { InvestigationDetail } from '@/contracts/declared/investigation';
+import type { InvestigationAdministrationErrorDetail } from '@/contracts/declared/investigationAdministrationError';
 import type { InvestigationAutopsyDetail } from '@/contracts/declared/investigationAutopsy';
 import type { InvestigationClinicalEvaluationDetail } from '@/contracts/declared/investigationClinicalEvaluation';
 import type { InvestigationColdChainDetail } from '@/contracts/declared/investigationColdChain';
+import type { InvestigationCommunityDetail } from '@/contracts/declared/investigationCommunity';
 import type { InvestigationMedicalHistoryDetail } from '@/contracts/declared/investigationMedicalHistory';
 import type { InvestigationSourceDetail } from '@/contracts/declared/investigationSource';
 import type { InvestigationVaccinationContextDetail } from '@/contracts/declared/investigationVaccinationContext';
@@ -13,12 +15,15 @@ import type { NotificationDetail } from '@/contracts/declared/notification';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { esaviCaseResource } from '@/features/esaviCase/api';
+import { AdministrationErrorSection } from '@/features/investigation/AdministrationErrorSection';
 import { BasicInfoSection } from '@/features/investigation/BasicInfoSection';
 import { ClinicalEvaluationSection } from '@/features/investigation/ClinicalEvaluationSection';
 import { ColdChainSection } from '@/features/investigation/ColdChainSection';
+import { CommunitySection } from '@/features/investigation/CommunitySection';
 import { DiagnosticList } from '@/features/investigation/DiagnosticList';
 import { EvaluationInstitutionList } from '@/features/investigation/EvaluationInstitutionList';
 import { MedicalHistorySection } from '@/features/investigation/MedicalHistorySection';
+import { OtherFindingsSection } from '@/features/investigation/OtherFindingsSection';
 import { PregnancySection } from '@/features/investigation/PregnancySection';
 import { SourceSection } from '@/features/investigation/SourceSection';
 import { TeamMemberList } from '@/features/investigation/TeamMemberList';
@@ -26,24 +31,33 @@ import { VaccinationContextSection } from '@/features/investigation/VaccinationC
 import { VaccineAdministeredList } from '@/features/investigation/VaccineAdministeredList';
 import {
   investigationByCaseKey,
+  investigationDiagnosticsByCaseKey,
   investigationResource,
+  investigationVaccineAdministeredResource,
+  useEvaluationInstitutionsByInvestigation,
+  useInvestigationAdministrationErrorByCase,
   useInvestigationAutopsyByCase,
   useInvestigationByCase,
-  useInvestigationColdChainByCase,
-  investigationDiagnosticsByCaseKey,
   useInvestigationClinicalEvaluationByCase,
+  useInvestigationColdChainByCase,
+  useInvestigationCommunityByCase,
+  useInvestigationDiagnosticsByCase,
   useInvestigationMedicalHistoryByCase,
   useInvestigationSourceByCase,
   useInvestigationVaccinationContextByCase,
+  investigationTeamMemberResource,
 } from '@/features/investigation/api';
 import type {
+  InvestigationAdministrationErrorFormValues,
   InvestigationAutopsyFormValues,
   InvestigationClinicalEvaluationFormValues,
   InvestigationColdChainFormValues,
+  InvestigationCommunityFormValues,
   InvestigationFormValues,
   InvestigationSourceFormValues,
   InvestigationVaccinationContextFormValues,
   MedicalHistoryFormValues,
+  OtherFindingsFormValues,
 } from '@/features/investigation/schemas';
 import { useNotificationByCase } from '@/features/notification/api';
 import type { PregnancyGateState } from '@/features/notification/schemas';
@@ -55,6 +69,175 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { usePregnancyGate } from '@/shared/hooks/usePregnancyGate';
 import { useProgressiveSections } from '@/shared/hooks/useProgressiveSections';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
+
+// The empty-sections warning of SPEC FE13e §3.6: computed on what the server already answered,
+// never on any `useForm`'s live state — a section counts as empty when every one of its data
+// columns reads `null`, and a satellite list counts as empty with zero active rows. Grouped by
+// form section, not by the seventeen progressive-reveal identifiers: E1/E2 share one row (and one
+// warning entry) and so do F/F2, exactly as the spec's own example lists "Cadena de frío" once.
+function isSourceEmpty(source: InvestigationSourceDetail | null): boolean {
+  if (!source) return true;
+  return (
+    source.history === null &&
+    source.interviewVaccinatedPerson === null &&
+    source.interviewHealthWorker === null &&
+    source.vaccinationRecord === null &&
+    source.autopsyRecord === null &&
+    source.verbalAutopsyRecord === null &&
+    source.investigationReport === null &&
+    source.other === null &&
+    source.otherDescription === null &&
+    source.notes === null
+  );
+}
+
+function isBasicInfoEmpty(investigation: InvestigationDetail): boolean {
+  return (
+    investigation.status === null &&
+    investigation.vaccinationSite === null &&
+    investigation.vaccinationHealthFacility === null &&
+    investigation.vaccinationGeoLocation === null &&
+    investigation.hospitalizationDate === null &&
+    investigation.investigationStartDate === null &&
+    investigation.vaccinationLatitude === null &&
+    investigation.vaccinationLongitude === null
+  );
+}
+
+function isMedicalHistoryEmpty(history: InvestigationMedicalHistoryDetail | null): boolean {
+  if (!history) return true;
+  return (
+    history.hasPriorHospitalizationHistory === null &&
+    history.priorHospitalizationObservations === null &&
+    history.hasFamilyHistory === null &&
+    history.familyHistoryObservations === null &&
+    history.isPregnancyConfirmed === null &&
+    history.notes === null
+  );
+}
+
+function isPregnancyEmpty(history: InvestigationMedicalHistoryDetail | null): boolean {
+  if (!history) return true;
+  return (
+    history.gestationalWeeks === null &&
+    history.gestationMethodItemId === null &&
+    history.hasPregnancyRiskFactor === null &&
+    history.riskFactorDescription === null &&
+    history.deliveryItemId === null &&
+    history.birthItemId === null &&
+    history.birthWeightGrams === null &&
+    history.pregnancyOutcomeItemId === null &&
+    history.wasBreastfed === null
+  );
+}
+
+function isClinicalEvaluationEmpty(evaluation: InvestigationClinicalEvaluationDetail | null): boolean {
+  if (!evaluation) return true;
+  return (
+    evaluation.receivedMedicalAttention === null &&
+    evaluation.sourceExam === null &&
+    evaluation.sourceDocuments === null &&
+    evaluation.sourceVerbalAutopsy === null &&
+    evaluation.sourceOther === null &&
+    evaluation.otherDescription === null &&
+    evaluation.suspectedChildAbuse === null &&
+    evaluation.childAbuseExplanation === null &&
+    evaluation.suspectedDomesticViolence === null &&
+    evaluation.domesticViolenceExplanation === null &&
+    evaluation.clinicalDetailsPersonName === null &&
+    evaluation.familyClinicalDetails === null &&
+    evaluation.completeClinicalSummary === null &&
+    evaluation.signsAndSymptoms === null &&
+    evaluation.otherSocialBackground === null &&
+    evaluation.notes === null
+  );
+}
+
+function isVaccinationContextEmpty(context: InvestigationVaccinationContextDetail | null): boolean {
+  if (!context) return true;
+  return (
+    context.momentItemId === null &&
+    context.multidoseItemId === null &&
+    context.vaccinatedPerVialCount === null &&
+    context.vaccinatedPerBatchCount === null &&
+    context.locations === null &&
+    context.isCluster === null &&
+    context.clusterIdentificationNumber === null &&
+    context.clusterAdditionalCaseCount === null &&
+    context.clusterUsedSameVial === null &&
+    context.clusterSameVialCount === null &&
+    context.notes === null
+  );
+}
+
+function isColdChainEmpty(coldChain: InvestigationColdChainDetail | null): boolean {
+  if (!coldChain) return true;
+  return (
+    coldChain.storageTemperatureMonitored === null &&
+    coldChain.storageRangeDeviation === null &&
+    coldChain.storageProcedureFollowed === null &&
+    coldChain.storageOtherObjectPresent === null &&
+    coldChain.storagePartiallyReconstitutedVaccine === null &&
+    coldChain.storageVaccineNotUsable === null &&
+    coldChain.storageDiluentNotUsable === null &&
+    coldChain.storageKeyFindings === null &&
+    coldChain.transportUsedThermos === null &&
+    coldChain.transportSetInThermos === null &&
+    coldChain.transportReturnedInThermos === null &&
+    coldChain.transportUsedColdPack === null &&
+    coldChain.transportTypeThermo === null &&
+    coldChain.transportKeyFindings === null &&
+    coldChain.notes === null
+  );
+}
+
+function isAdministrationErrorEmpty(error: InvestigationAdministrationErrorDetail | null): boolean {
+  if (!error) return true;
+  return (
+    error.usedAutoDisableSyringes === null &&
+    error.usedGlassSyringes === null &&
+    error.usedDisposableSyringes === null &&
+    error.usedRecycledDisposableSyringes === null &&
+    error.usedOtherSyringes === null &&
+    error.otherSyringesDescription === null &&
+    error.syringesKeyFindings === null &&
+    error.reconstitutionUsedSameSyringe === null &&
+    error.reconstitutionUsedSameSyringeDifferentVaccine === null &&
+    error.reconstitutionUsedDifferentSyringeSameVial === null &&
+    error.reconstitutionUsedDifferentSyringeDifferentVaccine === null &&
+    error.reconstitutionFollowedManufacturerRecommendation === null &&
+    error.reconstitutionKeyFindings === null &&
+    error.hadPrescriptionError === null &&
+    error.prescriptionErrorNotes === null &&
+    error.hadContaminatedVaccine === null &&
+    error.contaminatedVaccineNotes === null &&
+    error.hadAbnormalVaccineConditions === null &&
+    error.abnormalConditionsNotes === null &&
+    error.hadPreparationError === null &&
+    error.preparationErrorNotes === null &&
+    error.hadHandlingError === null &&
+    error.handlingErrorNotes === null &&
+    error.hadImproperAdministration === null &&
+    error.improperAdministrationNotes === null &&
+    error.notes === null
+  );
+}
+
+function isCommunityEmpty(community: InvestigationCommunityDetail | null): boolean {
+  if (!community) return true;
+  return (
+    community.patientLatitude === null &&
+    community.patientLongitude === null &&
+    community.hadSimilarEvent === null &&
+    community.similarEventDescription === null &&
+    community.similarEventCount === null &&
+    community.affectedVaccinated === null &&
+    community.affectedUnvaccinated === null &&
+    community.affectedUnknown === null &&
+    community.otherComments === null &&
+    community.notes === null
+  );
+}
 
 function InvestigationStepSkeleton() {
   return (
@@ -108,7 +291,17 @@ type InvestigationSectionId =
   // propio componente y llama a `advance()` de este mismo `useProgressiveSections`, nunca a un
   // botón pintado aquí. `coldChainTransport` es el último identificador con guardado real.
   | 'coldChainStorage'
-  | 'coldChainTransport';
+  | 'coldChainTransport'
+  // F/F2 and G/H (SPEC FE13e §3.6): the paso 5 closes with four more identifiers, seventeen in
+  // total. `administrationErrorSyringes`/`administrationErrorPractices` mirror E1/E2's own-button
+  // pattern — F's "Guardar y continuar" reveals F2 via `onRevealPractices`, never a button painted
+  // here. `otherFindings` (H) is `lastWithButton`: it keeps its own "Guardar y continuar" (§3.5 E)
+  // even though nothing is revealed behind it — the same harmless `advance()` past the end that
+  // `coldChainTransport` already does.
+  | 'administrationErrorSyringes'
+  | 'administrationErrorPractices'
+  | 'community'
+  | 'otherFindings';
 const BASE_SECTIONS: InvestigationSectionId[] = ['source', 'basicInfo', 'team', 'medicalHistory'];
 
 // The combined draft (§3.4): a single `'investigation'` key, even though four self-contained
@@ -129,6 +322,13 @@ interface InvestigationDraftValues {
   // reason as `team` and `evaluationInstitutions` above.
   vaccinationContext?: InvestigationVaccinationContextFormValues;
   coldChain?: InvestigationColdChainFormValues;
+  // F/F2 and G/H (SPEC FE13e §4 paso 9) — `administrationError` covers both revealed identifiers,
+  // same reasoning as `coldChain` above: one row, one `useForm`, one draft slot. `otherFindings`
+  // gets its own slot even though it's a single `notes` field — it's a separate `useForm` from
+  // `basicInfo`'s (§8).
+  administrationError?: InvestigationAdministrationErrorFormValues;
+  community?: InvestigationCommunityFormValues;
+  otherFindings?: OtherFindingsFormValues;
 }
 
 interface InvestigationStepBodyProps {
@@ -141,7 +341,11 @@ interface InvestigationStepBodyProps {
   clinicalEvaluation: InvestigationClinicalEvaluationDetail | null;
   vaccinationContext: InvestigationVaccinationContextDetail | null;
   coldChain: InvestigationColdChainDetail | null;
+  administrationError: InvestigationAdministrationErrorDetail | null;
+  community: InvestigationCommunityDetail | null;
   notification: NotificationDetail | null;
+  // For `CommunitySection`'s marker preload only (SPEC FE13e §3.7) — read, never duplicated.
+  patientId: string | undefined;
   // Resolved once by `InvestigationStep`, already `!== undefined` by the time the body mounts
   // (§4 paso 6, criterio de `readyToRenderForm` en `NotificationStep`): B1 either doesn't exist
   // at all (`'hidden'`) or exists with or without the "Si aplica" mark.
@@ -163,7 +367,10 @@ function InvestigationStepBody({
   clinicalEvaluation,
   vaccinationContext,
   coldChain,
+  administrationError,
+  community,
   notification,
+  patientId,
   pregnancyGate,
   existedOnMount,
   isClosed,
@@ -246,8 +453,15 @@ function InvestigationStepBody({
     'vaccinationContext',
     'coldChainStorage',
     'coldChainTransport',
+    // F → F2 → G → H (SPEC FE13e §3.6): the four identifiers this spec adds, always at the end —
+    // §2 out of scope says the movement of `notes` from A1 to H is the only reorder, and this is
+    // a pure append.
+    'administrationErrorSyringes',
+    'administrationErrorPractices',
+    'community',
+    'otherFindings',
   ];
-  const lastWithButton: InvestigationSectionId = 'coldChainTransport';
+  const lastWithButton: InvestigationSectionId = 'otherFindings';
 
   const revealAllRef = useRef(existedOnMount || isClosed);
   const { isVisible, frontier, advance } = useProgressiveSections<InvestigationSectionId>({
@@ -265,6 +479,43 @@ function InvestigationStepBody({
       advance();
     }
   }, [frontier, advance]);
+
+  // The empty-sections warning's four satellite-list reads (SPEC FE13e §3.6): identical query
+  // keys/params to the ones `TeamMemberList`/`EvaluationInstitutionList`/`DiagnosticList`/
+  // `VaccineAdministeredList` already run once their own section is visible, so this never doubles
+  // a network request — by the time H is visible every earlier section already is too (progressive
+  // reveal is monotonic), and TanStack Query serves the same cache entry.
+  const teamMembers = investigationTeamMemberResource.useListByParent!(investigationId, {
+    pageSize: 100,
+  });
+  const evaluationInstitutions = useEvaluationInstitutionsByInvestigation(investigationId, true);
+  const diagnostics = useInvestigationDiagnosticsByCase(caseId, true);
+  const vaccinesAdministered = investigationVaccineAdministeredResource.useListByParent!(
+    investigationId,
+    { pageSize: 100 },
+  );
+
+  // §3.6: "las listas satélite cuentan como vacías cuando no tienen filas activas" — computed on
+  // what the server answered, never on any `useForm`'s live state (§3.4).
+  const emptySectionLabelKeys = [
+    isSourceEmpty(investigationSource) && 'investigation.source.title',
+    isBasicInfoEmpty(investigation) && 'investigation.basicInfo.title',
+    (teamMembers.data?.count ?? 0) === 0 && 'investigation.team.sectionTitle',
+    isMedicalHistoryEmpty(medicalHistory) && 'investigation.medicalHistory.title',
+    pregnancyGate !== 'hidden' && isPregnancyEmpty(medicalHistory) && 'investigation.pregnancy.title',
+    isClinicalEvaluationEmpty(clinicalEvaluation) && 'investigation.clinicalEvaluation.title',
+    (evaluationInstitutions.data?.count ?? 0) === 0 && 'investigation.evaluationInstitution.title',
+    (diagnostics.data?.count ?? 0) === 0 && 'investigation.diagnostic.title',
+    (vaccinesAdministered.data?.count ?? 0) === 0 && 'investigation.vaccinesAdministered.title',
+    isVaccinationContextEmpty(vaccinationContext) && 'investigation.vaccinationContext.title',
+    // Reuses E1's own heading (already "Cadena de frío", with no E2-specific counterpart) instead
+    // of declaring a new combined key — same one row, same single warning entry (§3.6).
+    isColdChainEmpty(coldChain) && 'investigation.coldChain.storage.title',
+    isAdministrationErrorEmpty(administrationError) && 'investigation.administrationError.title',
+    isCommunityEmpty(community) && 'investigation.community.title',
+    investigation.notes === null && 'investigation.otherFindings.title',
+  ].filter((key): key is string => key !== false);
+  const emptySectionLabels = emptySectionLabelKeys.map((key) => t(key));
 
   return (
     <div className="flex flex-col gap-6">
@@ -435,6 +686,73 @@ function InvestigationStepBody({
           }
         />
       )}
+
+      {isVisible('administrationErrorSyringes') && (
+        <AdministrationErrorSection
+          caseId={caseId}
+          investigationId={investigationId}
+          administrationError={administrationError}
+          disabled={isClosed}
+          practicesRevealed={isVisible('administrationErrorPractices')}
+          onRevealPractices={advance}
+          showSaveButton={frontier === 'administrationErrorPractices'}
+          onSaved={() => {
+            clearDraft();
+            advance();
+          }}
+          draftValues={restoredValues.administrationError}
+          onValuesChange={(values) =>
+            setPendingDraftValues((current) => ({ ...current, administrationError: values }))
+          }
+        />
+      )}
+
+      {isVisible('community') && (
+        <CommunitySection
+          caseId={caseId}
+          investigationId={investigationId}
+          patientId={patientId}
+          community={community}
+          disabled={isClosed}
+          showSaveButton={frontier === 'community'}
+          onSaved={() => {
+            clearDraft();
+            advance();
+          }}
+          draftValues={restoredValues.community}
+          onValuesChange={(values) =>
+            setPendingDraftValues((current) => ({ ...current, community: values }))
+          }
+        />
+      )}
+
+      {isVisible('otherFindings') && (
+        <>
+          <OtherFindingsSection
+            investigationId={investigationId}
+            investigation={investigation}
+            disabled={isClosed}
+            showSaveButton={frontier === 'otherFindings'}
+            onSaved={() => {
+              clearDraft();
+              advance();
+            }}
+            draftValues={restoredValues.otherFindings}
+            onValuesChange={(values) =>
+              setPendingDraftValues((current) => ({ ...current, otherFindings: values }))
+            }
+          />
+
+          {/* The non-blocking warning of §3.6 — informational only, computed from server data.
+            Never gates «Completar etapa»: that button stays the shared, generic one from
+            `CaseWizardActionBar` (SPEC FE08), unmodified by this spec. */}
+          {emptySectionLabels.length > 0 && (
+            <p role="status" className="text-sm text-muted-foreground">
+              {t('investigation.complete.emptySections', { sections: emptySectionLabels.join(', ') })}
+            </p>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -458,6 +776,8 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
   const clinicalEvaluation = useInvestigationClinicalEvaluationByCase(caseId, stageExists);
   const vaccinationContext = useInvestigationVaccinationContextByCase(caseId, stageExists);
   const coldChain = useInvestigationColdChainByCase(caseId, stageExists);
+  const administrationError = useInvestigationAdministrationErrorByCase(caseId, stageExists);
+  const community = useInvestigationCommunityByCase(caseId, stageExists);
   const notificationStageExists = workflow.data?.stages.notification.exists === true;
   const notification = useNotificationByCase(caseId, notificationStageExists);
   const create = investigationResource.useCreate();
@@ -545,6 +865,8 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
     clinicalEvaluation.isLoading ||
     vaccinationContext.isLoading ||
     coldChain.isLoading ||
+    administrationError.isLoading ||
+    community.isLoading ||
     !pregnancyGateReady
   ) {
     return <InvestigationStepSkeleton />;
@@ -561,7 +883,10 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
       clinicalEvaluation={clinicalEvaluation.data ?? null}
       vaccinationContext={vaccinationContext.data ?? null}
       coldChain={coldChain.data ?? null}
+      administrationError={administrationError.data ?? null}
+      community={community.data ?? null}
       notification={notification.data ?? null}
+      patientId={patientId}
       pregnancyGate={pregnancyGate}
       existedOnMount={existedOnMountRef.current ?? false}
       isClosed={workflow.data.status.code === 'CLOSED'}
