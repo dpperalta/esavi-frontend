@@ -9,12 +9,18 @@ import type { CreateInvestigationPregnancyConditionInput } from '@/contracts/inv
 import type { CreateInvestigationClinicalEvaluationInput } from '@/contracts/investigationClinicalEvaluation';
 import type { CreateEvaluationInstitutionInput } from '@/contracts/evaluationInstitution';
 import type { CreateInvestigationDiagnosticInput } from '@/contracts/investigationDiagnostic';
+import type { CreateInvestigationVaccinationContextInput } from '@/contracts/investigationVaccinationContext';
 
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const timeRegex = /^\d{2}:\d{2}$/;
 const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
+
+// The Postgres `smallint` ceiling (SPEC FE13d §1.E) — no `CHECK` of the DDL covers it, only the
+// column type does, so replicating it here is what turns a `40000` into a readable client-side
+// rejection instead of a `500` from a Postgres overflow. Shared by the five counters of §J.
+const SMALLINT_MAX = 32767;
 
 // ---------------------------------------------------------------------------------------------
 // A — Header (SPEC FE13a §3.5 A). No data column is required: the row is born from the empty
@@ -614,4 +620,104 @@ export const investigationDiagnosticErrorFieldMap: Partial<
   INVDIAG_004_ALREADY_EXISTS: 'diagnosticName',
   INVDIAG_001_INVALID_DIAGNOSTIC_TYPE: 'diagnosticTypeItemId',
   INVDIAG_004_INVALID_DIAGNOSTIC_TYPE: 'diagnosticTypeItemId',
+};
+
+// ---------------------------------------------------------------------------------------------
+// J — Vaccination context and cluster, sections D and D1 (SPEC FE13d §3.5). One form for D.3–D.6
+// and D1: no column is required, so a single schema covers both `001` (open, empty) and `004`,
+// same idea as the header in §A and the medical history in §E.
+// ---------------------------------------------------------------------------------------------
+
+export type InvestigationVaccinationContextFormValues = Omit<
+  CreateInvestigationVaccinationContextInput,
+  'investigationId'
+>;
+
+// THE GATE, strict against `'YES'` and never a truthiness check (SPEC FE13d §1.A): `'NO'`,
+// `'UNKNOWN'`, `'NOT_APPLICABLE'`, `'NO_ANSWER'` and `null` are all truthy strings (or absent) and
+// would open the block by accident under `!!isCluster`. Mirrors `isClusterBlockOpen` in
+// `investigationVaccinationContext.service.ts`.
+export function isClusterBlockOpen(isCluster: AnswerOption | null | undefined): boolean {
+  return isCluster === 'YES';
+}
+
+// THE VIAL RULE, read backwards on purpose (SPEC FE13d §1.A, §6 decision 3): it is the `'NO'` that
+// requires the counter, not the `'YES'` — when not every case of the cluster shared the vial, the
+// missing datum is how many DID. Mirrors `assertSharedVialRule`. A `0` satisfies the obligation,
+// which is why this checks against `null`/`undefined` and never against truthiness.
+export function isSameVialCountRequirementMet(
+  clusterUsedSameVial: AnswerOption | null | undefined,
+  clusterSameVialCount: number | null | undefined,
+): boolean {
+  if (clusterUsedSameVial !== 'NO') return true;
+  return clusterSameVialCount !== null && clusterSameVialCount !== undefined;
+}
+
+// Declares the state of the block instead of letting the `PUT` body depend on what the form
+// happened to omit (SPEC FE13d §3.5, same criterion as `buildMedicalHistorySavePayload` above):
+// with the block closed, the four cluster columns travel as explicit `null`, so
+// `CLUSTER_FIELDS_NOT_ALLOWED` can never come back — the form never constructs that state.
+export function buildVaccinationContextSavePayload(
+  values: InvestigationVaccinationContextFormValues,
+): InvestigationVaccinationContextFormValues {
+  if (isClusterBlockOpen(values.isCluster)) return values;
+  return {
+    ...values,
+    clusterIdentificationNumber: null,
+    clusterAdditionalCaseCount: null,
+    clusterUsedSameVial: null,
+    clusterSameVialCount: null,
+  };
+}
+
+export const investigationVaccinationContextSaveSchema = z
+  .object({
+    momentItemId: z.string().uuid().nullable().optional(),
+    multidoseItemId: z.string().uuid().nullable().optional(),
+    vaccinatedPerVialCount: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    // Etiqueta propia, paralela a la del vial (SPEC FE13d §6 decision 2) — no está en
+    // `ESAVI-FORM.md`; la clave i18n lo declara en §3.8.
+    vaccinatedPerBatchCount: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    locations: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    isCluster: answerOptionSchema.nullable().optional(),
+    clusterIdentificationNumber: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().max(100).nullable().optional(),
+    ),
+    clusterAdditionalCaseCount: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    clusterUsedSameVial: answerOptionSchema.nullable().optional(),
+    clusterSameVialCount: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (!isSameVialCountRequirementMet(data.clusterUsedSameVial, data.clusterSameVialCount)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'sameVialCountRequired',
+        path: ['clusterSameVialCount'],
+      });
+    }
+  });
+
+function _assertInvestigationVaccinationContextSchemaMatchesContract(
+  value: z.infer<typeof investigationVaccinationContextSaveSchema>,
+): InvestigationVaccinationContextFormValues {
+  return value;
+}
+void _assertInvestigationVaccinationContextSchemaMatchesContract;
+
+// SPEC FE13d §3.2, §3.5 — `MOMENT_NOT_FOUND`/`MULTIDOSE_NOT_FOUND` anchor on their own
+// `<CatalogSelect>` despite sharing the same `vaccinationMoment` catalog (the whole point of the
+// two distinct codes). `CLUSTER_SAME_VIAL_COUNT_REQUIRED` anchors on the counter the vial rule is
+// actually about. `CLUSTER_FIELDS_NOT_ALLOWED` is deliberately not here: the client never
+// constructs the state that produces it (§6 decision 3 above).
+export const investigationVaccinationContextErrorFieldMap: Partial<
+  Record<string, keyof InvestigationVaccinationContextFormValues>
+> = {
+  INVVACTX_001_MOMENT_NOT_FOUND: 'momentItemId',
+  INVVACTX_004_MOMENT_NOT_FOUND: 'momentItemId',
+  INVVACTX_001_MULTIDOSE_NOT_FOUND: 'multidoseItemId',
+  INVVACTX_004_MULTIDOSE_NOT_FOUND: 'multidoseItemId',
+  INVVACTX_001_CLUSTER_SAME_VIAL_COUNT_REQUIRED: 'clusterSameVialCount',
+  INVVACTX_004_CLUSTER_SAME_VIAL_COUNT_REQUIRED: 'clusterSameVialCount',
 };
