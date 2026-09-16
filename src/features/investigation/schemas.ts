@@ -10,6 +10,7 @@ import type { CreateInvestigationClinicalEvaluationInput } from '@/contracts/inv
 import type { CreateEvaluationInstitutionInput } from '@/contracts/evaluationInstitution';
 import type { CreateInvestigationDiagnosticInput } from '@/contracts/investigationDiagnostic';
 import type { CreateInvestigationVaccinationContextInput } from '@/contracts/investigationVaccinationContext';
+import type { CreateInvestigationColdChainInput } from '@/contracts/investigationColdChain';
 
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
@@ -721,3 +722,91 @@ export const investigationVaccinationContextErrorFieldMap: Partial<
   INVVACTX_001_CLUSTER_SAME_VIAL_COUNT_REQUIRED: 'clusterSameVialCount',
   INVVACTX_004_CLUSTER_SAME_VIAL_COUNT_REQUIRED: 'clusterSameVialCount',
 };
+
+// ---------------------------------------------------------------------------------------------
+// K — Cold chain, sections E1 and E2 (SPEC FE13d §3.5). One form for storage and transport: no
+// column is required, so a single schema covers both `001` (open, empty) and `004`. Both
+// sub-sections save together, one `PUT`, at the end of E2 (§3.5, §6 decision 7).
+// ---------------------------------------------------------------------------------------------
+
+export type InvestigationColdChainFormValues = Omit<CreateInvestigationColdChainInput, 'investigationId'>;
+
+// THE STORAGE GATE. `storageTemperatureMonitored` is `boolean`, not `AnswerOption` — the "no" has
+// TWO forms and not five: `false` ("it was not monitored") and `null` ("it is not known") close
+// the block alike, because under neither is there a measurement to derive a deviation from. ONLY
+// `true` opens it. Mirrors `isStorageBlockOpen` in `investigationColdChain.service.ts`.
+export function isStorageBlockOpen(
+  storageTemperatureMonitored: boolean | null | undefined,
+): boolean {
+  return storageTemperatureMonitored === true;
+}
+
+// Declares the state of the block instead of letting the `PUT` body depend on what the form
+// happened to leave behind (SPEC FE13d §1.D, same criterion as `buildMedicalHistorySavePayload`
+// above): with the block closed, `storageRangeDeviation` — the ONE column it governs — travels as
+// explicit `null`, so `RANGE_DEVIATION_NOT_ALLOWED` can never come back. The other six `storage*`
+// columns are untouched: they hang from no block despite the shared prefix (SPEC FE13d §3.5).
+export function buildColdChainSavePayload(
+  values: InvestigationColdChainFormValues,
+): InvestigationColdChainFormValues {
+  if (isStorageBlockOpen(values.storageTemperatureMonitored)) return values;
+  return { ...values, storageRangeDeviation: null };
+}
+
+// THE TWO SIDES OF THE TRANSPORT EXCLUSION (SPEC FE13d §3.5, three rules). Only a `'YES'` on both
+// at once is the conflict — `'NO'`, `'UNKNOWN'` and `null` never arrest anything. The screen
+// impedes this state with an `onChange` `setValue` (SPEC FE13d §6 decision 8), and this superRefine
+// is the schema-level guarantee that the state stays unreachable even if that wiring is bypassed.
+export function areTransportContainersExclusive(
+  transportUsedThermos: AnswerOption | null | undefined,
+  transportUsedColdPack: AnswerOption | null | undefined,
+): boolean {
+  return !(transportUsedThermos === 'YES' && transportUsedColdPack === 'YES');
+}
+
+export const investigationColdChainSaveSchema = z
+  .object({
+    // `boolean`, NOT `AnswerOption` (SPEC FE13d §1.D) — the trap `<AnswerOptionField>` would fall
+    // into. Rendered with the `RadioGroup` Sí/No of two ways, no return to `null` (SPEC FE11).
+    storageTemperatureMonitored: z.boolean().nullable().optional(),
+    // `boolean` too. `false` is content, never absence (SPEC FE13d §1.F) — "monitored, no
+    // deviation" is the most frequent finding of the form.
+    storageRangeDeviation: z.boolean().nullable().optional(),
+    // The six columns outside the block, despite the shared `storage` prefix.
+    storageProcedureFollowed: answerOptionSchema.nullable().optional(),
+    storageOtherObjectPresent: answerOptionSchema.nullable().optional(),
+    storagePartiallyReconstitutedVaccine: answerOptionSchema.nullable().optional(),
+    storageVaccineNotUsable: answerOptionSchema.nullable().optional(),
+    storageDiluentNotUsable: answerOptionSchema.nullable().optional(),
+    storageKeyFindings: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    transportUsedThermos: answerOptionSchema.nullable().optional(),
+    // The three container labels that never say "termo" on screen (§3.8) — they belong to no
+    // conditional block, and neither flag forbids nor forces them (SPEC FE13d §3.5).
+    transportSetInThermos: answerOptionSchema.nullable().optional(),
+    transportReturnedInThermos: answerOptionSchema.nullable().optional(),
+    transportUsedColdPack: answerOptionSchema.nullable().optional(),
+    // The only `varchar(n)` of the table: 250, not encrypted (unlike
+    // `evaluationInstitutionSaveSchema`'s two fields above), so the DDL's own limit applies as-is.
+    transportTypeThermo: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().max(250).nullable().optional(),
+    ),
+    transportKeyFindings: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (!areTransportContainersExclusive(data.transportUsedThermos, data.transportUsedColdPack)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'transportContainerConflict',
+        path: ['transportUsedColdPack'],
+      });
+    }
+  });
+
+function _assertInvestigationColdChainSchemaMatchesContract(
+  value: z.infer<typeof investigationColdChainSaveSchema>,
+): InvestigationColdChainFormValues {
+  return value;
+}
+void _assertInvestigationColdChainSchemaMatchesContract;

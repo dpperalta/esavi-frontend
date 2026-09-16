@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   areAutopsyFlagsMutuallyExclusive,
+  areTransportContainersExclusive,
   buildClinicalEvaluationSavePayload,
+  buildColdChainSavePayload,
   buildMedicalHistorySavePayload,
   buildVaccinationContextSavePayload,
   ENCRYPTED_FIELD_SCREEN_LIMIT,
@@ -11,6 +13,7 @@ import {
   investigationAutopsySaveSchema,
   investigationClinicalEvaluationErrorFieldMap,
   investigationClinicalEvaluationSaveSchema,
+  investigationColdChainSaveSchema,
   investigationDiagnosticErrorFieldMap,
   investigationDiagnosticSaveSchema,
   investigationSaveSchema,
@@ -26,11 +29,13 @@ import {
   isPregnancyBlockOpen,
   isSameVialCountRequirementMet,
   isScheduledAutopsyDateRequirementMet,
+  isStorageBlockOpen,
   medicalHistoryErrorFieldMap,
   medicalHistorySaveSchema,
   newbornConditionErrorFieldMap,
   newbornConditionSaveSchema,
   teamMemberSaveSchema,
+  type InvestigationColdChainFormValues,
   type InvestigationVaccinationContextFormValues,
   type MedicalHistoryFormValues,
 } from './schemas';
@@ -823,5 +828,139 @@ describe('investigationVaccinationContextErrorFieldMap — J', () => {
     expect(
       investigationVaccinationContextErrorFieldMap.INVVACTX_004_CLUSTER_SAME_VIAL_COUNT_REQUIRED,
     ).toBe('clusterSameVialCount');
+  });
+});
+
+describe('isStorageBlockOpen — K (SPEC FE13d §1.D)', () => {
+  it('sólo true abre el bloque; false y null lo cierran igual — no es un answerOption de cinco valores', () => {
+    expect(isStorageBlockOpen(true)).toBe(true);
+    expect(isStorageBlockOpen(false)).toBe(false);
+    expect(isStorageBlockOpen(null)).toBe(false);
+    expect(isStorageBlockOpen(undefined)).toBe(false);
+  });
+});
+
+describe('buildColdChainSavePayload — K (SPEC FE13d §3.5)', () => {
+  const withStorageData: InvestigationColdChainFormValues = {
+    storageTemperatureMonitored: true,
+    storageRangeDeviation: false,
+    storageProcedureFollowed: 'YES',
+    storageOtherObjectPresent: null,
+    storagePartiallyReconstitutedVaccine: null,
+    storageVaccineNotUsable: null,
+    storageDiluentNotUsable: null,
+    storageKeyFindings: null,
+    transportUsedThermos: null,
+    transportSetInThermos: null,
+    transportReturnedInThermos: null,
+    transportUsedColdPack: null,
+    transportTypeThermo: null,
+    transportKeyFindings: null,
+    notes: null,
+  };
+
+  it('bloque abierto: storageRangeDeviation:false sobrevive — es contenido, no ausencia (§1.F)', () => {
+    const result = buildColdChainSavePayload(withStorageData);
+    expect(result.storageRangeDeviation).toBe(false);
+  });
+
+  it('bloque cerrado (false): storageRangeDeviation se limpia a null explícito', () => {
+    const result = buildColdChainSavePayload({
+      ...withStorageData,
+      storageTemperatureMonitored: false,
+    });
+    expect(result.storageRangeDeviation).toBeNull();
+  });
+
+  it('bloque cerrado (null): storageRangeDeviation se limpia igual que con false', () => {
+    const result = buildColdChainSavePayload({
+      ...withStorageData,
+      storageTemperatureMonitored: null,
+    });
+    expect(result.storageRangeDeviation).toBeNull();
+  });
+
+  it('las seis columnas storage* fuera del bloque no se tocan al cerrarlo', () => {
+    const result = buildColdChainSavePayload({
+      ...withStorageData,
+      storageTemperatureMonitored: false,
+    });
+    expect(result.storageProcedureFollowed).toBe('YES');
+  });
+});
+
+describe('areTransportContainersExclusive — K (SPEC FE13d §3.5, tres reglas)', () => {
+  it('los dos en YES es el único conflicto', () => {
+    expect(areTransportContainersExclusive('YES', 'YES')).toBe(false);
+  });
+
+  it('un solo YES no es conflicto', () => {
+    expect(areTransportContainersExclusive('YES', 'NO')).toBe(true);
+    expect(areTransportContainersExclusive('NO', 'YES')).toBe(true);
+  });
+
+  it('NO, UNKNOWN y null en cualquier combinación no arrastran nada', () => {
+    expect(areTransportContainersExclusive('NO', 'NO')).toBe(true);
+    expect(areTransportContainersExclusive('UNKNOWN', 'UNKNOWN')).toBe(true);
+    expect(areTransportContainersExclusive(null, null)).toBe(true);
+    expect(areTransportContainersExclusive(undefined, undefined)).toBe(true);
+  });
+});
+
+describe('investigationColdChainSaveSchema — K', () => {
+  it('un objeto vacío valida — ningún campo es obligatorio (§2, la ficha nace vacía)', () => {
+    expect(investigationColdChainSaveSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('storageTemperatureMonitored y storageRangeDeviation aceptan boolean, nunca AnswerOption', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      storageTemperatureMonitored: true,
+      storageRangeDeviation: false,
+    });
+    expect(result.success).toBe(true);
+    // En runtime, 'YES' (la trampa de AnswerOption) no pasa la forma boolean de la columna
+    // (SPEC FE13d §1.D) — el mismo 400 que el validador del backend produciría.
+    const wrongType = investigationColdChainSaveSchema.safeParse({
+      storageTemperatureMonitored: 'YES',
+    });
+    expect(wrongType.success).toBe(false);
+  });
+
+  it('storageRangeDeviation:false con la compuerta en true valida — no se confunde con ausencia', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      storageTemperatureMonitored: true,
+      storageRangeDeviation: false,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('los dos contenedores en YES no es un estado alcanzable desde el schema', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      transportUsedThermos: 'YES',
+      transportUsedColdPack: 'YES',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('un solo contenedor en YES sí es alcanzable', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      transportUsedThermos: 'YES',
+      transportUsedColdPack: 'NO',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('transportTypeThermo rechaza más de 250 caracteres', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      transportTypeThermo: 'x'.repeat(251),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('transportTypeThermo acepta exactamente 250 caracteres', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      transportTypeThermo: 'x'.repeat(250),
+    });
+    expect(result.success).toBe(true);
   });
 });
