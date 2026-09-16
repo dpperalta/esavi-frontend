@@ -188,6 +188,23 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   // `INVDIAG_006_INVESTIGATION_NOT_FOUND` is the empty state `DiagnosticList` renders itself,
   // never a toast).
   INVDIAG_006_CASE_NOT_FOUND: 'investigation.diagnostic.errors.caseNotFound',
+  // SPEC FE13d §3.5, §7.E — same criterion as FE13c above: the write-path codes per entity that
+  // ought to be unreachable in normal use, one generic text per entity. The business-rule codes
+  // (`CLUSTER_SAME_VIAL_COUNT_REQUIRED`, `CLUSTER_FIELDS_NOT_ALLOWED`, `TRANSPORT_CONTAINER_CONFLICT`,
+  // `MOMENT_NOT_FOUND`/`MULTIDOSE_NOT_FOUND`, `ALREADY_EXISTS`, `WHODRUG_NOT_FOUND`) aren't here —
+  // they go to a field via `investigationVaccinationContextErrorFieldMap`/
+  // `vaccineAdministeredErrorFieldMap` (`features/investigation/schemas.ts`), and their message
+  // is the backend's own already-translated text (CONVENTIONS.md §6.2) — a second, client-authored
+  // string here would just be a second translation of the same thing.
+  INVVACTX_001_CREATION_FAILED: 'investigation.vaccinationContext.errors.saveFailed',
+  INVVACTX_004_UPDATE_FAILED: 'investigation.vaccinationContext.errors.saveFailed',
+  INVVACTX_004_NOT_FOUND: 'investigation.vaccinationContext.errors.saveFailed',
+  INVVACAD_001_CREATION_FAILED: 'investigation.vaccinesAdministered.errors.saveFailed',
+  INVVACAD_004_UPDATE_FAILED: 'investigation.vaccinesAdministered.errors.saveFailed',
+  INVVACAD_004_NOT_FOUND: 'investigation.vaccinesAdministered.errors.saveFailed',
+  INVCOLD_001_CREATION_FAILED: 'investigation.coldChain.errors.saveFailed',
+  INVCOLD_004_UPDATE_FAILED: 'investigation.coldChain.errors.saveFailed',
+  INVCOLD_004_NOT_FOUND: 'investigation.coldChain.errors.saveFailed',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

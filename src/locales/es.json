@@ -659,6 +659,7 @@
       "completeStage": "Completar etapa",
       "stageCompleted": "Etapa completada.",
       "next": "Siguiente",
+      "continue": "Continuar",
       "unsavedChangesTitle": "Hay cambios sin guardar",
       "unsavedChangesBody": "Si continúas sin guardar, perderás lo que escribiste en este paso.",
       "pendingFieldsTitle": "Faltan estos campos para completar la etapa"
@@ -1329,6 +1330,87 @@
         "noInvestigation": "Todavía no existe la investigación de este caso.",
         "saveFailed": "No se pudo guardar el diagnóstico.",
         "caseNotFound": "El caso no existe."
+      }
+    },
+    "vaccinesAdministered": {
+      "title": "Vacunas administradas",
+      "empty": "Aún no se ha añadido ninguna vacuna administrada.",
+      "dictionaryMissing": "El diccionario WHODrug no está importado en este despliegue. Esta sección sólo admite vacunas codificadas y no puede rellenarse hasta que un administrador lo importe.",
+      "add": "Añadir vacuna",
+      "duplicate": "Esa vacuna ya está en la lista. Si son dos dosis distintas, indica el número de dosis en cada una.",
+      "field": {
+        "vaccine": "Vacuna",
+        "doseNumber": "Número de dosis",
+        "notes": "Observaciones"
+      },
+      "form": {
+        "createTitle": "Añadir vacuna administrada",
+        "editTitle": "Editar vacuna administrada"
+      },
+      "error": {
+        "noRawVaccine": "Esta sección exige una vacuna codificada del diccionario WHODrug."
+      },
+      "errors": {
+        "saveFailed": "No se pudo guardar la vacuna administrada."
+      }
+    },
+    "vaccinationContext": {
+      "title": "Contexto de la vacunación",
+      "openFailed": "No se pudo abrir la ficha de contexto de vacunación.",
+      "field": {
+        "vaccinatedPerVialCount": "Número de personas vacunadas con el vial de la vacuna involucrada en el caso",
+        "vaccinatedPerBatchCount": "Número de personas vacunadas con el lote de la vacuna involucrada",
+        "locations": "Lugares donde se vacunó a las demás personas",
+        "moment": "¿Cuándo fue vacunada la persona que tuvo el o los ESAVI?",
+        "multidose": "¿En el caso de viales multidosis, se administró la vacuna?",
+        "notes": "Observaciones"
+      },
+      "errors": {
+        "saveFailed": "No se pudo guardar el contexto de vacunación."
+      }
+    },
+    "cluster": {
+      "title": "Conglomerados",
+      "sameVialCountRequired": "Indica cuántos casos usaron el mismo vial antes de guardar.",
+      "field": {
+        "isCluster": "¿El caso investigado forma parte de un conglomerado de casos?",
+        "identificationNumber": "Número de identificación del conglomerado",
+        "additionalCaseCount": "Número de casos adicionales del conglomerado",
+        "usedSameVial": "¿Todos los casos del conglomerado usaron el mismo vial?",
+        "sameVialCount": "¿Cuántos casos del conglomerado usaron el mismo vial?"
+      }
+    },
+    "coldChain": {
+      "openFailed": "No se pudo abrir la ficha de cadena de frío.",
+      "storage": {
+        "title": "Cadena de frío",
+        "hint": "Último sitio de almacenamiento",
+        "field": {
+          "temperatureMonitored": "¿Se monitorizó la temperatura de almacenamiento?",
+          "rangeDeviation": "¿Hubo desviación del rango de temperatura?",
+          "procedureFollowed": "¿Se siguió el procedimiento de almacenamiento?",
+          "otherObjectPresent": "¿Había otros objetos junto a la vacuna en el refrigerador?",
+          "partiallyReconstitutedVaccine": "¿La vacuna estaba parcialmente reconstituida?",
+          "vaccineNotUsable": "¿La vacuna no era utilizable?",
+          "diluentNotUsable": "¿El diluyente no era utilizable?",
+          "keyFindings": "Hallazgos clave del almacenamiento"
+        }
+      },
+      "transport": {
+        "title": "Transporte",
+        "inheritedTieWarning": "Esta ficha tenía los dos contenedores marcados. Se ha conservado el termo; al guardar quedará corregido.",
+        "field": {
+          "typeThermo": "Tipo de contenedor utilizado",
+          "setInThermos": "¿Se colocó en el contenedor?",
+          "returnedInThermos": "¿Se devolvió en el contenedor?",
+          "usedThermos": "¿Se usó termo?",
+          "usedColdPack": "¿Se usó paquete frío?",
+          "keyFindings": "Hallazgos clave del transporte",
+          "notes": "Observaciones"
+        }
+      },
+      "errors": {
+        "saveFailed": "No se pudo guardar la cadena de frío."
       }
     },
     "draft": {
