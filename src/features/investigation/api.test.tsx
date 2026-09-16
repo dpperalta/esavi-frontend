@@ -10,9 +10,11 @@ import { useWhodrugTreeLevel } from '@/shared/hooks/useVaccineWhodrugTree';
 import {
   evaluationInstitutionResource,
   evaluationInstitutionsByInvestigationKey,
+  investigationAdministrationErrorResource,
   investigationAutopsyResource,
   investigationClinicalEvaluationResource,
   investigationColdChainResource,
+  investigationCommunityResource,
   investigationDiagnosticResource,
   investigationMedicalHistoryResource,
   investigationPregnancyConditionResource,
@@ -23,10 +25,12 @@ import {
   investigationVaccineAdministeredResource,
   useCreateInvestigationClinicalEvaluation,
   useEvaluationInstitutionsByInvestigation,
+  useInvestigationAdministrationErrorByCase,
   useInvestigationAutopsyByCase,
   useInvestigationByCase,
   useInvestigationClinicalEvaluationByCase,
   useInvestigationColdChainByCase,
+  useInvestigationCommunityByCase,
   useInvestigationDiagnosticsByCase,
   useInvestigationMedicalHistoryByCase,
   useInvestigationSourceByCase,
@@ -1285,6 +1289,210 @@ describe('investigationColdChainResource — 1:1 con PK = FK (ESAVI-INVCOLD-001/
     );
     const { Wrapper } = createWrapper();
     const { result } = renderHook(() => useInvestigationColdChainByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+const investigationAdministrationErrorDetail = {
+  investigationId: 'inv-1',
+  investigation: { investigationId: 'inv-1', caseId: 'case-1', isActive: true },
+  usedAutoDisableSyringes: null,
+  usedGlassSyringes: null,
+  usedDisposableSyringes: null,
+  usedRecycledDisposableSyringes: null,
+  usedOtherSyringes: null,
+  otherSyringesDescription: null,
+  syringesKeyFindings: null,
+  reconstitutionUsedSameSyringe: null,
+  reconstitutionUsedSameSyringeDifferentVaccine: null,
+  reconstitutionUsedDifferentSyringeSameVial: null,
+  reconstitutionUsedDifferentSyringeDifferentVaccine: null,
+  reconstitutionFollowedManufacturerRecommendation: null,
+  reconstitutionKeyFindings: null,
+  hadPrescriptionError: null,
+  prescriptionErrorNotes: null,
+  hadContaminatedVaccine: null,
+  contaminatedVaccineNotes: null,
+  hadAbnormalVaccineConditions: null,
+  abnormalConditionsNotes: null,
+  hadPreparationError: null,
+  preparationErrorNotes: null,
+  hadHandlingError: null,
+  handlingErrorNotes: null,
+  hadImproperAdministration: null,
+  improperAdministrationNotes: null,
+  notes: null,
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+};
+
+describe('investigationAdministrationErrorResource — 1:1 con PK = FK (ESAVI-INVADMER-001/004)', () => {
+  it('el POST lleva investigationId en el cuerpo, a secas', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-administration-errors', async ({ request }) => {
+        receivedBody = await request.json();
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationAdministrationErrorDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationAdministrationErrorResource.useCreate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toEqual({ investigationId: 'inv-1' });
+  });
+
+  it('el PUT va contra /:investigationId, no contra un id propio', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.put('http://localhost:4500/api/investigation-administration-errors/inv-1', ({ request }) => {
+        hitUrl = request.url;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationAdministrationErrorDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationAdministrationErrorResource.useUpdate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ id: 'inv-1', data: { usedAutoDisableSyringes: 'NO' } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-administration-errors/inv-1');
+  });
+
+  it('antes de revelarse la sección F, un 404 INVADMER_006_NOT_FOUND resuelve null', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-administration-errors/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'INVADMER_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationAdministrationErrorByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
+  });
+
+  it('con la cabecera de la investigación ausente, INVADMER_006_INVESTIGATION_NOT_FOUND se propaga', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-administration-errors/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'sin cabecera', code: 'INVADMER_006_INVESTIGATION_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationAdministrationErrorByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+const investigationCommunityDetail = {
+  investigationId: 'inv-1',
+  investigation: { investigationId: 'inv-1', caseId: 'case-1', isActive: true },
+  patientLatitude: null,
+  patientLongitude: null,
+  hadSimilarEvent: null,
+  similarEventDescription: null,
+  similarEventCount: null,
+  affectedVaccinated: null,
+  affectedUnvaccinated: null,
+  affectedUnknown: null,
+  otherComments: null,
+  notes: null,
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+};
+
+describe('investigationCommunityResource — 1:1 con PK = FK (ESAVI-INVCOMM-001/004)', () => {
+  it('el POST lleva investigationId en el cuerpo, a secas', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-communities', async ({ request }) => {
+        receivedBody = await request.json();
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationCommunityDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationCommunityResource.useCreate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toEqual({ investigationId: 'inv-1' });
+  });
+
+  it('el PUT va contra /:investigationId, no contra un id propio', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.put('http://localhost:4500/api/investigation-communities/inv-1', ({ request }) => {
+        hitUrl = request.url;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationCommunityDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationCommunityResource.useUpdate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ id: 'inv-1', data: { hadSimilarEvent: 'YES' } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-communities/inv-1');
+  });
+
+  it('antes de revelarse la sección G, un 404 INVCOMM_006_NOT_FOUND resuelve null', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-communities/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'INVCOMM_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationCommunityByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
+  });
+
+  it('con la cabecera de la investigación ausente, INVCOMM_006_INVESTIGATION_NOT_FOUND se propaga', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-communities/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'sin cabecera', code: 'INVCOMM_006_INVESTIGATION_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationCommunityByCase('case-1', true), {
       wrapper: Wrapper,
     });
 
