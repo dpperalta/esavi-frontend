@@ -212,8 +212,8 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   // (`isSyringeTypeDeclared` in `features/investigation/schemas.ts`), so this code should never
   // reach the server. Registered anyway as a safety net, pointing at the same text the `<fieldset>`
   // already shows inline.
-  INVADMER_001_SYRINGE_TYPE_REQUIRED: 'investigation.syringes.minimumRequired',
-  INVADMER_004_SYRINGE_TYPE_REQUIRED: 'investigation.syringes.minimumRequired',
+  INVADMER_001_SYRINGE_TYPE_REQUIRED: 'investigation.administrationError.syringes.minimumRequired',
+  INVADMER_004_SYRINGE_TYPE_REQUIRED: 'investigation.administrationError.syringes.minimumRequired',
   INVCOMM_001_CREATION_FAILED: 'investigation.community.errors.saveFailed',
   INVCOMM_004_UPDATE_FAILED: 'investigation.community.errors.saveFailed',
   INVCOMM_004_NOT_FOUND: 'investigation.community.errors.saveFailed',

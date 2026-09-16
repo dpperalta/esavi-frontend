@@ -1413,6 +1413,52 @@
         "saveFailed": "The cold chain could not be saved."
       }
     },
+    "administrationError": {
+      "openFailed": "The administration error record could not be opened.",
+      "syringes": {
+        "title": "Syringes and needles",
+        "typesLegend": "Type of syringe used",
+        "minimumRequired": "Indicate at least one type of syringe used",
+        "field": {
+          "usedAutoDisableSyringes": "Were auto-disable (AD) syringes used?",
+          "usedGlassSyringes": "Glass",
+          "usedDisposableSyringes": "Disposable",
+          "usedRecycledDisposableSyringes": "Recycled disposable",
+          "usedOtherSyringes": "Other",
+          "otherSyringesDescription": "Which ones?",
+          "syringesKeyFindings": "Specify the key findings, additional observations or comments"
+        }
+      },
+      "practices": {
+        "title": "Reconstitution procedure",
+        "reconstitutionHeading": "Reconstitution",
+        "administrationErrorsHeading": "Administration errors",
+        "field": {
+          "reconstitutionUsedSameSyringe": "Was the same syringe used to reconstitute multiple vials of the same vaccine?",
+          "reconstitutionUsedSameSyringeDifferentVaccine": "Was the same syringe used to reconstitute different vaccines?",
+          "reconstitutionUsedDifferentSyringeSameVial": "Was a different syringe used to reconstitute each vial of the vaccine?",
+          "reconstitutionUsedDifferentSyringeDifferentVaccine": "Was a different syringe used to reconstitute at each vaccination?",
+          "reconstitutionFollowedManufacturerRecommendation": "Are the diluents and vaccines used the same ones recommended by the manufacturer?",
+          "reconstitutionKeyFindings": "Specify the key findings or additional observations or comments",
+          "hadPrescriptionError": "Was there an error in the prescription or non-adherence to the vaccine's usage recommendations? (indications, contraindications, precautions)",
+          "prescriptionErrorNotes": "Explanation and observations",
+          "hadContaminatedVaccine": "Do you consider that the administered vaccine could have been contaminated?",
+          "contaminatedVaccineNotes": "Explanation and observations",
+          "hadAbnormalVaccineConditions": "Do you consider that the vaccine's physical conditions (color, turbidity, foreign substances, etc.) were abnormal at the time of administration?",
+          "abnormalConditionsNotes": "Explanation and observations",
+          "hadPreparationError": "Do you consider that there was an error in the preparation or reconstitution (wrong product, vaccine or diluent, mixing, syringe or improper filling of the syringe, etc.) of the vaccine by the vaccinator?",
+          "preparationErrorNotes": "Explanation and observations",
+          "hadHandlingError": "Do you consider that there was an error in handling the vaccine (interruption of the cold chain during transport, storage or the vaccination day, etc.)?",
+          "handlingErrorNotes": "Explanation and observations",
+          "hadImproperAdministration": "Do you consider that the vaccine was administered incorrectly (wrong dose, site or route of administration, wrong needle size, failure to follow good injection practices, etc.)?",
+          "improperAdministrationNotes": "Explanation and observations",
+          "notes": "Notes"
+        }
+      },
+      "errors": {
+        "saveFailed": "The administration error could not be saved."
+      }
+    },
     "draft": {
       "restored": "Recovered unsaved changes from an earlier session.",
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."

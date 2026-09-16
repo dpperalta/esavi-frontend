@@ -1413,6 +1413,52 @@
         "saveFailed": "De koudeketen kon niet worden opgeslagen."
       }
     },
+    "administrationError": {
+      "openFailed": "Het dossier van de toedieningsfout kon niet worden geopend.",
+      "syringes": {
+        "title": "Spuiten en naalden",
+        "typesLegend": "Gebruikt type spuit",
+        "minimumRequired": "Geef ten minste één gebruikt type spuit aan",
+        "field": {
+          "usedAutoDisableSyringes": "Werden zelfvernietigende (AD) spuiten gebruikt?",
+          "usedGlassSyringes": "Glas",
+          "usedDisposableSyringes": "Wegwerp",
+          "usedRecycledDisposableSyringes": "Gerecyclede wegwerp",
+          "usedOtherSyringes": "Andere",
+          "otherSyringesDescription": "Welke?",
+          "syringesKeyFindings": "Geef de belangrijkste bevindingen, aanvullende opmerkingen of commentaar aan"
+        }
+      },
+      "practices": {
+        "title": "Reconstitutieprocedure",
+        "reconstitutionHeading": "Reconstitutie",
+        "administrationErrorsHeading": "Toedieningsfouten",
+        "field": {
+          "reconstitutionUsedSameSyringe": "Werd dezelfde spuit gebruikt om meerdere flacons van hetzelfde vaccin te reconstitueren?",
+          "reconstitutionUsedSameSyringeDifferentVaccine": "Werd dezelfde spuit gebruikt om verschillende vaccins te reconstitueren?",
+          "reconstitutionUsedDifferentSyringeSameVial": "Werd een andere spuit gebruikt om elke flacon van het vaccin te reconstitueren?",
+          "reconstitutionUsedDifferentSyringeDifferentVaccine": "Werd bij elke vaccinatie een andere spuit gebruikt voor de reconstitutie?",
+          "reconstitutionFollowedManufacturerRecommendation": "Zijn de gebruikte verdunningsmiddelen en vaccins dezelfde als die door de fabrikant worden aanbevolen?",
+          "reconstitutionKeyFindings": "Geef de belangrijkste bevindingen of aanvullende opmerkingen of commentaar aan",
+          "hadPrescriptionError": "Was er een fout in het voorschrift of niet-naleving van de gebruiksaanbevelingen van het vaccin? (indicaties, contra-indicaties, voorzorgsmaatregelen)",
+          "prescriptionErrorNotes": "Toelichting en opmerkingen",
+          "hadContaminatedVaccine": "Denkt u dat het toegediende vaccin besmet kan zijn geweest?",
+          "contaminatedVaccineNotes": "Toelichting en opmerkingen",
+          "hadAbnormalVaccineConditions": "Denkt u dat de fysieke toestand van het vaccin (kleur, troebelheid, vreemde stoffen, enz.) abnormaal was op het moment van toediening?",
+          "abnormalConditionsNotes": "Toelichting en opmerkingen",
+          "hadPreparationError": "Denkt u dat er een fout is gemaakt bij de bereiding of reconstitutie (verkeerd product, vaccin of verdunningsmiddel, menging, spuit of onjuiste vulling van de spuit, enz.) van het vaccin door de vaccinator?",
+          "preparationErrorNotes": "Toelichting en opmerkingen",
+          "hadHandlingError": "Denkt u dat er een fout is gemaakt bij de omgang met het vaccin (onderbreking van de koudeketen tijdens transport, opslag of de vaccinatiedag, enz.)?",
+          "handlingErrorNotes": "Toelichting en opmerkingen",
+          "hadImproperAdministration": "Denkt u dat het vaccin onjuist is toegediend (verkeerde dosis, plaats of toedieningsweg, verkeerde naaldmaat, niet volgen van goede injectiepraktijken, enz.)?",
+          "improperAdministrationNotes": "Toelichting en opmerkingen",
+          "notes": "Opmerkingen"
+        }
+      },
+      "errors": {
+        "saveFailed": "De toedieningsfout kon niet worden opgeslagen."
+      }
+    },
     "draft": {
       "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."

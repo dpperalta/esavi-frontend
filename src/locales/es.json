@@ -1413,6 +1413,52 @@
         "saveFailed": "No se pudo guardar la cadena de frío."
       }
     },
+    "administrationError": {
+      "openFailed": "No se pudo abrir la ficha del error de administración.",
+      "syringes": {
+        "title": "Jeringas y agujas",
+        "typesLegend": "Tipo de jeringa utilizada",
+        "minimumRequired": "Indica al menos un tipo de jeringa usada",
+        "field": {
+          "usedAutoDisableSyringes": "¿Se usaron jeringas autodesactivables (AD)?",
+          "usedGlassSyringes": "Vidrio",
+          "usedDisposableSyringes": "Desechables",
+          "usedRecycledDisposableSyringes": "Desechables recicladas",
+          "usedOtherSyringes": "Otras",
+          "otherSyringesDescription": "¿Cuáles?",
+          "syringesKeyFindings": "Especifique los hallazgos clave, observaciones adicionales o comentarios"
+        }
+      },
+      "practices": {
+        "title": "Procedimiento de reconstitución",
+        "reconstitutionHeading": "Reconstitución",
+        "administrationErrorsHeading": "Errores de administración",
+        "field": {
+          "reconstitutionUsedSameSyringe": "¿Se usó la misma jeringa para la reconstitución de múltiples viales de la misma vacuna?",
+          "reconstitutionUsedSameSyringeDifferentVaccine": "¿Se usó la misma jeringa para la reconstitución de diferentes vacunas?",
+          "reconstitutionUsedDifferentSyringeSameVial": "¿Se usó una jeringa distinta para la reconstitución de cada vial de la vacuna?",
+          "reconstitutionUsedDifferentSyringeDifferentVaccine": "¿Se usó una jeringa distinta para la reconstitución en cada vacunación?",
+          "reconstitutionFollowedManufacturerRecommendation": "¿Los diluyentes y las vacunas usadas son las mismas recomendadas por el fabricante?",
+          "reconstitutionKeyFindings": "Especifique los hallazgos clave o las observaciones adicionales o los comentarios",
+          "hadPrescriptionError": "Hubo algún error en la prescripción o no adherencia a las recomendaciones de uso de la vacuna? (indicaciones, contraindicaciones, precauciones)",
+          "prescriptionErrorNotes": "Explicación y observaciones",
+          "hadContaminatedVaccine": "¿Considera que la vacuna administrada pudo haber estado contaminada?",
+          "contaminatedVaccineNotes": "Explicación y observaciones",
+          "hadAbnormalVaccineConditions": "¿Considera que las condiciones físicas de la vacuna (color, turbidez, sustancias extrañas, etc.) eran anormales en el momento de la administración?",
+          "abnormalConditionsNotes": "Explicación y observaciones",
+          "hadPreparationError": "¿Considera que hubo un error en la preparación o reconstitución (producto, vacuna o diluyente equivocado, mezcla, jeringa o llenado inapropiado de la jeringa, etc.) de la vacuna por el vacunador?",
+          "preparationErrorNotes": "Explicación y observaciones",
+          "hadHandlingError": "¿Considera que hubo un error en la manipulación de la vacuna (interrupción de la cadena de frio durante el transporte, el almacenamiento o la jornada de vacunación, etc.)?",
+          "handlingErrorNotes": "Explicación y observaciones",
+          "hadImproperAdministration": "¿Considera que la vacuna se administró incorrectamente (dosis equivocada, sitio o ruta de administración, aguja del tamaño equivocado, no seguimiento a buenas prácticas de inyección, etc.)?",
+          "improperAdministrationNotes": "Explicación y observaciones",
+          "notes": "Observaciones"
+        }
+      },
+      "errors": {
+        "saveFailed": "No se pudo guardar el error de administración."
+      }
+    },
     "draft": {
       "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
