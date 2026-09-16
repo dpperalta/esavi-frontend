@@ -18,7 +18,8 @@ function conditionLabel(row: InvestigationPregnancyConditionDetail): string {
   return row.conditionRaw ?? row.diagnosticTerm?.name ?? '';
 }
 
-// La sección B2 (SPEC FE13b §4 paso 7), montada sólo con `pregnancyOutcome.value === '2'`
+// La sección B2 (SPEC FE13b §4 paso 7), montada sólo con
+// `pregnancyOutcome.value === 'LIVE_BORN_WITH_COMPLICATIONS'`
 // (`PregnancySection` decide eso, no este componente). Sobre `<SatelliteList>`, igual que
 // `TeamMemberList` y `PregnancyComplicationList` — pero **sin botón de borrar** (§2): que un
 // `USER` pueda retirar una condición que él cargó depende de que `ESAVI-INVPREG-005A` baje de

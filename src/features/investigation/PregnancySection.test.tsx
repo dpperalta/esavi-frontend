@@ -179,11 +179,11 @@ describe('PregnancySection — B2 (SPEC FE13b §4 paso 7)', () => {
             rows: [
               {
                 catalogItemId: OUTCOME_LIVE_WITH_CONDITION,
-                code: 'LIVE_WITH_CONDITION',
+                code: '2',
                 name: 'Nacido vivo con afección médica al nacer',
-                value: '2',
+                value: 'LIVE_BORN_WITH_COMPLICATIONS',
               },
-              { catalogItemId: OUTCOME_OTHER, code: 'OTHER', name: 'Otro', value: '1' },
+              { catalogItemId: OUTCOME_OTHER, code: '1', name: 'Otro', value: 'OTHER' },
             ],
           },
         }),
