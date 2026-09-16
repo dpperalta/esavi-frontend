@@ -205,6 +205,26 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   INVCOLD_001_CREATION_FAILED: 'investigation.coldChain.errors.saveFailed',
   INVCOLD_004_UPDATE_FAILED: 'investigation.coldChain.errors.saveFailed',
   INVCOLD_004_NOT_FOUND: 'investigation.coldChain.errors.saveFailed',
+  INVADMER_001_CREATION_FAILED: 'investigation.administrationError.errors.saveFailed',
+  INVADMER_004_UPDATE_FAILED: 'investigation.administrationError.errors.saveFailed',
+  INVADMER_004_NOT_FOUND: 'investigation.administrationError.errors.saveFailed',
+  // SPEC FE13e §1.B, §3.5 A — the minimum rule is validated client-side before every submit
+  // (`isSyringeTypeDeclared` in `features/investigation/schemas.ts`), so this code should never
+  // reach the server. Registered anyway as a safety net, pointing at the same text the `<fieldset>`
+  // already shows inline.
+  INVADMER_001_SYRINGE_TYPE_REQUIRED: 'investigation.syringes.minimumRequired',
+  INVADMER_004_SYRINGE_TYPE_REQUIRED: 'investigation.syringes.minimumRequired',
+  INVCOMM_001_CREATION_FAILED: 'investigation.community.errors.saveFailed',
+  INVCOMM_004_UPDATE_FAILED: 'investigation.community.errors.saveFailed',
+  INVCOMM_004_NOT_FOUND: 'investigation.community.errors.saveFailed',
+  // SPEC FE13e §1.E, §3.5 D, §6 decision 17 — the form never produces the state that triggers
+  // either of these two (the description obligation is validated client-side and closing the gate
+  // always clears the five fields in the same request), but the server's precedence between them
+  // isn't reproduced, so both codes are registered regardless.
+  INVCOMM_001_SIMILAR_EVENT_DESCRIPTION_REQUIRED: 'investigation.community.errors.similarEventDescriptionRequired',
+  INVCOMM_004_SIMILAR_EVENT_DESCRIPTION_REQUIRED: 'investigation.community.errors.similarEventDescriptionRequired',
+  INVCOMM_001_SIMILAR_EVENT_FIELDS_NOT_ALLOWED: 'investigation.community.errors.similarEventFieldsNotAllowed',
+  INVCOMM_004_SIMILAR_EVENT_FIELDS_NOT_ALLOWED: 'investigation.community.errors.similarEventFieldsNotAllowed',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {
