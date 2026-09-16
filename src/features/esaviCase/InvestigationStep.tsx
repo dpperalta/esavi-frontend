@@ -5,35 +5,44 @@ import { toast } from 'sonner';
 import type { InvestigationDetail } from '@/contracts/declared/investigation';
 import type { InvestigationAutopsyDetail } from '@/contracts/declared/investigationAutopsy';
 import type { InvestigationClinicalEvaluationDetail } from '@/contracts/declared/investigationClinicalEvaluation';
+import type { InvestigationColdChainDetail } from '@/contracts/declared/investigationColdChain';
 import type { InvestigationMedicalHistoryDetail } from '@/contracts/declared/investigationMedicalHistory';
 import type { InvestigationSourceDetail } from '@/contracts/declared/investigationSource';
+import type { InvestigationVaccinationContextDetail } from '@/contracts/declared/investigationVaccinationContext';
 import type { NotificationDetail } from '@/contracts/declared/notification';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { esaviCaseResource } from '@/features/esaviCase/api';
 import { BasicInfoSection } from '@/features/investigation/BasicInfoSection';
 import { ClinicalEvaluationSection } from '@/features/investigation/ClinicalEvaluationSection';
+import { ColdChainSection } from '@/features/investigation/ColdChainSection';
 import { DiagnosticList } from '@/features/investigation/DiagnosticList';
 import { EvaluationInstitutionList } from '@/features/investigation/EvaluationInstitutionList';
 import { MedicalHistorySection } from '@/features/investigation/MedicalHistorySection';
 import { PregnancySection } from '@/features/investigation/PregnancySection';
 import { SourceSection } from '@/features/investigation/SourceSection';
 import { TeamMemberList } from '@/features/investigation/TeamMemberList';
+import { VaccinationContextSection } from '@/features/investigation/VaccinationContextSection';
+import { VaccineAdministeredList } from '@/features/investigation/VaccineAdministeredList';
 import {
   investigationByCaseKey,
   investigationResource,
   useInvestigationAutopsyByCase,
   useInvestigationByCase,
+  useInvestigationColdChainByCase,
   investigationDiagnosticsByCaseKey,
   useInvestigationClinicalEvaluationByCase,
   useInvestigationMedicalHistoryByCase,
   useInvestigationSourceByCase,
+  useInvestigationVaccinationContextByCase,
 } from '@/features/investigation/api';
 import type {
   InvestigationAutopsyFormValues,
   InvestigationClinicalEvaluationFormValues,
+  InvestigationColdChainFormValues,
   InvestigationFormValues,
   InvestigationSourceFormValues,
+  InvestigationVaccinationContextFormValues,
   MedicalHistoryFormValues,
 } from '@/features/investigation/schemas';
 import { useNotificationByCase } from '@/features/notification/api';
@@ -88,7 +97,18 @@ type InvestigationSectionId =
   | 'pregnancy'
   | 'clinicalEvaluation'
   | 'evaluationInstitutions'
-  | 'diagnostics';
+  | 'diagnostics'
+  // Sección D (SPEC FE13d §4 paso 10): `vaccinesAdministered` es una lista satélite sin botón
+  // propio, igual que `team` y `evaluationInstitutions` — se pasa de largo sola. `vaccinationContext`
+  // cubre D.3–D.6 y D1 en un solo «Guardar y continuar».
+  | 'vaccinesAdministered'
+  | 'vaccinationContext'
+  // E1/E2 (§6 decision 7 de FE13d): dos identificadores sobre la misma fila. `coldChainStorage`
+  // sólo gobierna si `<ColdChainSection>` se monta — el «Continuar» entre E1 y E2 vive dentro del
+  // propio componente y llama a `advance()` de este mismo `useProgressiveSections`, nunca a un
+  // botón pintado aquí. `coldChainTransport` es el último identificador con guardado real.
+  | 'coldChainStorage'
+  | 'coldChainTransport';
 const BASE_SECTIONS: InvestigationSectionId[] = ['source', 'basicInfo', 'team', 'medicalHistory'];
 
 // The combined draft (§3.4): a single `'investigation'` key, even though four self-contained
@@ -105,6 +125,10 @@ interface InvestigationDraftValues {
   // Section C (SPEC FE13c §4 paso 8) — `evaluationInstitutions` and `diagnostics` are satellite
   // lists that persist on every add/edit, the same reason `team` never gets a draft slot.
   clinicalEvaluation?: InvestigationClinicalEvaluationFormValues;
+  // Section D/D1 and E1/E2 (SPEC FE13d §4 paso 10) — `vaccinesAdministered` gets no slot, same
+  // reason as `team` and `evaluationInstitutions` above.
+  vaccinationContext?: InvestigationVaccinationContextFormValues;
+  coldChain?: InvestigationColdChainFormValues;
 }
 
 interface InvestigationStepBodyProps {
@@ -115,6 +139,8 @@ interface InvestigationStepBodyProps {
   investigationAutopsy: InvestigationAutopsyDetail | null;
   medicalHistory: InvestigationMedicalHistoryDetail | null;
   clinicalEvaluation: InvestigationClinicalEvaluationDetail | null;
+  vaccinationContext: InvestigationVaccinationContextDetail | null;
+  coldChain: InvestigationColdChainDetail | null;
   notification: NotificationDetail | null;
   // Resolved once by `InvestigationStep`, already `!== undefined` by the time the body mounts
   // (§4 paso 6, criterio de `readyToRenderForm` en `NotificationStep`): B1 either doesn't exist
@@ -135,6 +161,8 @@ function InvestigationStepBody({
   investigationAutopsy,
   medicalHistory,
   clinicalEvaluation,
+  vaccinationContext,
+  coldChain,
   notification,
   pregnancyGate,
   existedOnMount,
@@ -212,8 +240,14 @@ function InvestigationStepBody({
     'clinicalEvaluation',
     'evaluationInstitutions',
     'diagnostics',
+    // Sección D → D1 → E1 → E2 (SPEC FE13d §2, §4 paso 10): en el orden del formulario, detrás
+    // de las tres secciones de FE13c.
+    'vaccinesAdministered',
+    'vaccinationContext',
+    'coldChainStorage',
+    'coldChainTransport',
   ];
-  const lastWithButton: InvestigationSectionId = 'evaluationInstitutions';
+  const lastWithButton: InvestigationSectionId = 'coldChainTransport';
 
   const revealAllRef = useRef(existedOnMount || isClosed);
   const { isVisible, frontier, advance } = useProgressiveSections<InvestigationSectionId>({
@@ -222,13 +256,12 @@ function InvestigationStepBody({
     lastWithButton,
   });
 
-  // `team` never gates anything — it's a satellite list with its own add dialog, not a
-  // "Guardar y continuar" of its own (SPEC FE13a §3.6) — but §4.3's order (`ESAVI-FORM.md`
-  // Sección A2 before B) keeps it ahead of `medicalHistory` in `SECTIONS`. Passing through it
-  // automatically is what lets `medicalHistory` become the next gated frontier instead of
-  // getting stuck behind a section with no button to press.
+  // The three satellite lists with no button of their own — `team`, `diagnostics` (SPEC FE13c
+  // §4 paso 8, it "reveals with the last advance") and `vaccinesAdministered` (SPEC FE13d §4
+  // paso 10, same reasoning) — are passed through automatically, which is what lets the next
+  // gated section become the frontier instead of getting stuck behind one with no button to press.
   useEffect(() => {
-    if (frontier === 'team') {
+    if (frontier === 'team' || frontier === 'diagnostics' || frontier === 'vaccinesAdministered') {
       advance();
     }
   }, [frontier, advance]);
@@ -360,6 +393,48 @@ function InvestigationStepBody({
           }
         />
       )}
+
+      {isVisible('vaccinesAdministered') && (
+        <VaccineAdministeredList investigationId={investigationId} disabled={isClosed} />
+      )}
+
+      {isVisible('vaccinationContext') && (
+        <VaccinationContextSection
+          caseId={caseId}
+          investigationId={investigationId}
+          vaccinationContext={vaccinationContext}
+          disabled={isClosed}
+          showSaveButton={frontier === 'vaccinationContext'}
+          onSaved={() => {
+            clearDraft();
+            advance();
+          }}
+          draftValues={restoredValues.vaccinationContext}
+          onValuesChange={(values) =>
+            setPendingDraftValues((current) => ({ ...current, vaccinationContext: values }))
+          }
+        />
+      )}
+
+      {isVisible('coldChainStorage') && (
+        <ColdChainSection
+          caseId={caseId}
+          investigationId={investigationId}
+          coldChain={coldChain}
+          disabled={isClosed}
+          transportRevealed={isVisible('coldChainTransport')}
+          onRevealTransport={advance}
+          showSaveButton={frontier === 'coldChainTransport'}
+          onSaved={() => {
+            clearDraft();
+            advance();
+          }}
+          draftValues={restoredValues.coldChain}
+          onValuesChange={(values) =>
+            setPendingDraftValues((current) => ({ ...current, coldChain: values }))
+          }
+        />
+      )}
     </div>
   );
 }
@@ -381,6 +456,8 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
   const investigationAutopsy = useInvestigationAutopsyByCase(caseId, stageExists);
   const medicalHistory = useInvestigationMedicalHistoryByCase(caseId, stageExists);
   const clinicalEvaluation = useInvestigationClinicalEvaluationByCase(caseId, stageExists);
+  const vaccinationContext = useInvestigationVaccinationContextByCase(caseId, stageExists);
+  const coldChain = useInvestigationColdChainByCase(caseId, stageExists);
   const notificationStageExists = workflow.data?.stages.notification.exists === true;
   const notification = useNotificationByCase(caseId, notificationStageExists);
   const create = investigationResource.useCreate();
@@ -466,6 +543,8 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
     investigationAutopsy.isLoading ||
     medicalHistory.isLoading ||
     clinicalEvaluation.isLoading ||
+    vaccinationContext.isLoading ||
+    coldChain.isLoading ||
     !pregnancyGateReady
   ) {
     return <InvestigationStepSkeleton />;
@@ -480,6 +559,8 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
       investigationAutopsy={investigationAutopsy.data ?? null}
       medicalHistory={medicalHistory.data ?? null}
       clinicalEvaluation={clinicalEvaluation.data ?? null}
+      vaccinationContext={vaccinationContext.data ?? null}
+      coldChain={coldChain.data ?? null}
       notification={notification.data ?? null}
       pregnancyGate={pregnancyGate}
       existedOnMount={existedOnMountRef.current ?? false}
