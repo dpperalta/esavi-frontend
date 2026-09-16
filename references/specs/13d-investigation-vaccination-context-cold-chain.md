@@ -1,6 +1,6 @@
 # SPEC FE13d — Paso 5: el acto de vacunación, las vacunas administradas y la cadena de frío
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE08 (armazón del asistente, `CaseWizardActionBar`, sólo lectura si `CLOSED`), SPEC FE11 (el `RadioGroup` Sí/No de dos vías sin retorno a `null`), SPEC FE12a (la cadena guardar/completar de un paso y `<AnswerOptionField>`), SPEC FE12c (`<WhodrugTreePicker>` y su árbol de cinco niveles), SPEC FE12f (`useProgressiveSections`), SPEC FE13a (la cabecera de la investigación y `InvestigationStep.tsx`), SPEC FE13c (las últimas tres secciones montadas sobre ese paso), SPEC F58 del backend (la investigación y sus satélites)
 > **Fecha:** 2026-09-11
 > **Objetivo:** Cerrar §5.5.4 del `CASE-PROCESS.md` — las secciones D, D1, E1 y E2 del formulario de investigación: qué pasó el día de la vacunación, con qué vacunas, y si la cadena de frío aguantó.

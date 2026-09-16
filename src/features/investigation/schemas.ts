@@ -9,12 +9,20 @@ import type { CreateInvestigationPregnancyConditionInput } from '@/contracts/inv
 import type { CreateInvestigationClinicalEvaluationInput } from '@/contracts/investigationClinicalEvaluation';
 import type { CreateEvaluationInstitutionInput } from '@/contracts/evaluationInstitution';
 import type { CreateInvestigationDiagnosticInput } from '@/contracts/investigationDiagnostic';
+import type { CreateInvestigationVaccinationContextInput } from '@/contracts/investigationVaccinationContext';
+import type { CreateInvestigationColdChainInput } from '@/contracts/investigationColdChain';
+import type { CreateInvestigationVaccineAdministeredInput } from '@/contracts/investigationVaccineAdministered';
 
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
 const timeRegex = /^\d{2}:\d{2}$/;
 const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
+
+// The Postgres `smallint` ceiling (SPEC FE13d §1.E) — no `CHECK` of the DDL covers it, only the
+// column type does, so replicating it here is what turns a `40000` into a readable client-side
+// rejection instead of a `500` from a Postgres overflow. Shared by the five counters of §J.
+const SMALLINT_MAX = 32767;
 
 // ---------------------------------------------------------------------------------------------
 // A — Header (SPEC FE13a §3.5 A). No data column is required: the row is born from the empty
@@ -615,3 +623,244 @@ export const investigationDiagnosticErrorFieldMap: Partial<
   INVDIAG_001_INVALID_DIAGNOSTIC_TYPE: 'diagnosticTypeItemId',
   INVDIAG_004_INVALID_DIAGNOSTIC_TYPE: 'diagnosticTypeItemId',
 };
+
+// ---------------------------------------------------------------------------------------------
+// J — Vaccination context and cluster, sections D and D1 (SPEC FE13d §3.5). One form for D.3–D.6
+// and D1: no column is required, so a single schema covers both `001` (open, empty) and `004`,
+// same idea as the header in §A and the medical history in §E.
+// ---------------------------------------------------------------------------------------------
+
+export type InvestigationVaccinationContextFormValues = Omit<
+  CreateInvestigationVaccinationContextInput,
+  'investigationId'
+>;
+
+// THE GATE, strict against `'YES'` and never a truthiness check (SPEC FE13d §1.A): `'NO'`,
+// `'UNKNOWN'`, `'NOT_APPLICABLE'`, `'NO_ANSWER'` and `null` are all truthy strings (or absent) and
+// would open the block by accident under `!!isCluster`. Mirrors `isClusterBlockOpen` in
+// `investigationVaccinationContext.service.ts`.
+export function isClusterBlockOpen(isCluster: AnswerOption | null | undefined): boolean {
+  return isCluster === 'YES';
+}
+
+// THE VIAL RULE, read backwards on purpose (SPEC FE13d §1.A, §6 decision 3): it is the `'NO'` that
+// requires the counter, not the `'YES'` — when not every case of the cluster shared the vial, the
+// missing datum is how many DID. Mirrors `assertSharedVialRule`. A `0` satisfies the obligation,
+// which is why this checks against `null`/`undefined` and never against truthiness.
+export function isSameVialCountRequirementMet(
+  clusterUsedSameVial: AnswerOption | null | undefined,
+  clusterSameVialCount: number | null | undefined,
+): boolean {
+  if (clusterUsedSameVial !== 'NO') return true;
+  return clusterSameVialCount !== null && clusterSameVialCount !== undefined;
+}
+
+// Declares the state of the block instead of letting the `PUT` body depend on what the form
+// happened to omit (SPEC FE13d §3.5, same criterion as `buildMedicalHistorySavePayload` above):
+// with the block closed, the four cluster columns travel as explicit `null`, so
+// `CLUSTER_FIELDS_NOT_ALLOWED` can never come back — the form never constructs that state.
+export function buildVaccinationContextSavePayload(
+  values: InvestigationVaccinationContextFormValues,
+): InvestigationVaccinationContextFormValues {
+  if (isClusterBlockOpen(values.isCluster)) return values;
+  return {
+    ...values,
+    clusterIdentificationNumber: null,
+    clusterAdditionalCaseCount: null,
+    clusterUsedSameVial: null,
+    clusterSameVialCount: null,
+  };
+}
+
+export const investigationVaccinationContextSaveSchema = z
+  .object({
+    momentItemId: z.string().uuid().nullable().optional(),
+    multidoseItemId: z.string().uuid().nullable().optional(),
+    vaccinatedPerVialCount: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    // Etiqueta propia, paralela a la del vial (SPEC FE13d §6 decision 2) — no está en
+    // `ESAVI-FORM.md`; la clave i18n lo declara en §3.8.
+    vaccinatedPerBatchCount: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    locations: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    isCluster: answerOptionSchema.nullable().optional(),
+    clusterIdentificationNumber: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().max(100).nullable().optional(),
+    ),
+    clusterAdditionalCaseCount: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    clusterUsedSameVial: answerOptionSchema.nullable().optional(),
+    clusterSameVialCount: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (!isSameVialCountRequirementMet(data.clusterUsedSameVial, data.clusterSameVialCount)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'sameVialCountRequired',
+        path: ['clusterSameVialCount'],
+      });
+    }
+  });
+
+function _assertInvestigationVaccinationContextSchemaMatchesContract(
+  value: z.infer<typeof investigationVaccinationContextSaveSchema>,
+): InvestigationVaccinationContextFormValues {
+  return value;
+}
+void _assertInvestigationVaccinationContextSchemaMatchesContract;
+
+// SPEC FE13d §3.2, §3.5 — `MOMENT_NOT_FOUND`/`MULTIDOSE_NOT_FOUND` anchor on their own
+// `<CatalogSelect>` despite sharing the same `vaccinationMoment` catalog (the whole point of the
+// two distinct codes). `CLUSTER_SAME_VIAL_COUNT_REQUIRED` anchors on the counter the vial rule is
+// actually about. `CLUSTER_FIELDS_NOT_ALLOWED` is deliberately not here: the client never
+// constructs the state that produces it (§6 decision 3 above).
+export const investigationVaccinationContextErrorFieldMap: Partial<
+  Record<string, keyof InvestigationVaccinationContextFormValues>
+> = {
+  INVVACTX_001_MOMENT_NOT_FOUND: 'momentItemId',
+  INVVACTX_004_MOMENT_NOT_FOUND: 'momentItemId',
+  INVVACTX_001_MULTIDOSE_NOT_FOUND: 'multidoseItemId',
+  INVVACTX_004_MULTIDOSE_NOT_FOUND: 'multidoseItemId',
+  INVVACTX_001_CLUSTER_SAME_VIAL_COUNT_REQUIRED: 'clusterSameVialCount',
+  INVVACTX_004_CLUSTER_SAME_VIAL_COUNT_REQUIRED: 'clusterSameVialCount',
+};
+
+// ---------------------------------------------------------------------------------------------
+// L — Vaccine administered, section D.1–D.2 (SPEC FE13d §3.5). Create/edit dialog for
+// `investigationVaccineAdministered`. `vaccineWhodrugId` binds as `string | null` in the form —
+// `null` before `<WhodrugTreePicker>` resolves anything — even though the contract requires a
+// plain `string`: keeping the schema's output type `string | null` too (instead of narrowing with
+// `.refine`'s type-predicate overload) is what keeps `TFieldValues` and the schema's inferred type
+// identical, avoiding the `ResourceForm` generic-mismatch trap already on file in
+// `DiluentFormRow.tsx` (`CONVENTIONS.md §13`).
+// ---------------------------------------------------------------------------------------------
+
+export type VaccineAdministeredFormValues = Omit<
+  CreateInvestigationVaccineAdministeredInput,
+  'investigationId' | 'vaccineWhodrugId'
+> & {
+  vaccineWhodrugId: string | null;
+};
+
+export const vaccineAdministeredSaveSchema = z
+  .object({
+    // Bloqueante (§3.5): no hay rama cruda, a diferencia de `notificationVaccine` — la tabla no
+    // admite `vaccineName` libre.
+    vaccineWhodrugId: z.string().uuid().nullable(),
+    doseNumber: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (data.vaccineWhodrugId === null) {
+      ctx.addIssue({ code: 'custom', message: 'vaccineRequired', path: ['vaccineWhodrugId'] });
+    }
+  });
+
+function _assertVaccineAdministeredSchemaMatchesContract(
+  value: z.infer<typeof vaccineAdministeredSaveSchema>,
+): VaccineAdministeredFormValues {
+  return value;
+}
+void _assertVaccineAdministeredSchemaMatchesContract;
+
+// SPEC FE13d §3.5 — el `409` del trío `(investigationId, vaccineWhodrugId, doseNumber)` ancla en
+// `vaccineWhodrugId`: el mensaje que trae el backend nombra la vacuna, no la dosis
+// (`CONVENTIONS.md §6.2` — `error.message` ya viene traducido, el cliente no lo reconstruye).
+// `WHODRUG_NOT_FOUND` anchors on the same field (§3.5: "404 si la vacuna no existe o está
+// inactiva") — the entry the diálogo submitted was retired from the dictionary between opening
+// the tree and saving.
+export const vaccineAdministeredErrorFieldMap: Partial<
+  Record<string, keyof VaccineAdministeredFormValues>
+> = {
+  INVVACAD_001_ALREADY_EXISTS: 'vaccineWhodrugId',
+  INVVACAD_004_ALREADY_EXISTS: 'vaccineWhodrugId',
+  INVVACAD_001_WHODRUG_NOT_FOUND: 'vaccineWhodrugId',
+  INVVACAD_004_WHODRUG_NOT_FOUND: 'vaccineWhodrugId',
+};
+
+// ---------------------------------------------------------------------------------------------
+// K — Cold chain, sections E1 and E2 (SPEC FE13d §3.5). One form for storage and transport: no
+// column is required, so a single schema covers both `001` (open, empty) and `004`. Both
+// sub-sections save together, one `PUT`, at the end of E2 (§3.5, §6 decision 7).
+// ---------------------------------------------------------------------------------------------
+
+export type InvestigationColdChainFormValues = Omit<CreateInvestigationColdChainInput, 'investigationId'>;
+
+// THE STORAGE GATE. `storageTemperatureMonitored` is `boolean`, not `AnswerOption` — the "no" has
+// TWO forms and not five: `false` ("it was not monitored") and `null` ("it is not known") close
+// the block alike, because under neither is there a measurement to derive a deviation from. ONLY
+// `true` opens it. Mirrors `isStorageBlockOpen` in `investigationColdChain.service.ts`.
+export function isStorageBlockOpen(
+  storageTemperatureMonitored: boolean | null | undefined,
+): boolean {
+  return storageTemperatureMonitored === true;
+}
+
+// Declares the state of the block instead of letting the `PUT` body depend on what the form
+// happened to leave behind (SPEC FE13d §1.D, same criterion as `buildMedicalHistorySavePayload`
+// above): with the block closed, `storageRangeDeviation` — the ONE column it governs — travels as
+// explicit `null`, so `RANGE_DEVIATION_NOT_ALLOWED` can never come back. The other six `storage*`
+// columns are untouched: they hang from no block despite the shared prefix (SPEC FE13d §3.5).
+export function buildColdChainSavePayload(
+  values: InvestigationColdChainFormValues,
+): InvestigationColdChainFormValues {
+  if (isStorageBlockOpen(values.storageTemperatureMonitored)) return values;
+  return { ...values, storageRangeDeviation: null };
+}
+
+// THE TWO SIDES OF THE TRANSPORT EXCLUSION (SPEC FE13d §3.5, three rules). Only a `'YES'` on both
+// at once is the conflict — `'NO'`, `'UNKNOWN'` and `null` never arrest anything. The screen
+// impedes this state with an `onChange` `setValue` (SPEC FE13d §6 decision 8), and this superRefine
+// is the schema-level guarantee that the state stays unreachable even if that wiring is bypassed.
+export function areTransportContainersExclusive(
+  transportUsedThermos: AnswerOption | null | undefined,
+  transportUsedColdPack: AnswerOption | null | undefined,
+): boolean {
+  return !(transportUsedThermos === 'YES' && transportUsedColdPack === 'YES');
+}
+
+export const investigationColdChainSaveSchema = z
+  .object({
+    // `boolean`, NOT `AnswerOption` (SPEC FE13d §1.D) — the trap `<AnswerOptionField>` would fall
+    // into. Rendered with the `RadioGroup` Sí/No of two ways, no return to `null` (SPEC FE11).
+    storageTemperatureMonitored: z.boolean().nullable().optional(),
+    // `boolean` too. `false` is content, never absence (SPEC FE13d §1.F) — "monitored, no
+    // deviation" is the most frequent finding of the form.
+    storageRangeDeviation: z.boolean().nullable().optional(),
+    // The six columns outside the block, despite the shared `storage` prefix.
+    storageProcedureFollowed: answerOptionSchema.nullable().optional(),
+    storageOtherObjectPresent: answerOptionSchema.nullable().optional(),
+    storagePartiallyReconstitutedVaccine: answerOptionSchema.nullable().optional(),
+    storageVaccineNotUsable: answerOptionSchema.nullable().optional(),
+    storageDiluentNotUsable: answerOptionSchema.nullable().optional(),
+    storageKeyFindings: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    transportUsedThermos: answerOptionSchema.nullable().optional(),
+    // The three container labels that never say "termo" on screen (§3.8) — they belong to no
+    // conditional block, and neither flag forbids nor forces them (SPEC FE13d §3.5).
+    transportSetInThermos: answerOptionSchema.nullable().optional(),
+    transportReturnedInThermos: answerOptionSchema.nullable().optional(),
+    transportUsedColdPack: answerOptionSchema.nullable().optional(),
+    // The only `varchar(n)` of the table: 250, not encrypted (unlike
+    // `evaluationInstitutionSaveSchema`'s two fields above), so the DDL's own limit applies as-is.
+    transportTypeThermo: z.preprocess(
+      emptyToUndefined,
+      z.string().trim().max(250).nullable().optional(),
+    ),
+    transportKeyFindings: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (!areTransportContainersExclusive(data.transportUsedThermos, data.transportUsedColdPack)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'transportContainerConflict',
+        path: ['transportUsedColdPack'],
+      });
+    }
+  });
+
+function _assertInvestigationColdChainSchemaMatchesContract(
+  value: z.infer<typeof investigationColdChainSaveSchema>,
+): InvestigationColdChainFormValues {
+  return value;
+}
+void _assertInvestigationColdChainSchemaMatchesContract;

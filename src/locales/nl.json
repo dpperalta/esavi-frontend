@@ -659,6 +659,7 @@
       "completeStage": "Fase voltooien",
       "stageCompleted": "Fase voltooid.",
       "next": "Volgende",
+      "continue": "Doorgaan",
       "unsavedChangesTitle": "Er zijn niet-opgeslagen wijzigingen",
       "unsavedChangesBody": "Als je doorgaat zonder op te slaan, verlies je wat je in deze stap hebt ingevoerd.",
       "pendingFieldsTitle": "Deze velden ontbreken nog om de fase te voltooien"
@@ -1329,6 +1330,87 @@
         "noInvestigation": "Het onderzoek van dit dossier bestaat nog niet.",
         "saveFailed": "De diagnose kon niet worden opgeslagen.",
         "caseNotFound": "Dit dossier bestaat niet."
+      }
+    },
+    "vaccinesAdministered": {
+      "title": "Toegediende vaccins",
+      "empty": "Er is nog geen toegediend vaccin toegevoegd.",
+      "dictionaryMissing": "Het WHODrug-woordenboek is niet geïmporteerd in deze omgeving. Deze sectie accepteert alleen gecodeerde vaccins en kan pas worden ingevuld zodra een beheerder het importeert.",
+      "add": "Vaccin toevoegen",
+      "duplicate": "Dat vaccin staat al op de lijst. Als het om twee verschillende doses gaat, geef dan bij elk het dosisnummer op.",
+      "field": {
+        "vaccine": "Vaccin",
+        "doseNumber": "Dosisnummer",
+        "notes": "Opmerkingen"
+      },
+      "form": {
+        "createTitle": "Toegediend vaccin toevoegen",
+        "editTitle": "Toegediend vaccin bewerken"
+      },
+      "error": {
+        "noRawVaccine": "Deze sectie vereist een gecodeerd vaccin uit het WHODrug-woordenboek."
+      },
+      "errors": {
+        "saveFailed": "Het toegediende vaccin kon niet worden opgeslagen."
+      }
+    },
+    "vaccinationContext": {
+      "title": "Context van de vaccinatie",
+      "openFailed": "Het dossier met de vaccinatiecontext kon niet worden geopend.",
+      "field": {
+        "vaccinatedPerVialCount": "Aantal personen gevaccineerd met de flacon die bij dit geval betrokken was",
+        "vaccinatedPerBatchCount": "Aantal personen gevaccineerd met de partij die bij dit geval betrokken was",
+        "locations": "Plaatsen waar de andere personen zijn gevaccineerd",
+        "moment": "Wanneer werd de persoon met het of de ESAVI('s) gevaccineerd?",
+        "multidose": "Is het vaccin toegediend uit een multidosisflacon?",
+        "notes": "Opmerkingen"
+      },
+      "errors": {
+        "saveFailed": "De vaccinatiecontext kon niet worden opgeslagen."
+      }
+    },
+    "cluster": {
+      "title": "Clusters",
+      "sameVialCountRequired": "Geef aan hoeveel gevallen dezelfde flacon gebruikten voordat je opslaat.",
+      "field": {
+        "isCluster": "Maakt het onderzochte geval deel uit van een cluster van gevallen?",
+        "identificationNumber": "Identificatienummer van het cluster",
+        "additionalCaseCount": "Aantal extra gevallen in het cluster",
+        "usedSameVial": "Gebruikten alle gevallen in het cluster dezelfde flacon?",
+        "sameVialCount": "Hoeveel gevallen in het cluster gebruikten dezelfde flacon?"
+      }
+    },
+    "coldChain": {
+      "openFailed": "Het dossier van de koudeketen kon niet worden geopend.",
+      "storage": {
+        "title": "Koudeketen",
+        "hint": "Laatste opslaglocatie",
+        "field": {
+          "temperatureMonitored": "Werd de opslagtemperatuur gecontroleerd?",
+          "rangeDeviation": "Was er een afwijking van het temperatuurbereik?",
+          "procedureFollowed": "Werd de opslagprocedure gevolgd?",
+          "otherObjectPresent": "Bevonden zich andere voorwerpen naast het vaccin in de koelkast?",
+          "partiallyReconstitutedVaccine": "Was het vaccin gedeeltelijk gereconstitueerd?",
+          "vaccineNotUsable": "Was het vaccin onbruikbaar?",
+          "diluentNotUsable": "Was het verdunningsmiddel onbruikbaar?",
+          "keyFindings": "Belangrijkste bevindingen van de opslag"
+        }
+      },
+      "transport": {
+        "title": "Vervoer",
+        "inheritedTieWarning": "Dit dossier had beide houders aangevinkt. De thermosfles is behouden; bij het opslaan wordt dit gecorrigeerd.",
+        "field": {
+          "typeThermo": "Type gebruikte houder",
+          "setInThermos": "Werd het in de houder geplaatst?",
+          "returnedInThermos": "Werd het in de houder teruggebracht?",
+          "usedThermos": "Werd een thermosfles gebruikt?",
+          "usedColdPack": "Werd een koelelement gebruikt?",
+          "keyFindings": "Belangrijkste bevindingen van het vervoer",
+          "notes": "Opmerkingen"
+        }
+      },
+      "errors": {
+        "saveFailed": "De koudeketen kon niet worden opgeslagen."
       }
     },
     "draft": {

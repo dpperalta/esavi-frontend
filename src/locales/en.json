@@ -659,6 +659,7 @@
       "completeStage": "Complete stage",
       "stageCompleted": "Stage completed.",
       "next": "Next",
+      "continue": "Continue",
       "unsavedChangesTitle": "You have unsaved changes",
       "unsavedChangesBody": "If you continue without saving, you'll lose what you typed in this step.",
       "pendingFieldsTitle": "These fields are still needed to complete the stage"
@@ -1329,6 +1330,87 @@
         "noInvestigation": "This case's investigation doesn't exist yet.",
         "saveFailed": "The diagnosis could not be saved.",
         "caseNotFound": "This case doesn't exist."
+      }
+    },
+    "vaccinesAdministered": {
+      "title": "Vaccines administered",
+      "empty": "No administered vaccine has been added yet.",
+      "dictionaryMissing": "The WHODrug dictionary is not imported in this deployment. This section only accepts coded vaccines and cannot be filled in until an administrator imports it.",
+      "add": "Add vaccine",
+      "duplicate": "That vaccine is already on the list. If these are two different doses, enter the dose number for each one.",
+      "field": {
+        "vaccine": "Vaccine",
+        "doseNumber": "Dose number",
+        "notes": "Notes"
+      },
+      "form": {
+        "createTitle": "Add administered vaccine",
+        "editTitle": "Edit administered vaccine"
+      },
+      "error": {
+        "noRawVaccine": "This section requires a coded vaccine from the WHODrug dictionary."
+      },
+      "errors": {
+        "saveFailed": "The administered vaccine could not be saved."
+      }
+    },
+    "vaccinationContext": {
+      "title": "Vaccination context",
+      "openFailed": "The vaccination context record could not be opened.",
+      "field": {
+        "vaccinatedPerVialCount": "Number of people vaccinated with the vial involved in the case",
+        "vaccinatedPerBatchCount": "Number of people vaccinated with the batch involved in the case",
+        "locations": "Locations where the other people were vaccinated",
+        "moment": "When was the person who had the ESAVI(s) vaccinated?",
+        "multidose": "In the case of multidose vials, was the vaccine administered?",
+        "notes": "Notes"
+      },
+      "errors": {
+        "saveFailed": "The vaccination context could not be saved."
+      }
+    },
+    "cluster": {
+      "title": "Clusters",
+      "sameVialCountRequired": "Enter how many cases used the same vial before saving.",
+      "field": {
+        "isCluster": "Is the investigated case part of a cluster of cases?",
+        "identificationNumber": "Cluster identification number",
+        "additionalCaseCount": "Number of additional cases in the cluster",
+        "usedSameVial": "Did all the cases in the cluster use the same vial?",
+        "sameVialCount": "How many cases in the cluster used the same vial?"
+      }
+    },
+    "coldChain": {
+      "openFailed": "The cold chain record could not be opened.",
+      "storage": {
+        "title": "Cold chain",
+        "hint": "Last storage site",
+        "field": {
+          "temperatureMonitored": "Was the storage temperature monitored?",
+          "rangeDeviation": "Was there a temperature range deviation?",
+          "procedureFollowed": "Was the storage procedure followed?",
+          "otherObjectPresent": "Were there other objects next to the vaccine in the fridge?",
+          "partiallyReconstitutedVaccine": "Was the vaccine partially reconstituted?",
+          "vaccineNotUsable": "Was the vaccine unusable?",
+          "diluentNotUsable": "Was the diluent unusable?",
+          "keyFindings": "Key storage findings"
+        }
+      },
+      "transport": {
+        "title": "Transport",
+        "inheritedTieWarning": "This record had both containers marked. The thermos was kept; it will be corrected on the next save.",
+        "field": {
+          "typeThermo": "Type of container used",
+          "setInThermos": "Was it set in the container?",
+          "returnedInThermos": "Was it returned in the container?",
+          "usedThermos": "Was a thermos used?",
+          "usedColdPack": "Was a cold pack used?",
+          "keyFindings": "Key transport findings",
+          "notes": "Notes"
+        }
+      },
+      "errors": {
+        "saveFailed": "The cold chain could not be saved."
       }
     },
     "draft": {

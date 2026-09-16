@@ -8,6 +8,9 @@ import type { CreateInvestigationPregnancyConditionInput } from '@/contracts/inv
 import type { CreateInvestigationClinicalEvaluationInput } from '@/contracts/investigationClinicalEvaluation';
 import type { CreateEvaluationInstitutionInput } from '@/contracts/evaluationInstitution';
 import type { CreateInvestigationDiagnosticInput } from '@/contracts/investigationDiagnostic';
+import type { CreateInvestigationVaccinationContextInput } from '@/contracts/investigationVaccinationContext';
+import type { CreateInvestigationVaccineAdministeredInput } from '@/contracts/investigationVaccineAdministered';
+import type { CreateInvestigationColdChainInput } from '@/contracts/investigationColdChain';
 import type { InvestigationDetail } from '@/contracts/declared/investigation';
 import type { InvestigationSourceDetail } from '@/contracts/declared/investigationSource';
 import type { InvestigationAutopsyDetail } from '@/contracts/declared/investigationAutopsy';
@@ -17,10 +20,16 @@ import type { InvestigationPregnancyConditionDetail } from '@/contracts/declared
 import type { InvestigationClinicalEvaluationDetail } from '@/contracts/declared/investigationClinicalEvaluation';
 import type { EvaluationInstitutionDetail } from '@/contracts/declared/evaluationInstitution';
 import type { InvestigationDiagnosticDetail } from '@/contracts/declared/investigationDiagnostic';
+import type { InvestigationVaccinationContextDetail } from '@/contracts/declared/investigationVaccinationContext';
+import type { InvestigationVaccineAdministeredDetail } from '@/contracts/declared/investigationVaccineAdministered';
+import type { InvestigationColdChainDetail } from '@/contracts/declared/investigationColdChain';
 import type { PaginatedResponse } from '@/contracts/declared/pagination';
+import { useCountryIsoCode } from '@/features/systemConfig/api';
 import { client } from '@/shared/api/client';
 import { createResource } from '@/shared/api/createResource';
 import { EsaviApiError } from '@/shared/api/types';
+import { useWhodrugTreeLevel } from '@/shared/hooks/useVaccineWhodrugTree';
+import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 
 // POST   /api/investigations               ESAVI-INVESTGN-001  USER  create the header, `{ caseId }` only (SPEC FE13a §2)
 // GET    /api/investigations/case/:id      ESAVI-INVESTGN-006  USER  by case, in reentry — hand-written below
@@ -408,6 +417,140 @@ export function useInvestigationDiagnosticsByCase(caseId: string | undefined, en
         `investigation-diagnostics/case/${caseId}`,
       );
       return response.data;
+    },
+    enabled: enabled && caseId !== undefined,
+  });
+}
+
+// ESAVI-WHODRUG-006A — probes the master's first tree level with no ancestors and no search, the
+// exact same call `<WhodrugTreePicker>` makes internally for its own "diccionario no importado"
+// branch (SPEC FE13d §3.1, §6.6). Passing identical arguments — `{}` ancestors, `''` search, the
+// same `language`/`country` — is what keeps the two callers on the ONE cache entry the acceptance
+// criteria require instead of two: the probe costs nothing the picker was not going to pay for
+// anyway. `total === 0` (not `count`) is "the dictionary has no rows to walk", the same field
+// `dictionaryEmpty` reads inside the picker.
+export function useWhodrugDictionaryAvailable() {
+  const language = usePreferencesStore((state) => state.language);
+  const country = useCountryIsoCode().data;
+  const query = useWhodrugTreeLevel('abbreviation', {}, '', language, country);
+  return {
+    isLoading: query.isLoading,
+    isAvailable: query.data === undefined ? undefined : query.data.total > 0,
+  };
+}
+
+// POST /api/investigation-vaccination-contexts             ESAVI-INVVACTX-001  USER  create the ficha, `{ investigationId }` only, on section D's reveal (SPEC FE13d §2)
+// GET  /api/investigation-vaccination-contexts/case/:id    ESAVI-INVVACTX-006  USER  by case, in reentry — hand-written below
+// PUT  /api/investigation-vaccination-contexts/:id         ESAVI-INVVACTX-004  USER  update — `:id` IS the investigationId
+// Same 1:1 shape as investigationSource, investigationAutopsy and investigationMedicalHistory
+// above (SPEC FE13d §3.1). D.3–D.6 (context) and D1 (cluster) share this one row.
+export const investigationVaccinationContextResource = createResource<
+  InvestigationVaccinationContextDetail,
+  CreateInvestigationVaccinationContextInput,
+  Partial<CreateInvestigationVaccinationContextInput>
+>({
+  key: 'investigationVaccinationContext',
+  path: 'investigation-vaccination-contexts',
+  idField: 'investigationId',
+  inactiveMode: 'serverDecides',
+  hasActivate: false,
+});
+
+export function investigationVaccinationContextByCaseKey(caseId: string) {
+  return ['investigationVaccinationContext', 'byCase', caseId] as const;
+}
+
+// ESAVI-INVVACTX-006 — one object, not a list. `INVVACTX_006_NOT_FOUND` is the normal state
+// before section D's opening `POST` and the only code swallowed into `null`, same criterion as
+// `useInvestigationMedicalHistoryByCase`: `INVVACTX_006_INVESTIGATION_NOT_FOUND` and
+// `INVVACTX_006_CASE_NOT_FOUND` are left to propagate — two different failures the screen sends
+// the investigator to fix in two different places (SPEC FE13d §3.2).
+export function useInvestigationVaccinationContextByCase(
+  caseId: string | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: investigationVaccinationContextByCaseKey(caseId ?? ''),
+    queryFn: async () => {
+      try {
+        const response = await client.get<InvestigationVaccinationContextDetail>(
+          `investigation-vaccination-contexts/case/${caseId}`,
+        );
+        return response.data;
+      } catch (err) {
+        if (err instanceof EsaviApiError && err.code === 'INVVACTX_006_NOT_FOUND') {
+          return null;
+        }
+        throw err;
+      }
+    },
+    enabled: enabled && caseId !== undefined,
+  });
+}
+
+// POST /api/investigation-vaccines-administered                   ESAVI-INVVACAD-001   USER  add a vaccine
+// GET  /api/investigation-vaccines-administered/investigation/:id ESAVI-INVVACAD-002A  USER  active vaccines, by investigation — `useListByParent` below
+// PUT  /api/investigation-vaccines-administered/:id                ESAVI-INVVACAD-004  USER  edit a vaccine
+// `vaccineAdministeredId` is its own PK, minted by the database — a proper list of rows, not a
+// 1:1 satellite (SPEC FE13d §3.1). Out of scope (SPEC FE13d §2): `-005A`/`-005B` (ADMIN, blocked
+// on `CASE-PROCESS.md` §10) — no delete hook exists here at all, same reason as
+// `investigationTeamMemberResource` above.
+export const investigationVaccineAdministeredResource = createResource<
+  InvestigationVaccineAdministeredDetail,
+  CreateInvestigationVaccineAdministeredInput,
+  Partial<CreateInvestigationVaccineAdministeredInput>
+>({
+  key: 'investigationVaccineAdministered',
+  path: 'investigation-vaccines-administered',
+  idField: 'vaccineAdministeredId',
+  inactiveMode: 'serverDecides',
+  hasActivate: false,
+  parent: {
+    operation: 'byInvestigation',
+    segment: 'investigation/:parentId',
+  },
+});
+
+// POST /api/investigation-cold-chains             ESAVI-INVCOLD-001  USER  create the ficha, `{ investigationId }` only, on section E1's reveal (SPEC FE13d §2)
+// GET  /api/investigation-cold-chains/case/:id    ESAVI-INVCOLD-006  USER  by case, in reentry — hand-written below
+// PUT  /api/investigation-cold-chains/:id         ESAVI-INVCOLD-004  USER  update — `:id` IS the investigationId
+// Same 1:1 shape as investigationVaccinationContext above. E1 (storage) and E2 (transport) share
+// this one row and one `useForm` (SPEC FE13d §3.5).
+export const investigationColdChainResource = createResource<
+  InvestigationColdChainDetail,
+  CreateInvestigationColdChainInput,
+  Partial<CreateInvestigationColdChainInput>
+>({
+  key: 'investigationColdChain',
+  path: 'investigation-cold-chains',
+  idField: 'investigationId',
+  inactiveMode: 'serverDecides',
+  hasActivate: false,
+});
+
+export function investigationColdChainByCaseKey(caseId: string) {
+  return ['investigationColdChain', 'byCase', caseId] as const;
+}
+
+// ESAVI-INVCOLD-006 — one object, not a list. `INVCOLD_006_NOT_FOUND` is the normal state before
+// section E1's opening `POST` and the only code swallowed into `null`, same criterion as its
+// vaccination-context sibling above: `INVCOLD_006_INVESTIGATION_NOT_FOUND` and
+// `INVCOLD_006_CASE_NOT_FOUND` are left to propagate (SPEC FE13d §3.2).
+export function useInvestigationColdChainByCase(caseId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: investigationColdChainByCaseKey(caseId ?? ''),
+    queryFn: async () => {
+      try {
+        const response = await client.get<InvestigationColdChainDetail>(
+          `investigation-cold-chains/case/${caseId}`,
+        );
+        return response.data;
+      } catch (err) {
+        if (err instanceof EsaviApiError && err.code === 'INVCOLD_006_NOT_FOUND') {
+          return null;
+        }
+        throw err;
+      }
     },
     enabled: enabled && caseId !== undefined,
   });

@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   areAutopsyFlagsMutuallyExclusive,
+  areTransportContainersExclusive,
   buildClinicalEvaluationSavePayload,
+  buildColdChainSavePayload,
   buildMedicalHistorySavePayload,
+  buildVaccinationContextSavePayload,
   ENCRYPTED_FIELD_SCREEN_LIMIT,
   evaluationInstitutionErrorFieldMap,
   evaluationInstitutionSaveSchema,
@@ -10,22 +13,30 @@ import {
   investigationAutopsySaveSchema,
   investigationClinicalEvaluationErrorFieldMap,
   investigationClinicalEvaluationSaveSchema,
+  investigationColdChainSaveSchema,
   investigationDiagnosticErrorFieldMap,
   investigationDiagnosticSaveSchema,
   investigationSaveSchema,
   investigationSourceSaveSchema,
+  investigationVaccinationContextErrorFieldMap,
+  investigationVaccinationContextSaveSchema,
   isAutopsyDateNotBeforeDeath,
   isAutopsyDateRequirementMet,
+  isClusterBlockOpen,
   isFlagExplanationRequirementMet,
   isInstitutionIdentified,
   isOtherSourceDescriptionRequirementMet,
   isPregnancyBlockOpen,
+  isSameVialCountRequirementMet,
   isScheduledAutopsyDateRequirementMet,
+  isStorageBlockOpen,
   medicalHistoryErrorFieldMap,
   medicalHistorySaveSchema,
   newbornConditionErrorFieldMap,
   newbornConditionSaveSchema,
   teamMemberSaveSchema,
+  type InvestigationColdChainFormValues,
+  type InvestigationVaccinationContextFormValues,
   type MedicalHistoryFormValues,
 } from './schemas';
 
@@ -646,5 +657,310 @@ describe('investigationDiagnosticErrorFieldMap — I (SPEC FE13c §3.5 C)', () =
     expect(investigationDiagnosticErrorFieldMap.INVDIAG_001_INVALID_DIAGNOSTIC_TYPE).toBe(
       'diagnosticTypeItemId',
     );
+  });
+});
+
+describe('isClusterBlockOpen — J (SPEC FE13d §1.A)', () => {
+  it('sólo YES abre el bloque; las otras cuatro formas del answerOption lo cierran igual', () => {
+    expect(isClusterBlockOpen('YES')).toBe(true);
+    expect(isClusterBlockOpen('NO')).toBe(false);
+    expect(isClusterBlockOpen('UNKNOWN')).toBe(false);
+    expect(isClusterBlockOpen('NOT_APPLICABLE')).toBe(false);
+    expect(isClusterBlockOpen('NO_ANSWER')).toBe(false);
+    expect(isClusterBlockOpen(null)).toBe(false);
+    expect(isClusterBlockOpen(undefined)).toBe(false);
+  });
+});
+
+describe('isSameVialCountRequirementMet — J (SPEC FE13d §1.A, §6 decision 3)', () => {
+  it('con clusterUsedSameVial distinto de NO, el contador no se exige', () => {
+    expect(isSameVialCountRequirementMet('YES', null)).toBe(true);
+    expect(isSameVialCountRequirementMet('UNKNOWN', null)).toBe(true);
+    expect(isSameVialCountRequirementMet(null, null)).toBe(true);
+    expect(isSameVialCountRequirementMet(undefined, undefined)).toBe(true);
+  });
+
+  it('con clusterUsedSameVial:NO, el contador es obligatorio', () => {
+    expect(isSameVialCountRequirementMet('NO', null)).toBe(false);
+    expect(isSameVialCountRequirementMet('NO', undefined)).toBe(false);
+  });
+
+  it('un 0 satisface la obligación — no es una ausencia (§6 decision 3)', () => {
+    expect(isSameVialCountRequirementMet('NO', 0)).toBe(true);
+  });
+
+  it('cualquier número mayor satisface igual', () => {
+    expect(isSameVialCountRequirementMet('NO', 5)).toBe(true);
+  });
+});
+
+describe('buildVaccinationContextSavePayload — J (SPEC FE13d §3.5)', () => {
+  const withClusterData: InvestigationVaccinationContextFormValues = {
+    momentItemId: 'moment-1',
+    multidoseItemId: null,
+    vaccinatedPerVialCount: 3,
+    vaccinatedPerBatchCount: 5,
+    locations: 'Centro de salud X',
+    isCluster: 'YES',
+    clusterIdentificationNumber: 'CL-001',
+    clusterAdditionalCaseCount: 2,
+    clusterUsedSameVial: 'NO',
+    clusterSameVialCount: 0,
+    notes: null,
+  };
+
+  it('bloque abierto: las cuatro columnas del conglomerado viajan tal cual, el 0 sobrevive', () => {
+    const result = buildVaccinationContextSavePayload(withClusterData);
+    expect(result.clusterIdentificationNumber).toBe('CL-001');
+    expect(result.clusterAdditionalCaseCount).toBe(2);
+    expect(result.clusterUsedSameVial).toBe('NO');
+    expect(result.clusterSameVialCount).toBe(0);
+  });
+
+  // Caso cruzado (mismo criterio que `buildMedicalHistorySavePayload`): las cuatro formas que
+  // cierran el bloque lo cierran igual en el constructor del cuerpo, no sólo en el predicado.
+  it.each([
+    ['NO', 'NO'],
+    ['UNKNOWN', 'UNKNOWN'],
+    ['NOT_APPLICABLE', 'NOT_APPLICABLE'],
+    ['NO_ANSWER', 'NO_ANSWER'],
+    ['null', null],
+  ] as const)('%s cierra las cuatro columnas del conglomerado — null explícito, no omitido', (_label, value) => {
+    const result = buildVaccinationContextSavePayload({ ...withClusterData, isCluster: value });
+    expect(result).toMatchObject({
+      isCluster: value,
+      clusterIdentificationNumber: null,
+      clusterAdditionalCaseCount: null,
+      clusterUsedSameVial: null,
+      clusterSameVialCount: null,
+    });
+  });
+
+  it('el contexto de fuera del bloque (D.3–D.6) no se toca al cerrar el conglomerado', () => {
+    const result = buildVaccinationContextSavePayload({ ...withClusterData, isCluster: 'NO' });
+    expect(result.momentItemId).toBe('moment-1');
+    expect(result.vaccinatedPerVialCount).toBe(3);
+    expect(result.vaccinatedPerBatchCount).toBe(5);
+    expect(result.locations).toBe('Centro de salud X');
+  });
+});
+
+describe('investigationVaccinationContextSaveSchema — J', () => {
+  it('un objeto vacío valida — ningún campo es obligatorio (§2, la ficha nace vacía)', () => {
+    expect(investigationVaccinationContextSaveSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('isCluster:UNKNOWN con clusterIdentificationNumber escrito valida en el schema — la limpieza la hace el constructor del cuerpo, no el schema', () => {
+    const result = investigationVaccinationContextSaveSchema.safeParse({
+      isCluster: 'UNKNOWN',
+      clusterIdentificationNumber: 'CL-001',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('clusterUsedSameVial:NO sin contador falla', () => {
+    const result = investigationVaccinationContextSaveSchema.safeParse({
+      isCluster: 'YES',
+      clusterUsedSameVial: 'NO',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('clusterUsedSameVial:NO con contador 0 pasa', () => {
+    const result = investigationVaccinationContextSaveSchema.safeParse({
+      isCluster: 'YES',
+      clusterUsedSameVial: 'NO',
+      clusterSameVialCount: 0,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('clusterUsedSameVial:YES no exige el contador', () => {
+    const result = investigationVaccinationContextSaveSchema.safeParse({
+      isCluster: 'YES',
+      clusterUsedSameVial: 'YES',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it.each([
+    ['vaccinatedPerVialCount'],
+    ['vaccinatedPerBatchCount'],
+    ['clusterAdditionalCaseCount'],
+    ['clusterSameVialCount'],
+  ] as const)('%s rechaza 40000 — por encima del techo smallint de 32767', (field) => {
+    const result = investigationVaccinationContextSaveSchema.safeParse({ [field]: 40000 });
+    expect(result.success).toBe(false);
+  });
+
+  it.each([
+    ['vaccinatedPerVialCount'],
+    ['vaccinatedPerBatchCount'],
+    ['clusterAdditionalCaseCount'],
+    ['clusterSameVialCount'],
+  ] as const)('%s acepta 32767 — el borde exacto', (field) => {
+    const result = investigationVaccinationContextSaveSchema.safeParse({ [field]: 32767 });
+    expect(result.success).toBe(true);
+  });
+
+  it('clusterIdentificationNumber rechaza más de 100 caracteres', () => {
+    const result = investigationVaccinationContextSaveSchema.safeParse({
+      clusterIdentificationNumber: 'x'.repeat(101),
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('investigationVaccinationContextErrorFieldMap — J', () => {
+  it('los dos códigos de catálogo compartido anclan en desplegables distintos', () => {
+    expect(investigationVaccinationContextErrorFieldMap.INVVACTX_001_MOMENT_NOT_FOUND).toBe(
+      'momentItemId',
+    );
+    expect(investigationVaccinationContextErrorFieldMap.INVVACTX_001_MULTIDOSE_NOT_FOUND).toBe(
+      'multidoseItemId',
+    );
+  });
+
+  it('CLUSTER_SAME_VIAL_COUNT_REQUIRED ancla en clusterSameVialCount, en el 001 y en el 004', () => {
+    expect(
+      investigationVaccinationContextErrorFieldMap.INVVACTX_001_CLUSTER_SAME_VIAL_COUNT_REQUIRED,
+    ).toBe('clusterSameVialCount');
+    expect(
+      investigationVaccinationContextErrorFieldMap.INVVACTX_004_CLUSTER_SAME_VIAL_COUNT_REQUIRED,
+    ).toBe('clusterSameVialCount');
+  });
+});
+
+describe('isStorageBlockOpen — K (SPEC FE13d §1.D)', () => {
+  it('sólo true abre el bloque; false y null lo cierran igual — no es un answerOption de cinco valores', () => {
+    expect(isStorageBlockOpen(true)).toBe(true);
+    expect(isStorageBlockOpen(false)).toBe(false);
+    expect(isStorageBlockOpen(null)).toBe(false);
+    expect(isStorageBlockOpen(undefined)).toBe(false);
+  });
+});
+
+describe('buildColdChainSavePayload — K (SPEC FE13d §3.5)', () => {
+  const withStorageData: InvestigationColdChainFormValues = {
+    storageTemperatureMonitored: true,
+    storageRangeDeviation: false,
+    storageProcedureFollowed: 'YES',
+    storageOtherObjectPresent: null,
+    storagePartiallyReconstitutedVaccine: null,
+    storageVaccineNotUsable: null,
+    storageDiluentNotUsable: null,
+    storageKeyFindings: null,
+    transportUsedThermos: null,
+    transportSetInThermos: null,
+    transportReturnedInThermos: null,
+    transportUsedColdPack: null,
+    transportTypeThermo: null,
+    transportKeyFindings: null,
+    notes: null,
+  };
+
+  it('bloque abierto: storageRangeDeviation:false sobrevive — es contenido, no ausencia (§1.F)', () => {
+    const result = buildColdChainSavePayload(withStorageData);
+    expect(result.storageRangeDeviation).toBe(false);
+  });
+
+  it('bloque cerrado (false): storageRangeDeviation se limpia a null explícito', () => {
+    const result = buildColdChainSavePayload({
+      ...withStorageData,
+      storageTemperatureMonitored: false,
+    });
+    expect(result.storageRangeDeviation).toBeNull();
+  });
+
+  it('bloque cerrado (null): storageRangeDeviation se limpia igual que con false', () => {
+    const result = buildColdChainSavePayload({
+      ...withStorageData,
+      storageTemperatureMonitored: null,
+    });
+    expect(result.storageRangeDeviation).toBeNull();
+  });
+
+  it('las seis columnas storage* fuera del bloque no se tocan al cerrarlo', () => {
+    const result = buildColdChainSavePayload({
+      ...withStorageData,
+      storageTemperatureMonitored: false,
+    });
+    expect(result.storageProcedureFollowed).toBe('YES');
+  });
+});
+
+describe('areTransportContainersExclusive — K (SPEC FE13d §3.5, tres reglas)', () => {
+  it('los dos en YES es el único conflicto', () => {
+    expect(areTransportContainersExclusive('YES', 'YES')).toBe(false);
+  });
+
+  it('un solo YES no es conflicto', () => {
+    expect(areTransportContainersExclusive('YES', 'NO')).toBe(true);
+    expect(areTransportContainersExclusive('NO', 'YES')).toBe(true);
+  });
+
+  it('NO, UNKNOWN y null en cualquier combinación no arrastran nada', () => {
+    expect(areTransportContainersExclusive('NO', 'NO')).toBe(true);
+    expect(areTransportContainersExclusive('UNKNOWN', 'UNKNOWN')).toBe(true);
+    expect(areTransportContainersExclusive(null, null)).toBe(true);
+    expect(areTransportContainersExclusive(undefined, undefined)).toBe(true);
+  });
+});
+
+describe('investigationColdChainSaveSchema — K', () => {
+  it('un objeto vacío valida — ningún campo es obligatorio (§2, la ficha nace vacía)', () => {
+    expect(investigationColdChainSaveSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('storageTemperatureMonitored y storageRangeDeviation aceptan boolean, nunca AnswerOption', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      storageTemperatureMonitored: true,
+      storageRangeDeviation: false,
+    });
+    expect(result.success).toBe(true);
+    // En runtime, 'YES' (la trampa de AnswerOption) no pasa la forma boolean de la columna
+    // (SPEC FE13d §1.D) — el mismo 400 que el validador del backend produciría.
+    const wrongType = investigationColdChainSaveSchema.safeParse({
+      storageTemperatureMonitored: 'YES',
+    });
+    expect(wrongType.success).toBe(false);
+  });
+
+  it('storageRangeDeviation:false con la compuerta en true valida — no se confunde con ausencia', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      storageTemperatureMonitored: true,
+      storageRangeDeviation: false,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('los dos contenedores en YES no es un estado alcanzable desde el schema', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      transportUsedThermos: 'YES',
+      transportUsedColdPack: 'YES',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('un solo contenedor en YES sí es alcanzable', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      transportUsedThermos: 'YES',
+      transportUsedColdPack: 'NO',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('transportTypeThermo rechaza más de 250 caracteres', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      transportTypeThermo: 'x'.repeat(251),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('transportTypeThermo acepta exactamente 250 caracteres', () => {
+    const result = investigationColdChainSaveSchema.safeParse({
+      transportTypeThermo: 'x'.repeat(250),
+    });
+    expect(result.success).toBe(true);
   });
 });

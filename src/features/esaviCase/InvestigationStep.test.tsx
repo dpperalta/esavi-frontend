@@ -151,6 +151,60 @@ function emptyClinicalEvaluationDetail() {
 }
 let clinicalEvaluationRow: ReturnType<typeof emptyClinicalEvaluationDetail> | null = null;
 
+// SPEC FE13d §4 paso 10 — mismo patrón que `emptyMedicalHistoryDetail`/`emptyClinicalEvaluationDetail`
+// de arriba: las dos fichas 1:1 nacen vacías al revelarse su sección.
+function emptyVaccinationContextDetail() {
+  return {
+    investigationId: INVESTIGATION_1,
+    investigation: { investigationId: INVESTIGATION_1, isActive: true, investigationStartDate: null, status: null, case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', eventDate: null } },
+    momentItemId: null,
+    moment: null,
+    multidoseItemId: null,
+    multidoseMoment: null,
+    vaccinatedPerVialCount: null as number | null,
+    vaccinatedPerBatchCount: null as number | null,
+    locations: null as string | null,
+    isCluster: null as AnswerOption | null,
+    clusterIdentificationNumber: null as string | null,
+    clusterAdditionalCaseCount: null,
+    clusterUsedSameVial: null as AnswerOption | null,
+    clusterSameVialCount: null as number | null,
+    notes: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: null,
+    deletedAt: null,
+    appDetails: [],
+  };
+}
+let vaccinationContextRow: ReturnType<typeof emptyVaccinationContextDetail> | null = null;
+
+function emptyColdChainDetail() {
+  return {
+    investigationId: INVESTIGATION_1,
+    investigation: { investigationId: INVESTIGATION_1, caseId: CASE_1, isActive: true },
+    storageTemperatureMonitored: null as boolean | null,
+    storageRangeDeviation: null as boolean | null,
+    storageProcedureFollowed: null,
+    storageOtherObjectPresent: null,
+    storagePartiallyReconstitutedVaccine: null,
+    storageVaccineNotUsable: null,
+    storageDiluentNotUsable: null,
+    storageKeyFindings: null,
+    transportUsedThermos: null as AnswerOption | null,
+    transportSetInThermos: null,
+    transportReturnedInThermos: null,
+    transportUsedColdPack: null as AnswerOption | null,
+    transportTypeThermo: null as string | null,
+    transportKeyFindings: null,
+    notes: null,
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: null,
+    deletedAt: null,
+    appDetails: [],
+  };
+}
+let coldChainRow: ReturnType<typeof emptyColdChainDetail> | null = null;
+
 beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
@@ -160,6 +214,8 @@ beforeEach(() => {
   toastError.mockClear();
   medicalHistoryRow = null;
   clinicalEvaluationRow = null;
+  vaccinationContextRow = null;
+  coldChainRow = null;
   mockSectionDependencies();
 });
 
@@ -231,6 +287,64 @@ function mockSectionDependencies() {
     ),
     http.get(`http://localhost:4500/api/investigation-diagnostics/case/${CASE_1}`, () =>
       HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    // Sección D (SPEC FE13d §4 paso 10): mismo criterio estatal que `medicalHistoryRow`/
+    // `clinicalEvaluationRow` — las dos fichas 1:1 se abren solas al revelar su sección, y la
+    // relectura siguiente tiene que verlas.
+    http.get(`http://localhost:4500/api/investigation-vaccination-contexts/case/${CASE_1}`, () =>
+      vaccinationContextRow
+        ? HttpResponse.json({ ok: true, message: 'ok', data: vaccinationContextRow })
+        : HttpResponse.json(
+            { ok: false, message: 'no encontrado', code: 'INVVACTX_006_NOT_FOUND' },
+            { status: 404 },
+          ),
+    ),
+    http.post('http://localhost:4500/api/investigation-vaccination-contexts', () => {
+      vaccinationContextRow = emptyVaccinationContextDetail();
+      return HttpResponse.json({ ok: true, message: 'ok', data: vaccinationContextRow }, { status: 201 });
+    }),
+    http.put(
+      `http://localhost:4500/api/investigation-vaccination-contexts/${INVESTIGATION_1}`,
+      async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        vaccinationContextRow = { ...emptyVaccinationContextDetail(), ...vaccinationContextRow, ...body };
+        return HttpResponse.json({ ok: true, message: 'ok', data: vaccinationContextRow });
+      },
+    ),
+    http.get(`http://localhost:4500/api/investigation-cold-chains/case/${CASE_1}`, () =>
+      coldChainRow
+        ? HttpResponse.json({ ok: true, message: 'ok', data: coldChainRow })
+        : HttpResponse.json(
+            { ok: false, message: 'no encontrado', code: 'INVCOLD_006_NOT_FOUND' },
+            { status: 404 },
+          ),
+    ),
+    http.post('http://localhost:4500/api/investigation-cold-chains', () => {
+      coldChainRow = emptyColdChainDetail();
+      return HttpResponse.json({ ok: true, message: 'ok', data: coldChainRow }, { status: 201 });
+    }),
+    http.put(
+      `http://localhost:4500/api/investigation-cold-chains/${INVESTIGATION_1}`,
+      async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        coldChainRow = { ...emptyColdChainDetail(), ...coldChainRow, ...body };
+        return HttpResponse.json({ ok: true, message: 'ok', data: coldChainRow });
+      },
+    ),
+    http.get(
+      `http://localhost:4500/api/investigation-vaccines-administered/investigation/${INVESTIGATION_1}`,
+      () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    // El sondeo del diccionario (SPEC FE13d §3.1): vacío por defecto, igual que el resto de esta
+    // función — los tests que necesitan una vacuna real lo sobrescriben.
+    http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, total: 0, options: [] } }),
+    ),
+    http.get('http://localhost:4500/api/system-configs/code/ESAVI_APP_COUNTRY_ISO_CODE', () =>
+      HttpResponse.json(
+        { ok: false, message: 'no configurado', code: 'SYSCONF_006_NOT_FOUND' },
+        { status: 404 },
+      ),
     ),
     // The gate of §7.4 (SPEC FE13b §4 paso 6): a male patient by default so `pregnancyGate`
     // resolves to `'hidden'` and every test written before this section existed keeps seeing
@@ -1763,5 +1877,312 @@ describe('InvestigationStep — el recorrido completo del tramo C (SPEC FE13c §
     expect(screen.queryByRole('button', { name: 'Siguiente' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Añadir institución' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Añadir diagnóstico' })).not.toBeInTheDocument();
+  });
+});
+
+// Sección D/D1/E1/E2 (SPEC FE13d §4 paso 10): reutiliza `walkToClinicalEvaluation` y el mismo
+// clic «Siguiente» de instituciones que el tramo C ya necesitaba — `diagnostics` y
+// `vaccinesAdministered` pasan de largo solos (§4 paso 10), así que ese único clic basta para
+// llegar hasta el contexto de vacunación.
+async function walkToVaccinationContext() {
+  const user = await walkToClinicalEvaluation();
+  await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+  await waitFor(() => expect(clinicalEvaluationRow).not.toBeNull());
+  await user.click(await screen.findByRole('button', { name: 'Siguiente' }));
+  // `getByRole('heading', ...)` y no `findByText`: la sección repite la misma clave i18n en su
+  // `<h3>` visible y en el `<legend className="sr-only">` del primer `<fieldset>` (§3.7) — sólo
+  // el encabezado tiene rol `heading`.
+  await screen.findByRole('heading', { name: 'Contexto de la vacunación' });
+  return user;
+}
+
+describe('InvestigationStep — sección D y E: vacunas administradas, contexto y cadena de frío (SPEC FE13d §4 paso 10)', () => {
+  it('en un paso nuevo, tras revelar todo lo anterior, sólo se ve D con un botón', async () => {
+    await walkToVaccinationContext();
+
+    expect(await screen.findByText('Vacunas administradas')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: 'Contexto de la vacunación' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Guardar y continuar' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Guardar y continuar' })).toHaveLength(1);
+    expect(
+      screen.queryByRole('heading', { name: 'Cadena de frío' }),
+    ).not.toBeInTheDocument();
+  }, 30000);
+
+  it('revelar D crea el contexto con un solo POST; revelar E1 crea la cadena de frío con un solo POST', async () => {
+    let vaccinationContextPosts = 0;
+    let coldChainPosts = 0;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-vaccination-contexts', () => {
+        vaccinationContextPosts++;
+        vaccinationContextRow = emptyVaccinationContextDetail();
+        return HttpResponse.json({ ok: true, message: 'ok', data: vaccinationContextRow }, { status: 201 });
+      }),
+      http.post('http://localhost:4500/api/investigation-cold-chains', () => {
+        coldChainPosts++;
+        coldChainRow = emptyColdChainDetail();
+        return HttpResponse.json({ ok: true, message: 'ok', data: coldChainRow }, { status: 201 });
+      }),
+    );
+    const user = await walkToVaccinationContext();
+
+    await waitFor(() => expect(vaccinationContextPosts).toBe(1));
+
+    await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+    await waitFor(() => expect(vaccinationContextRow).not.toBeNull());
+
+    expect(
+      await screen.findByRole('heading', { name: 'Cadena de frío' }),
+    ).toBeInTheDocument();
+    await waitFor(() => expect(coldChainPosts).toBe(1));
+    expect(vaccinationContextPosts).toBe(1);
+
+    // E2 todavía no se pintó — «Continuar» es un paso de interfaz, no un guardado.
+    expect(
+      screen.queryByRole('heading', { name: 'Transporte' }),
+    ).not.toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Continuar' }));
+    expect(
+      await screen.findByRole('heading', { name: 'Transporte' }),
+    ).toBeInTheDocument();
+    expect(coldChainPosts).toBe(1);
+  }, 30000);
+
+  it('reentrada con todo revelado: las cuatro secciones muestran sus datos, sin ningún botón intermedio', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail();
+    vaccinationContextRow = { ...emptyVaccinationContextDetail(), locations: 'Centro de salud X' };
+    coldChainRow = { ...emptyColdChainDetail(), transportTypeThermo: 'Termo azul' };
+    server.use(
+      http.get(
+        `http://localhost:4500/api/investigation-vaccines-administered/investigation/${INVESTIGATION_1}`,
+        () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 1,
+              rows: [
+                {
+                  vaccineAdministeredId: 'vacad-1',
+                  investigationId: INVESTIGATION_1,
+                  sortOrder: 1,
+                  vaccineWhodrugId: 'whodrug-1',
+                  doseNumber: 1,
+                  notes: null,
+                  isActive: true,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: null,
+                  deletedAt: null,
+                  appDetails: [],
+                  vaccineWhodrug: { vaccineWhodrugId: 'whodrug-1', drugCode: 'CODE-1', drugName: 'BCG vaccine' },
+                },
+              ],
+            },
+          }),
+      ),
+    );
+
+    renderInvestigationStep();
+
+    expect(await screen.findByText('Vacunas administradas')).toBeInTheDocument();
+    expect(await screen.findAllByText('BCG vaccine')).not.toHaveLength(0);
+    expect(await screen.findByDisplayValue('Centro de salud X')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('Termo azul')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continuar' })).not.toBeInTheDocument();
+  });
+
+  it('expediente CLOSED: las cuatro secciones se ven en sólo lectura, sin «Guardar» ni «Añadir»', async () => {
+    mockWorkflowClosed();
+    mockInvestigationDetail();
+    vaccinationContextRow = emptyVaccinationContextDetail();
+    coldChainRow = emptyColdChainDetail();
+
+    renderInvestigationStep();
+
+    expect(await screen.findByText('Vacunas administradas')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Contexto de la vacunación' }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Transporte' }),
+    ).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continuar' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Añadir vacuna' }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+// El recorrido completo del bloque D/E (SPEC FE13d §4 paso 12): añadir dos vacunas
+// administradas, rellenar el contexto con conglomerado, abrir y cerrar la compuerta, rellenar la
+// cadena de frío con storageRangeDeviation:false, guardar, recargar y comprobar que todo vuelve —
+// y el mismo recorrido repetido sobre un expediente CLOSED, en sólo lectura.
+const LONG_WAIT = { timeout: 30000 };
+const VACCINE_A_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1';
+const VACCINE_B_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2';
+
+describe('InvestigationStep — el recorrido completo del bloque D/E (SPEC FE13d §4 paso 12)', () => {
+  it(
+    'alta desde cero: dos vacunas ya administradas, contexto con conglomerado, cadena de frío, guardar y recargar',
+    async () => {
+      // Las dos vacunas se precargan por mock: la interacción de alta contra el árbol WHODrug
+      // — abrir el combobox, resolver una opción — ya está cubierta en
+      // `VaccineAdministeredFormDialog.test.tsx` y `VaccineAdministeredList.test.tsx`. Repetirla
+      // dos veces seguidas aquí no añade cobertura nueva y, en este entorno, desestabiliza el
+      // resto del archivo (una sola resolución de árbol ya tarda varios minutos). Este recorrido
+      // se concentra en lo que es específico del bloque: el conglomerado y la cadena de frío.
+      const vaccineRows: Array<Record<string, unknown>> = [
+        {
+          vaccineAdministeredId: 'vacad-1',
+          investigationId: INVESTIGATION_1,
+          sortOrder: 1,
+          vaccineWhodrugId: VACCINE_A_ID,
+          doseNumber: 1,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          vaccineWhodrug: { vaccineWhodrugId: VACCINE_A_ID, drugCode: 'BCG-1', drugName: 'BCG vaccine' },
+        },
+        {
+          vaccineAdministeredId: 'vacad-2',
+          investigationId: INVESTIGATION_1,
+          sortOrder: 2,
+          vaccineWhodrugId: VACCINE_B_ID,
+          doseNumber: 1,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          vaccineWhodrug: { vaccineWhodrugId: VACCINE_B_ID, drugCode: 'HPV-1', drugName: 'HPV vaccine' },
+        },
+      ];
+      server.use(
+        http.get(
+          `http://localhost:4500/api/investigation-vaccines-administered/investigation/${INVESTIGATION_1}`,
+          () => HttpResponse.json({ ok: true, message: 'ok', data: { count: vaccineRows.length, rows: vaccineRows } }),
+        ),
+        http.put(
+          `http://localhost:4500/api/investigation-vaccination-contexts/${INVESTIGATION_1}`,
+          async ({ request }) => {
+            const body = (await request.json()) as Record<string, unknown>;
+            vaccinationContextRow = { ...emptyVaccinationContextDetail(), ...vaccinationContextRow, ...body };
+            return HttpResponse.json({ ok: true, message: 'ok', data: vaccinationContextRow });
+          },
+        ),
+        http.put(
+          `http://localhost:4500/api/investigation-cold-chains/${INVESTIGATION_1}`,
+          async ({ request }) => {
+            const body = (await request.json()) as Record<string, unknown>;
+            coldChainRow = { ...emptyColdChainDetail(), ...coldChainRow, ...body };
+            return HttpResponse.json({ ok: true, message: 'ok', data: coldChainRow });
+          },
+        ),
+      );
+
+      const user = await walkToVaccinationContext();
+
+      expect(await screen.findAllByText('BCG vaccine')).not.toHaveLength(0);
+      expect(await screen.findAllByText('HPV vaccine')).not.toHaveLength(0);
+
+      // D.3–D1 — el contexto, con el conglomerado abierto y vuelto a cerrar antes de guardar.
+      await user.click(screen.getByRole('combobox', { name: '¿El caso investigado forma parte de un conglomerado de casos?' }));
+      await user.click(await screen.findByRole('option', { name: 'Sí' }));
+      expect(await screen.findByLabelText('Número de identificación del conglomerado')).toBeInTheDocument();
+
+      await user.click(screen.getByRole('combobox', { name: '¿El caso investigado forma parte de un conglomerado de casos?' }));
+      await user.click(await screen.findByRole('option', { name: 'No' }));
+      expect(
+        screen.queryByLabelText('Número de identificación del conglomerado'),
+      ).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
+      await waitFor(() => expect(vaccinationContextRow).not.toBeNull());
+
+      // E1/E2 — la cadena de frío, storageRangeDeviation:false sobrevive.
+      await screen.findByRole('heading', { name: 'Cadena de frío' });
+      const monitoredGroup = screen.getByRole('radiogroup', {
+        name: '¿Se monitorizó la temperatura de almacenamiento?',
+      });
+      await user.click(within(monitoredGroup).getByRole('radio', { name: 'Sí' }));
+      const deviationGroup = await screen.findByRole('radiogroup', {
+        name: '¿Hubo desviación del rango de temperatura?',
+      });
+      await user.click(within(deviationGroup).getByRole('radio', { name: 'No' }));
+
+      await user.click(await screen.findByRole('button', { name: 'Continuar' }));
+      await user.click(await screen.findByRole('button', { name: 'Guardar y continuar' }));
+      await waitFor(() => expect(coldChainRow).not.toBeNull());
+      expect(coldChainRow).toMatchObject({ storageTemperatureMonitored: true, storageRangeDeviation: false });
+
+      // Recarga — un montaje nuevo sobre el mismo estado del servidor trae todo de vuelta.
+      mockWorkflow(true);
+      renderInvestigationStep();
+
+      expect(await screen.findAllByText('BCG vaccine', {}, LONG_WAIT)).not.toHaveLength(0);
+      expect(await screen.findAllByText('HPV vaccine', {}, LONG_WAIT)).not.toHaveLength(0);
+      expect(
+        await screen.findByRole('heading', { name: 'Transporte' }, LONG_WAIT),
+      ).toBeInTheDocument();
+    },
+    60000,
+  );
+
+  it('el mismo recorrido sobre un expediente CLOSED: sólo lectura, sin «Guardar» ni «Añadir»', async () => {
+    mockWorkflowClosed();
+    mockInvestigationDetail();
+    vaccinationContextRow = { ...emptyVaccinationContextDetail(), isCluster: 'YES', clusterIdentificationNumber: 'CL-9' };
+    coldChainRow = { ...emptyColdChainDetail(), storageTemperatureMonitored: true, storageRangeDeviation: false };
+    server.use(
+      http.get(
+        `http://localhost:4500/api/investigation-vaccines-administered/investigation/${INVESTIGATION_1}`,
+        () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 1,
+              rows: [
+                {
+                  vaccineAdministeredId: 'vacad-1',
+                  investigationId: INVESTIGATION_1,
+                  sortOrder: 1,
+                  vaccineWhodrugId: VACCINE_A_ID,
+                  doseNumber: 1,
+                  notes: null,
+                  isActive: true,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: null,
+                  deletedAt: null,
+                  appDetails: [],
+                  vaccineWhodrug: { vaccineWhodrugId: VACCINE_A_ID, drugCode: 'BCG-1', drugName: 'BCG vaccine' },
+                },
+              ],
+            },
+          }),
+      ),
+    );
+
+    renderInvestigationStep();
+
+    expect(await screen.findByLabelText('Número de identificación del conglomerado')).toBeDisabled();
+    expect(await screen.findAllByText('BCG vaccine')).not.toHaveLength(0);
+    expect(
+      await screen.findByRole('heading', { name: 'Transporte' }),
+    ).toBeInTheDocument();
+
+    expect(screen.queryByRole('button', { name: 'Guardar y continuar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continuar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Añadir vacuna' })).not.toBeInTheDocument();
   });
 });
