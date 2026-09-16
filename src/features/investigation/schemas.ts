@@ -11,6 +11,7 @@ import type { CreateEvaluationInstitutionInput } from '@/contracts/evaluationIns
 import type { CreateInvestigationDiagnosticInput } from '@/contracts/investigationDiagnostic';
 import type { CreateInvestigationVaccinationContextInput } from '@/contracts/investigationVaccinationContext';
 import type { CreateInvestigationColdChainInput } from '@/contracts/investigationColdChain';
+import type { CreateInvestigationVaccineAdministeredInput } from '@/contracts/investigationVaccineAdministered';
 
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
@@ -721,6 +722,59 @@ export const investigationVaccinationContextErrorFieldMap: Partial<
   INVVACTX_004_MULTIDOSE_NOT_FOUND: 'multidoseItemId',
   INVVACTX_001_CLUSTER_SAME_VIAL_COUNT_REQUIRED: 'clusterSameVialCount',
   INVVACTX_004_CLUSTER_SAME_VIAL_COUNT_REQUIRED: 'clusterSameVialCount',
+};
+
+// ---------------------------------------------------------------------------------------------
+// L — Vaccine administered, section D.1–D.2 (SPEC FE13d §3.5). Create/edit dialog for
+// `investigationVaccineAdministered`. `vaccineWhodrugId` binds as `string | null` in the form —
+// `null` before `<WhodrugTreePicker>` resolves anything — even though the contract requires a
+// plain `string`: keeping the schema's output type `string | null` too (instead of narrowing with
+// `.refine`'s type-predicate overload) is what keeps `TFieldValues` and the schema's inferred type
+// identical, avoiding the `ResourceForm` generic-mismatch trap already on file in
+// `DiluentFormRow.tsx` (`CONVENTIONS.md §13`).
+// ---------------------------------------------------------------------------------------------
+
+export type VaccineAdministeredFormValues = Omit<
+  CreateInvestigationVaccineAdministeredInput,
+  'investigationId' | 'vaccineWhodrugId'
+> & {
+  vaccineWhodrugId: string | null;
+};
+
+export const vaccineAdministeredSaveSchema = z
+  .object({
+    // Bloqueante (§3.5): no hay rama cruda, a diferencia de `notificationVaccine` — la tabla no
+    // admite `vaccineName` libre.
+    vaccineWhodrugId: z.string().uuid().nullable(),
+    doseNumber: z.number().int().min(0).max(SMALLINT_MAX).nullable().optional(),
+    notes: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
+  })
+  .superRefine((data, ctx) => {
+    if (data.vaccineWhodrugId === null) {
+      ctx.addIssue({ code: 'custom', message: 'vaccineRequired', path: ['vaccineWhodrugId'] });
+    }
+  });
+
+function _assertVaccineAdministeredSchemaMatchesContract(
+  value: z.infer<typeof vaccineAdministeredSaveSchema>,
+): VaccineAdministeredFormValues {
+  return value;
+}
+void _assertVaccineAdministeredSchemaMatchesContract;
+
+// SPEC FE13d §3.5 — el `409` del trío `(investigationId, vaccineWhodrugId, doseNumber)` ancla en
+// `vaccineWhodrugId`: el mensaje que trae el backend nombra la vacuna, no la dosis
+// (`CONVENTIONS.md §6.2` — `error.message` ya viene traducido, el cliente no lo reconstruye).
+// `WHODRUG_NOT_FOUND` anchors on the same field (§3.5: "404 si la vacuna no existe o está
+// inactiva") — the entry the diálogo submitted was retired from the dictionary between opening
+// the tree and saving.
+export const vaccineAdministeredErrorFieldMap: Partial<
+  Record<string, keyof VaccineAdministeredFormValues>
+> = {
+  INVVACAD_001_ALREADY_EXISTS: 'vaccineWhodrugId',
+  INVVACAD_004_ALREADY_EXISTS: 'vaccineWhodrugId',
+  INVVACAD_001_WHODRUG_NOT_FOUND: 'vaccineWhodrugId',
+  INVVACAD_004_WHODRUG_NOT_FOUND: 'vaccineWhodrugId',
 };
 
 // ---------------------------------------------------------------------------------------------
