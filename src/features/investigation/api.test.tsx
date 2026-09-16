@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { useWhodrugTreeLevel } from '@/shared/hooks/useVaccineWhodrugTree';
 import {
   evaluationInstitutionResource,
   evaluationInstitutionsByInvestigationKey,
@@ -31,6 +32,7 @@ import {
   useInvestigationSourceByCase,
   useInvestigationVaccinationContextByCase,
   useNewbornConditionsByMedicalHistory,
+  useWhodrugDictionaryAvailable,
 } from './api';
 
 const server = setupServer();
@@ -910,6 +912,75 @@ describe('investigationDiagnosticResource — ESAVI-INVDIAG-001/004', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(hitUrl).toContain('/investigation-diagnostics/diag-1');
+  });
+});
+
+function whodrugAbbreviationLevelResponse(total: number) {
+  return HttpResponse.json({
+    ok: true,
+    message: 'ok',
+    data: {
+      count: total === 0 ? 0 : 1,
+      total,
+      options: total === 0 ? [] : [{ value: 'BCG', matchCount: total, vaccineWhodrugId: null }],
+    },
+  });
+}
+
+describe('useWhodrugDictionaryAvailable — ESAVI-WHODRUG-006A', () => {
+  beforeEach(() => {
+    server.use(
+      http.get('http://localhost:4500/api/system-configs/code/ESAVI_APP_COUNTRY_ISO_CODE', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { value: 'ECU' } }),
+      ),
+    );
+  });
+
+  it('con el diccionario vacío (total 0) resuelve isAvailable:false', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () =>
+        whodrugAbbreviationLevelResponse(0),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useWhodrugDictionaryAvailable(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.isAvailable).toBe(false);
+  });
+
+  it('con al menos una fila resuelve isAvailable:true', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () =>
+        whodrugAbbreviationLevelResponse(3),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useWhodrugDictionaryAvailable(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.isAvailable).toBe(true);
+  });
+
+  it('comparte una sola clave de caché con el primer nivel de <WhodrugTreePicker>, no dos', async () => {
+    let hitCount = 0;
+    server.use(
+      http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () => {
+        hitCount += 1;
+        return whodrugAbbreviationLevelResponse(1);
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(
+      () => ({
+        probe: useWhodrugDictionaryAvailable(),
+        pickerLevel: useWhodrugTreeLevel('abbreviation', {}, '', 'es', undefined),
+      }),
+      { wrapper: Wrapper },
+    );
+
+    await waitFor(() => expect(result.current.pickerLevel.isSuccess).toBe(true));
+    expect(hitCount).toBe(1);
   });
 });
 

@@ -24,9 +24,12 @@ import type { InvestigationVaccinationContextDetail } from '@/contracts/declared
 import type { InvestigationVaccineAdministeredDetail } from '@/contracts/declared/investigationVaccineAdministered';
 import type { InvestigationColdChainDetail } from '@/contracts/declared/investigationColdChain';
 import type { PaginatedResponse } from '@/contracts/declared/pagination';
+import { useCountryIsoCode } from '@/features/systemConfig/api';
 import { client } from '@/shared/api/client';
 import { createResource } from '@/shared/api/createResource';
 import { EsaviApiError } from '@/shared/api/types';
+import { useWhodrugTreeLevel } from '@/shared/hooks/useVaccineWhodrugTree';
+import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 
 // POST   /api/investigations               ESAVI-INVESTGN-001  USER  create the header, `{ caseId }` only (SPEC FE13a §2)
 // GET    /api/investigations/case/:id      ESAVI-INVESTGN-006  USER  by case, in reentry — hand-written below
@@ -417,6 +420,23 @@ export function useInvestigationDiagnosticsByCase(caseId: string | undefined, en
     },
     enabled: enabled && caseId !== undefined,
   });
+}
+
+// ESAVI-WHODRUG-006A — probes the master's first tree level with no ancestors and no search, the
+// exact same call `<WhodrugTreePicker>` makes internally for its own "diccionario no importado"
+// branch (SPEC FE13d §3.1, §6.6). Passing identical arguments — `{}` ancestors, `''` search, the
+// same `language`/`country` — is what keeps the two callers on the ONE cache entry the acceptance
+// criteria require instead of two: the probe costs nothing the picker was not going to pay for
+// anyway. `total === 0` (not `count`) is "the dictionary has no rows to walk", the same field
+// `dictionaryEmpty` reads inside the picker.
+export function useWhodrugDictionaryAvailable() {
+  const language = usePreferencesStore((state) => state.language);
+  const country = useCountryIsoCode().data;
+  const query = useWhodrugTreeLevel('abbreviation', {}, '', language, country);
+  return {
+    isLoading: query.isLoading,
+    isAvailable: query.data === undefined ? undefined : query.data.total > 0,
+  };
 }
 
 // POST /api/investigation-vaccination-contexts             ESAVI-INVVACTX-001  USER  create the ficha, `{ investigationId }` only, on section D's reveal (SPEC FE13d §2)
