@@ -11,20 +11,25 @@ import {
   evaluationInstitutionsByInvestigationKey,
   investigationAutopsyResource,
   investigationClinicalEvaluationResource,
+  investigationColdChainResource,
   investigationDiagnosticResource,
   investigationMedicalHistoryResource,
   investigationPregnancyConditionResource,
   investigationResource,
   investigationSourceResource,
   investigationTeamMemberResource,
+  investigationVaccinationContextResource,
+  investigationVaccineAdministeredResource,
   useCreateInvestigationClinicalEvaluation,
   useEvaluationInstitutionsByInvestigation,
   useInvestigationAutopsyByCase,
   useInvestigationByCase,
   useInvestigationClinicalEvaluationByCase,
+  useInvestigationColdChainByCase,
   useInvestigationDiagnosticsByCase,
   useInvestigationMedicalHistoryByCase,
   useInvestigationSourceByCase,
+  useInvestigationVaccinationContextByCase,
   useNewbornConditionsByMedicalHistory,
 } from './api';
 
@@ -905,5 +910,313 @@ describe('investigationDiagnosticResource — ESAVI-INVDIAG-001/004', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(hitUrl).toContain('/investigation-diagnostics/diag-1');
+  });
+});
+
+const investigationVaccinationContextDetail = {
+  investigationId: 'inv-1',
+  investigation: investigationSourceDetail.investigation,
+  momentItemId: null,
+  moment: null,
+  multidoseItemId: null,
+  multidoseMoment: null,
+  vaccinatedPerVialCount: null,
+  vaccinatedPerBatchCount: null,
+  locations: null,
+  isCluster: null,
+  clusterIdentificationNumber: null,
+  clusterAdditionalCaseCount: null,
+  clusterUsedSameVial: null,
+  clusterSameVialCount: null,
+  notes: null,
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+};
+
+describe('investigationVaccinationContextResource — 1:1 con PK = FK (ESAVI-INVVACTX-001/004)', () => {
+  it('el POST lleva investigationId en el cuerpo, a secas', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post(
+        'http://localhost:4500/api/investigation-vaccination-contexts',
+        async ({ request }) => {
+          receivedBody = await request.json();
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: investigationVaccinationContextDetail,
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationVaccinationContextResource.useCreate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toEqual({ investigationId: 'inv-1' });
+  });
+
+  it('el PUT va contra /:investigationId, no contra un id propio', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.put(
+        'http://localhost:4500/api/investigation-vaccination-contexts/inv-1',
+        ({ request }) => {
+          hitUrl = request.url;
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: investigationVaccinationContextDetail,
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationVaccinationContextResource.useUpdate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ id: 'inv-1', data: { isCluster: null } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-vaccination-contexts/inv-1');
+  });
+
+  it('antes de revelarse la sección D, un 404 INVVACTX_006_NOT_FOUND resuelve null', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-vaccination-contexts/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'INVVACTX_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationVaccinationContextByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
+  });
+
+  it('con la cabecera de la investigación ausente, INVVACTX_006_INVESTIGATION_NOT_FOUND se propaga', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-vaccination-contexts/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'sin cabecera', code: 'INVVACTX_006_INVESTIGATION_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationVaccinationContextByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+  });
+});
+
+const investigationVaccineAdministeredDetail = {
+  vaccineAdministeredId: 'vacad-1',
+  investigationId: 'inv-1',
+  sortOrder: 1,
+  vaccineWhodrugId: 'whodrug-1',
+  doseNumber: null,
+  notes: null,
+  isActive: true,
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+  vaccineWhodrug: { vaccineWhodrugId: 'whodrug-1', drugCode: 'ABC123', drugName: 'BCG vaccine' },
+};
+
+describe('investigationVaccineAdministeredResource.useListByParent — ESAVI-INVVACAD-002A', () => {
+  it('lista las vacunas activas por investigationId, no por caseId', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.get(
+        'http://localhost:4500/api/investigation-vaccines-administered/investigation/inv-1',
+        ({ request }) => {
+          hitUrl = request.url;
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: { count: 1, rows: [investigationVaccineAdministeredDetail] },
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(
+      () => investigationVaccineAdministeredResource.useListByParent!('inv-1', { pageSize: 100 }),
+      { wrapper: Wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-vaccines-administered/investigation/inv-1');
+    expect(result.current.data?.rows[0].vaccineWhodrug?.drugName).toBe('BCG vaccine');
+  });
+});
+
+describe('investigationVaccineAdministeredResource — ESAVI-INVVACAD-001/004', () => {
+  it('el POST lleva investigationId y vaccineWhodrugId, sin sortOrder', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post(
+        'http://localhost:4500/api/investigation-vaccines-administered',
+        async ({ request }) => {
+          receivedBody = await request.json();
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: investigationVaccineAdministeredDetail,
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationVaccineAdministeredResource.useCreate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1', vaccineWhodrugId: 'whodrug-1' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toEqual({ investigationId: 'inv-1', vaccineWhodrugId: 'whodrug-1' });
+    expect((receivedBody as Record<string, unknown>).sortOrder).toBeUndefined();
+  });
+
+  it('el PUT va contra /:vaccineAdministeredId', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.put(
+        'http://localhost:4500/api/investigation-vaccines-administered/vacad-1',
+        ({ request }) => {
+          hitUrl = request.url;
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: investigationVaccineAdministeredDetail,
+          });
+        },
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationVaccineAdministeredResource.useUpdate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ id: 'vacad-1', data: { doseNumber: 0 } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-vaccines-administered/vacad-1');
+  });
+});
+
+const investigationColdChainDetail = {
+  investigationId: 'inv-1',
+  investigation: { investigationId: 'inv-1', caseId: 'case-1', isActive: true },
+  storageTemperatureMonitored: null,
+  storageRangeDeviation: null,
+  storageProcedureFollowed: null,
+  storageOtherObjectPresent: null,
+  storagePartiallyReconstitutedVaccine: null,
+  storageVaccineNotUsable: null,
+  storageDiluentNotUsable: null,
+  storageKeyFindings: null,
+  transportUsedThermos: null,
+  transportSetInThermos: null,
+  transportReturnedInThermos: null,
+  transportUsedColdPack: null,
+  transportTypeThermo: null,
+  transportKeyFindings: null,
+  notes: null,
+  createdAt: '2026-09-11T00:00:00.000Z',
+  updatedAt: null,
+  deletedAt: null,
+  appDetails: [],
+};
+
+describe('investigationColdChainResource — 1:1 con PK = FK (ESAVI-INVCOLD-001/004)', () => {
+  it('el POST lleva investigationId en el cuerpo, a secas', async () => {
+    let receivedBody: unknown = null;
+    server.use(
+      http.post('http://localhost:4500/api/investigation-cold-chains', async ({ request }) => {
+        receivedBody = await request.json();
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationColdChainDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationColdChainResource.useCreate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ investigationId: 'inv-1' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(receivedBody).toEqual({ investigationId: 'inv-1' });
+  });
+
+  it('el PUT va contra /:investigationId, no contra un id propio', async () => {
+    let hitUrl: string | null = null;
+    server.use(
+      http.put('http://localhost:4500/api/investigation-cold-chains/inv-1', ({ request }) => {
+        hitUrl = request.url;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationColdChainDetail });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => investigationColdChainResource.useUpdate(), {
+      wrapper: Wrapper,
+    });
+
+    result.current.mutate({ id: 'inv-1', data: { storageRangeDeviation: false } });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(hitUrl).toContain('/investigation-cold-chains/inv-1');
+  });
+
+  it('antes de revelarse la sección E1, un 404 INVCOLD_006_NOT_FOUND resuelve null', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-cold-chains/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'no encontrado', code: 'INVCOLD_006_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationColdChainByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toBeNull();
+  });
+
+  it('con la cabecera de la investigación ausente, INVCOLD_006_INVESTIGATION_NOT_FOUND se propaga', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/investigation-cold-chains/case/case-1', () =>
+        HttpResponse.json(
+          { ok: false, message: 'sin cabecera', code: 'INVCOLD_006_INVESTIGATION_NOT_FOUND' },
+          { status: 404 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+    const { result } = renderHook(() => useInvestigationColdChainByCase('case-1', true), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });
