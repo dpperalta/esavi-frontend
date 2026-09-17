@@ -512,6 +512,14 @@
       },
       "empty": "There are no case files to show.",
       "emptyFiltered": "No case file matches the filters."
+    },
+    "reopen": {
+      "action": "Reopen",
+      "confirmTitle": "Reopen this case file?",
+      "confirmBody": "The case file will become editable again. Any user will be able to keep filling it in.",
+      "confirmAction": "Reopen",
+      "success": "Case file reopened.",
+      "forbidden": "Your role no longer allows reopening case files."
     }
   },
   "esaviCase": {

@@ -512,6 +512,14 @@
       },
       "empty": "Er zijn geen dossiers om te tonen.",
       "emptyFiltered": "Geen dossier komt overeen met de filters."
+    },
+    "reopen": {
+      "action": "Heropenen",
+      "confirmTitle": "Dit dossier heropenen?",
+      "confirmBody": "Het dossier wordt weer bewerkbaar. Elke gebruiker kan het blijven invullen.",
+      "confirmAction": "Heropenen",
+      "success": "Dossier heropend.",
+      "forbidden": "Je rol staat het heropenen van dossiers niet meer toe."
     }
   },
   "esaviCase": {

@@ -512,6 +512,14 @@
       },
       "empty": "No hay expedientes que mostrar.",
       "emptyFiltered": "Ningún expediente coincide con los filtros."
+    },
+    "reopen": {
+      "action": "Reabrir",
+      "confirmTitle": "¿Reabrir este expediente?",
+      "confirmBody": "El expediente volverá a ser editable. Cualquier usuario podrá seguir completándolo.",
+      "confirmAction": "Reabrir",
+      "success": "Expediente reabierto.",
+      "forbidden": "Tu rol ya no permite reabrir expedientes."
     }
   },
   "esaviCase": {
