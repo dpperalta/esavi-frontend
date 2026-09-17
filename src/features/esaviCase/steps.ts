@@ -94,13 +94,53 @@ export function isReachableStepSlug(value: string): value is CaseWizardStepSlug 
   return REACHABLE_WIZARD_STEPS.some((step) => step.slug === value);
 }
 
-// Where /esavi-cases/:id/wizard/:step lands when :step is missing, unrecognized, or locked
-// (SPEC FE08 §4 plan step 9): the most advanced step that's actually unlocked, walked in
-// process order — worst case that's `classification`, which has no precondition of its own.
-export function resolveResumeStep(stages: WorkflowStages): CaseWizardStepSlug {
+// The two flags step 6 (and, for `investigation`, step 5) read from outside their own stage: a
+// serious event or a requested investigation, never a `stages.*.exists` alone (SPEC FE14a §1D).
+// `null` on either — or the whole object `null` — means "still loading", never "no" (§3.4).
+export interface CaseWizardStepFlags {
+  isSeriousEvent: boolean | null;
+  requestInvestigation: boolean | null;
+}
+
+// Paso 5 y 6 sólo existen si el caso los requiere (SPEC FE14a §1D, CASE-PROCESS.md §5.6): el
+// stepper no los pinta y una URL directa a uno de ellos redirige. Los demás pasos no dependen de
+// ninguna bandera — siempre se requieren. `flags === null` — la lectura de clasificación o de
+// notificación todavía pendiente — no oculta nada: mostrar de más no pierde datos, mostrar de
+// menos esconde un paso que sí hacía falta (SPEC FE14a §3.4, riesgo 2). Una fila ya creada
+// (`stages.<stage>.exists`) mantiene el paso visible aunque las banderas hayan pasado a `false`
+// después — no hay forma de ver ni corregir esos datos desde el asistente si el paso desaparece.
+export function isStepRequired(
+  slug: CaseWizardStepSlug,
+  stages: WorkflowStages,
+  flags: CaseWizardStepFlags | null,
+): boolean {
+  if (flags === null) return true;
+  if (slug === 'investigation') {
+    return flags.requestInvestigation === true || stages.investigation.exists;
+  }
+  if (slug === 'final-classification') {
+    return (
+      flags.isSeriousEvent === true ||
+      flags.requestInvestigation === true ||
+      stages.finalClassification.exists
+    );
+  }
+  return true;
+}
+
+// Where /esavi-cases/:id/wizard/:step lands when :step is missing, unrecognized, locked or not
+// required (SPEC FE08 §4 plan step 9, SPEC FE14a §4 plan step 4): the most advanced step that's
+// both unlocked and required, walked in process order — worst case that's `classification`, which
+// has no precondition of its own and is always required. `flags` defaults to `null` so every
+// existing caller before SPEC FE14a §4 plan step 5 wires the stepper's two reads keeps compiling
+// unchanged — with `flags` unresolved nothing is skipped, same as before this spec.
+export function resolveResumeStep(
+  stages: WorkflowStages,
+  flags: CaseWizardStepFlags | null = null,
+): CaseWizardStepSlug {
   let resumeSlug: CaseWizardStepSlug = 'classification';
   for (const step of REACHABLE_WIZARD_STEPS) {
-    if (isStepUnlocked(step.slug, stages)) {
+    if (isStepUnlocked(step.slug, stages) && isStepRequired(step.slug, stages, flags)) {
       resumeSlug = step.slug;
     }
   }
