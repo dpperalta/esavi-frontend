@@ -17,12 +17,34 @@ import { useCaseWorkflow, useCompleteStage } from '@/features/caseWorkflow/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { useCaseWizard } from './CaseWizardContext';
+import { useCaseWizardStepFlags } from './CaseWizardStepper';
 import {
   CASE_WIZARD_STEPS,
+  isStepRequired,
   isStepUnlocked,
   stageWorkflowKey,
+  type CaseWizardStepDefinition,
+  type CaseWizardStepFlags,
   type CaseWizardStepSlug,
+  type CaseWorkflowStages,
 } from './steps';
+
+// The next step whose door isn't shut by `isStepRequired` (SPEC FE14b §2, §4 paso 8) — never
+// `currentIndex + 1` alone, which would land on a hidden step 5/6 or, now, walk past `closure`
+// straight off the end of the array. `flags === null` (still loading) makes every step required
+// (§3.4), so this resolves to the immediate next step until the two reads settle — the same
+// "don't hide while loading" rule FE14a's stepper already follows.
+function findNextRequiredStep(
+  currentIndex: number,
+  stages: CaseWorkflowStages,
+  flags: CaseWizardStepFlags | null,
+): CaseWizardStepDefinition | null {
+  for (let i = currentIndex + 1; i < CASE_WIZARD_STEPS.length; i++) {
+    const step = CASE_WIZARD_STEPS[i];
+    if (isStepRequired(step.slug, stages, flags)) return step;
+  }
+  return null;
+}
 
 interface CaseWizardActionBarProps {
   caseId: string;
@@ -36,6 +58,7 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
   const navigate = useNavigate();
   const workflow = useCaseWorkflow(caseId);
   const completeStage = useCompleteStage(caseId);
+  const flags = useCaseWizardStepFlags(caseId, workflow.data?.stages);
   const { activeStep, isDirty, pendingFields } = useCaseWizard();
   const [pendingNavigation, setPendingNavigation] = useState<CaseWizardStepSlug | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -54,7 +77,7 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
   const stageCompleted = activeStageEntry?.endedAt !== null && activeStageEntry?.endedAt !== undefined;
 
   const currentIndex = CASE_WIZARD_STEPS.findIndex((step) => step.slug === activeSlug);
-  const nextStep = CASE_WIZARD_STEPS[currentIndex + 1] ?? null;
+  const nextStep = findNextRequiredStep(currentIndex, stages, flags);
   const nextUnlocked = nextStep ? isStepUnlocked(nextStep.slug, stages) : false;
 
   function goToStep(slug: CaseWizardStepSlug) {
