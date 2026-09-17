@@ -403,6 +403,8 @@ function FinalClassificationFormBody({
 
   return (
     <div className="flex flex-col gap-6">
+      <h2 className="text-lg font-semibold text-foreground">{t('finalClassification.title')}</h2>
+
       {!blocksHidden && (
         <fieldset
           disabled={disabled}

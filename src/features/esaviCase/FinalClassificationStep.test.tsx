@@ -283,10 +283,10 @@ describe('FinalClassificationStep — precedencia entre importancias (SPEC FE14a
     renderStep();
     const user = setupUser();
 
-    const selectA = await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    const selectA = await screen.findByRole('combobox', { name: 'Importancia A' });
     await waitFor(() => expect(selectA).toHaveTextContent('Importancia 1'));
 
-    const selectB = screen.getByRole('combobox', { name: 'finalClassification.blockB.importance' });
+    const selectB = screen.getByRole('combobox', { name: 'Importancia B' });
     await user.click(selectB);
     await user.click(await screen.findByRole('option', { name: 'Importancia 1' }));
 
@@ -311,27 +311,27 @@ describe('FinalClassificationStep — el bloque D (SPEC FE14a §3.5)', () => {
     const user = setupUser();
 
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'finalClassification.blockA.importance' })).toHaveTextContent(
+      expect(screen.getByRole('combobox', { name: 'Importancia A' })).toHaveTextContent(
         'Importancia 1',
       ),
     );
 
-    const switchD = screen.getByRole('switch', { name: 'finalClassification.fields.dIsUnclassifiable' });
+    const switchD = screen.getByRole('switch', { name: 'Especificar la información adicional requerida para clasificar el caso en situaciones en las que se identifiquen eventos falsos y se haya iniciado el análisis de causalidad, estos se incluirán en esta categoría' });
     await user.click(switchD);
 
     await waitFor(() =>
-      expect(screen.queryByRole('combobox', { name: 'finalClassification.blockA.importance' })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('combobox', { name: 'Importancia A' })).not.toBeInTheDocument(),
     );
-    expect(screen.queryByRole('combobox', { name: 'finalClassification.blockB.importance' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox', { name: 'finalClassification.blockC.importance' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Importancia B' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Importancia C' })).not.toBeInTheDocument();
 
     await user.click(switchD);
 
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'finalClassification.blockA.importance' })).toBeInTheDocument(),
+      expect(screen.getByRole('combobox', { name: 'Importancia A' })).toBeInTheDocument(),
     );
     // Apagar D no restaura: el bloque vuelve a pintarse vacío, no con "Importancia 1".
-    expect(screen.getByRole('combobox', { name: 'finalClassification.blockA.importance' })).not.toHaveTextContent(
+    expect(screen.getByRole('combobox', { name: 'Importancia A' })).not.toHaveTextContent(
       'Importancia 1',
     );
   });
@@ -345,7 +345,7 @@ describe('FinalClassificationStep — los <Switch> tri-estado', () => {
     renderStep();
 
     const switchA1 = await screen.findByRole('switch', {
-      name: 'finalClassification.fields.aIsRelatedToVaccineProduct',
+      name: 'A1. Evento relacionado con la vacuna o cualquiera de sus componentes',
     });
     expect(switchA1).toHaveAttribute('aria-checked', 'false');
 
@@ -387,7 +387,7 @@ describe('FinalClassificationStep — estados de §3.6', () => {
     renderStep();
 
     await waitFor(() =>
-      expect(screen.getByRole('combobox', { name: 'finalClassification.blockA.importance' })).toBeInTheDocument(),
+      expect(screen.getByRole('combobox', { name: 'Importancia A' })).toBeInTheDocument(),
     );
     expect(hit).toBe(false);
   });
@@ -401,7 +401,7 @@ describe('FinalClassificationStep — guardar (SPEC FE14a §4 paso 8)', () => {
     renderStepWithActionBar();
     const user = setupUser();
 
-    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    await screen.findByRole('combobox', { name: 'Importancia A' });
     await clickSaveButton(user);
 
     await waitFor(() => expect(calls.post).toBe(1));
@@ -422,7 +422,7 @@ describe('FinalClassificationStep — guardar (SPEC FE14a §4 paso 8)', () => {
 
     renderStepWithActionBar();
 
-    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    await screen.findByRole('combobox', { name: 'Importancia A' });
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(calls.post).toBe(0);
@@ -434,9 +434,9 @@ describe('FinalClassificationStep — guardar (SPEC FE14a §4 paso 8)', () => {
 
     renderStepWithActionBar();
 
-    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    await screen.findByRole('combobox', { name: 'Importancia A' });
 
-    expect(await screen.findByText('finalClassification.pending.verdict')).toBeInTheDocument();
+    expect(await screen.findByText('Marca un veredicto: el bloque D, o al menos un criterio de A, B o C.')).toBeInTheDocument();
   });
 
   it('con D encendido, «Completar etapa» ya no lista el pendiente', async () => {
@@ -446,15 +446,15 @@ describe('FinalClassificationStep — guardar (SPEC FE14a §4 paso 8)', () => {
     renderStepWithActionBar();
     const user = setupUser();
 
-    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
-    expect(screen.getByText('finalClassification.pending.verdict')).toBeInTheDocument();
+    await screen.findByRole('combobox', { name: 'Importancia A' });
+    expect(screen.getByText('Marca un veredicto: el bloque D, o al menos un criterio de A, B o C.')).toBeInTheDocument();
 
     await user.click(
-      screen.getByRole('switch', { name: 'finalClassification.fields.dIsUnclassifiable' }),
+      screen.getByRole('switch', { name: 'Especificar la información adicional requerida para clasificar el caso en situaciones en las que se identifiquen eventos falsos y se haya iniciado el análisis de causalidad, estos se incluirán en esta categoría' }),
     );
 
     await waitFor(() =>
-      expect(screen.queryByText('finalClassification.pending.verdict')).not.toBeInTheDocument(),
+      expect(screen.queryByText('Marca un veredicto: el bloque D, o al menos un criterio de A, B o C.')).not.toBeInTheDocument(),
     );
   });
 
@@ -517,14 +517,14 @@ describe('FinalClassificationStep — guardar (SPEC FE14a §4 paso 8)', () => {
     renderStepWithActionBar();
     const user = setupUser();
 
-    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    await screen.findByRole('combobox', { name: 'Importancia A' });
     await clickSaveButton(user);
 
     await waitFor(() => expect(postCalls).toBe(1));
     // Tras el 409, se relee la fila — el próximo «Guardar» ya ve `finalClassificationId`.
     await waitFor(() =>
       expect(
-        screen.getByRole('combobox', { name: 'finalClassification.blockA.importance' }),
+        screen.getByRole('combobox', { name: 'Importancia A' }),
       ).toBeInTheDocument(),
     );
 
@@ -542,7 +542,7 @@ describe('FinalClassificationStep — guardar (SPEC FE14a §4 paso 8)', () => {
     const user = setupUser();
 
     const selectA = await screen.findByRole('combobox', {
-      name: 'finalClassification.blockA.importance',
+      name: 'Importancia A',
     });
     await user.click(selectA);
     await user.click(await screen.findByRole('option', { name: 'Importancia 1' }));
@@ -560,7 +560,7 @@ describe('FinalClassificationStep — guardar (SPEC FE14a §4 paso 8)', () => {
     renderStepWithActionBar();
     const user = setupUser();
 
-    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    await screen.findByRole('combobox', { name: 'Importancia A' });
     await clickSaveButton(user);
 
     await waitFor(() => expect(calls.post).toBe(1));
@@ -583,9 +583,9 @@ describe('FinalClassificationStep — el borrador (SPEC FE14a §4 paso 9)', () =
 
     renderStep();
 
-    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    await screen.findByRole('combobox', { name: 'Importancia A' });
     await waitFor(() =>
-      expect(toastInfo).toHaveBeenCalledWith('finalClassification.draft.discarded'),
+      expect(toastInfo).toHaveBeenCalledWith('Se descartaron cambios sin guardar: el caso se editó en otro sitio.'),
     );
     expect(useDraftsStore.getState().get('case-1', 'finalClassification')).toBeUndefined();
   });
@@ -602,11 +602,11 @@ describe('FinalClassificationStep — el borrador (SPEC FE14a §4 paso 9)', () =
     renderStep();
 
     const switchC = await screen.findByRole('switch', {
-      name: 'finalClassification.fields.cHasCoincidentCause',
+      name: 'C. Una enfermedad subyacente o emergente o una afección causada por exposición a algo distinto que la vacuna o el proceso de vacunación',
     });
     await waitFor(() => expect(switchC).toHaveAttribute('aria-checked', 'true'));
     await waitFor(() =>
-      expect(toastInfo).toHaveBeenCalledWith('finalClassification.draft.restored'),
+      expect(toastInfo).toHaveBeenCalledWith('Se recuperaron cambios sin guardar de una sesión anterior.'),
     );
   });
 
@@ -634,7 +634,7 @@ describe('FinalClassificationStep — el borrador (SPEC FE14a §4 paso 9)', () =
     renderStepWithActionBar();
     const user = setupUser();
 
-    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    await screen.findByRole('combobox', { name: 'Importancia A' });
     await waitFor(() =>
       expect(useDraftsStore.getState().get('case-1', 'finalClassification')).toBeDefined(),
     );

@@ -1505,6 +1505,58 @@
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
     }
   },
+  "finalClassification": {
+    "title": "Eindclassificatie",
+    "blockA": {
+      "legend": "Orde A: Belang",
+      "importance": "Belang A",
+      "vaccineTitle": "Belang A: Causaal verband consistent met het vaccin",
+      "processTitle": "A. Causaal verband consistent met het vaccinatieproces"
+    },
+    "blockB": {
+      "legend": "Orde B: Belang",
+      "importance": "Belang B",
+      "title": "Onbepaald"
+    },
+    "blockC": {
+      "legend": "Orde C: Belang",
+      "importance": "Belang C",
+      "title": "Geen causaal verband consistent met het vaccin of het vaccinatieproces"
+    },
+    "blockD": {
+      "legend": "Orde D: Niet classificeerbaar"
+    },
+    "fields": {
+      "aIsRelatedToVaccineProduct": "A1. Gebeurtenis gerelateerd aan het vaccin of een van de bestanddelen ervan",
+      "aIsRelatedToQualityDeviation": "A2. Gebeurtenis gerelateerd aan een kwaliteitsafwijking van het biologische product of vaccin",
+      "aIsRelatedToProgrammaticError": "A3. Gebeurtenis gerelateerd aan een programmatische fout",
+      "aIsRelatedToStress": "A4. Stressgerelateerde gebeurtenis die plaatsvond onmiddellijk vóór, tijdens of onmiddellijk na het vaccinatieproces",
+      "bIsConsistentTemporalRelation": "B1. De temporele relatie is consistent, maar er is onvoldoende definitief bewijs voor een causaal verband met het vaccin (kan een recent aan het vaccin geassocieerde gebeurtenis zijn)",
+      "bHasDeterminantFactor": "B2. Bepalende factoren voor de classificatie tonen tegenstrijdige tendensen vóór en tegen een causaal verband met de vaccinatie",
+      "cHasCoincidentCause": "C. Een onderliggende of opkomende ziekte, of een aandoening veroorzaakt door blootstelling aan iets anders dan het vaccin of het vaccinatieproces",
+      "dIsUnclassifiable": "Specificeer de aanvullende informatie die nodig is om het geval te classificeren in situaties waarin valse gebeurtenissen worden vastgesteld en de causaliteitsanalyse al is gestart; deze worden in deze categorie opgenomen",
+      "notes": "Opmerkingen"
+    },
+    "help": {
+      "notesUnclassifiable": "Specificeer hier de informatie die ontbreekt om het geval te classificeren."
+    },
+    "importance": {
+      "released": "Deze positie ging over naar blok {{block}}"
+    },
+    "pending": {
+      "verdict": "Markeer een oordeel: blok D, of ten minste één criterium van A, B of C."
+    },
+    "error": {
+      "importanceDuplicated": "Die positie heeft al een ander blok.",
+      "unclassifiableFieldsNotAllowed": "Met \"Niet classificeerbaar\" aan moeten de andere blokken leeg blijven.",
+      "loadFailed": "We konden de eindclassificatie niet laden",
+      "inactive": "De eindclassificatie is gedeactiveerd. Alleen een superbeheerder kan deze heractiveren."
+    },
+    "draft": {
+      "restored": "Niet-opgeslagen wijzigingen van een eerdere sessie hersteld.",
+      "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
+    }
+  },
   "whodrugTreePicker": {
     "level": {
       "abbreviation": "Afkorting",
