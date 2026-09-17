@@ -520,6 +520,67 @@
       "confirmAction": "Reopen",
       "success": "Case file reopened.",
       "forbidden": "Your role no longer allows reopening case files."
+    },
+    "close": {
+      "title": "Closing the case file",
+      "intro": "Before closing, we check that everything required is complete and free of inconsistencies.",
+      "sections": {
+        "preconditions": "Requirements",
+        "blockers": "Blocking inconsistencies",
+        "warnings": "Warnings"
+      },
+      "state": {
+        "met": "Met",
+        "unmet": "Pending",
+        "warning": "Warning"
+      },
+      "checks": {
+        "notPendingValidation": "The case file is not pending validation",
+        "classification": "Initial classification",
+        "notification": "Notification",
+        "investigation": "Investigation",
+        "finalClassification": "Final classification",
+        "autopsyWithoutDeath": "There is an autopsy on record, but the case's outcome is «{{outcome}}».",
+        "autopsyWithoutOutcome": "There is an autopsy on record, but the case has no declared outcome.",
+        "autopsyWithoutDeathLabel": "Autopsy and outcome",
+        "severityMismatch": "The initial classification says {{classification}} and the notification says {{notification}}.",
+        "severityMismatchHint": "Fixing it requires a SUPERADMIN to delete the notification record.",
+        "severityMismatchLabel": "Severity consistency",
+        "medicationAnswer": "There are {{count}} medications on record, but the medication question says «{{answer}}».",
+        "medicationAnswerLabel": "Declared medication",
+        "communityCount": "The affected people add up to {{breakdown}} and the declared total is {{declared}}.",
+        "communityCountLabel": "Affected people count"
+      },
+      "reasons": {
+        "always": "Always required.",
+        "investigationRequested": "Required because an investigation was requested.",
+        "seriousEvent": "Required because the event is serious.",
+        "seriousAndInvestigated": "Required because the event is serious and because an investigation was requested."
+      },
+      "rowMissing": "Not registered yet.",
+      "rowDeactivated": "It has been deactivated. An administrator needs to reactivate it.",
+      "severity": {
+        "serious": "serious",
+        "notSerious": "not serious"
+      },
+      "unanswered": "unanswered",
+      "links": {
+        "classification": "Go to the initial classification",
+        "notification": "Go to the notification",
+        "investigation": "Go to the investigation",
+        "finalClassification": "Go to the final classification",
+        "fixOutcome": "Fix the outcome",
+        "reviewAutopsy": "Review the autopsy"
+      },
+      "loadError": "We couldn't load all the closing data.",
+      "ready": "The case file meets everything required to close.",
+      "blockedHint": "Resolve what's pending to be able to close the case file.",
+      "action": "Close case file",
+      "confirmTitle": "Close this case file?",
+      "confirmBody": "The case file will become read-only. Only an administrator will be able to reopen it.",
+      "confirmWarnings": "There are unresolved warnings:",
+      "confirmAction": "Close case file",
+      "success": "Case file closed."
     }
   },
   "esaviCase": {

@@ -520,6 +520,67 @@
       "confirmAction": "Heropenen",
       "success": "Dossier heropend.",
       "forbidden": "Je rol staat het heropenen van dossiers niet meer toe."
+    },
+    "close": {
+      "title": "Dossier sluiten",
+      "intro": "Voordat we sluiten, controleren we of alles verplichte compleet is en zonder tegenstrijdigheden.",
+      "sections": {
+        "preconditions": "Vereisten",
+        "blockers": "Blokkerende tegenstrijdigheden",
+        "warnings": "Waarschuwingen"
+      },
+      "state": {
+        "met": "Voldaan",
+        "unmet": "In behandeling",
+        "warning": "Waarschuwing"
+      },
+      "checks": {
+        "notPendingValidation": "Het dossier wacht niet op validatie",
+        "classification": "Initiële classificatie",
+        "notification": "Melding",
+        "investigation": "Onderzoek",
+        "finalClassification": "Definitieve classificatie",
+        "autopsyWithoutDeath": "Er is een autopsie geregistreerd, maar de uitkomst van het geval is «{{outcome}}».",
+        "autopsyWithoutOutcome": "Er is een autopsie geregistreerd, maar het geval heeft geen vermelde uitkomst.",
+        "autopsyWithoutDeathLabel": "Autopsie en uitkomst",
+        "severityMismatch": "De initiële classificatie zegt {{classification}} en de melding zegt {{notification}}.",
+        "severityMismatchHint": "Dit oplossen vereist dat een SUPERADMIN het meldingsdossier verwijdert.",
+        "severityMismatchLabel": "Consistentie van de ernst",
+        "medicationAnswer": "Er zijn {{count}} medicaties geregistreerd, maar de vraag over medicatie zegt «{{answer}}».",
+        "medicationAnswerLabel": "Opgegeven medicatie",
+        "communityCount": "De getroffenen tellen op tot {{breakdown}} en het opgegeven totaal is {{declared}}.",
+        "communityCountLabel": "Aantal getroffenen"
+      },
+      "reasons": {
+        "always": "Altijd vereist.",
+        "investigationRequested": "Vereist omdat een onderzoek is aangevraagd.",
+        "seriousEvent": "Vereist omdat het evenement ernstig is.",
+        "seriousAndInvestigated": "Vereist omdat het evenement ernstig is en omdat een onderzoek is aangevraagd."
+      },
+      "rowMissing": "Nog niet geregistreerd.",
+      "rowDeactivated": "Is gedeactiveerd. Een beheerder moet het reactiveren.",
+      "severity": {
+        "serious": "ernstig",
+        "notSerious": "niet ernstig"
+      },
+      "unanswered": "onbeantwoord",
+      "links": {
+        "classification": "Ga naar de initiële classificatie",
+        "notification": "Ga naar de melding",
+        "investigation": "Ga naar het onderzoek",
+        "finalClassification": "Ga naar de definitieve classificatie",
+        "fixOutcome": "Corrigeer de uitkomst",
+        "reviewAutopsy": "Bekijk de autopsie"
+      },
+      "loadError": "We konden niet alle sluitingsgegevens laden.",
+      "ready": "Het dossier voldoet aan alles wat nodig is om te sluiten.",
+      "blockedHint": "Los wat nog openstaat op om het dossier te kunnen sluiten.",
+      "action": "Dossier sluiten",
+      "confirmTitle": "Dit dossier sluiten?",
+      "confirmBody": "Het dossier wordt alleen-lezen. Alleen een beheerder kan het weer heropenen.",
+      "confirmWarnings": "Er zijn onopgeloste waarschuwingen:",
+      "confirmAction": "Dossier sluiten",
+      "success": "Dossier gesloten."
     }
   },
   "esaviCase": {

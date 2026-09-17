@@ -80,11 +80,49 @@ function settled<T>(phase: ResolvedPhase<T>): PhaseRow<T> {
   return phase === 'loading' || phase === 'error' ? null : phase;
 }
 
+function active<T>(phase: ResolvedPhase<T>): T | undefined {
+  return phase !== null && phase !== 'deactivated' && phase !== 'loading' && phase !== 'error'
+    ? phase
+    : undefined;
+}
+
+// The raw values `ClosureStep` interpolates into a check's own text (§3.8: `{{outcome}}`,
+// `{{classification}}`/`{{notification}}`, `{{count}}`/`{{answer}}`, `{{breakdown}}`/
+// `{{declared}}`) — `evaluateCloseReadiness` only ever sees the narrower shape it compares
+// against (SPEC FE14b §3.3), so this is assembled here, from the same resolved phases, instead
+// of widening the pure function's input.
+export interface CloseReadinessContext {
+  isSeriousEvent: boolean | null;
+  requestInvestigation: boolean | null;
+  notificationType: string | null;
+  outcomeName: string | null;
+  takesMedication: string | null;
+  activeMedicationCount: number;
+  community: {
+    similarEventCount: number | null;
+    affectedVaccinated: number | null;
+    affectedUnvaccinated: number | null;
+    affectedUnknown: number | null;
+  } | null;
+}
+
+const EMPTY_CONTEXT: CloseReadinessContext = {
+  isSeriousEvent: null,
+  requestInvestigation: null,
+  notificationType: null,
+  outcomeName: null,
+  takesMedication: null,
+  activeMedicationCount: 0,
+  community: null,
+};
+
 // SPEC FE14b §3.2, §3.4, plan step 3 — the eight lectures the closure step needs, each `enabled`
 // by its own phase's `exists` (never a hardcoded `true`), folded into the shape
 // `evaluateCloseReadiness` expects. Nothing here is stored: TanStack Query is the only cache, and
 // `status`/`lines`/`canClose` are recomputed on every render (§3.4, "una excepción declarada").
-export function useCloseReadiness(caseId: string | undefined): CloseReadiness {
+export function useCloseReadiness(
+  caseId: string | undefined,
+): CloseReadiness & { context: CloseReadinessContext } {
   const workflow = useCaseWorkflow(caseId);
   const stages = workflow.data?.stages;
 
@@ -155,7 +193,7 @@ export function useCloseReadiness(caseId: string | undefined): CloseReadiness {
     medicationsLoading ||
     (workflow.isPending && caseId !== undefined)
   ) {
-    return { status: 'loading', lines: [], canClose: false };
+    return { status: 'loading', lines: [], canClose: false, context: EMPTY_CONTEXT };
   }
 
   if (
@@ -163,7 +201,7 @@ export function useCloseReadiness(caseId: string | undefined): CloseReadiness {
     medicationsErrored ||
     workflow.isError
   ) {
-    return { status: 'error', lines: [], canClose: false };
+    return { status: 'error', lines: [], canClose: false, context: EMPTY_CONTEXT };
   }
 
   const input: CloseReadinessInput = {
@@ -177,7 +215,26 @@ export function useCloseReadiness(caseId: string | undefined): CloseReadiness {
     hasActiveMedication,
   };
 
-  return { status: 'ready', ...evaluateCloseReadiness(input) };
+  const activeCommunity = active(community);
+  const context: CloseReadinessContext = {
+    isSeriousEvent: active(classification)?.isSeriousEvent ?? null,
+    requestInvestigation: active(notification)?.requestInvestigation ?? null,
+    notificationType: active(notification)?.notificationType ?? null,
+    outcomeName: active(notification)?.outcome?.name ?? null,
+    takesMedication: active(notification)?.takesMedication ?? null,
+    activeMedicationCount:
+      medicationsQuery.data?.rows.filter((medication) => medication.isActive).length ?? 0,
+    community: activeCommunity
+      ? {
+          similarEventCount: activeCommunity.similarEventCount,
+          affectedVaccinated: activeCommunity.affectedVaccinated,
+          affectedUnvaccinated: activeCommunity.affectedUnvaccinated,
+          affectedUnknown: activeCommunity.affectedUnknown,
+        }
+      : null,
+  };
+
+  return { status: 'ready', ...evaluateCloseReadiness(input), context };
 }
 
 // The read hooks answer the full contract row; the pure function only wants the fields it

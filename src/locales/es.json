@@ -520,6 +520,67 @@
       "confirmAction": "Reabrir",
       "success": "Expediente reabierto.",
       "forbidden": "Tu rol ya no permite reabrir expedientes."
+    },
+    "close": {
+      "title": "Cierre del expediente",
+      "intro": "Antes de cerrar, revisamos que todo lo obligatorio esté completo y sin incoherencias.",
+      "sections": {
+        "preconditions": "Requisitos",
+        "blockers": "Incoherencias que bloquean",
+        "warnings": "Avisos"
+      },
+      "state": {
+        "met": "Cumplido",
+        "unmet": "Pendiente",
+        "warning": "Aviso"
+      },
+      "checks": {
+        "notPendingValidation": "El expediente no está pendiente de validación",
+        "classification": "Clasificación inicial",
+        "notification": "Notificación",
+        "investigation": "Investigación",
+        "finalClassification": "Clasificación final",
+        "autopsyWithoutDeath": "Hay una autopsia registrada, pero el desenlace del caso es «{{outcome}}».",
+        "autopsyWithoutOutcome": "Hay una autopsia registrada, pero el caso no tiene un desenlace declarado.",
+        "autopsyWithoutDeathLabel": "Autopsia y desenlace",
+        "severityMismatch": "La clasificación inicial dice {{classification}} y la notificación {{notification}}.",
+        "severityMismatchHint": "Corregirlo exige que un SUPERADMIN elimine la ficha de la notificación.",
+        "severityMismatchLabel": "Coherencia de la gravedad",
+        "medicationAnswer": "Hay {{count}} medicaciones registradas, pero la pregunta sobre medicación dice «{{answer}}».",
+        "medicationAnswerLabel": "Medicación declarada",
+        "communityCount": "Los afectados suman {{breakdown}} y el total declarado es {{declared}}.",
+        "communityCountLabel": "Conteo de afectados"
+      },
+      "reasons": {
+        "always": "Siempre se exige.",
+        "investigationRequested": "Se exige porque se solicitó una investigación.",
+        "seriousEvent": "Se exige porque el evento es grave.",
+        "seriousAndInvestigated": "Se exige porque el evento es grave y porque se solicitó una investigación."
+      },
+      "rowMissing": "Todavía no se ha registrado.",
+      "rowDeactivated": "Está dada de baja. Un administrador tiene que reactivarla.",
+      "severity": {
+        "serious": "grave",
+        "notSerious": "no grave"
+      },
+      "unanswered": "sin responder",
+      "links": {
+        "classification": "Ir a la clasificación inicial",
+        "notification": "Ir a la notificación",
+        "investigation": "Ir a la investigación",
+        "finalClassification": "Ir a la clasificación final",
+        "fixOutcome": "Corregir el desenlace",
+        "reviewAutopsy": "Revisar la autopsia"
+      },
+      "loadError": "No pudimos cargar todos los datos del cierre.",
+      "ready": "El expediente cumple todo lo necesario para cerrarse.",
+      "blockedHint": "Resuelve lo pendiente para poder cerrar el expediente.",
+      "action": "Cerrar expediente",
+      "confirmTitle": "¿Cerrar este expediente?",
+      "confirmBody": "El expediente pasará a sólo lectura. Únicamente un administrador podrá reabrirlo.",
+      "confirmWarnings": "Hay avisos sin resolver:",
+      "confirmAction": "Cerrar expediente",
+      "success": "Expediente cerrado."
     }
   },
   "esaviCase": {
