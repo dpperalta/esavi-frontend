@@ -36,6 +36,10 @@ beforeEach(() => {
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
   toastInfo.mockClear();
+  // `useDraftsStore` is a module-level singleton (`persist` middleware) — `localStorage.clear()`
+  // alone doesn't reset its already-hydrated in-memory state, so a draft seeded by one test would
+  // otherwise leak into the next one's render.
+  useDraftsStore.setState({ drafts: {} });
 });
 
 const IMPORTANCE_TYPE = {
@@ -294,6 +298,43 @@ describe('FinalClassificationStep — precedencia entre importancias (SPEC FE14a
     expect(selectA).not.toHaveTextContent('Importancia 1');
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
+
+  it('un duplicado detectado por el schema del cliente muestra el texto traducido, no el marcador desnudo', async () => {
+    mockCatalog();
+    mockWorkflow(true);
+    mockFinalClassification(baseFinalClassificationDetail({ finalClassificationId: 'fc-1' }));
+    // Un borrador restaurado puede traer dos importancias iguales sin pasar por
+    // `handleImportanceChange` (que nunca deja construir ese estado desde la UI) — el
+    // `superRefine` de `finalClassificationSaveSchema` lo detecta igual al intentar guardar, y el
+    // marcador desnudo `'importanceDuplicated'` que produce tiene que resolverse contra i18n, no
+    // mostrarse crudo (bug real: capturado en pantalla con el marcador sin traducir).
+    useDraftsStore.getState().set(
+      'case-1',
+      'finalClassification',
+      {
+        importanceAItemId: '11111111-1111-4111-8111-111111111111',
+        importanceBItemId: '11111111-1111-4111-8111-111111111111',
+      },
+      null,
+    );
+
+    renderStepWithActionBar();
+    const user = setupUser();
+
+    await screen.findByRole('combobox', { name: 'Importancia A' });
+    // Ningún handler de PUT registrado a propósito: si la validación del cliente no bloqueara el
+    // envío, `onUnhandledRequest: 'error'` de MSW haría fallar el test.
+    await clickSaveButton(user);
+
+    // Los dos campos duplicados (A y B) reciben el error cada uno (SPEC FE14a §3.5), así que hay
+    // dos avisos, no uno.
+    const alerts = await screen.findAllByRole('alert');
+    expect(alerts.length).toBeGreaterThanOrEqual(2);
+    for (const alert of alerts) {
+      expect(alert).toHaveTextContent('Esa posición ya la tiene otro bloque.');
+    }
+    expect(screen.queryByText('importanceDuplicated')).not.toBeInTheDocument();
+  }, 30000);
 });
 
 describe('FinalClassificationStep — el bloque D (SPEC FE14a §3.5)', () => {

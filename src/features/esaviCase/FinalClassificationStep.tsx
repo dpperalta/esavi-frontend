@@ -130,9 +130,12 @@ interface ImportanceFieldRowProps {
   disabled?: boolean;
 }
 
-// El `<ImportanceSelect>` más su error de servidor (`_IMPORTANCE_DUPLICATED`/`_IMPORTANCE_NOT_FOUND`,
-// SPEC FE14a §3.5), anclado en el campo y no en un aviso genérico. Envuelto en `Controller` sólo
-// para leer `fieldState.error` — el valor y el `onChange` siguen viniendo de `handleImportanceChange`.
+// El `<ImportanceSelect>` más su error — de servidor (`_IMPORTANCE_DUPLICATED`/`_IMPORTANCE_NOT_FOUND`,
+// ya traducido por el backend) o del `superRefine` del cliente (el marcador desnudo
+// `'importanceDuplicated'` de `finalClassificationSaveSchema`, resuelto aquí contra i18n — mismo
+// criterio que `otherConditionDescriptionRequired` en `ClassificationStep`), SPEC FE14a §3.5,
+// anclado en el campo y no en un aviso genérico. Envuelto en `Controller` sólo para leer
+// `fieldState.error` — el valor y el `onChange` siguen viniendo de `handleImportanceChange`.
 function ImportanceFieldRow({
   control,
   name,
@@ -142,6 +145,7 @@ function ImportanceFieldRow({
   releasedToBlock,
   disabled,
 }: ImportanceFieldRowProps) {
+  const { t } = useTranslation();
   return (
     <Controller
       control={control}
@@ -157,7 +161,9 @@ function ImportanceFieldRow({
           />
           {fieldState.error && (
             <p role="alert" className="text-sm text-destructive">
-              {fieldState.error.message}
+              {fieldState.error.message === 'importanceDuplicated'
+                ? t('finalClassification.error.importanceDuplicated')
+                : fieldState.error.message}
             </p>
           )}
         </div>
@@ -498,7 +504,9 @@ function FinalClassificationFormBody({
               </label>
               {fieldState.error && (
                 <p role="alert" className="text-sm text-destructive">
-                  {fieldState.error.message}
+                  {fieldState.error.message === 'unclassifiableFieldsNotAllowed'
+                    ? t('finalClassification.error.unclassifiableFieldsNotAllowed')
+                    : fieldState.error.message}
                 </p>
               )}
             </div>
