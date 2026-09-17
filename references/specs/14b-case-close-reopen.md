@@ -1,6 +1,6 @@
 # SPEC FE14b — Cerrar y reabrir el expediente
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (armazón del asistente, `steps.ts`, `CaseWizardActionBar`, sólo lectura con `CLOSED`), SPEC FE14a (`isStepRequired`, banderas del stepper, paso 6), SPEC FE12a (`notification.outcome`, `notificationType`, `takesMedication`), SPEC FE13a (`investigationAutopsy`), SPEC FE13e (`investigationCommunity`), SPEC F44 del backend (`ESAVI-CASEFLOW-008`/`-009`)
 > **Fecha:** 2026-09-17
 > **Objetivo:** Añadir al asistente un paso «Cierre» que liste, precondición por precondición, lo que bloquea o avisa antes de cerrar el expediente, y dar al ADMIN la acción de reabrirlo.
