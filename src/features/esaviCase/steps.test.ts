@@ -29,7 +29,7 @@ function buildStages(
 }
 
 describe('CASE_WIZARD_STEPS', () => {
-  it('declara los seis pasos con su grupo y etapa', () => {
+  it('declara los siete pasos con su grupo y etapa', () => {
     expect(CASE_WIZARD_STEPS.map((step) => step.slug)).toEqual([
       'patient',
       'case-opening',
@@ -37,7 +37,13 @@ describe('CASE_WIZARD_STEPS', () => {
       'notification',
       'investigation',
       'final-classification',
+      'closure',
     ]);
+  });
+
+  it('closure va detrás de final-classification, sin stage propio', () => {
+    const closure = CASE_WIZARD_STEPS.find((step) => step.slug === 'closure');
+    expect(closure).toEqual({ slug: 'closure', group: 'closure', stage: null });
   });
 });
 
@@ -105,16 +111,21 @@ describe('isStepUnlocked', () => {
       ),
     ).toBe(true);
   });
+
+  it('closure está siempre desbloqueado, sin precondición propia (SPEC FE14b §2)', () => {
+    expect(isStepUnlocked('closure', buildStages())).toBe(true);
+  });
 });
 
 describe('isReachableStepSlug', () => {
-  it('acepta los seis pasos, incluidos patient y case-opening (SPEC FE10 §8)', () => {
+  it('acepta los siete pasos, incluidos patient, case-opening y closure (SPEC FE10 §8, SPEC FE14b §2)', () => {
     expect(isReachableStepSlug('patient')).toBe(true);
     expect(isReachableStepSlug('case-opening')).toBe(true);
     expect(isReachableStepSlug('classification')).toBe(true);
     expect(isReachableStepSlug('notification')).toBe(true);
     expect(isReachableStepSlug('investigation')).toBe(true);
     expect(isReachableStepSlug('final-classification')).toBe(true);
+    expect(isReachableStepSlug('closure')).toBe(true);
   });
 
   it('rechaza cualquier valor desconocido', () => {
@@ -214,6 +225,50 @@ describe('resolveResumeStep', () => {
 
     expect(resolveResumeStep(stages, flags)).toBe('final-classification');
   });
+
+  it('sin isClosed, closure nunca gana la reanudación aunque esté siempre desbloqueado y requerido (SPEC FE14b §2, §6)', () => {
+    const stages = buildStages({
+      classification: {
+        exists: true,
+        id: 'c-1',
+        startedAt: null,
+        endedAt: '2026-09-01',
+        durationMinutes: 10,
+      },
+      notification: {
+        exists: true,
+        id: 'n-1',
+        startedAt: null,
+        endedAt: null,
+        durationMinutes: null,
+      },
+    });
+    const flags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: false };
+
+    expect(resolveResumeStep(stages, flags, false)).toBe('notification');
+  });
+
+  it('con isClosed, closure gana la reanudación', () => {
+    const stages = buildStages({
+      classification: {
+        exists: true,
+        id: 'c-1',
+        startedAt: null,
+        endedAt: '2026-09-01',
+        durationMinutes: 10,
+      },
+      notification: {
+        exists: true,
+        id: 'n-1',
+        startedAt: null,
+        endedAt: null,
+        durationMinutes: null,
+      },
+    });
+    const flags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: false };
+
+    expect(resolveResumeStep(stages, flags, true)).toBe('closure');
+  });
 });
 
 describe('isStepRequired — SPEC FE14a §2, §3.4', () => {
@@ -224,6 +279,12 @@ describe('isStepRequired — SPEC FE14a §2, §3.4', () => {
     expect(isStepRequired('case-opening', stages, flags)).toBe(true);
     expect(isStepRequired('classification', stages, flags)).toBe(true);
     expect(isStepRequired('notification', stages, flags)).toBe(true);
+  });
+
+  it('closure siempre se requiere (SPEC FE14b §2)', () => {
+    const stages = buildStages();
+    const flags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: false };
+    expect(isStepRequired('closure', stages, flags)).toBe(true);
   });
 
   it('caso no grave y sin investigación: no requiere ni el 5 ni el 6', () => {

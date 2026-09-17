@@ -5,7 +5,10 @@ import { EsaviApiError } from '@/shared/api/types';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
+import { ReopenCaseButton } from '@/features/caseWorkflow/ReopenCaseButton';
 import { PatientStep } from '@/features/patient/PatientStep';
+import { ROLE_LEVELS } from '@/shared/config/roles';
+import { useCan } from '@/shared/hooks/useCan';
 import { esaviCaseResource } from './api';
 import { CaseOpeningStep } from './CaseOpeningStep';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
@@ -13,6 +16,7 @@ import { CaseWizardProvider } from './CaseWizardContext';
 import { CaseWizardHeader } from './CaseWizardHeader';
 import { CaseWizardStepper, useCaseWizardStepFlags } from './CaseWizardStepper';
 import { ClassificationStep } from './ClassificationStep';
+import { ClosureStep } from './ClosureStep';
 import { FinalClassificationStep } from './FinalClassificationStep';
 import { InvestigationStep } from './InvestigationStep';
 import { NotificationStep } from './NotificationStep';
@@ -64,6 +68,7 @@ export function CaseWizardPage() {
   const workflow = useCaseWorkflow(id);
   const caseDetail = esaviCaseResource.useOne(id ?? '');
   const flags = useCaseWizardStepFlags(id ?? '', workflow.data?.stages);
+  const canReopen = useCan(ROLE_LEVELS.ADMIN);
 
   if (!id) {
     return <Navigate to="/esavi-cases" replace />;
@@ -110,7 +115,7 @@ export function CaseWizardPage() {
     !isStepUnlocked(step, stages) ||
     !isStepRequired(step, stages, flags)
   ) {
-    const resumeSlug = resolveResumeStep(stages, flags);
+    const resumeSlug = resolveResumeStep(stages, flags, isClosed);
     return <Navigate to={`/esavi-cases/${id}/wizard/${resumeSlug}`} replace />;
   }
 
@@ -124,19 +129,21 @@ export function CaseWizardPage() {
         <div className="flex min-w-0 flex-1 flex-col gap-6">
           <CaseWizardHeader caseId={id} />
 
-          {isClosed && (
+          {isClosed && step !== 'closure' && (
             <div
               role="status"
-              className="rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground"
             >
-              {t('caseWizard.readOnly.closedBanner')}
+              {t(canReopen ? 'caseWizard.readOnly.closedBannerAdmin' : 'caseWizard.readOnly.closedBanner')}
+              {canReopen && <ReopenCaseButton caseId={id} />}
             </div>
           )}
 
-          {/* patient y case-opening llevan su propia barra de acciones — Continuar / Crear caso
-              · Guardar · Siguiente (SPEC FE10 §2) — y no tienen `stage`, así que la barra
-              genérica (Guardar · Completar etapa · Siguiente, atada a `useCaseWizard()`) no se
-              pinta para ellos. */}
+          {/* patient, case-opening y closure llevan su propia barra de acciones (o ninguna) —
+              Continuar / Crear caso · Guardar · Siguiente (SPEC FE10 §2), «Cerrar expediente» /
+              «Reabrir» (SPEC FE14b §2) — y no tienen `stage`, así que la barra genérica
+              (Guardar · Completar etapa · Siguiente, atada a `useCaseWizard()`) no se pinta para
+              ellos. */}
           {step === 'patient' && (
             <PatientStep caseId={id} patientId={caseDetail.data.patient.patientId} />
           )}
@@ -145,8 +152,9 @@ export function CaseWizardPage() {
           {step === 'notification' && <NotificationStep caseId={id} />}
           {step === 'investigation' && <InvestigationStep caseId={id} />}
           {step === 'final-classification' && <FinalClassificationStep caseId={id} />}
+          {step === 'closure' && <ClosureStep caseId={id} />}
 
-          {step !== 'patient' && step !== 'case-opening' && (
+          {step !== 'patient' && step !== 'case-opening' && step !== 'closure' && (
             <CaseWizardActionBar caseId={id} activeSlug={step} />
           )}
         </div>

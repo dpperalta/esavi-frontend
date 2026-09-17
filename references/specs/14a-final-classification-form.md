@@ -1,6 +1,6 @@
 # SPEC FE14a — Paso 6: el formulario de clasificación final
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (armazón del asistente, `CaseWizardActionBar`, `CaseWizardStepHandle`, sólo lectura si `CLOSED`), SPEC FE11 (`classification.isSeriousEvent`), SPEC FE12a (`notification.requestInvestigation`, borrador en `draftsStore` y su resolución de conflicto), SPEC FE13a (el `<Switch>` tri-estado de las fuentes), SPEC F41 del backend (CRUD de la clasificación final), SPEC F44 del backend (el avance de fase `ESAVI-CASEFLOW-012`)
 > **Fecha:** 2026-09-12
 > **Objetivo:** Sustituir el marcador de posición del paso 6 por el formulario del veredicto de causalidad —tres importancias y los bloques A, B, C y D— y hacer que el stepper sólo muestre los pasos 5 y 6 cuando el caso los requiere.

@@ -3,15 +3,17 @@ import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 
 export type CaseWizardGroup = 'patient' | 'notification' | 'investigation' | 'closure';
 
-// The six slugs of SPEC FE08 §3.1. English, not a number: a saved link (`.../wizard/notification`)
-// stays valid if a later spec splits a step; `.../wizard/4` would not (§6).
+// The seven slugs of SPEC FE08 §3.1, plus `closure` (SPEC FE14b §2). English, not a number: a
+// saved link (`.../wizard/notification`) stays valid if a later spec splits a step; `.../wizard/4`
+// would not (§6).
 export type CaseWizardStepSlug =
   | 'patient'
   | 'case-opening'
   | 'classification'
   | 'notification'
   | 'investigation'
-  | 'final-classification';
+  | 'final-classification'
+  | 'closure';
 
 export interface CaseWizardStepDefinition {
   slug: CaseWizardStepSlug;
@@ -29,6 +31,9 @@ export const CASE_WIZARD_STEPS: CaseWizardStepDefinition[] = [
   { slug: 'notification', group: 'notification', stage: 'NOTIFICATION' },
   { slug: 'investigation', group: 'investigation', stage: 'INVESTIGATION' },
   { slug: 'final-classification', group: 'closure', stage: 'FINAL_CLASSIFICATION' },
+  // Sin `stage` propio, como los pasos 1-2 (SPEC FE14b §2): no escribe ninguna fila, sólo lee las
+  // que ya existen. `stageWorkflowKey` nunca se llama con él.
+  { slug: 'closure', group: 'closure', stage: null },
 ];
 
 export type CaseWorkflowStages = CaseWorkflowDetail['stages'];
@@ -134,12 +139,20 @@ export function isStepRequired(
 // has no precondition of its own and is always required. `flags` defaults to `null` so every
 // existing caller before SPEC FE14a §4 plan step 5 wires the stepper's two reads keeps compiling
 // unchanged — with `flags` unresolved nothing is skipped, same as before this spec.
+//
+// `closure` is always unlocked and always required (SPEC FE14b §2, §6), so without `isClosed` it
+// would win the walk for every single case — the "most advanced step" of an open case would
+// always be a checklist instead of whatever work is actually pending. It's skipped unless
+// `isClosed`, and `isClosed` defaults to `false` so every caller before this spec keeps compiling
+// unchanged — with it unresolved, `closure` stays skipped, same as before.
 export function resolveResumeStep(
   stages: WorkflowStages,
   flags: CaseWizardStepFlags | null = null,
+  isClosed = false,
 ): CaseWizardStepSlug {
   let resumeSlug: CaseWizardStepSlug = 'classification';
   for (const step of REACHABLE_WIZARD_STEPS) {
+    if (step.slug === 'closure' && !isClosed) continue;
     if (isStepUnlocked(step.slug, stages) && isStepRequired(step.slug, stages, flags)) {
       resumeSlug = step.slug;
     }

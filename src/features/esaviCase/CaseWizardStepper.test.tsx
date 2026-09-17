@@ -28,7 +28,10 @@ beforeEach(() => {
   tokenStore.setRefreshToken('a-refresh-token');
 });
 
-function mockWorkflow(stages: Record<string, { exists: boolean; endedAt: string | null }>) {
+function mockWorkflow(
+  stages: Record<string, { exists: boolean; endedAt: string | null }>,
+  statusCode: 'OPEN' | 'CLOSED' = 'OPEN',
+) {
   server.use(
     http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
       HttpResponse.json({
@@ -37,7 +40,7 @@ function mockWorkflow(stages: Record<string, { exists: boolean; endedAt: string 
         data: {
           caseWorkflowId: 'workflow-1',
           caseId: 'case-1',
-          status: { catalogItemId: 'status-1', code: 'OPEN', name: 'Abierto' },
+          status: { catalogItemId: 'status-1', code: statusCode, name: statusCode },
           previousStatus: null,
           openedAt: '2026-09-01T00:00:00.000Z',
           closedAt: null,
@@ -234,5 +237,47 @@ describe('CaseWizardStepper', () => {
         container.querySelector('a[href="/esavi-cases/case-1/wizard/final-classification"]'),
       ).not.toBeInTheDocument(),
     );
+  });
+
+  // SPEC FE14b §4 paso 7
+  it('el paso closure siempre se pinta, sin candado, en un caso recién abierto', async () => {
+    mockWorkflow({
+      classification: { exists: false, endedAt: null },
+      notification: { exists: false, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    const { container } = renderStepper('classification');
+
+    const link = await waitFor(() => {
+      const el = container.querySelector('a[href="/esavi-cases/case-1/wizard/closure"]');
+      expect(el).toBeInTheDocument();
+      return el;
+    });
+    expect(link?.closest('[aria-disabled="true"]')).toBeNull();
+  });
+
+  it('closure marca «Completado» con CLOSED y «Sin iniciar» en cualquier otro estado', async () => {
+    mockWorkflow(
+      {
+        classification: { exists: true, endedAt: '2026-09-01' },
+        notification: { exists: true, endedAt: null },
+        investigation: { exists: false, endedAt: null },
+        finalClassification: { exists: false, endedAt: null },
+      },
+      'CLOSED',
+    );
+    mockClassification(false);
+    mockNotification(false);
+
+    const { container } = renderStepper('closure');
+
+    const link = await waitFor(() => {
+      const el = container.querySelector('a[href="/esavi-cases/case-1/wizard/closure"]');
+      expect(el).toBeInTheDocument();
+      return el;
+    });
+    expect(link?.textContent).toContain('Completado');
   });
 });

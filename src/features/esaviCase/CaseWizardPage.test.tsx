@@ -186,6 +186,18 @@ function mockWorkflow(
   );
 }
 
+function mockCurrentUser(roleName: string, level: number) {
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { userId: '1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+      }),
+    ),
+  );
+}
+
 function renderPage(initialPath: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -380,5 +392,106 @@ describe('CaseWizardPage — las dos pantallas de error de 006', () => {
       expect(screen.getByText('No pudimos cargar el expediente')).toBeInTheDocument(),
     );
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+});
+
+// SPEC FE14b §4 paso 7
+describe('CaseWizardPage — paso closure', () => {
+  it('/wizard sin :step no aterriza en closure con el caso abierto', async () => {
+    mockCase();
+    mockClassification();
+    mockNotification(false);
+    server.use(
+      http.get('http://localhost:4500/api/catalog-types', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+    mockWorkflow('OPEN', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: true, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    const { container } = renderPage('/esavi-cases/case-1/wizard');
+
+    await waitFor(() =>
+      expect(container.querySelector('a[aria-current="step"]')).toHaveAttribute(
+        'href',
+        '/esavi-cases/case-1/wizard/notification',
+      ),
+    );
+  });
+
+  it('/wizard sin :step aterriza en closure con el caso CLOSED', async () => {
+    mockCase();
+    mockWorkflow('CLOSED', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: true, endedAt: '2026-09-02' },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    renderPage('/esavi-cases/case-1/wizard');
+
+    expect(await screen.findByRole('heading', { name: 'Expediente cerrado' })).toBeInTheDocument();
+  });
+
+  it('en closure no se pinta la barra genérica: no hay Guardar, Completar etapa ni Siguiente', async () => {
+    mockCase();
+    mockWorkflow('OPEN', {
+      classification: { exists: false, endedAt: null },
+      notification: { exists: false, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    renderPage('/esavi-cases/case-1/wizard/closure');
+
+    expect(await screen.findByRole('heading', { name: 'Cierre del expediente' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Siguiente' })).not.toBeInTheDocument();
+  });
+
+  it('el aviso de cerrado muestra «Reabrir» con ADMIN y el texto de siempre con USER', async () => {
+    mockCase();
+    mockPatient();
+    mockClassification();
+    mockWorkflow('CLOSED', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: true, endedAt: '2026-09-02' },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+    mockCurrentUser('ADMIN', 50);
+
+    renderPage('/esavi-cases/case-1/wizard/classification');
+
+    await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
+    expect(await screen.findByRole('button', { name: 'Reabrir' })).toBeInTheDocument();
+  });
+
+  it('con USER, el aviso de cerrado mantiene el texto de pedírselo a un administrador', async () => {
+    mockCase();
+    mockPatient();
+    mockClassification();
+    mockWorkflow('CLOSED', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: true, endedAt: '2026-09-02' },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+    mockCurrentUser('USER', 25);
+
+    renderPage('/esavi-cases/case-1/wizard/classification');
+
+    await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
+    expect(
+      screen.getByText(
+        'Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reabrir' })).not.toBeInTheDocument();
   });
 });

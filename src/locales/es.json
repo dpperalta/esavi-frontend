@@ -483,7 +483,18 @@
       "CASEFLOW_007_STAGE_NOT_STARTED": "Esta etapa aún no se ha iniciado.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Esta etapa ya se completó.",
       "CASEFLOW_007_CASE_CLOSED": "Este expediente está cerrado.",
-      "CASEFLOW_002_STATUS_NOT_FOUND": "Ese estado no existe en el catálogo. Se limpió el filtro."
+      "CASEFLOW_002_STATUS_NOT_FOUND": "Ese estado no existe en el catálogo. Se limpió el filtro.",
+      "CASEFLOW_008_NOT_FOUND": "El caso no tiene expediente de flujo.",
+      "CASEFLOW_008_ALREADY_CLOSED": "Este expediente ya estaba cerrado.",
+      "CASEFLOW_008_PENDING_VALIDATION": "No se puede cerrar: el expediente está pendiente de validación.",
+      "CASEFLOW_008_CLASSIFICATION_REQUIRED": "No se puede cerrar: falta la clasificación inicial.",
+      "CASEFLOW_008_NOTIFICATION_REQUIRED": "No se puede cerrar: falta la notificación.",
+      "CASEFLOW_008_INVESTIGATION_REQUIRED": "No se puede cerrar: falta la investigación.",
+      "CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED": "No se puede cerrar: falta la clasificación final.",
+      "CASEFLOW_008_CLOSE_FAILED": "No pudimos cerrar el expediente. Intenta de nuevo.",
+      "CASEFLOW_009_NOT_FOUND": "El caso no tiene expediente de flujo.",
+      "CASEFLOW_009_NOT_CLOSED": "Este expediente ya no está cerrado.",
+      "CASEFLOW_009_REOPEN_FAILED": "No pudimos reabrir el expediente. Intenta de nuevo."
     },
     "list": {
       "columns": {
@@ -501,6 +512,83 @@
       },
       "empty": "No hay expedientes que mostrar.",
       "emptyFiltered": "Ningún expediente coincide con los filtros."
+    },
+    "reopen": {
+      "action": "Reabrir",
+      "confirmTitle": "¿Reabrir este expediente?",
+      "confirmBody": "El expediente volverá a ser editable. Cualquier usuario podrá seguir completándolo.",
+      "confirmAction": "Reabrir",
+      "success": "Expediente reabierto.",
+      "forbidden": "Tu rol ya no permite reabrir expedientes."
+    },
+    "close": {
+      "title": "Cierre del expediente",
+      "intro": "Antes de cerrar, revisamos que todo lo obligatorio esté completo y sin incoherencias.",
+      "sections": {
+        "preconditions": "Requisitos",
+        "blockers": "Incoherencias que bloquean",
+        "warnings": "Avisos"
+      },
+      "state": {
+        "met": "Cumplido",
+        "unmet": "Pendiente",
+        "warning": "Aviso"
+      },
+      "checks": {
+        "notPendingValidation": "El expediente no está pendiente de validación",
+        "classification": "Clasificación inicial",
+        "notification": "Notificación",
+        "investigation": "Investigación",
+        "finalClassification": "Clasificación final",
+        "autopsyWithoutDeath": "Hay una autopsia registrada, pero el desenlace del caso es «{{outcome}}».",
+        "autopsyWithoutOutcome": "Hay una autopsia registrada, pero el caso no tiene un desenlace declarado.",
+        "autopsyWithoutDeathLabel": "Autopsia y desenlace",
+        "severityMismatch": "La clasificación inicial dice {{classification}} y la notificación {{notification}}.",
+        "severityMismatchHint": "Corregirlo exige que un SUPERADMIN elimine la ficha de la notificación.",
+        "severityMismatchLabel": "Coherencia de la gravedad",
+        "medicationAnswer": "Hay {{count}} medicaciones registradas, pero la pregunta sobre medicación dice «{{answer}}».",
+        "medicationAnswerLabel": "Medicación declarada",
+        "communityCount": "Los afectados suman {{breakdown}} y el total declarado es {{declared}}.",
+        "communityCountLabel": "Conteo de afectados"
+      },
+      "reasons": {
+        "always": "Siempre se exige.",
+        "investigationRequested": "Se exige porque se solicitó una investigación.",
+        "seriousEvent": "Se exige porque el evento es grave.",
+        "seriousAndInvestigated": "Se exige porque el evento es grave y porque se solicitó una investigación."
+      },
+      "rowMissing": "Todavía no se ha registrado.",
+      "rowDeactivated": "Está dada de baja. Un administrador tiene que reactivarla.",
+      "severity": {
+        "serious": "grave",
+        "notSerious": "no grave"
+      },
+      "unanswered": "sin responder",
+      "links": {
+        "classification": "Ir a la clasificación inicial",
+        "notification": "Ir a la notificación",
+        "investigation": "Ir a la investigación",
+        "finalClassification": "Ir a la clasificación final",
+        "fixOutcome": "Corregir el desenlace",
+        "reviewAutopsy": "Revisar la autopsia"
+      },
+      "loadError": "No pudimos cargar todos los datos del cierre.",
+      "ready": "El expediente cumple todo lo necesario para cerrarse.",
+      "blockedHint": "Resuelve lo pendiente para poder cerrar el expediente.",
+      "action": "Cerrar expediente",
+      "confirmTitle": "¿Cerrar este expediente?",
+      "confirmBody": "El expediente pasará a sólo lectura. Únicamente un administrador podrá reabrirlo.",
+      "confirmWarnings": "Hay avisos sin resolver:",
+      "confirmAction": "Cerrar expediente",
+      "success": "Expediente cerrado."
+    },
+    "closed": {
+      "title": "Expediente cerrado",
+      "closedAt": "Cerrado el",
+      "reopenCount": "Veces reabierto",
+      "lastReopenedAt": "Última reapertura",
+      "never": "Nunca",
+      "askAdmin": "Pídeselo a un administrador para reabrirlo."
     }
   },
   "esaviCase": {
@@ -643,7 +731,8 @@
       "classification": "Clasificación inicial",
       "notification": "Ficha de notificación",
       "investigation": "Investigación",
-      "finalClassification": "Clasificación final"
+      "finalClassification": "Clasificación final",
+      "closure": "Cierre del expediente"
     },
     "stepStatus": {
       "notStarted": "Sin iniciar",
@@ -677,7 +766,8 @@
       "generic": "No pudimos cargar el expediente"
     },
     "readOnly": {
-      "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo."
+      "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo.",
+      "closedBannerAdmin": "Este expediente está cerrado."
     }
   },
   "patient": {
