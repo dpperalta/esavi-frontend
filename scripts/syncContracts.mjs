@@ -91,6 +91,7 @@ const SYNC_MAP = [
     dest: 'investigationAdministrationError.ts',
   },
   { source: 'investigation/investigationCommunity.types.ts', dest: 'investigationCommunity.ts' },
+  { source: 'finalClassification/finalClassification.types.ts', dest: 'finalClassification.ts' },
 ];
 
 // notification.types.ts and severeNotification.types.ts are the first mirrored files that import

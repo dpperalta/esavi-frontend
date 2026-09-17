@@ -1505,6 +1505,58 @@
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."
     }
   },
+  "finalClassification": {
+    "title": "Final classification",
+    "blockA": {
+      "legend": "Order A: Importance",
+      "importance": "Importance A",
+      "vaccineTitle": "Importance A: Causal association consistent with the vaccine",
+      "processTitle": "A. Causal association consistent with the vaccination process"
+    },
+    "blockB": {
+      "legend": "Order B: Importance",
+      "importance": "Importance B",
+      "title": "Indeterminate"
+    },
+    "blockC": {
+      "legend": "Order C: Importance",
+      "importance": "Importance C",
+      "title": "No causal association consistent with the vaccine or the vaccination process"
+    },
+    "blockD": {
+      "legend": "Order D: Unclassifiable"
+    },
+    "fields": {
+      "aIsRelatedToVaccineProduct": "A1. Event related to the vaccine or any of its components",
+      "aIsRelatedToQualityDeviation": "A2. Event related to a quality deviation of the biological product or vaccine",
+      "aIsRelatedToProgrammaticError": "A3. Event related to a programmatic error",
+      "aIsRelatedToStress": "A4. Stress-related event that occurred immediately before, during or immediately after the vaccination process",
+      "bIsConsistentTemporalRelation": "B1. The temporal relationship is consistent, but there isn't enough definitive evidence of a causal relationship with the vaccine (may be a recently vaccine-associated event)",
+      "bHasDeterminantFactor": "B2. Determinant factors for the classification show conflicting trends for and against a causal association with vaccination",
+      "cHasCoincidentCause": "C. An underlying or emerging illness, or a condition caused by exposure to something other than the vaccine or the vaccination process",
+      "dIsUnclassifiable": "Specify the additional information required to classify the case in situations where false events are identified and the causality analysis has already started; these will be included in this category",
+      "notes": "Observations"
+    },
+    "help": {
+      "notesUnclassifiable": "Specify here the information that's missing to classify the case."
+    },
+    "importance": {
+      "released": "This position moved to block {{block}}"
+    },
+    "pending": {
+      "verdict": "Mark a verdict: block D, or at least one criterion from A, B or C."
+    },
+    "error": {
+      "importanceDuplicated": "Another block already holds that position.",
+      "unclassifiableFieldsNotAllowed": "With \"Unclassifiable\" on, the other blocks must stay empty.",
+      "loadFailed": "We couldn't load the final classification",
+      "inactive": "The final classification is deactivated. Only a superadmin can reactivate it."
+    },
+    "draft": {
+      "restored": "Recovered unsaved changes from an earlier session.",
+      "discarded": "Discarded unsaved changes: the case was edited somewhere else."
+    }
+  },
   "whodrugTreePicker": {
     "level": {
       "abbreviation": "Abbreviation",

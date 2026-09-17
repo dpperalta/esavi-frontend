@@ -11,15 +11,16 @@ import { CaseOpeningStep } from './CaseOpeningStep';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
 import { CaseWizardHeader } from './CaseWizardHeader';
-import { CaseWizardStepper } from './CaseWizardStepper';
+import { CaseWizardStepper, useCaseWizardStepFlags } from './CaseWizardStepper';
 import { ClassificationStep } from './ClassificationStep';
+import { FinalClassificationStep } from './FinalClassificationStep';
 import { InvestigationStep } from './InvestigationStep';
 import { NotificationStep } from './NotificationStep';
 import {
   CaseWorkflowErrorScreen,
   hasDedicatedCaseWorkflowErrorScreen,
 } from './CaseWorkflowErrorScreen';
-import { isReachableStepSlug, isStepUnlocked, resolveResumeStep } from './steps';
+import { isReachableStepSlug, isStepRequired, isStepUnlocked, resolveResumeStep } from './steps';
 
 function CaseWizardSkeleton() {
   return (
@@ -62,6 +63,7 @@ export function CaseWizardPage() {
 
   const workflow = useCaseWorkflow(id);
   const caseDetail = esaviCaseResource.useOne(id ?? '');
+  const flags = useCaseWizardStepFlags(id ?? '', workflow.data?.stages);
 
   if (!id) {
     return <Navigate to="/esavi-cases" replace />;
@@ -98,10 +100,17 @@ export function CaseWizardPage() {
   const { stages, status } = workflow.data;
   const isClosed = status.code === 'CLOSED';
 
-  // Reanudación (no `:step`) and the locked/invalid-step guard both land on the same place:
-  // the most advanced unlocked step (SPEC FE08 §4 plan step 9).
-  if (!step || !isReachableStepSlug(step) || !isStepUnlocked(step, stages)) {
-    const resumeSlug = resolveResumeStep(stages);
+  // Reanudación (no `:step`), el guard de paso bloqueado/inválido y el de paso no requerido
+  // (SPEC FE14a §2) aterrizan en el mismo lugar: el paso desbloqueado y requerido más avanzado
+  // (SPEC FE08 §4 plan step 9). Con `flags` todavía sin resolver, `isStepRequired` no oculta nada
+  // (§3.4), así que esta rama no redirige de más mientras clasificación o notificación cargan.
+  if (
+    !step ||
+    !isReachableStepSlug(step) ||
+    !isStepUnlocked(step, stages) ||
+    !isStepRequired(step, stages, flags)
+  ) {
+    const resumeSlug = resolveResumeStep(stages, flags);
     return <Navigate to={`/esavi-cases/${id}/wizard/${resumeSlug}`} replace />;
   }
 
@@ -135,15 +144,7 @@ export function CaseWizardPage() {
           {step === 'classification' && <ClassificationStep caseId={id} />}
           {step === 'notification' && <NotificationStep caseId={id} />}
           {step === 'investigation' && <InvestigationStep caseId={id} />}
-          {step !== 'patient' &&
-            step !== 'case-opening' &&
-            step !== 'classification' &&
-            step !== 'notification' &&
-            step !== 'investigation' && (
-              <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                {step}
-              </div>
-            )}
+          {step === 'final-classification' && <FinalClassificationStep caseId={id} />}
 
           {step !== 'patient' && step !== 'case-opening' && (
             <CaseWizardActionBar caseId={id} activeSlug={step} />

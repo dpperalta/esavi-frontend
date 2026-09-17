@@ -1505,6 +1505,58 @@
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
     }
   },
+  "finalClassification": {
+    "title": "Clasificación final",
+    "blockA": {
+      "legend": "Orden A: Importancia",
+      "importance": "Importancia A",
+      "vaccineTitle": "Importancia A: Con asociación causal congruente con la vacuna",
+      "processTitle": "A. Con asociación causal congruente con el proceso de vacunación"
+    },
+    "blockB": {
+      "legend": "Orden B: Importancia",
+      "importance": "Importancia B",
+      "title": "Indeterminado"
+    },
+    "blockC": {
+      "legend": "Orden C: Importancia",
+      "importance": "Importancia C",
+      "title": "Sin asociación causal congruente con la vacuna o el proceso de vacunación"
+    },
+    "blockD": {
+      "legend": "Orden D: No clasificable"
+    },
+    "fields": {
+      "aIsRelatedToVaccineProduct": "A1. Evento relacionado con la vacuna o cualquiera de sus componentes",
+      "aIsRelatedToQualityDeviation": "A2. Evento relacionado con una desviación de calidad del producto biológico o la vacuna",
+      "aIsRelatedToProgrammaticError": "A3. Evento relacionado con un error programático",
+      "aIsRelatedToStress": "A4. Evento por estrés que tuvo lugar inmediatamente antes, durante o inmediatamente después del proceso de vacunación",
+      "bIsConsistentTemporalRelation": "B1. La relación temporal es congruente, pero no hay evidencia definitiva suficiente sobre una relación causal con la vacuna (puede ser un evento recientemente asociado a la vacuna)",
+      "bHasDeterminantFactor": "B2. Factores determinantes para la clasificación muestran tendencias conflictivas a favor y en contra de una asociación causal con la vacunación",
+      "cHasCoincidentCause": "C. Una enfermedad subyacente o emergente o una afección causada por exposición a algo distinto que la vacuna o el proceso de vacunación",
+      "dIsUnclassifiable": "Especificar la información adicional requerida para clasificar el caso en situaciones en las que se identifiquen eventos falsos y se haya iniciado el análisis de causalidad, estos se incluirán en esta categoría",
+      "notes": "Observaciones"
+    },
+    "help": {
+      "notesUnclassifiable": "Especifica aquí la información que falta para clasificar el caso."
+    },
+    "importance": {
+      "released": "Esta posición pasó al bloque {{block}}"
+    },
+    "pending": {
+      "verdict": "Marca un veredicto: el bloque D, o al menos un criterio de A, B o C."
+    },
+    "error": {
+      "importanceDuplicated": "Esa posición ya la tiene otro bloque.",
+      "unclassifiableFieldsNotAllowed": "Con «No clasificable» activo, los demás bloques deben quedar vacíos.",
+      "loadFailed": "No pudimos cargar la clasificación final",
+      "inactive": "La clasificación final está desactivada. Sólo un superadministrador puede reactivarla."
+    },
+    "draft": {
+      "restored": "Se recuperaron cambios sin guardar de una sesión anterior.",
+      "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
+    }
+  },
   "whodrugTreePicker": {
     "level": {
       "abbreviation": "Abreviatura",

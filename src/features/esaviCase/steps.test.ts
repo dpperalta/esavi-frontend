@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
-import { CASE_WIZARD_STEPS, isReachableStepSlug, isStepUnlocked, resolveResumeStep } from './steps';
+import {
+  CASE_WIZARD_STEPS,
+  isReachableStepSlug,
+  isStepRequired,
+  isStepUnlocked,
+  resolveResumeStep,
+  type CaseWizardStepFlags,
+} from './steps';
 
 function buildStages(
   overrides: Partial<CaseWorkflowDetail['stages']> = {},
@@ -141,5 +148,136 @@ describe('resolveResumeStep', () => {
     // investigation y final-classification comparten la misma precondición
     // (notification.exists) — el orden de recorrido deja final-classification como el último.
     expect(resolveResumeStep(stages)).toBe('final-classification');
+  });
+
+  it('sin flags (default null) no oculta nada, igual que antes de SPEC FE14a', () => {
+    const stages = buildStages({
+      classification: {
+        exists: true,
+        id: 'c-1',
+        startedAt: null,
+        endedAt: '2026-09-01',
+        durationMinutes: 10,
+      },
+      notification: {
+        exists: true,
+        id: 'n-1',
+        startedAt: null,
+        endedAt: null,
+        durationMinutes: null,
+      },
+    });
+
+    expect(resolveResumeStep(stages)).toBe('final-classification');
+  });
+
+  it('la reanudación nunca devuelve un paso no requerido — un caso no grave sin investigación se queda en notification', () => {
+    const stages = buildStages({
+      classification: {
+        exists: true,
+        id: 'c-1',
+        startedAt: null,
+        endedAt: '2026-09-01',
+        durationMinutes: 10,
+      },
+      notification: {
+        exists: true,
+        id: 'n-1',
+        startedAt: null,
+        endedAt: null,
+        durationMinutes: null,
+      },
+    });
+    const flags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: false };
+
+    expect(resolveResumeStep(stages, flags)).toBe('notification');
+  });
+
+  it('un caso grave sin investigación resuelve a final-classification, saltando investigation', () => {
+    const stages = buildStages({
+      classification: {
+        exists: true,
+        id: 'c-1',
+        startedAt: null,
+        endedAt: '2026-09-01',
+        durationMinutes: 10,
+      },
+      notification: {
+        exists: true,
+        id: 'n-1',
+        startedAt: null,
+        endedAt: null,
+        durationMinutes: null,
+      },
+    });
+    const flags: CaseWizardStepFlags = { isSeriousEvent: true, requestInvestigation: false };
+
+    expect(resolveResumeStep(stages, flags)).toBe('final-classification');
+  });
+});
+
+describe('isStepRequired — SPEC FE14a §2, §3.4', () => {
+  it('patient, case-opening, classification y notification siempre se requieren', () => {
+    const stages = buildStages();
+    const flags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: false };
+    expect(isStepRequired('patient', stages, flags)).toBe(true);
+    expect(isStepRequired('case-opening', stages, flags)).toBe(true);
+    expect(isStepRequired('classification', stages, flags)).toBe(true);
+    expect(isStepRequired('notification', stages, flags)).toBe(true);
+  });
+
+  it('caso no grave y sin investigación: no requiere ni el 5 ni el 6', () => {
+    const stages = buildStages();
+    const flags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: false };
+    expect(isStepRequired('investigation', stages, flags)).toBe(false);
+    expect(isStepRequired('final-classification', stages, flags)).toBe(false);
+  });
+
+  it('grave sin investigación: requiere el 6 y no el 5', () => {
+    const stages = buildStages();
+    const flags: CaseWizardStepFlags = { isSeriousEvent: true, requestInvestigation: false };
+    expect(isStepRequired('investigation', stages, flags)).toBe(false);
+    expect(isStepRequired('final-classification', stages, flags)).toBe(true);
+  });
+
+  it('no grave con requestInvestigation: requiere los dos', () => {
+    const stages = buildStages();
+    const flags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: true };
+    expect(isStepRequired('investigation', stages, flags)).toBe(true);
+    expect(isStepRequired('final-classification', stages, flags)).toBe(true);
+  });
+
+  it('con stages.finalClassification.exists, el 6 se requiere aunque las dos banderas sean false', () => {
+    const stages = buildStages({
+      finalClassification: {
+        exists: true,
+        id: 'fc-1',
+        startedAt: null,
+        endedAt: null,
+        durationMinutes: null,
+      },
+    });
+    const flags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: false };
+    expect(isStepRequired('final-classification', stages, flags)).toBe(true);
+  });
+
+  it('con stages.investigation.exists, el 5 se requiere aunque requestInvestigation sea false', () => {
+    const stages = buildStages({
+      investigation: {
+        exists: true,
+        id: 'inv-1',
+        startedAt: null,
+        endedAt: null,
+        durationMinutes: null,
+      },
+    });
+    const flags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: false };
+    expect(isStepRequired('investigation', stages, flags)).toBe(true);
+  });
+
+  it('con flags === null, todo se requiere', () => {
+    const stages = buildStages();
+    expect(isStepRequired('investigation', stages, null)).toBe(true);
+    expect(isStepRequired('final-classification', stages, null)).toBe(true);
   });
 });
