@@ -75,6 +75,14 @@ vi.mock('leaflet', () => {
 
     panTo() {}
 
+    setView = vi.fn();
+
+    getZoom() {
+      return 6;
+    }
+
+    invalidateSize() {}
+
     remove() {}
 
     fireClick(lat: number, lng: number) {
@@ -102,6 +110,7 @@ function lastMarker() {
 function lastMap() {
   return vi.mocked(L.map).mock.results.at(-1)?.value as {
     fireClick: (lat: number, lng: number) => void;
+    setView: ReturnType<typeof vi.fn>;
   };
 }
 
@@ -193,5 +202,61 @@ describe('MapPointPicker', () => {
       expect.anything(),
       expect.objectContaining({ center: [1, 2] }),
     );
+  });
+  it('un clic sobre una copia repetida del mundo envuelve la longitud, no la recorta a ±180', () => {
+    const onChange = vi.fn();
+    render(<MapPointPicker value={null} onChange={onChange} ariaLabel="Localidad del paciente" />);
+
+    lastMap().fireClick(-2.9, -439.0);
+
+    expect(onChange).toHaveBeenCalledWith({ lat: -2.9, lng: -79 });
+  });
+
+  it('arrastrar el marcador sobre una copia repetida también envuelve la longitud', () => {
+    const onChange = vi.fn();
+    render(
+      <MapPointPicker value={{ lat: -0.18, lng: -78.46 }} onChange={onChange} ariaLabel="Localidad del paciente" />,
+    );
+
+    lastMarker().dragTo(-0.18, 281.54);
+
+    expect(onChange).toHaveBeenLastCalledWith({ lat: -0.18, lng: -78.46 });
+  });
+
+  it('sin value, un fallbackCenter que llega después del montaje recentra el mapa', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <MapPointPicker value={null} onChange={onChange} ariaLabel="Localidad del paciente" />,
+    );
+
+    rerender(
+      <MapPointPicker
+        value={null}
+        onChange={onChange}
+        ariaLabel="Localidad del paciente"
+        fallbackCenter={{ lat: -2.9, lng: -79 }}
+      />,
+    );
+
+    expect(lastMap().setView).toHaveBeenCalledWith([-2.9, -79], 6);
+  });
+
+  it('con value, un fallbackCenter tardío no mueve el mapa', () => {
+    const onChange = vi.fn();
+    const value = { lat: -0.18, lng: -78.46 };
+    const { rerender } = render(
+      <MapPointPicker value={value} onChange={onChange} ariaLabel="Localidad del paciente" />,
+    );
+
+    rerender(
+      <MapPointPicker
+        value={value}
+        onChange={onChange}
+        ariaLabel="Localidad del paciente"
+        fallbackCenter={{ lat: -2.9, lng: -79 }}
+      />,
+    );
+
+    expect(lastMap().setView).not.toHaveBeenCalled();
   });
 });

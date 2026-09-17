@@ -100,6 +100,13 @@ function toLatLng(lat: number, lng: number): LatLng {
   };
 }
 
+// Leaflet repeats the world horizontally, so a click or a drag on any copy but the central one
+// yields a longitude outside [-180, 180]. That is the same place on Earth, not an invalid value:
+// it is wrapped back, never clamped — clamping pinned every such click to the antimeridian.
+function wrapLongitude(lng: number): number {
+  return ((((lng + 180) % 360) + 360) % 360) - 180;
+}
+
 // La primitiva de `ARCHITECTURE.md` §4.3, declarada y escrita en SPEC FE13a §3.7. Leaflet sobre
 // `VITE_MAP_TILE_URL`, con dos campos numéricos como alternativa sin ratón: el mapa y los campos
 // son dos vistas del mismo `value`, nunca dos dueños (SPEC FE13a §3.4).
@@ -110,6 +117,7 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const initialCenterRef = useRef<LatLng | null>(null);
   const onChangeRef = useRef(onChange);
   const disabledRef = useRef(!!disabled);
   onChangeRef.current = onChange;
@@ -148,11 +156,21 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
       if (disabledRef.current) {
         return;
       }
-      emit(event.latlng.lat, event.latlng.lng);
+      emit(event.latlng.lat, wrapLongitude(event.latlng.lng));
     });
     mapRef.current = map;
+    initialCenterRef.current = initialCenter;
+
+    // Leaflet measures its container once, at creation. When the container is laid out later or
+    // changes width (a section revealed progressively, the sidebar collapsing), the map keeps the
+    // stale size: tiles cover only part of it and clicks resolve to the wrong coordinates.
+    const resizeObserver = new ResizeObserver(() => {
+      map.invalidateSize();
+    });
+    resizeObserver.observe(containerRef.current);
 
     return () => {
+      resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
       markerRef.current = null;
@@ -163,6 +181,23 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
   useEffect(() => {
     containerRef.current?.setAttribute('aria-label', ariaLabel);
   }, [ariaLabel]);
+
+  // `fallbackCenter` usually arrives after mount — it comes from a query the caller resolves
+  // (the chosen `geoLocation`, the patient's residence). Without this, the map stays on the env
+  // default it was created with. Only while there is no own point: a `value` always wins.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || value || !fallbackCenter) {
+      return;
+    }
+    const initial = initialCenterRef.current;
+    if (initial && initial.lat === fallbackCenter.lat && initial.lng === fallbackCenter.lng) {
+      return;
+    }
+    initialCenterRef.current = fallbackCenter;
+    map.setView([fallbackCenter.lat, fallbackCenter.lng], map.getZoom());
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the coordinates, not on the object identity the caller rebuilds every render.
+  }, [fallbackCenter?.lat, fallbackCenter?.lng]);
 
   // El marcador es la única fuente de verdad de dónde está el punto en el mapa: se crea, se mueve
   // o se quita según `value`, nunca lleva posición propia.
@@ -180,7 +215,7 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
       const marker = L.marker([value.lat, value.lng], { draggable: !disabledRef.current }).addTo(map);
       marker.on('dragend', () => {
         const position = marker.getLatLng();
-        emit(position.lat, position.lng);
+        emit(position.lat, wrapLongitude(position.lng));
       });
       markerRef.current = marker;
     } else {
