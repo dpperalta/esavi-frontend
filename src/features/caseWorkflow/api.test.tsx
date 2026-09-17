@@ -6,7 +6,7 @@ import type { ReactNode } from 'react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
-import { useCaseWorkflow, useCaseWorkflowList, useCompleteStage } from './api';
+import { useCaseWorkflow, useCaseWorkflowList, useCloseCase, useCompleteStage, useReopenCase } from './api';
 
 const server = setupServer();
 
@@ -106,6 +106,137 @@ describe('useCompleteStage — ESAVI-CASEFLOW-007', () => {
 
     await waitFor(() => expect(result.current.complete.isSuccess).toBe(true));
     await waitFor(() => expect(getCalls).toBe(2));
+  });
+});
+
+const PHASE_READ_ENTITIES = [
+  'classification',
+  'notification',
+  'investigation',
+  'finalClassification',
+  'investigationAutopsy',
+  'investigationCommunity',
+  'notificationMedication',
+];
+
+const TRANSITION_KEYS = [
+  ['caseWorkflow', 'byCase', 'case-1'],
+  ['caseWorkflow', 'list', {}],
+  ['esaviCase', 'detail', 'case-1'],
+];
+
+// Seeds every key the transitions may invalidate, so `isInvalidated` can be read on each one.
+function seedCache(queryClient: QueryClient) {
+  for (const key of TRANSITION_KEYS) queryClient.setQueryData(key, {});
+  for (const entity of PHASE_READ_ENTITIES) queryClient.setQueryData([entity, 'byCase', 'case-1'], {});
+}
+
+function invalidatedKeys(queryClient: QueryClient) {
+  return queryClient
+    .getQueryCache()
+    .findAll()
+    .filter((query) => query.state.isInvalidated)
+    .map((query) => query.queryKey);
+}
+
+function conflict(code: string) {
+  return HttpResponse.json({ ok: false, message: 'conflict', code }, { status: 409 });
+}
+
+describe('useCloseCase — ESAVI-CASEFLOW-008', () => {
+  it('sale sin body y con 200 invalida las tres claves del workflow', async () => {
+    let body: string | null = null;
+    server.use(
+      http.patch('http://localhost:4500/api/case-workflows/case/case-1/close', async ({ request }) => {
+        body = await request.text();
+        return HttpResponse.json({ ok: true, message: 'ok', data: caseWorkflowDetail });
+      }),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useCloseCase('case-1'), { wrapper: Wrapper });
+
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(body).toBe('');
+    expect(invalidatedKeys(queryClient)).toEqual(expect.arrayContaining(TRANSITION_KEYS));
+    expect(invalidatedKeys(queryClient)).toHaveLength(3);
+  });
+
+  it('con 409 CASEFLOW_008_INVESTIGATION_REQUIRED invalida las diez claves', async () => {
+    server.use(
+      http.patch('http://localhost:4500/api/case-workflows/case/case-1/close', () =>
+        conflict('CASEFLOW_008_INVESTIGATION_REQUIRED'),
+      ),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useCloseCase('case-1'), { wrapper: Wrapper });
+
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(invalidatedKeys(queryClient)).toHaveLength(10);
+  });
+
+  it('con 500 CASEFLOW_008_CLOSE_FAILED no invalida nada', async () => {
+    server.use(
+      http.patch('http://localhost:4500/api/case-workflows/case/case-1/close', () =>
+        HttpResponse.json({ ok: false, message: 'boom', code: 'CASEFLOW_008_CLOSE_FAILED' }, { status: 500 }),
+      ),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useCloseCase('case-1'), { wrapper: Wrapper });
+
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(invalidatedKeys(queryClient)).toHaveLength(0);
+  });
+});
+
+describe('useReopenCase — ESAVI-CASEFLOW-009', () => {
+  it('sale sin body y con 200 invalida las tres claves del workflow', async () => {
+    let body: string | null = null;
+    server.use(
+      http.patch('http://localhost:4500/api/case-workflows/case/case-1/reopen', async ({ request }) => {
+        body = await request.text();
+        return HttpResponse.json({ ok: true, message: 'ok', data: caseWorkflowDetail });
+      }),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useReopenCase('case-1'), { wrapper: Wrapper });
+
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(body).toBe('');
+    expect(invalidatedKeys(queryClient)).toEqual(expect.arrayContaining(TRANSITION_KEYS));
+    expect(invalidatedKeys(queryClient)).toHaveLength(3);
+  });
+
+  it('con 409 CASEFLOW_009_NOT_CLOSED invalida sólo el workflow', async () => {
+    server.use(
+      http.patch('http://localhost:4500/api/case-workflows/case/case-1/reopen', () =>
+        conflict('CASEFLOW_009_NOT_CLOSED'),
+      ),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useReopenCase('case-1'), { wrapper: Wrapper });
+
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(invalidatedKeys(queryClient)).toEqual([['caseWorkflow', 'byCase', 'case-1']]);
   });
 });
 

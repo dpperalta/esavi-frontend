@@ -1,9 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CaseWorkflowListFilters, CompleteCaseWorkflowStageInput } from '@/contracts/caseWorkflow';
 import type { CaseWorkflowDetail, CaseWorkflowListRow } from '@/contracts/declared/caseWorkflow';
 import type { PaginatedResponse } from '@/contracts/declared/pagination';
 import type { ListParams } from '@/shared/api/createResource';
 import { client } from '@/shared/api/client';
+import { EsaviApiError } from '@/shared/api/types';
 import { useCan } from '@/shared/hooks/useCan';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 
@@ -75,6 +76,73 @@ export function useCaseWorkflowList(params: ListParams & { filters?: CaseWorkflo
   return useQuery({
     queryKey: ['caseWorkflow', 'list', { limit, offset, includeInactive, filters }],
     queryFn: () => fetchCaseWorkflowList(url, limit, offset, filters),
+  });
+}
+
+// ESAVI-CASEFLOW-008 — no body; answers the full workflow
+async function closeCaseWorkflow(caseId: string): Promise<CaseWorkflowDetail> {
+  const response = await client.patch<CaseWorkflowDetail>(`/case-workflows/case/${caseId}/close`);
+  return response.data;
+}
+
+// ESAVI-CASEFLOW-009 — no body; answers the full workflow
+async function reopenCaseWorkflow(caseId: string): Promise<CaseWorkflowDetail> {
+  const response = await client.patch<CaseWorkflowDetail>(`/case-workflows/case/${caseId}/reopen`);
+  return response.data;
+}
+
+// The seven phase reads the closure step evaluates (SPEC FE14b §3.4). Keys are repeated here
+// instead of imported: a feature doesn't import another feature's api (CONVENTIONS.md §3).
+const CLOSE_READINESS_ENTITIES = [
+  'classification',
+  'notification',
+  'investigation',
+  'finalClassification',
+  'investigationAutopsy',
+  'investigationCommunity',
+  'notificationMedication',
+] as const;
+
+function invalidateWorkflowTransition(queryClient: QueryClient, caseId: string) {
+  void queryClient.invalidateQueries({ queryKey: caseWorkflowByCaseKey(caseId) });
+  void queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'list'] });
+  void queryClient.invalidateQueries({ queryKey: ['esaviCase'] });
+}
+
+function isConflictOf(error: unknown, codePrefix: string): boolean {
+  return error instanceof EsaviApiError && error.status === 409 && !!error.code?.startsWith(codePrefix);
+}
+
+export function useCloseCase(caseId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => closeCaseWorkflow(caseId),
+    onSuccess: () => invalidateWorkflowTransition(queryClient, caseId),
+    onError: (error) => {
+      // A 409 means the local checklist was stale (another tab or user): re-reading every phase
+      // explains the rejection better than the toast alone (SPEC FE14b §3.4, §6).
+      if (!isConflictOf(error, 'CASEFLOW_008_')) return;
+      invalidateWorkflowTransition(queryClient, caseId);
+      for (const entity of CLOSE_READINESS_ENTITIES) {
+        void queryClient.invalidateQueries({ queryKey: [entity, 'byCase', caseId] });
+      }
+    },
+  });
+}
+
+export function useReopenCase(caseId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => reopenCaseWorkflow(caseId),
+    onSuccess: () => invalidateWorkflowTransition(queryClient, caseId),
+    onError: (error) => {
+      // Another administrator already reopened it.
+      if (isConflictOf(error, 'CASEFLOW_009_NOT_CLOSED')) {
+        void queryClient.invalidateQueries({ queryKey: caseWorkflowByCaseKey(caseId) });
+      }
+    },
   });
 }
 

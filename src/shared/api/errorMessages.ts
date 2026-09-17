@@ -63,6 +63,19 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   // SPEC FE09 §3.5 — not a toast: CaseWorkflowInbox reads this text itself and shows it inline
   // next to the `statusCode` selector, after clearing the offending filter from the URL.
   CASEFLOW_002_STATUS_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_002_STATUS_NOT_FOUND',
+  // SPEC FE14b §3.5 — close (008) and reopen (009). The closure step prevents the six `409`s of
+  // `008`, so they only surface when its checklist was stale; `useCloseCase` re-reads on them.
+  CASEFLOW_008_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_008_NOT_FOUND',
+  CASEFLOW_008_ALREADY_CLOSED: 'caseWorkflow.errors.CASEFLOW_008_ALREADY_CLOSED',
+  CASEFLOW_008_PENDING_VALIDATION: 'caseWorkflow.errors.CASEFLOW_008_PENDING_VALIDATION',
+  CASEFLOW_008_CLASSIFICATION_REQUIRED: 'caseWorkflow.errors.CASEFLOW_008_CLASSIFICATION_REQUIRED',
+  CASEFLOW_008_NOTIFICATION_REQUIRED: 'caseWorkflow.errors.CASEFLOW_008_NOTIFICATION_REQUIRED',
+  CASEFLOW_008_INVESTIGATION_REQUIRED: 'caseWorkflow.errors.CASEFLOW_008_INVESTIGATION_REQUIRED',
+  CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED: 'caseWorkflow.errors.CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED',
+  CASEFLOW_008_CLOSE_FAILED: 'caseWorkflow.errors.CASEFLOW_008_CLOSE_FAILED',
+  CASEFLOW_009_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_009_NOT_FOUND',
+  CASEFLOW_009_NOT_CLOSED: 'caseWorkflow.errors.CASEFLOW_009_NOT_CLOSED',
+  CASEFLOW_009_REOPEN_FAILED: 'caseWorkflow.errors.CASEFLOW_009_REOPEN_FAILED',
   // SPEC FE09 §4.14 — deactivate/reactivate from the list's row menu, same four-code shape as
   // every other entity's 005A/005B.
   CASE_005A_NOT_FOUND: 'esaviCase.errors.CASE_005A_NOT_FOUND',

@@ -483,7 +483,18 @@
       "CASEFLOW_007_STAGE_NOT_STARTED": "This stage hasn't started yet.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "This stage is already complete.",
       "CASEFLOW_007_CASE_CLOSED": "This case file is closed.",
-      "CASEFLOW_002_STATUS_NOT_FOUND": "That status does not exist in the catalog. The filter was cleared."
+      "CASEFLOW_002_STATUS_NOT_FOUND": "That status does not exist in the catalog. The filter was cleared.",
+      "CASEFLOW_008_NOT_FOUND": "The case has no workflow record.",
+      "CASEFLOW_008_ALREADY_CLOSED": "This case file was already closed.",
+      "CASEFLOW_008_PENDING_VALIDATION": "Cannot close: the case file is pending validation.",
+      "CASEFLOW_008_CLASSIFICATION_REQUIRED": "Cannot close: the initial classification is missing.",
+      "CASEFLOW_008_NOTIFICATION_REQUIRED": "Cannot close: the notification is missing.",
+      "CASEFLOW_008_INVESTIGATION_REQUIRED": "Cannot close: the investigation is missing.",
+      "CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED": "Cannot close: the final classification is missing.",
+      "CASEFLOW_008_CLOSE_FAILED": "We couldn't close the case file. Please try again.",
+      "CASEFLOW_009_NOT_FOUND": "The case has no workflow record.",
+      "CASEFLOW_009_NOT_CLOSED": "This case file is no longer closed.",
+      "CASEFLOW_009_REOPEN_FAILED": "We couldn't reopen the case file. Please try again."
     },
     "list": {
       "columns": {

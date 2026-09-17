@@ -28,6 +28,25 @@ describe('getErrorMessage', () => {
     expect(getErrorMessage(error)).toBe(expected);
   });
 
+  // SPEC FE14b §3.5, plan step 1 — close (008) and reopen (009).
+  it.each([
+    ['CASEFLOW_008_NOT_FOUND', 'El caso no tiene expediente de flujo.'],
+    ['CASEFLOW_008_ALREADY_CLOSED', 'Este expediente ya estaba cerrado.'],
+    ['CASEFLOW_008_PENDING_VALIDATION', 'No se puede cerrar: el expediente está pendiente de validación.'],
+    ['CASEFLOW_008_CLASSIFICATION_REQUIRED', 'No se puede cerrar: falta la clasificación inicial.'],
+    ['CASEFLOW_008_NOTIFICATION_REQUIRED', 'No se puede cerrar: falta la notificación.'],
+    ['CASEFLOW_008_INVESTIGATION_REQUIRED', 'No se puede cerrar: falta la investigación.'],
+    ['CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED', 'No se puede cerrar: falta la clasificación final.'],
+    ['CASEFLOW_008_CLOSE_FAILED', 'No pudimos cerrar el expediente. Intenta de nuevo.'],
+    ['CASEFLOW_009_NOT_FOUND', 'El caso no tiene expediente de flujo.'],
+    ['CASEFLOW_009_NOT_CLOSED', 'Este expediente ya no está cerrado.'],
+    ['CASEFLOW_009_REOPEN_FAILED', 'No pudimos reabrir el expediente. Intenta de nuevo.'],
+  ])('mapea %s a su texto propio', (code, expected) => {
+    const error = new EsaviApiError('mensaje del backend', 409, code);
+
+    expect(getErrorMessage(error)).toBe(expected);
+  });
+
   // SPEC FE12a §3.5, plan step 15 — un texto genérico por entidad para los `_CREATION_FAILED`/
   // `_UPDATE_FAILED`/`_NOT_FOUND` de guardado, y uno solo compartido para los `006` de lectura.
   it.each([

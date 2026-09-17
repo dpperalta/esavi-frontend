@@ -483,7 +483,18 @@
       "CASEFLOW_007_STAGE_NOT_STARTED": "Esta etapa aún no se ha iniciado.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Esta etapa ya se completó.",
       "CASEFLOW_007_CASE_CLOSED": "Este expediente está cerrado.",
-      "CASEFLOW_002_STATUS_NOT_FOUND": "Ese estado no existe en el catálogo. Se limpió el filtro."
+      "CASEFLOW_002_STATUS_NOT_FOUND": "Ese estado no existe en el catálogo. Se limpió el filtro.",
+      "CASEFLOW_008_NOT_FOUND": "El caso no tiene expediente de flujo.",
+      "CASEFLOW_008_ALREADY_CLOSED": "Este expediente ya estaba cerrado.",
+      "CASEFLOW_008_PENDING_VALIDATION": "No se puede cerrar: el expediente está pendiente de validación.",
+      "CASEFLOW_008_CLASSIFICATION_REQUIRED": "No se puede cerrar: falta la clasificación inicial.",
+      "CASEFLOW_008_NOTIFICATION_REQUIRED": "No se puede cerrar: falta la notificación.",
+      "CASEFLOW_008_INVESTIGATION_REQUIRED": "No se puede cerrar: falta la investigación.",
+      "CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED": "No se puede cerrar: falta la clasificación final.",
+      "CASEFLOW_008_CLOSE_FAILED": "No pudimos cerrar el expediente. Intenta de nuevo.",
+      "CASEFLOW_009_NOT_FOUND": "El caso no tiene expediente de flujo.",
+      "CASEFLOW_009_NOT_CLOSED": "Este expediente ya no está cerrado.",
+      "CASEFLOW_009_REOPEN_FAILED": "No pudimos reabrir el expediente. Intenta de nuevo."
     },
     "list": {
       "columns": {

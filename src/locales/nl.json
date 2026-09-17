@@ -483,7 +483,18 @@
       "CASEFLOW_007_STAGE_NOT_STARTED": "Deze fase is nog niet gestart.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Deze fase is al voltooid.",
       "CASEFLOW_007_CASE_CLOSED": "Dit dossier is gesloten.",
-      "CASEFLOW_002_STATUS_NOT_FOUND": "Die status bestaat niet in de catalogus. Het filter is gewist."
+      "CASEFLOW_002_STATUS_NOT_FOUND": "Die status bestaat niet in de catalogus. Het filter is gewist.",
+      "CASEFLOW_008_NOT_FOUND": "Het geval heeft geen workflowdossier.",
+      "CASEFLOW_008_ALREADY_CLOSED": "Dit dossier was al gesloten.",
+      "CASEFLOW_008_PENDING_VALIDATION": "Kan niet sluiten: het dossier wacht op validatie.",
+      "CASEFLOW_008_CLASSIFICATION_REQUIRED": "Kan niet sluiten: de initiële classificatie ontbreekt.",
+      "CASEFLOW_008_NOTIFICATION_REQUIRED": "Kan niet sluiten: de melding ontbreekt.",
+      "CASEFLOW_008_INVESTIGATION_REQUIRED": "Kan niet sluiten: het onderzoek ontbreekt.",
+      "CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED": "Kan niet sluiten: de definitieve classificatie ontbreekt.",
+      "CASEFLOW_008_CLOSE_FAILED": "We konden het dossier niet sluiten. Probeer het opnieuw.",
+      "CASEFLOW_009_NOT_FOUND": "Het geval heeft geen workflowdossier.",
+      "CASEFLOW_009_NOT_CLOSED": "Dit dossier is niet meer gesloten.",
+      "CASEFLOW_009_REOPEN_FAILED": "We konden het dossier niet heropenen. Probeer het opnieuw."
     },
     "list": {
       "columns": {
