@@ -731,7 +731,8 @@
       "classification": "Clasificación inicial",
       "notification": "Ficha de notificación",
       "investigation": "Investigación",
-      "finalClassification": "Clasificación final"
+      "finalClassification": "Clasificación final",
+      "closure": "Cierre del expediente"
     },
     "stepStatus": {
       "notStarted": "Sin iniciar",
@@ -765,7 +766,8 @@
       "generic": "No pudimos cargar el expediente"
     },
     "readOnly": {
-      "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo."
+      "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo.",
+      "closedBannerAdmin": "Este expediente está cerrado."
     }
   },
   "patient": {

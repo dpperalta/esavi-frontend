@@ -731,7 +731,8 @@
       "classification": "Initial classification",
       "notification": "Notification form",
       "investigation": "Investigation",
-      "finalClassification": "Final classification"
+      "finalClassification": "Final classification",
+      "closure": "Closing the case file"
     },
     "stepStatus": {
       "notStarted": "Not started",
@@ -765,7 +766,8 @@
       "generic": "We couldn't load the case file"
     },
     "readOnly": {
-      "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again."
+      "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again.",
+      "closedBannerAdmin": "This case file is closed."
     }
   },
   "patient": {

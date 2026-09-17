@@ -67,6 +67,7 @@ const STEP_LABEL_KEY: Record<CaseWizardStepSlug, string> = {
   notification: 'caseWizard.steps.notification',
   investigation: 'caseWizard.steps.investigation',
   'final-classification': 'caseWizard.steps.finalClassification',
+  closure: 'caseWizard.steps.closure',
 };
 
 // Only three of the four groups get their own header (§3.8): 'patient' holds a single step
@@ -97,7 +98,14 @@ const STATUS_COLOR: Record<StepStatus, string> = {
   completed: 'text-success',
 };
 
-function stepStatus(step: CaseWizardStepDefinition, stages: CaseWorkflowStages): StepStatus {
+function stepStatus(
+  step: CaseWizardStepDefinition,
+  stages: CaseWorkflowStages,
+  isClosed: boolean,
+): StepStatus {
+  // `closure` has no `stage` either, but unlike steps 1-2 it isn't "always behind us" — it
+  // reflects the workflow's own status, not a row it writes (SPEC FE14b §2).
+  if (step.slug === 'closure') return isClosed ? 'completed' : 'not-started';
   // Steps 1-2 have no `stage`: reaching this wizard means the case already exists, so they're
   // always behind us (SPEC FE08 §3.1).
   if (!step.stage) return 'completed';
@@ -112,14 +120,16 @@ function StepRow({
   step,
   stages,
   isActive,
+  isClosed,
 }: {
   caseId: string;
   step: CaseWizardStepDefinition;
   stages: CaseWorkflowStages;
   isActive: boolean;
+  isClosed: boolean;
 }) {
   const { t } = useTranslation();
-  const status = stepStatus(step, stages);
+  const status = stepStatus(step, stages, isClosed);
   const StatusIcon = STATUS_ICON[status];
   const label = t(STEP_LABEL_KEY[step.slug]);
 
@@ -180,11 +190,13 @@ function GroupSteps({
   steps,
   stages,
   activeSlug,
+  isClosed,
 }: {
   caseId: string;
   steps: CaseWizardStepDefinition[];
   stages: CaseWorkflowStages;
   activeSlug: CaseWizardStepSlug;
+  isClosed: boolean;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -195,13 +207,14 @@ function GroupSteps({
           step={step}
           stages={stages}
           isActive={step.slug === activeSlug}
+          isClosed={isClosed}
         />
       ))}
     </div>
   );
 }
 
-// Four groups, six steps (SPEC FE08 §3.1). Desktop keeps every group expanded — the segments
+// Four groups, seven steps (SPEC FE08 §3.1, SPEC FE14b §2). Desktop keeps every group expanded — the segments
 // with the largest forms go uncollapsed even on wide screens (§3.7); only below `md` do the
 // three named groups become an accordion, the active step's group open by default.
 export function CaseWizardStepper({ caseId, activeSlug }: CaseWizardStepperProps) {
@@ -220,7 +233,8 @@ export function CaseWizardStepper({ caseId, activeSlug }: CaseWizardStepperProps
     );
   }
 
-  const { stages } = workflow.data;
+  const { stages, status } = workflow.data;
+  const isClosed = status.code === 'CLOSED';
   const activeGroup =
     CASE_WIZARD_STEPS.find((step) => step.slug === activeSlug)?.group ?? 'patient';
 
@@ -238,7 +252,7 @@ export function CaseWizardStepper({ caseId, activeSlug }: CaseWizardStepperProps
 
   return (
     <nav className="flex flex-col gap-4">
-      <GroupSteps caseId={caseId} steps={patientSteps} stages={stages} activeSlug={activeSlug} />
+      <GroupSteps caseId={caseId} steps={patientSteps} stages={stages} activeSlug={activeSlug} isClosed={isClosed} />
 
       {/* Desktop: every group expanded, no accordion (§3.7). */}
       <div className="hidden flex-col gap-4 md:flex">
@@ -253,7 +267,7 @@ export function CaseWizardStepper({ caseId, activeSlug }: CaseWizardStepperProps
                   {t(labelKey)}
                 </h2>
               )}
-              <GroupSteps caseId={caseId} steps={steps} stages={stages} activeSlug={activeSlug} />
+              <GroupSteps caseId={caseId} steps={steps} stages={stages} activeSlug={activeSlug} isClosed={isClosed} />
             </div>
           );
         })}
@@ -269,7 +283,7 @@ export function CaseWizardStepper({ caseId, activeSlug }: CaseWizardStepperProps
             <AccordionItem key={group} value={group}>
               <AccordionTrigger className="px-3">{labelKey && t(labelKey)}</AccordionTrigger>
               <AccordionContent className="px-3">
-                <GroupSteps caseId={caseId} steps={steps} stages={stages} activeSlug={activeSlug} />
+                <GroupSteps caseId={caseId} steps={steps} stages={stages} activeSlug={activeSlug} isClosed={isClosed} />
               </AccordionContent>
             </AccordionItem>
           );

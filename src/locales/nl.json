@@ -731,7 +731,8 @@
       "classification": "Eerste classificatie",
       "notification": "Meldingsformulier",
       "investigation": "Onderzoek",
-      "finalClassification": "Eindclassificatie"
+      "finalClassification": "Eindclassificatie",
+      "closure": "Dossier sluiten"
     },
     "stepStatus": {
       "notStarted": "Niet gestart",
@@ -765,7 +766,8 @@
       "generic": "We konden het dossier niet laden"
     },
     "readOnly": {
-      "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken."
+      "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken.",
+      "closedBannerAdmin": "Dit dossier is gesloten."
     }
   },
   "patient": {
