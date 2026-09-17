@@ -1,15 +1,25 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import type { CreateFinalClassificationInput } from '@/contracts/finalClassification';
 import type { FinalClassificationDetail } from '@/contracts/declared/finalClassification';
+import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
-import { useFinalClassificationByCase } from '@/features/finalClassification/api';
+import {
+  finalClassificationByCaseKey,
+  finalClassificationResource,
+  useCreateFinalClassification,
+  useFinalClassificationByCase,
+} from '@/features/finalClassification/api';
 import { ImportanceSelect } from '@/features/finalClassification/ImportanceSelect';
 import {
   IMPORTANCE_FIELDS,
   UNCLASSIFIABLE_FORBIDDEN_FIELDS,
   finalClassificationSaveSchema,
+  hasVerdict,
   toFormValues,
   type FinalClassificationFormValues,
 } from '@/features/finalClassification/schemas';
@@ -19,6 +29,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { useCaseWizard } from './CaseWizardContext';
 
 type ImportanceField = (typeof IMPORTANCE_FIELDS)[number];
 type ImportanceBlock = 'A' | 'B' | 'C';
@@ -108,18 +119,84 @@ function SwitchRow({ control, name, labelKey, disabled }: SwitchRowProps) {
   );
 }
 
+interface ImportanceFieldRowProps {
+  control: ReturnType<typeof useForm<FinalClassificationFormValues>>['control'];
+  name: ImportanceField;
+  label: string;
+  value: string | null;
+  onChangeValue: (value: string | null) => void;
+  releasedToBlock: ImportanceBlock | null;
+  disabled?: boolean;
+}
+
+// El `<ImportanceSelect>` más su error de servidor (`_IMPORTANCE_DUPLICATED`/`_IMPORTANCE_NOT_FOUND`,
+// SPEC FE14a §3.5), anclado en el campo y no en un aviso genérico. Envuelto en `Controller` sólo
+// para leer `fieldState.error` — el valor y el `onChange` siguen viniendo de `handleImportanceChange`.
+function ImportanceFieldRow({
+  control,
+  name,
+  label,
+  value,
+  onChangeValue,
+  releasedToBlock,
+  disabled,
+}: ImportanceFieldRowProps) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ fieldState }) => (
+        <div className="flex flex-col gap-1">
+          <ImportanceSelect
+            label={label}
+            value={value}
+            onChange={onChangeValue}
+            releasedToBlock={releasedToBlock}
+            disabled={disabled}
+          />
+          {fieldState.error && (
+            <p role="alert" className="text-sm text-destructive">
+              {fieldState.error.message}
+            </p>
+          )}
+        </div>
+      )}
+    />
+  );
+}
+
+// «Completar etapa» exige un veredicto (SPEC FE14a §3.5): `dIsUnclassifiable === true`, o al
+// menos uno de los siete booleanos de A, B y C en `true`. Sin veredicto, la barra lo lista como
+// pendiente en vez de apagar el botón en silencio.
+function computePendingFields(
+  values: FinalClassificationFormValues,
+  t: (key: string) => string,
+): string[] {
+  return hasVerdict(values) ? [] : [t('finalClassification.pending.verdict')];
+}
+
 interface FinalClassificationFormBodyProps {
+  caseId: string;
   finalClassification: FinalClassificationDetail | null;
   disabled?: boolean;
 }
 
 // El formulario en sí (SPEC FE14a §3.5): un único `useForm`, sin revelado progresivo y sin botón
-// por sección — se guarda entero desde `CaseWizardActionBar` (paso 8 de este mismo plan).
+// por sección — se guarda entero desde `CaseWizardActionBar`, con el handle registrado más abajo.
 function FinalClassificationFormBody({
+  caseId,
   finalClassification,
   disabled,
 }: FinalClassificationFormBodyProps) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const { registerStep, unregisterStep } = useCaseWizard();
+  const create = useCreateFinalClassification();
+  const update = finalClassificationResource.useUpdate();
+
+  // Nunca en `useState` (mismo criterio que `ClassificationStep`): `finalClassification` ya es la
+  // caché de TanStack Query, así que el id se deriva del prop en cada render en vez de copiarse.
+  const finalClassificationId = finalClassification?.finalClassificationId ?? null;
 
   // Qué bloque se quedó con la posición de cuál otro (SPEC FE14a §3.5): efímero, no forma parte
   // del contrato de estado de §3.4. Como máximo una entrada a la vez — elegir una posición sólo
@@ -172,6 +249,99 @@ function FinalClassificationFormBody({
     }
   }
 
+  const handleValidSubmit = useCallback(
+    async (values: FinalClassificationFormValues) => {
+      try {
+        if (finalClassificationId) {
+          await update.mutateAsync({ id: finalClassificationId, data: values });
+          toast.success(t('common.toast.updated'));
+        } else {
+          const created = await create.mutateAsync({
+            ...values,
+            caseId,
+          } as CreateFinalClassificationInput);
+          queryClient.setQueryData(finalClassificationByCaseKey(caseId), created);
+          toast.success(t('common.toast.created'));
+        }
+        form.reset(values);
+      } catch (err) {
+        if (!(err instanceof EsaviApiError)) {
+          throw err;
+        }
+        // `CASEFLOW_012_CASE_CLOSED` conmuta el armazón a sólo lectura sin esperar el próximo
+        // `006` de workflow (SPEC FE14a §3.5), mismo criterio que `ClassificationStep`.
+        if (err.code === 'CASEFLOW_012_CASE_CLOSED') {
+          queryClient.setQueryData<CaseWorkflowDetail>(['caseWorkflow', 'byCase', caseId], (old) =>
+            old ? { ...old, status: { ...old.status, code: 'CLOSED' } } : old,
+          );
+          toast.error(getErrorMessage(err));
+          return;
+        }
+        // El número de operación entre `FINCLASS` y el sufijo no está fijo (`00X`, SPEC FE14a
+        // §3.5) — comparado por sufijo, mismo criterio que `BasicInfoSection` (FE13a).
+        if (err.code.endsWith('_UNCLASSIFIABLE_FIELDS_NOT_ALLOWED')) {
+          form.setError('dIsUnclassifiable', { type: 'server', message: err.message });
+          return;
+        }
+        if (err.code.endsWith('_IMPORTANCE_DUPLICATED')) {
+          // El servidor no dice cuáles dos se repiten — ancla en todas las importancias con
+          // valor, no sólo en el par real (SPEC FE14a §3.5).
+          for (const field of IMPORTANCE_FIELDS) {
+            if (form.getValues(field)) {
+              form.setError(field, { type: 'server', message: err.message });
+            }
+          }
+          return;
+        }
+        if (err.code.endsWith('_IMPORTANCE_NOT_FOUND')) {
+          // El bloque va dentro de `err.message`, que no se parsea (SPEC FE14a §3.5) — ancla en
+          // todas las importancias con valor e invalida el catálogo.
+          for (const field of IMPORTANCE_FIELDS) {
+            if (form.getValues(field)) {
+              form.setError(field, { type: 'server', message: err.message });
+            }
+          }
+          await queryClient.invalidateQueries({ queryKey: ['catalogItem'] });
+          return;
+        }
+        // La carrera entre dos pestañas (SPEC FE14a §3.5): relee la fila y el siguiente «Guardar»
+        // es un `PUT`, no un segundo `POST`.
+        if (err.code === 'FINCLASS_001_CASE_ALREADY_FINAL_CLASSIFIED') {
+          await queryClient.invalidateQueries({ queryKey: finalClassificationByCaseKey(caseId) });
+          await queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'byCase', caseId] });
+          toast.error(getErrorMessage(err));
+          return;
+        }
+        toast.error(getErrorMessage(err));
+      }
+    },
+    [caseId, create, finalClassificationId, form, queryClient, t, update],
+  );
+
+  const performSave = useCallback(
+    () => form.handleSubmit(handleValidSubmit)(),
+    [form, handleValidSubmit],
+  );
+
+  const pendingFields = computePendingFields(watchedValues, t);
+
+  // Leídos por referencia dentro del handle, nunca capturados por valor (mismo criterio que
+  // `ClassificationStep`, SPEC FE11 §9): depender de `pendingFields`/`performSave` en el array de
+  // dependencias reabre `CaseWizardProvider` en cada cambio y produce un bucle sin fin.
+  const performSaveRef = useRef(performSave);
+  performSaveRef.current = performSave;
+  const pendingFieldsRef = useRef(pendingFields);
+  pendingFieldsRef.current = pendingFields;
+
+  useEffect(() => {
+    registerStep({
+      save: () => performSaveRef.current(),
+      isDirty: form.formState.isDirty,
+      getPendingFields: () => pendingFieldsRef.current,
+    });
+    return () => unregisterStep();
+  }, [registerStep, unregisterStep, form.formState.isDirty]);
+
   return (
     <div className="flex flex-col gap-6">
       {!blocksHidden && (
@@ -182,10 +352,12 @@ function FinalClassificationFormBody({
           <legend className="px-1 text-sm font-medium text-foreground">
             {t('finalClassification.blockA.legend')}
           </legend>
-          <ImportanceSelect
+          <ImportanceFieldRow
+            control={form.control}
+            name="importanceAItemId"
             label={t('finalClassification.blockA.importance')}
             value={watchedValues.importanceAItemId ?? null}
-            onChange={(next) => handleImportanceChange('importanceAItemId', next)}
+            onChangeValue={(next) => handleImportanceChange('importanceAItemId', next)}
             releasedToBlock={releasedNotices.A ?? null}
             disabled={disabled}
           />
@@ -205,10 +377,12 @@ function FinalClassificationFormBody({
           <legend className="px-1 text-sm font-medium text-foreground">
             {t('finalClassification.blockB.legend')}
           </legend>
-          <ImportanceSelect
+          <ImportanceFieldRow
+            control={form.control}
+            name="importanceBItemId"
             label={t('finalClassification.blockB.importance')}
             value={watchedValues.importanceBItemId ?? null}
-            onChange={(next) => handleImportanceChange('importanceBItemId', next)}
+            onChangeValue={(next) => handleImportanceChange('importanceBItemId', next)}
             releasedToBlock={releasedNotices.B ?? null}
             disabled={disabled}
           />
@@ -227,10 +401,12 @@ function FinalClassificationFormBody({
           <legend className="px-1 text-sm font-medium text-foreground">
             {t('finalClassification.blockC.legend')}
           </legend>
-          <ImportanceSelect
+          <ImportanceFieldRow
+            control={form.control}
+            name="importanceCItemId"
             label={t('finalClassification.blockC.importance')}
             value={watchedValues.importanceCItemId ?? null}
-            onChange={(next) => handleImportanceChange('importanceCItemId', next)}
+            onChangeValue={(next) => handleImportanceChange('importanceCItemId', next)}
             releasedToBlock={releasedNotices.C ?? null}
             disabled={disabled}
           />
@@ -248,16 +424,23 @@ function FinalClassificationFormBody({
         <Controller
           control={form.control}
           name="dIsUnclassifiable"
-          render={({ field }) => (
-            <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
-              <Switch
-                checked={field.value === true}
-                onCheckedChange={(checked) => handleUnclassifiableChange(checked)}
-                disabled={disabled}
-                aria-label={t('finalClassification.fields.dIsUnclassifiable')}
-              />
-              {t('finalClassification.fields.dIsUnclassifiable')}
-            </label>
+          render={({ field, fieldState }) => (
+            <div className="flex flex-col gap-1">
+              <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
+                <Switch
+                  checked={field.value === true}
+                  onCheckedChange={(checked) => handleUnclassifiableChange(checked)}
+                  disabled={disabled}
+                  aria-label={t('finalClassification.fields.dIsUnclassifiable')}
+                />
+                {t('finalClassification.fields.dIsUnclassifiable')}
+              </label>
+              {fieldState.error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {fieldState.error.message}
+                </p>
+              )}
+            </div>
           )}
         />
       </fieldset>
@@ -343,6 +526,7 @@ export function FinalClassificationStep({ caseId }: FinalClassificationStepProps
 
   return (
     <FinalClassificationFormBody
+      caseId={caseId}
       finalClassification={finalClassification.data ?? null}
       disabled={isClosed}
     />
