@@ -5,12 +5,22 @@ import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { useDraftsStore } from '@/shared/stores/draftsStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
 import { FinalClassificationStep } from './FinalClassificationStep';
+
+const toastInfo = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    info: (...args: unknown[]) => toastInfo(...args),
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+}));
 
 const server = setupServer();
 
@@ -25,6 +35,7 @@ beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
+  toastInfo.mockClear();
 });
 
 const IMPORTANCE_TYPE = {
@@ -554,5 +565,83 @@ describe('FinalClassificationStep — guardar (SPEC FE14a §4 paso 8)', () => {
 
     await waitFor(() => expect(calls.post).toBe(1));
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument());
+  }, 30000);
+});
+
+describe('FinalClassificationStep — el borrador (SPEC FE14a §4 paso 9)', () => {
+  it('un borrador con baseUpdatedAt distinto del updatedAt de la fila se descarta con aviso', async () => {
+    mockCatalog();
+    mockWorkflow(true);
+    mockFinalClassification(
+      baseFinalClassificationDetail({ updatedAt: '2026-09-05T00:00:00.000Z' }),
+    );
+    // El `baseUpdatedAt` del borrador no coincide con el `updatedAt` real de la fila —
+    // `resolveDraftConflict` lo descarta (SPEC FE14a §3.4).
+    useDraftsStore
+      .getState()
+      .set('case-1', 'finalClassification', { cHasCoincidentCause: true }, '2026-01-01T00:00:00.000Z');
+
+    renderStep();
+
+    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    await waitFor(() =>
+      expect(toastInfo).toHaveBeenCalledWith('finalClassification.draft.discarded'),
+    );
+    expect(useDraftsStore.getState().get('case-1', 'finalClassification')).toBeUndefined();
+  });
+
+  it('un borrador cuyo baseUpdatedAt coincide se restaura y precarga un <Switch>', async () => {
+    mockCatalog();
+    mockWorkflow(true);
+    // `updatedAt: null` en la fila — coincide con el `baseUpdatedAt` del borrador de abajo.
+    mockFinalClassification(baseFinalClassificationDetail());
+    useDraftsStore
+      .getState()
+      .set('case-1', 'finalClassification', { cHasCoincidentCause: true }, null);
+
+    renderStep();
+
+    const switchC = await screen.findByRole('switch', {
+      name: 'finalClassification.fields.cHasCoincidentCause',
+    });
+    await waitFor(() => expect(switchC).toHaveAttribute('aria-checked', 'true'));
+    await waitFor(() =>
+      expect(toastInfo).toHaveBeenCalledWith('finalClassification.draft.restored'),
+    );
+  });
+
+  it('tras un PUT correcto el borrador ya no existe', async () => {
+    mockCatalog();
+    mockWorkflow(true);
+    mockFinalClassification(baseFinalClassificationDetail({ finalClassificationId: 'fc-1' }));
+    useDraftsStore
+      .getState()
+      .set('case-1', 'finalClassification', { cHasCoincidentCause: true }, null);
+
+    let putCalled = false;
+    server.use(
+      http.put('http://localhost:4500/api/final-classifications/fc-1', async ({ request }) => {
+        putCalled = true;
+        const body = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { ...baseFinalClassificationDetail({ finalClassificationId: 'fc-1' }), ...body },
+        });
+      }),
+    );
+
+    renderStepWithActionBar();
+    const user = setupUser();
+
+    await screen.findByRole('combobox', { name: 'finalClassification.blockA.importance' });
+    await waitFor(() =>
+      expect(useDraftsStore.getState().get('case-1', 'finalClassification')).toBeDefined(),
+    );
+
+    await clickSaveButton(user);
+
+    await waitFor(() => expect(putCalled).toBe(true));
+    expect(useDraftsStore.getState().get('case-1', 'finalClassification')).toBeUndefined();
   }, 30000);
 });

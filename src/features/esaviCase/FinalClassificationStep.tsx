@@ -29,6 +29,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { useCaseWizard } from './CaseWizardContext';
 
 type ImportanceField = (typeof IMPORTANCE_FIELDS)[number];
@@ -198,6 +199,34 @@ function FinalClassificationFormBody({
   // caché de TanStack Query, así que el id se deriva del prop en cada render en vez de copiarse.
   const finalClassificationId = finalClassification?.finalClassificationId ?? null;
 
+  // El `updatedAt` de la fila al montar (SPEC FE14a §3.4, mismo criterio que `InvestigationStep`):
+  // nunca se recalcula, o la regla de conflicto se compararía siempre contra sí misma.
+  const baseUpdatedAtRef = useRef(finalClassification?.updatedAt ?? null);
+
+  // Resuelto una sola vez, en el primer render de este cuerpo — que sólo se monta con la lectura
+  // del `006` ya resuelta (o `exists === false`), igual que `InvestigationStep`.
+  const [draft] = useState(() => {
+    const stored = useDraftsStore.getState().get(caseId, 'finalClassification');
+    const resolution = resolveDraftConflict(stored, baseUpdatedAtRef.current);
+    return {
+      resolution,
+      values: (stored?.values as Partial<FinalClassificationFormValues> | undefined) ?? {},
+    };
+  });
+
+  const hasNotifiedDraftRef = useRef(false);
+  useEffect(() => {
+    if (hasNotifiedDraftRef.current) return;
+    hasNotifiedDraftRef.current = true;
+    if (draft.resolution === 'discard') {
+      useDraftsStore.getState().clear(caseId, 'finalClassification');
+      toast.info(t('finalClassification.draft.discarded'));
+    } else if (draft.resolution === 'restore') {
+      toast.info(t('finalClassification.draft.restored'));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Qué bloque se quedó con la posición de cuál otro (SPEC FE14a §3.5): efímero, no forma parte
   // del contrato de estado de §3.4. Como máximo una entrada a la vez — elegir una posición sólo
   // puede desplazar al bloque que la tenía antes.
@@ -207,13 +236,42 @@ function FinalClassificationFormBody({
 
   const form = useForm<FinalClassificationFormValues>({
     resolver: zodResolver(finalClassificationSaveSchema) as Resolver<FinalClassificationFormValues>,
-    defaultValues: buildDefaultValues(finalClassification),
+    defaultValues: {
+      ...buildDefaultValues(finalClassification),
+      ...(draft.resolution === 'restore' ? draft.values : {}),
+    },
     mode: 'onTouched',
     reValidateMode: 'onChange',
   });
 
   const watchedValues = useWatch({ control: form.control }) as FinalClassificationFormValues;
   const blocksHidden = watchedValues.dIsUnclassifiable === true;
+
+  // Un único debounce de 500ms para todo el formulario (SPEC FE14a §2, §3.4, mismo criterio que
+  // `InvestigationStep`): cualquier cambio reinicia el mismo temporizador.
+  const draftDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    // Sólo si el formulario está sucio (SPEC FE14a §3.4): `form.reset(values)` deja `isDirty` en
+    // `false` justo después de guardar, y eso es lo que impide que este mismo efecto — que se
+    // vuelve a ejecutar porque `watchedValues` cambia de referencia en cada render — resucite el
+    // borrador que `clearDraft()` acaba de borrar.
+    if (!form.formState.isDirty) return;
+    if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
+    draftDebounceRef.current = setTimeout(() => {
+      useDraftsStore.getState().set(caseId, 'finalClassification', watchedValues, baseUpdatedAtRef.current);
+    }, 500);
+    return () => {
+      if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
+    };
+  }, [caseId, watchedValues, form.formState.isDirty]);
+
+  // "Se borra en cuanto responde el POST o el PUT" (§2, §3.4): lo ya escrito está en la base, y lo
+  // que queda sin tocar no necesita sobrevivir a un cierre accidental sobre un dato que ya es
+  // historia.
+  function clearDraft() {
+    if (draftDebounceRef.current) clearTimeout(draftDebounceRef.current);
+    useDraftsStore.getState().clear(caseId, 'finalClassification');
+  }
 
   // La precedencia, en el cliente (SPEC FE14a §3.5): elegir en un selector una posición que ya
   // tiene otro bloque deja ese otro en `null` y muestra el aviso bajo él. El formulario nunca
@@ -264,6 +322,7 @@ function FinalClassificationFormBody({
           toast.success(t('common.toast.created'));
         }
         form.reset(values);
+        clearDraft();
       } catch (err) {
         if (!(err instanceof EsaviApiError)) {
           throw err;
@@ -315,7 +374,7 @@ function FinalClassificationFormBody({
         toast.error(getErrorMessage(err));
       }
     },
-    [caseId, create, finalClassificationId, form, queryClient, t, update],
+    [caseId, create, finalClassificationId, form, queryClient, t, update, clearDraft],
   );
 
   const performSave = useCallback(
