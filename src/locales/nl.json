@@ -581,6 +581,14 @@
       "confirmWarnings": "Er zijn onopgeloste waarschuwingen:",
       "confirmAction": "Dossier sluiten",
       "success": "Dossier gesloten."
+    },
+    "closed": {
+      "title": "Dossier gesloten",
+      "closedAt": "Gesloten op",
+      "reopenCount": "Aantal keer heropend",
+      "lastReopenedAt": "Laatst heropend",
+      "never": "Nooit",
+      "askAdmin": "Vraag een beheerder om het te heropenen."
     }
   },
   "esaviCase": {

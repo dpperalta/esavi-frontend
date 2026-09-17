@@ -581,6 +581,14 @@
       "confirmWarnings": "There are unresolved warnings:",
       "confirmAction": "Close case file",
       "success": "Case file closed."
+    },
+    "closed": {
+      "title": "Case file closed",
+      "closedAt": "Closed on",
+      "reopenCount": "Times reopened",
+      "lastReopenedAt": "Last reopened",
+      "never": "Never",
+      "askAdmin": "Ask an administrator to reopen it."
     }
   },
   "esaviCase": {

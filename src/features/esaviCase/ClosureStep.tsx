@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { format } from 'date-fns';
 import { AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { AnswerOption } from '@/contracts/common';
-import { useCloseCase } from '@/features/caseWorkflow/api';
+import { useCaseWorkflow, useCloseCase } from '@/features/caseWorkflow/api';
+import { ReopenCaseButton } from '@/features/caseWorkflow/ReopenCaseButton';
 import { type CloseReadinessContext, useCloseReadiness } from '@/features/caseWorkflow/useCloseReadiness';
 import type { CloseCheckId, CloseCheckKind, CloseCheckLine, CloseCheckState } from '@/features/caseWorkflow/closeReadiness';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -22,10 +24,16 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { ROLE_LEVELS } from '@/shared/config/roles';
+import { useCan } from '@/shared/hooks/useCan';
 import { cn } from '@/shared/lib/utils';
 
 interface ClosureStepProps {
   caseId: string;
+}
+
+function formatDateTime(value: string | null): string | null {
+  return value ? format(new Date(value), 'dd/MM/yyyy HH:mm') : null;
 }
 
 function ClosureStepSkeleton() {
@@ -251,9 +259,13 @@ function ClosureSection({
 
 const BLOCKED_HINT_ID = 'closure-step-blocked-hint';
 
-// Modo abierto (SPEC FE14b §2, §3.6): la lista completa y «Cerrar expediente». El modo `CLOSED`
-// lo añade el siguiente paso del plan.
-export function ClosureStep({ caseId }: ClosureStepProps) {
+interface ClosureStepModeProps {
+  caseId: string;
+  headingRef: React.RefObject<HTMLHeadingElement | null>;
+}
+
+// Modo abierto (SPEC FE14b §2, §3.6): la lista completa y «Cerrar expediente».
+function ClosureStepOpen({ caseId, headingRef }: ClosureStepModeProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const readiness = useCloseReadiness(caseId);
@@ -297,7 +309,9 @@ export function ClosureStep({ caseId }: ClosureStepProps) {
   return (
     <div className="flex flex-col gap-6 pb-20 md:pb-0">
       <div className="flex flex-col gap-1">
-        <h1 className="text-lg font-semibold text-foreground">{t('caseWorkflow.close.title')}</h1>
+        <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold text-foreground outline-none">
+          {t('caseWorkflow.close.title')}
+        </h2>
         <p className="text-sm text-muted-foreground">{t('caseWorkflow.close.intro')}</p>
       </div>
 
@@ -376,5 +390,95 @@ export function ClosureStep({ caseId }: ClosureStepProps) {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+function ClosureSummaryRow({ labelKey, value }: { labelKey: string; value: string }) {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-b border-border py-2 last:border-b-0">
+      <dt className="text-sm text-muted-foreground">{t(labelKey)}</dt>
+      <dd className="text-sm font-medium text-foreground">{value}</dd>
+    </div>
+  );
+}
+
+// Modo `CLOSED` (SPEC FE14b §2, §3.6): el resumen de `closedAt`/`reopenCount`/`lastReopenedAt` y
+// «Reabrir» según el rol. `REOPENED` no es un estado propio (§3.6): sólo se llega aquí con
+// `CLOSED`, así que este componente no necesita distinguirlo.
+function ClosureStepClosed({ caseId, headingRef }: ClosureStepModeProps) {
+  const { t } = useTranslation();
+  const workflow = useCaseWorkflow(caseId);
+  const canReopen = useCan(ROLE_LEVELS.ADMIN);
+
+  if (!workflow.data) {
+    return <ClosureStepSkeleton />;
+  }
+
+  const { closedAt, reopenCount, lastReopenedAt } = workflow.data;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold text-foreground outline-none">
+        {t('caseWorkflow.closed.title')}
+      </h2>
+      <dl className="flex flex-col rounded-lg border border-border px-3">
+        <ClosureSummaryRow
+          labelKey="caseWorkflow.closed.closedAt"
+          value={formatDateTime(closedAt) ?? '—'}
+        />
+        <ClosureSummaryRow
+          labelKey="caseWorkflow.closed.reopenCount"
+          value={String(reopenCount)}
+        />
+        <ClosureSummaryRow
+          labelKey="caseWorkflow.closed.lastReopenedAt"
+          value={formatDateTime(lastReopenedAt) ?? t('caseWorkflow.closed.never')}
+        />
+      </dl>
+      {canReopen ? (
+        <ReopenCaseButton caseId={caseId} />
+      ) : (
+        <p className="text-sm text-muted-foreground">{t('caseWorkflow.closed.askAdmin')}</p>
+      )}
+    </div>
+  );
+}
+
+// SPEC FE14b §2, §3.1: el paso «Cierre». Decide el modo por `status.code` y, al cambiar de modo
+// —tras cerrar o reabrir—, mueve el foco al `<h2>` del modo nuevo y lo anuncia en una región
+// `aria-live` (§3.7).
+export function ClosureStep({ caseId }: ClosureStepProps) {
+  const { t } = useTranslation();
+  const workflow = useCaseWorkflow(caseId);
+  const headingRef = useRef<HTMLHeadingElement | null>(null);
+  const [announcement, setAnnouncement] = useState('');
+  const isClosed = workflow.data?.status.code === 'CLOSED';
+  const previousModeRef = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    if (workflow.data === undefined) return;
+    if (previousModeRef.current !== null && previousModeRef.current !== isClosed) {
+      headingRef.current?.focus();
+      setAnnouncement(t(isClosed ? 'caseWorkflow.closed.title' : 'caseWorkflow.close.title'));
+    }
+    previousModeRef.current = isClosed;
+  }, [isClosed, t, workflow.data]);
+
+  if (!workflow.data) {
+    return <ClosureStepSkeleton />;
+  }
+
+  return (
+    <>
+      <span aria-live="polite" className="sr-only">
+        {announcement}
+      </span>
+      {isClosed ? (
+        <ClosureStepClosed caseId={caseId} headingRef={headingRef} />
+      ) : (
+        <ClosureStepOpen caseId={caseId} headingRef={headingRef} />
+      )}
+    </>
   );
 }

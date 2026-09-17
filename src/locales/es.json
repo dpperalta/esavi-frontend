@@ -581,6 +581,14 @@
       "confirmWarnings": "Hay avisos sin resolver:",
       "confirmAction": "Cerrar expediente",
       "success": "Expediente cerrado."
+    },
+    "closed": {
+      "title": "Expediente cerrado",
+      "closedAt": "Cerrado el",
+      "reopenCount": "Veces reabierto",
+      "lastReopenedAt": "Última reapertura",
+      "never": "Nunca",
+      "askAdmin": "Pídeselo a un administrador para reabrirlo."
     }
   },
   "esaviCase": {

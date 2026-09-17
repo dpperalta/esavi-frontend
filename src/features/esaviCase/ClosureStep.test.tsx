@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
+import { format } from 'date-fns';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
@@ -66,6 +67,33 @@ function notFound(code: string) {
 function mockWorkflow(stages: Partial<Record<string, typeof YES_STAGE>>) {
   server.use(
     http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () => ok(workflow(stages))),
+  );
+}
+
+function mockClosedWorkflow(overrides: Partial<ReturnType<typeof workflow>> = {}) {
+  server.use(
+    http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+      ok({
+        ...workflow({ classification: YES_STAGE, notification: YES_STAGE }),
+        status: { catalogItemId: 'status-2', code: 'CLOSED', name: 'Cerrado' },
+        closedAt: '2026-09-10T12:00:00.000Z',
+        reopenCount: 2,
+        lastReopenedAt: '2026-09-05T08:30:00.000Z',
+        ...overrides,
+      }),
+    ),
+  );
+}
+
+function mockCurrentUser(roleName: string, level: number) {
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { userId: '1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+      }),
+    ),
   );
 }
 
@@ -225,5 +253,46 @@ describe('ClosureStep — modo abierto', () => {
 
     expect(await screen.findByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Cerrar expediente' })).toBeDisabled();
+  });
+});
+
+// SPEC FE14b §4 paso 6
+describe('ClosureStep — modo cerrado', () => {
+  it('con CLOSED y USER se ven los tres datos y el texto de pedírselo a un administrador', async () => {
+    mockCurrentUser('USER', 25);
+    mockClosedWorkflow();
+
+    renderStep();
+
+    expect(await screen.findByRole('heading', { name: 'Expediente cerrado' })).toBeInTheDocument();
+    expect(
+      screen.getByText(format(new Date('2026-09-10T12:00:00.000Z'), 'dd/MM/yyyy HH:mm')),
+    ).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(
+      screen.getByText(format(new Date('2026-09-05T08:30:00.000Z'), 'dd/MM/yyyy HH:mm')),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Pídeselo a un administrador para reabrirlo.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reabrir' })).not.toBeInTheDocument();
+  });
+
+  it('con CLOSED y ADMIN está el botón «Reabrir»', async () => {
+    mockCurrentUser('ADMIN', 50);
+    mockClosedWorkflow();
+
+    renderStep();
+
+    expect(await screen.findByRole('button', { name: 'Reabrir' })).toBeInTheDocument();
+    expect(screen.queryByText('Pídeselo a un administrador para reabrirlo.')).not.toBeInTheDocument();
+  });
+
+  it('lastReopenedAt: null se pinta como «Nunca»', async () => {
+    mockCurrentUser('USER', 25);
+    mockClosedWorkflow({ lastReopenedAt: null, reopenCount: 0 });
+
+    renderStep();
+
+    await screen.findByRole('heading', { name: 'Expediente cerrado' });
+    expect(screen.getByText('Nunca')).toBeInTheDocument();
   });
 });
