@@ -60,6 +60,62 @@ function mockWorkflow(stages: Record<string, { exists: boolean; endedAt: string 
   );
 }
 
+function mockClassification(isSeriousEvent: boolean | null) {
+  server.use(
+    http.get('http://localhost:4500/api/classifications/case/case-1', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          classificationId: 'classif-1',
+          age: null,
+          firstConsultationDate: null,
+          isSeriousEvent,
+          causedDeath: null,
+          causedDisability: null,
+          causedCongenitalAnomaly: null,
+          causedFetalDeath: null,
+          causedLifeThreatening: null,
+          causedHospitalization: null,
+          causedAbortion: null,
+          causedOtherCondition: null,
+          otherSeriousConditionDescription: null,
+          notes: null,
+          isActive: true,
+          createdAt: '2026-09-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+          case: { caseId: 'case-1', caseCode: 'C-1', reportDate: null, eventDate: null },
+          ageUnit: null,
+        },
+      }),
+    ),
+  );
+}
+
+function mockNotification(requestInvestigation: boolean, delayMs = 0) {
+  server.use(
+    http.get('http://localhost:4500/api/notifications/case/case-1', async () => {
+      if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: 'notif-1',
+          notificationType: 'SEVERE',
+          requestInvestigation,
+          isActive: true,
+          createdAt: '2026-09-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      });
+    }),
+  );
+}
+
 function renderStepper(activeSlug: Parameters<typeof CaseWizardStepper>[0]['activeSlug']) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -96,8 +152,10 @@ describe('CaseWizardStepper', () => {
       classification: { exists: true, endedAt: '2026-09-01' },
       notification: { exists: true, endedAt: null },
       investigation: { exists: false, endedAt: null },
-      finalClassification: { exists: false, endedAt: null },
+      finalClassification: { exists: true, endedAt: null },
     });
+    mockClassification(true);
+    mockNotification(true);
 
     const { container } = renderStepper('final-classification');
 
@@ -109,9 +167,72 @@ describe('CaseWizardStepper', () => {
     );
 
     // Both hang off the same precondition (notification.exists), not a 5→6 chain (§6): unlocking
-    // final-classification here doesn't depend on investigation ever starting.
+    // final-classification here doesn't depend on investigation ever starting. `requestInvestigation`
+    // is true too, so step 5 stays required and visible.
     expect(
       container.querySelector('a[href="/esavi-cases/case-1/wizard/investigation"]'),
     ).toBeInTheDocument();
+  });
+
+  it('un caso no grave y sin investigación no muestra los pasos 5 ni 6 (SPEC FE14a §2)', async () => {
+    mockWorkflow({
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: true, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+    mockClassification(false);
+    mockNotification(false);
+
+    const { container } = renderStepper('notification');
+
+    await waitFor(() =>
+      expect(
+        container.querySelector('a[href="/esavi-cases/case-1/wizard/notification"]'),
+      ).toBeInTheDocument(),
+    );
+
+    await waitFor(() => {
+      expect(
+        container.querySelector('a[href="/esavi-cases/case-1/wizard/investigation"]'),
+      ).not.toBeInTheDocument();
+      expect(
+        container.querySelector('a[href="/esavi-cases/case-1/wizard/final-classification"]'),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it('mientras la notificación carga, el stepper muestra los seis pasos', async () => {
+    mockWorkflow({
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: true, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+    mockClassification(false);
+    mockNotification(false, 50);
+
+    const { container } = renderStepper('notification');
+
+    // The workflow resolves fast; the notification read is still in flight, so `flags` is `null`
+    // and nothing is hidden yet (SPEC FE14a §3.4, §7 riesgo 2).
+    await waitFor(() =>
+      expect(
+        container.querySelector('a[href="/esavi-cases/case-1/wizard/notification"]'),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      container.querySelector('a[href="/esavi-cases/case-1/wizard/investigation"]'),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector('a[href="/esavi-cases/case-1/wizard/final-classification"]'),
+    ).toBeInTheDocument();
+
+    // Once it resolves (not required, not serious), both hide.
+    await waitFor(() =>
+      expect(
+        container.querySelector('a[href="/esavi-cases/case-1/wizard/final-classification"]'),
+      ).not.toBeInTheDocument(),
+    );
   });
 });

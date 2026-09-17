@@ -10,16 +10,48 @@ import {
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { cn } from '@/shared/lib/utils';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
+import { useClassificationByCase } from '@/features/classification/api';
+import { useNotificationByCase } from '@/features/notification/api';
 import {
   CASE_WIZARD_STEPS,
   getPrecedingStepSlug,
+  isStepRequired,
   isStepUnlocked,
   stageWorkflowKey,
   type CaseWizardGroup,
   type CaseWizardStepDefinition,
+  type CaseWizardStepFlags,
   type CaseWizardStepSlug,
   type CaseWorkflowStages,
 } from './steps';
+
+// The two extra reads the stepper needs beyond `caseWorkflow` (SPEC FE14a §2, §3.4): whether the
+// case requires step 5 or step 6 at all. Both share their cache key with FE11's
+// `useClassificationByCase` and FE12a's `useNotificationByCase`, so a normal reentry — which
+// already primed both caches for the active step — pays nothing extra (SPEC FE14a §7 riesgo 1).
+// `enabled` follows `stages.<stage>.exists`: a stage that hasn't started yet has nothing to read,
+// and its flag resolves to `null` without ever counting as "pending" (§3.4).
+export function useCaseWizardStepFlags(
+  caseId: string,
+  stages: CaseWorkflowStages | undefined,
+): CaseWizardStepFlags | null {
+  const classification = useClassificationByCase(caseId, !!stages?.classification.exists);
+  const notification = useNotificationByCase(caseId, !!stages?.notification.exists);
+
+  const classificationUnresolved =
+    !!stages?.classification.exists && (classification.isLoading || classification.isError);
+  const notificationUnresolved =
+    !!stages?.notification.exists && (notification.isLoading || notification.isError);
+
+  // A failed read leaves the stepper without flags and, by the loading rule, showing all six
+  // steps — the safe failure: showing too much never loses data (SPEC FE14a §7 riesgo 2).
+  if (classificationUnresolved || notificationUnresolved) return null;
+
+  return {
+    isSeriousEvent: classification.data?.isSeriousEvent ?? null,
+    requestInvestigation: notification.data?.requestInvestigation ?? null,
+  };
+}
 
 interface CaseWizardStepperProps {
   caseId: string;
@@ -175,6 +207,7 @@ function GroupSteps({
 export function CaseWizardStepper({ caseId, activeSlug }: CaseWizardStepperProps) {
   const { t } = useTranslation();
   const workflow = useCaseWorkflow(caseId);
+  const flags = useCaseWizardStepFlags(caseId, workflow.data?.stages);
 
   if (!workflow.data) {
     return (
@@ -193,6 +226,16 @@ export function CaseWizardStepper({ caseId, activeSlug }: CaseWizardStepperProps
 
   const patientSteps = CASE_WIZARD_STEPS.filter((step) => step.group === 'patient');
 
+  // Steps 5 and 6 drop out of both the desktop and the mobile rendering when the case doesn't
+  // require them (SPEC FE14a §2). `flags === null` (classification or notification still loading,
+  // or failed) leaves `isStepRequired` returning `true` for everything, so nothing flickers away
+  // and back on a normal reentry (§3.4, §7 riesgo 2).
+  function requiredStepsOf(group: CaseWizardGroup) {
+    return CASE_WIZARD_STEPS.filter(
+      (step) => step.group === group && isStepRequired(step.slug, stages, flags),
+    );
+  }
+
   return (
     <nav className="flex flex-col gap-4">
       <GroupSteps caseId={caseId} steps={patientSteps} stages={stages} activeSlug={activeSlug} />
@@ -200,7 +243,8 @@ export function CaseWizardStepper({ caseId, activeSlug }: CaseWizardStepperProps
       {/* Desktop: every group expanded, no accordion (§3.7). */}
       <div className="hidden flex-col gap-4 md:flex">
         {GROUP_ORDER.filter((group) => group !== 'patient').map((group) => {
-          const steps = CASE_WIZARD_STEPS.filter((step) => step.group === group);
+          const steps = requiredStepsOf(group);
+          if (steps.length === 0) return null;
           const labelKey = GROUP_LABEL_KEY[group];
           return (
             <div key={group} className="flex flex-col gap-1">
@@ -218,7 +262,8 @@ export function CaseWizardStepper({ caseId, activeSlug }: CaseWizardStepperProps
       {/* Mobile: the three named groups collapse, the active step's group starts open. */}
       <Accordion type="multiple" defaultValue={[activeGroup]} className="flex flex-col md:hidden">
         {GROUP_ORDER.filter((group) => group !== 'patient').map((group) => {
-          const steps = CASE_WIZARD_STEPS.filter((step) => step.group === group);
+          const steps = requiredStepsOf(group);
+          if (steps.length === 0) return null;
           const labelKey = GROUP_LABEL_KEY[group];
           return (
             <AccordionItem key={group} value={group}>

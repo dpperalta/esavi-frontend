@@ -122,6 +122,27 @@ function mockClassification() {
   );
 }
 
+function mockNotification(requestInvestigation: boolean) {
+  server.use(
+    http.get('http://localhost:4500/api/notifications/case/case-1', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          notificationId: 'notif-1',
+          notificationType: 'SEVERE',
+          requestInvestigation,
+          isActive: true,
+          createdAt: '2026-09-01T00:00:00.000Z',
+          updatedAt: null,
+          deletedAt: null,
+          appDetails: [],
+        },
+      }),
+    ),
+  );
+}
+
 function mockWorkflowError(code: string) {
   server.use(
     http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
@@ -220,6 +241,37 @@ describe('CaseWizardPage — reanudación y bloqueo de paso', () => {
     // (their precondition, notification.exists, is still false). `notification` no es ya un
     // placeholder (SPEC FE12a) — se confirma con el propio formulario, no con el slug crudo.
     await waitFor(() => expect(screen.getByLabelText('Descripción del ESAVI (signos y síntomas)')).toBeInTheDocument());
+  });
+
+  it('una URL a un paso no requerido redirige al paso de reanudación (SPEC FE14a §2)', async () => {
+    mockCase();
+    mockClassification();
+    mockNotification(false);
+    server.use(
+      http.get('http://localhost:4500/api/catalog-types', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+    mockWorkflow('OPEN', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: true, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    const { container } = renderPage('/esavi-cases/case-1/wizard/final-classification');
+
+    // classification.isSeriousEvent === false y notification.requestInvestigation === false:
+    // final-classification está desbloqueado (notification.exists) pero no es requerido
+    // (SPEC FE14a §2), así que la URL redirige al paso de reanudación — notification, el más
+    // avanzado que sigue siendo requerido. Se comprueba con el paso activo del stepper, no con el
+    // formulario de NotificationStep, para no depender de sus mocks internos (severa/no severa).
+    await waitFor(() =>
+      expect(container.querySelector('a[aria-current="step"]')).toHaveAttribute(
+        'href',
+        '/esavi-cases/case-1/wizard/notification',
+      ),
+    );
   });
 });
 
