@@ -7,6 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { setupUser } from '@/test/user';
 import { EsaviCaseDetailPage } from './EsaviCaseDetailPage';
 
 const server = setupServer();
@@ -182,6 +183,100 @@ describe('EsaviCaseDetailPage — bloque de estado del 006', () => {
     expect(
       await screen.findByRole('button', { name: 'Ver expediente (sólo lectura)' }),
     ).toBeInTheDocument();
+  });
+});
+
+// SPEC FE14b §4 paso 9
+describe('EsaviCaseDetailPage — ReopenCaseButton (ESAVI-CASEFLOW-009)', () => {
+  function mockClosedCase() {
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: caseDetail() }),
+      ),
+      http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: workflowDetail({ status: { catalogItemId: 'item-closed', code: 'CLOSED', name: 'Cerrado' } }),
+        }),
+      ),
+    );
+  }
+
+  it('con CLOSED y ADMIN, el botón está junto a la insignia y reabrir cambia la insignia sin recargar', async () => {
+    mockCurrentUser('ADMIN', 50);
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: caseDetail() }),
+      ),
+    );
+    // El `PATCH` invalida el workflow, y el siguiente `GET` tiene que reflejar el reabierto — no
+    // basta con mockear el `PATCH` aparte, o el refetch posterior a la invalidación repetiría el
+    // mismo `CLOSED` del mock inicial.
+    let isClosed = true;
+    server.use(
+      http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: workflowDetail(
+            isClosed
+              ? { status: { catalogItemId: 'item-closed', code: 'CLOSED', name: 'Cerrado' } }
+              : { status: { catalogItemId: 'item-open', code: 'OPEN', name: 'Abierto' }, reopenCount: 1 },
+          ),
+        }),
+      ),
+      http.patch('http://localhost:4500/api/case-workflows/case/case-1/reopen', () => {
+        isClosed = false;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: workflowDetail({
+            status: { catalogItemId: 'item-open', code: 'OPEN', name: 'Abierto' },
+            reopenCount: 1,
+          }),
+        });
+      }),
+    );
+
+    const user = setupUser();
+    renderPage();
+
+    expect(await screen.findByText('Cerrado')).toBeInTheDocument();
+    const reopenButton = await screen.findByRole('button', { name: 'Reabrir' });
+    await user.click(reopenButton);
+
+    const confirmButtons = await screen.findAllByRole('button', { name: 'Reabrir' });
+    await user.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => expect(screen.getByText('Abierto')).toBeInTheDocument());
+  });
+
+  it('con CLOSED y USER, el botón no está', async () => {
+    mockCurrentUser('USER', 25);
+    mockClosedCase();
+
+    renderPage();
+
+    expect(await screen.findByText('Cerrado')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reabrir' })).not.toBeInTheDocument();
+  });
+
+  it('con un estado abierto, el botón no está para ningún rol', async () => {
+    mockCurrentUser('ADMIN', 50);
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: caseDetail() }),
+      ),
+      http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowDetail() }),
+      ),
+    );
+
+    renderPage();
+
+    expect(await screen.findByText('Abierto')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reabrir' })).not.toBeInTheDocument();
   });
 });
 

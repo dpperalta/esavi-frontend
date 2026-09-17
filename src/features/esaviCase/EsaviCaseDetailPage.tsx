@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { esaviCaseResource } from '@/features/esaviCase/api';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
+import { ReopenCaseButton } from '@/features/caseWorkflow/ReopenCaseButton';
 import { EsaviCaseNotFound } from '@/features/esaviCase/EsaviCaseNotFound';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
@@ -66,6 +67,7 @@ function WorkflowStatusBlock({ caseId }: WorkflowStatusBlockProps) {
       <div className="flex items-center gap-2">
         <span className="sr-only">{t('esaviCase.detail.workflowStatus')}</span>
         <Badge variant={isClosed ? 'outline' : 'default'}>{workflow.data.status.name}</Badge>
+        {isClosed && <ReopenCaseButton caseId={caseId} />}
       </div>
       <Button type="button" onClick={() => navigate(`/esavi-cases/${caseId}/wizard`)}>
         {t(isClosed ? 'esaviCase.detail.viewCaseReadOnly' : 'esaviCase.detail.openCase')}
