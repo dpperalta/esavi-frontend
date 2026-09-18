@@ -9,6 +9,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { BasicInfoSection } from './BasicInfoSection';
+import type { InvestigationSectionHandle } from './schemas';
 
 // Leaflet manipulates the real DOM with layout measurements jsdom doesn't compute — same minimal
 // double as `MapPointPicker.test.tsx` (step 3). Only the numeric latitude field is needed here,
@@ -103,8 +104,9 @@ function mockEmptyCatalogAndSearch() {
         ok: true,
         message: 'ok',
         data: {
-          count: 2,
+          count: 3,
           rows: [
+            { catalogItemId: STATUS_UNKNOWN, code: 'UNKNOWN', name: 'Desconocido', value: '0' },
             { catalogItemId: STATUS_DEATH, code: 'DEATH', name: 'Fallecido', value: 'DEATH' },
             { catalogItemId: STATUS_RECOVERED, code: 'RECOVERED', name: 'Recuperado', value: 'RECOVERED' },
           ],
@@ -146,6 +148,7 @@ const SITE_HOME = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const HFAC_1 = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const GEO_1 = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
 const STATUS_DEATH = '11111111-1111-4111-8111-111111111111';
+const STATUS_UNKNOWN = '22222222-2222-4222-8222-222222222222';
 
 const investigationWithResolvedObjects = {
   investigationId: INVESTIGATION_1,
@@ -393,5 +396,81 @@ describe('BasicInfoSection — el bloque de muerte y autopsia (SPEC FE13a §4 pa
     await user.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
 
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
+  });
+});
+
+describe('BasicInfoSection — campos pendientes y aviso de «Desconocido» (SPEC FE16 §4 paso 4)', () => {
+  const START_DATE_ENTRY = 'Información básica · Fecha de inicio de la investigación';
+  const DEATH_DATE_ENTRY = 'Información básica · Fecha de fallecimiento';
+
+  function renderWithHandle(props: Partial<Parameters<typeof BasicInfoSection>[0]> = {}) {
+    const holder: { handle: InvestigationSectionHandle | null } = { handle: null };
+    renderBasicInfoSection({
+      onRegisterHandle: (next) => {
+        holder.handle = next;
+      },
+      ...props,
+    });
+    return holder;
+  }
+
+  it('sin fecha de inicio devuelve su entrada con el prefijo de sección', async () => {
+    const holder = renderWithHandle();
+
+    await waitFor(() => expect(holder.handle).not.toBeNull());
+    expect(holder.handle!.getPendingFields!()).toEqual([START_DATE_ENTRY]);
+  });
+
+  it('con la fecha de inicio y sin estado DEATH no devuelve nada', async () => {
+    const holder = renderWithHandle({ investigation: investigationWithResolvedObjects });
+
+    await waitFor(() => expect(holder.handle).not.toBeNull());
+    expect(holder.handle!.getPendingFields!()).toEqual([]);
+  });
+
+  it('con el estado en DEATH y sin fila de autopsia devuelve las dos, en orden', async () => {
+    const holder = renderWithHandle({
+      investigation: { ...investigationWithDeathStatus, investigationStartDate: null },
+      investigationAutopsy: null,
+    });
+
+    await screen.findByLabelText('Si la persona murió, indique la fecha de la muerte');
+    expect(holder.handle!.getPendingFields!()).toEqual([START_DATE_ENTRY, DEATH_DATE_ENTRY]);
+  });
+
+  it('con la fila de autopsia guardada devuelve sólo la primera', async () => {
+    const holder = renderWithHandle({
+      investigation: { ...investigationWithDeathStatus, investigationStartDate: null },
+      investigationAutopsy: investigationAutopsyFixture,
+    });
+
+    await screen.findByLabelText('Registre los resultados de la necropsia');
+    expect(holder.handle!.getPendingFields!()).toEqual([START_DATE_ENTRY]);
+  });
+
+  it('con el ítem «Desconocido» (value 0) muestra el aviso y no lo lista como pendiente', async () => {
+    const holder = renderWithHandle({
+      investigation: {
+        ...investigationWithResolvedObjects,
+        status: { catalogItemId: STATUS_UNKNOWN, code: 'UNKNOWN', name: 'Desconocido' },
+      },
+    });
+
+    expect(
+      await screen.findByText(/El estado quedó en «Desconocido», el valor por defecto/),
+    ).toBeInTheDocument();
+    expect(holder.handle!.getPendingFields!()).toEqual([]);
+  });
+
+  it('con cualquier otro estado el aviso no aparece', async () => {
+    renderWithHandle({
+      investigation: {
+        ...investigationWithResolvedObjects,
+        status: { catalogItemId: STATUS_RECOVERED, code: 'RECOVERED', name: 'Recuperado' },
+      },
+    });
+
+    await screen.findByText('Recuperado');
+    expect(screen.queryByText(/El estado quedó en «Desconocido»/)).not.toBeInTheDocument();
   });
 });

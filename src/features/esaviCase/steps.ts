@@ -133,6 +133,35 @@ export function isStepRequired(
   return true;
 }
 
+// The next step whose door isn't shut by `isStepRequired` (SPEC FE14b §2, §4 paso 8) — never
+// `currentIndex + 1` alone, which would land on a hidden step 5/6 or walk past `closure` off the
+// end of the array. `flags === null` (still loading) makes every step required (§3.4).
+export function findNextRequiredStep(
+  currentIndex: number,
+  stages: WorkflowStages,
+  flags: CaseWizardStepFlags | null,
+): CaseWizardStepDefinition | null {
+  for (let i = currentIndex + 1; i < CASE_WIZARD_STEPS.length; i++) {
+    const step = CASE_WIZARD_STEPS[i];
+    if (isStepRequired(step.slug, stages, flags)) return step;
+  }
+  return null;
+}
+
+// Mirror of `findNextRequiredStep` (SPEC FE16 §3.1). Doesn't check `isStepUnlocked`: a preceding
+// step is unlocked by definition (SPEC FE16 §6).
+export function findPreviousRequiredStep(
+  currentIndex: number,
+  stages: WorkflowStages,
+  flags: CaseWizardStepFlags | null,
+): CaseWizardStepDefinition | null {
+  for (let i = currentIndex - 1; i >= 0; i--) {
+    const step = CASE_WIZARD_STEPS[i];
+    if (isStepRequired(step.slug, stages, flags)) return step;
+  }
+  return null;
+}
+
 // Where /esavi-cases/:id/wizard/:step lands when :step is missing, unrecognized, locked or not
 // required (SPEC FE08 §4 plan step 9, SPEC FE14a §4 plan step 4): the most advanced step that's
 // both unlocked and required, walked in process order — worst case that's `classification`, which

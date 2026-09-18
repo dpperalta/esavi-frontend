@@ -747,6 +747,7 @@
       "saveAndContinue": "Opslaan en doorgaan",
       "completeStage": "Fase voltooien",
       "stageCompleted": "Fase voltooid.",
+      "previous": "Vorige",
       "next": "Volgende",
       "continue": "Doorgaan",
       "unsavedChangesTitle": "Er zijn niet-opgeslagen wijzigingen",
@@ -1262,7 +1263,17 @@
       "vaccinationGeoLocationId": "Subnationaal geografisch niveau",
       "mapLabel": "Volledig adres van de vaccinatieplaats",
       "hospitalizationDate": "Datum van ziekenhuisopname",
-      "investigationStartDate": "Startdatum van het onderzoek"
+      "investigationStartDate": "Startdatum van het onderzoek",
+      "statusUnknownWarning": "De status is op «Onbekend» blijven staan, de standaardwaarde. Controleer of dat klopt."
+    },
+    "pending": {
+      "entry": "{{section}} · {{field}}",
+      "investigationStartDate": "Startdatum van het onderzoek",
+      "deathDate": "Datum van overlijden",
+      "atLeastOneTeamMember": "Minstens één teamlid",
+      "atLeastOneInstitution": "Minstens één instelling",
+      "atLeastOneDiagnostic": "Minstens één diagnose",
+      "atLeastOneVaccine": "Minstens één vaccin"
     },
     "source": {
       "title": "Informatiebronnen",

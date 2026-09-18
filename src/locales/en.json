@@ -747,6 +747,7 @@
       "saveAndContinue": "Save and continue",
       "completeStage": "Complete stage",
       "stageCompleted": "Stage completed.",
+      "previous": "Previous",
       "next": "Next",
       "continue": "Continue",
       "unsavedChangesTitle": "You have unsaved changes",
@@ -1262,7 +1263,17 @@
       "vaccinationGeoLocationId": "Subnational geographic level",
       "mapLabel": "Full address of the vaccination site",
       "hospitalizationDate": "Hospitalization date",
-      "investigationStartDate": "Investigation start date"
+      "investigationStartDate": "Investigation start date",
+      "statusUnknownWarning": "The status was left as “Unknown”, the default value. Check it if it isn't the right one."
+    },
+    "pending": {
+      "entry": "{{section}} · {{field}}",
+      "investigationStartDate": "Investigation start date",
+      "deathDate": "Date of death",
+      "atLeastOneTeamMember": "At least one team member",
+      "atLeastOneInstitution": "At least one institution",
+      "atLeastOneDiagnostic": "At least one diagnosis",
+      "atLeastOneVaccine": "At least one vaccine"
     },
     "source": {
       "title": "Information sources",

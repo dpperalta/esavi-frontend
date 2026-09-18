@@ -16,6 +16,7 @@ import {
 } from '@/features/investigation/api';
 import {
   investigationAutopsySaveSchema,
+  investigationBasicInfoCompleteSchema,
   investigationSaveSchema,
   type InvestigationAutopsyFormValues,
   type InvestigationFormValues,
@@ -30,6 +31,14 @@ import { HealthFacilitySelect } from '@/shared/components/HealthFacilitySelect';
 import { MapPointPicker, type LatLng } from '@/shared/components/MapPointPicker';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 import { Button } from '@/shared/components/ui/button';
+
+const PENDING_LABEL_KEYS = {
+  investigationStartDate: 'investigation.pending.investigationStartDate',
+  deathDate: 'investigation.pending.deathDate',
+} as const;
+
+// The catalog item «Desconocido» (SPEC FE16 §3.5): the server's default when the status is left empty.
+const UNKNOWN_STATUS_VALUE = '0';
 
 function buildDefaultValues(investigation: InvestigationDetail | null): InvestigationFormValues {
   return {
@@ -149,12 +158,16 @@ export function BasicInfoSection({
   const vaccinationGeoLocationId = form.watch('vaccinationGeoLocationId');
   const vaccinationLatitude = form.watch('vaccinationLatitude');
   const vaccinationLongitude = form.watch('vaccinationLongitude');
+  const investigationStartDate = form.watch('investigationStartDate');
   const autopsyDeathDate = autopsyForm.watch('deathDate');
 
   // The death block's gate checks `status.value`, never `code` or `name` (SPEC FE13a §6,
   // decision), and is derived in render — there's no `showAutopsy` flag anywhere.
-  const isDeath =
-    statusItems.rows.find((row) => row.catalogItemId === statusItemId)?.value === 'DEATH';
+  const selectedStatusValue = statusItems.rows.find(
+    (row) => row.catalogItemId === statusItemId,
+  )?.value;
+  const isDeath = selectedStatusValue === 'DEATH';
+  const isStatusUnknown = selectedStatusValue === UNKNOWN_STATUS_VALUE;
 
   // §6.6 warning (CASE-PROCESS.md): only once the notification has loaded — "staying silent is
   // correct; warning about an unverified divergence is not" — and only while the death block is
@@ -291,11 +304,37 @@ export function BasicInfoSection({
   const performSaveRef = useRef(handleSave);
   performSaveRef.current = handleSave;
   const isDirty = form.formState.isDirty || autopsyForm.formState.isDirty;
+
+  // Read by reference, like `performSaveRef`: the handle registers once per `isDirty` change, not
+  // on every keystroke (SPEC FE16 §3.4).
+  function getPendingFields(): string[] {
+    const result = investigationBasicInfoCompleteSchema.safeParse({
+      investigationStartDate,
+      isDeath,
+      hasAutopsyRow: investigationAutopsy !== null,
+    });
+    if (result.success) return [];
+    const section = t('investigation.basicInfo.title');
+    return result.error.issues.map((issue) => {
+      const field = t(PENDING_LABEL_KEYS[issue.path[0] as keyof typeof PENDING_LABEL_KEYS]);
+      return t('investigation.pending.entry', { section, field });
+    });
+  }
+  const getPendingFieldsRef = useRef(getPendingFields);
+  getPendingFieldsRef.current = getPendingFields;
+  // What the step aggregates only refreshes when this handle changes: `isDeath` resolves inside
+  // this section (the status catalog), so the step wouldn't re-render on its own when it does.
+  const pendingFieldsKey = getPendingFields().join('\n');
+
   useEffect(() => {
-    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    onRegisterHandle?.({
+      save: () => performSaveRef.current(),
+      isDirty,
+      getPendingFields: () => getPendingFieldsRef.current(),
+    });
     return () => onRegisterHandle?.(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onRegisterHandle, isDirty]);
+  }, [onRegisterHandle, isDirty, pendingFieldsKey]);
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border p-4">
@@ -321,6 +360,18 @@ export function BasicInfoSection({
             />
           )}
         />
+        {/* Information, not a pending: the status isn't required on screen (CASE-PROCESS.md, SPEC
+          FE16 §3.5) — it only flags that the server default is still there. */}
+        <div aria-live="polite">
+          {isStatusUnknown && (
+            <p
+              role="status"
+              className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning"
+            >
+              {t('investigation.basicInfo.statusUnknownWarning')}
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">

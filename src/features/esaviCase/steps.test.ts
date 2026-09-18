@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import {
   CASE_WIZARD_STEPS,
+  findNextRequiredStep,
+  findPreviousRequiredStep,
   isReachableStepSlug,
   isStepRequired,
   isStepUnlocked,
@@ -340,5 +342,65 @@ describe('isStepRequired — SPEC FE14a §2, §3.4', () => {
     const stages = buildStages();
     expect(isStepRequired('investigation', stages, null)).toBe(true);
     expect(isStepRequired('final-classification', stages, null)).toBe(true);
+  });
+});
+
+function indexOfStep(slug: string): number {
+  return CASE_WIZARD_STEPS.findIndex((step) => step.slug === slug);
+}
+
+describe('findPreviousRequiredStep — SPEC FE16 §4 paso 1', () => {
+  const noFlags: CaseWizardStepFlags = { isSeriousEvent: false, requestInvestigation: false };
+  const bothRequired: CaseWizardStepFlags = { isSeriousEvent: true, requestInvestigation: true };
+
+  it('desde investigation devuelve notification', () => {
+    const previous = findPreviousRequiredStep(
+      indexOfStep('investigation'),
+      buildStages(),
+      bothRequired,
+    );
+    expect(previous?.slug).toBe('notification');
+  });
+
+  it('desde el primer paso devuelve null', () => {
+    expect(findPreviousRequiredStep(indexOfStep('patient'), buildStages(), bothRequired)).toBeNull();
+  });
+
+  it('desde closure salta el 5 y el 6 cuando isStepRequired los deja fuera', () => {
+    const previous = findPreviousRequiredStep(indexOfStep('closure'), buildStages(), noFlags);
+    expect(previous?.slug).toBe('notification');
+  });
+
+  it('desde closure salta sólo el 5 cuando el caso es grave sin investigación', () => {
+    const flags: CaseWizardStepFlags = { isSeriousEvent: true, requestInvestigation: false };
+    const previous = findPreviousRequiredStep(indexOfStep('closure'), buildStages(), flags);
+    expect(previous?.slug).toBe('final-classification');
+  });
+
+  it('desde final-classification salta un investigation oculto y aterriza en notification', () => {
+    const flags: CaseWizardStepFlags = { isSeriousEvent: true, requestInvestigation: false };
+    const previous = findPreviousRequiredStep(
+      indexOfStep('final-classification'),
+      buildStages(),
+      flags,
+    );
+    expect(previous?.slug).toBe('notification');
+  });
+
+  it('con flags === null nada se salta: es el paso inmediatamente anterior', () => {
+    const previous = findPreviousRequiredStep(indexOfStep('closure'), buildStages(), null);
+    expect(previous?.slug).toBe('final-classification');
+  });
+});
+
+describe('findNextRequiredStep', () => {
+  it('desde notification salta investigation cuando no se requiere', () => {
+    const flags: CaseWizardStepFlags = { isSeriousEvent: true, requestInvestigation: false };
+    const next = findNextRequiredStep(indexOfStep('notification'), buildStages(), flags);
+    expect(next?.slug).toBe('final-classification');
+  });
+
+  it('desde closure devuelve null', () => {
+    expect(findNextRequiredStep(indexOfStep('closure'), buildStages(), null)).toBeNull();
   });
 });

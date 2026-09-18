@@ -14,6 +14,7 @@ import {
   hasPregnancyFieldContent,
   investigationAdministrationErrorSaveSchema,
   investigationAutopsySaveSchema,
+  investigationBasicInfoCompleteSchema,
   investigationClinicalEvaluationErrorFieldMap,
   investigationClinicalEvaluationSaveSchema,
   investigationColdChainSaveSchema,
@@ -62,6 +63,55 @@ describe('investigationSaveSchema — A (SPEC FE13a §3.5 A)', () => {
 
   it('rechaza una latitud fuera de rango', () => {
     expect(investigationSaveSchema.safeParse({ vaccinationLatitude: 200 }).success).toBe(false);
+  });
+});
+
+describe('investigationBasicInfoCompleteSchema — A (SPEC FE16 §3.5)', () => {
+  function pendingPaths(value: unknown): string[] {
+    const result = investigationBasicInfoCompleteSchema.safeParse(value);
+    return result.success ? [] : result.error.issues.map((issue) => String(issue.path[0]));
+  }
+
+  it('sin fecha de inicio, la fecha de inicio queda pendiente', () => {
+    expect(
+      pendingPaths({ investigationStartDate: null, isDeath: false, hasAutopsyRow: false }),
+    ).toEqual(['investigationStartDate']);
+    expect(
+      pendingPaths({ investigationStartDate: undefined, isDeath: false, hasAutopsyRow: false }),
+    ).toEqual(['investigationStartDate']);
+    expect(
+      pendingPaths({ investigationStartDate: '', isDeath: false, hasAutopsyRow: false }),
+    ).toEqual(['investigationStartDate']);
+  });
+
+  it('con fecha de inicio y sin bloque de muerte, no hay pendientes', () => {
+    expect(
+      pendingPaths({ investigationStartDate: '2026-09-01', isDeath: false, hasAutopsyRow: false }),
+    ).toEqual([]);
+  });
+
+  it('con el estado en DEATH y sin fila de autopsia, la fecha de fallecimiento queda pendiente', () => {
+    expect(
+      pendingPaths({ investigationStartDate: '2026-09-01', isDeath: true, hasAutopsyRow: false }),
+    ).toEqual(['deathDate']);
+  });
+
+  it('con el estado en DEATH y la fila de autopsia guardada, la fecha de fallecimiento no está pendiente', () => {
+    expect(
+      pendingPaths({ investigationStartDate: '2026-09-01', isDeath: true, hasAutopsyRow: true }),
+    ).toEqual([]);
+  });
+
+  it('con las dos reglas incumplidas a la vez, devuelve las dos', () => {
+    expect(
+      pendingPaths({ investigationStartDate: null, isDeath: true, hasAutopsyRow: false }),
+    ).toEqual(['investigationStartDate', 'deathDate']);
+  });
+
+  it('una fila de autopsia sin estado DEATH no genera pendiente', () => {
+    expect(
+      pendingPaths({ investigationStartDate: '2026-09-01', isDeath: false, hasAutopsyRow: true }),
+    ).toEqual([]);
   });
 });
 

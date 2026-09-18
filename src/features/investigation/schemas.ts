@@ -22,6 +22,9 @@ import type { CreateInvestigationCommunityInput } from '@/contracts/investigatio
 export interface InvestigationSectionHandle {
   save: () => Promise<void>;
   isDirty: boolean;
+  // Already translated and section-prefixed (SPEC FE16 §3.3). Optional: only `basicInfo` has
+  // field-level pendings, the other sections don't need to declare `() => []`.
+  getPendingFields?: () => string[];
 }
 
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
@@ -66,6 +69,31 @@ function _assertInvestigationSchemaMatchesContract(
   return value;
 }
 void _assertInvestigationSchemaMatchesContract;
+
+// Process-level obligations of step 5's header (SPEC FE16 §3.5, CASE-PROCESS.md §4.6) — the second
+// of the two levels, never a save blocker: the backend requires no investigation column, so the
+// caller reads the issue `path`s and lists them, it doesn't surface the messages. `deathDate` isn't
+// a column of this form: it's owed by the autopsy row, which the death block only opens for a
+// `DEATH` status, so its pending is "that row hasn't been saved yet". Both rules live in the
+// `superRefine`: a type issue on the base object would skip it and hide the second pending.
+export const investigationBasicInfoCompleteSchema = z
+  .object({
+    investigationStartDate: z.string().nullable().optional(),
+    isDeath: z.boolean(),
+    hasAutopsyRow: z.boolean(),
+  })
+  .superRefine((data, ctx) => {
+    if (!isoDateRegex.test(data.investigationStartDate ?? '')) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'investigationStartDateRequired',
+        path: ['investigationStartDate'],
+      });
+    }
+    if (data.isDeath && !data.hasAutopsyRow) {
+      ctx.addIssue({ code: 'custom', message: 'deathDateRequired', path: ['deathDate'] });
+    }
+  });
 
 // ---------------------------------------------------------------------------------------------
 // B — Sources of information (SPEC FE13a §3.5 B). Eight tri-state flags (`null` = "not
