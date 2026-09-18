@@ -512,22 +512,12 @@ function InvestigationStepBody({
   const performSaveRef = useRef(() => Promise.all(dirtySectionHandles.map((handle) => handle.save())));
   performSaveRef.current = () => Promise.all(dirtySectionHandles.map((handle) => handle.save()));
 
-  useEffect(() => {
-    registerStep({
-      save: async () => {
-        await performSaveRef.current();
-      },
-      isDirty: isAnySectionDirty,
-      getPendingFields: () => [],
-    });
-    return () => unregisterStep();
-  }, [registerStep, unregisterStep, isAnySectionDirty]);
-
-  // The empty-sections warning's four satellite-list reads (SPEC FE13e §3.6): identical query
-  // keys/params to the ones `TeamMemberList`/`EvaluationInstitutionList`/`DiagnosticList`/
-  // `VaccineAdministeredList` already run once their own section is visible, so this never doubles
-  // a network request — by the time H is visible every earlier section already is too (progressive
-  // reveal is monotonic), and TanStack Query serves the same cache entry.
+  // The empty-sections warning's four satellite-list reads (SPEC FE13e §3.6), also the source of
+  // the four list minimums of «Completar etapa» (SPEC FE16 §3.5): identical query keys/params to
+  // the ones `TeamMemberList`/`EvaluationInstitutionList`/`DiagnosticList`/`VaccineAdministeredList`
+  // already run once their own section is visible, so this never doubles a network request — by
+  // the time H is visible every earlier section already is too (progressive reveal is monotonic),
+  // and TanStack Query serves the same cache entry.
   const teamMembers = investigationTeamMemberResource.useListByParent!(investigationId, {
     pageSize: 100,
   });
@@ -537,6 +527,60 @@ function InvestigationStepBody({
     investigationId,
     { pageSize: 100 },
   );
+
+  // SPEC FE16 §3.4–§3.6: derived in render, never stored. A list minimum is only affirmed once its
+  // read has succeeded — `count` is `0` while the request is in flight and after an error, and
+  // affirming it then would flash four false pendings on every entry to the step.
+  const listMinimums = [
+    {
+      query: teamMembers,
+      section: 'investigation.team.sectionTitle',
+      field: 'investigation.pending.atLeastOneTeamMember',
+    },
+    {
+      query: evaluationInstitutions,
+      section: 'investigation.evaluationInstitution.title',
+      field: 'investigation.pending.atLeastOneInstitution',
+    },
+    {
+      query: diagnostics,
+      section: 'investigation.diagnostic.title',
+      field: 'investigation.pending.atLeastOneDiagnostic',
+    },
+    {
+      query: vaccinesAdministered,
+      section: 'investigation.vaccinesAdministered.title',
+      field: 'investigation.pending.atLeastOneVaccine',
+    },
+  ] as const;
+  const pendingFields = [
+    ...sections.flatMap((id) => sectionHandles[id]?.getPendingFields?.() ?? []),
+    ...listMinimums
+      .filter(({ query }) => query.isSuccess && query.data?.count === 0)
+      .map(({ section, field }) =>
+        t('investigation.pending.entry', { section: t(section), field: t(field) }),
+      ),
+  ];
+
+  // Read by reference (SPEC FE11 §9, SPEC FE12a §4 paso 10): the handle is registered again only
+  // when `isDirty` or the list's *content* changes, never on every keystroke — depending on
+  // `pendingFields` itself would reopen `CaseWizardProvider` on each render. The key is what makes
+  // a list that settles after mount (or a minimum that gets satisfied) reach the action bar, since
+  // the provider only re-reads `getPendingFields` when the handle object changes.
+  const pendingFieldsRef = useRef(pendingFields);
+  pendingFieldsRef.current = pendingFields;
+  const pendingFieldsKey = pendingFields.join('\n');
+
+  useEffect(() => {
+    registerStep({
+      save: async () => {
+        await performSaveRef.current();
+      },
+      isDirty: isAnySectionDirty,
+      getPendingFields: () => pendingFieldsRef.current,
+    });
+    return () => unregisterStep();
+  }, [registerStep, unregisterStep, isAnySectionDirty, pendingFieldsKey]);
 
   // §3.6: "las listas satélite cuentan como vacías cuando no tienen filas activas" — computed on
   // what the server answered, never on any `useForm`'s live state (§3.4).
