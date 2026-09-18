@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +9,7 @@ import { investigationSourceByCaseKey, investigationSourceResource } from '@/fea
 import {
   investigationSourceSaveSchema,
   isOtherSourceDescriptionRequirementMet,
+  type InvestigationSectionHandle,
   type InvestigationSourceFormValues,
 } from '@/features/investigation/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -64,6 +65,9 @@ export interface SourceSectionProps {
   // merge it with the other two sections and write it with a single 500ms debounce.
   draftValues?: InvestigationSourceFormValues;
   onValuesChange?: (values: InvestigationSourceFormValues) => void;
+  // Lets `InvestigationStep` save this section from the generic "Guardar" if the investigator
+  // revisits it after its own frontier moved on (SPEC FE13a, fix for the missing `registerStep`).
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Section 1 of step 5 (SPEC FE13a §3.5 B): the eight tri-state flags of `investigationSource`
@@ -79,6 +83,7 @@ export function SourceSection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: SourceSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -143,6 +148,18 @@ export function SourceSection({
       toast.error(getErrorMessage(err));
     }
   }
+
+  // Same ref-then-effect split as `ClassificationStep`'s `registerStep` (SPEC FE11 §9): the saved
+  // function is read from a ref so re-registering only depends on `isDirty` flipping, never on a
+  // closure that changes every keystroke.
+  const performSaveRef = useRef(() => form.handleSubmit(handleValidSubmit)());
+  performSaveRef.current = () => form.handleSubmit(handleValidSubmit)();
+  const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty]);
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border p-4">

@@ -15,6 +15,15 @@ import type { CreateInvestigationVaccineAdministeredInput } from '@/contracts/in
 import type { CreateInvestigationAdministrationErrorInput } from '@/contracts/investigationAdministrationError';
 import type { CreateInvestigationCommunityInput } from '@/contracts/investigationCommunity';
 
+// What each of step 5's self-contained sections hands `InvestigationStep` so the generic "Guardar"
+// of `CaseWizardActionBar` can persist a section the investigator revisited after its own frontier
+// moved past it — every section still saves itself through its own "Guardar y continuar", this is
+// only for a section that's dirty again after that.
+export interface InvestigationSectionHandle {
+  save: () => Promise<void>;
+  isDirty: boolean;
+}
+
 const answerOptionSchema = z.enum(ANSWER_OPTIONS);
 
 const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;

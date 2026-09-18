@@ -13,6 +13,7 @@ import {
   buildMedicalHistorySavePayload,
   medicalHistoryErrorFieldMap,
   medicalHistorySaveSchema,
+  type InvestigationSectionHandle,
   type MedicalHistoryFormValues,
 } from '@/features/investigation/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -59,6 +60,7 @@ export interface MedicalHistorySectionProps {
   // never touches `localStorage` directly.
   draftValues?: MedicalHistoryFormValues;
   onValuesChange?: (values: MedicalHistoryFormValues) => void;
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Section B of step 5 (SPEC FE13b §3.5 A, §4 paso 5): the five always-on columns of
@@ -80,6 +82,7 @@ export function MedicalHistorySection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: MedicalHistorySectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -154,6 +157,21 @@ export function MedicalHistorySection({
       toast.error(getErrorMessage(err));
     }
   }
+
+  // Same ref-then-effect split as `ClassificationStep`'s `registerStep` (SPEC FE11 §9). No handle
+  // while the row doesn't exist yet — there's nothing to save.
+  const performSaveRef = useRef(() => form.handleSubmit(handleValidSubmit)());
+  performSaveRef.current = () => form.handleSubmit(handleValidSubmit)();
+  const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    if (medicalHistory === null) {
+      onRegisterHandle?.(null);
+      return;
+    }
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty, medicalHistory === null]);
 
   // The row isn't there yet, or the opening `POST` failed outright (§3.6): no form to paint over
   // a ficha that can't be saved. `INVMEDH_001_ALREADY_EXISTS` never reaches here — it resets the

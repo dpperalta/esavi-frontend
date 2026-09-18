@@ -16,6 +16,7 @@ import {
   investigationClinicalEvaluationSaveSchema,
   isFlagExplanationRequirementMet,
   type InvestigationClinicalEvaluationFormValues,
+  type InvestigationSectionHandle,
 } from '@/features/investigation/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
@@ -106,6 +107,7 @@ export interface ClinicalEvaluationSectionProps {
   onSaved: () => void;
   draftValues?: InvestigationClinicalEvaluationFormValues;
   onValuesChange?: (values: InvestigationClinicalEvaluationFormValues) => void;
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Section C of step 5 (SPEC FE13c §3.5 A) — the sixteen columns of `ESAVI-FORM.md` C.1–C.16,
@@ -122,6 +124,7 @@ export function ClinicalEvaluationSection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: ClinicalEvaluationSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -205,6 +208,19 @@ export function ClinicalEvaluationSection({
       toast.error(getErrorMessage(err));
     }
   }
+
+  const performSaveRef = useRef(() => form.handleSubmit(handleValidSubmit)());
+  performSaveRef.current = () => form.handleSubmit(handleValidSubmit)();
+  const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    if (clinicalEvaluation === null) {
+      onRegisterHandle?.(null);
+      return;
+    }
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty, clinicalEvaluation === null]);
 
   // La fila no existe todavía, o la `POST` de apertura falló de plano (§4 paso 5): sin ficha no
   // hay formulario que pintar. `INVCLIEV_001_ALREADY_EXISTS` nunca llega hasta aquí — resetea la

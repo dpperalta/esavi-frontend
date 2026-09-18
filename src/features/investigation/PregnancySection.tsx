@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -11,6 +11,7 @@ import {
   buildMedicalHistorySavePayload,
   medicalHistoryErrorFieldMap,
   medicalHistorySaveSchema,
+  type InvestigationSectionHandle,
   type MedicalHistoryFormValues,
 } from '@/features/investigation/schemas';
 import type { PregnancyGateState } from '@/features/notification/schemas';
@@ -60,6 +61,7 @@ export interface PregnancySectionProps {
   onSaved: () => void;
   draftValues?: MedicalHistoryFormValues;
   onValuesChange?: (values: MedicalHistoryFormValues) => void;
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Section B1 of step 5 (SPEC FE13b §3.5 A, §4 paso 6): the nine columns
@@ -79,6 +81,7 @@ export function PregnancySection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: PregnancySectionProps) {
   const { t } = useTranslation();
   const update = investigationMedicalHistoryResource.useUpdate();
@@ -153,7 +156,21 @@ export function PregnancySection({
     }
   }
 
-  if (pregnancyGate === 'hidden') {
+  const performSaveRef = useRef(() => form.handleSubmit(handleValidSubmit)());
+  performSaveRef.current = () => form.handleSubmit(handleValidSubmit)();
+  const isDirty = form.formState.isDirty;
+  const hidden = pregnancyGate === 'hidden';
+  useEffect(() => {
+    if (hidden) {
+      onRegisterHandle?.(null);
+      return;
+    }
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty, hidden]);
+
+  if (hidden) {
     return null;
   }
 
