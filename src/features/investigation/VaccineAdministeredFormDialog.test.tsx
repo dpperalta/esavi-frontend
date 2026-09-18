@@ -244,6 +244,14 @@ describe('VaccineAdministeredFormDialog — SPEC FE13d §4 paso 6', () => {
 
       await user.click(await screen.findByRole('combobox', {}, LONG_WAIT));
       await user.click(await screen.findByRole('option', { name: /BCG/ }, LONG_WAIT));
+      // `<WhodrugTreePicker>` collapses to its summary as soon as the option is clicked, but only
+      // writes `vaccineWhodrugId` into the form once the detail read answers. Saving before that
+      // submits a null id, fails the schema and never reaches the 409 this test is about.
+      // The drug name only exists once that read answered.
+      await waitFor(
+        () => expect(screen.getAllByText('Vacuna resuelta').length).toBeGreaterThan(0),
+        LONG_WAIT,
+      );
       await user.click(screen.getByRole('button', { name: 'Guardar' }));
 
       expect(

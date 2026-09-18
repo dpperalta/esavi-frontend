@@ -95,20 +95,22 @@ describe('EsaviCaseListPage — filtros hacia el 002A/002B', () => {
   it('los filtros de la URL viajan al 002A como query params', async () => {
     mockCurrentUser('USER', 25);
     mockGeoLocationPicker();
-    let receivedParams: URLSearchParams | null = null;
+    // Holder object, not a `let`: the assignment happens inside the resolver, which the compiler
+    // can't see running, so a plain variable stays narrowed to `null` at the assertions below.
+    const received: { params: URLSearchParams | null } = { params: null };
     server.use(
       http.get('http://localhost:4500/api/esavi-cases', ({ request }) => {
-        receivedParams = new URL(request.url).searchParams;
+        received.params = new URL(request.url).searchParams;
         return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
       }),
     );
 
     renderPage('/esavi-cases?code=ab&geoLocationId=11111111-1111-4111-8111-111111111111&reportDate=2026-03-01');
 
-    await waitFor(() => expect(receivedParams).not.toBeNull());
-    expect(receivedParams?.get('code')).toBe('ab');
-    expect(receivedParams?.get('geoLocationId')).toBe('11111111-1111-4111-8111-111111111111');
-    expect(receivedParams?.get('reportDate')).toBe('2026-03-01');
+    await waitFor(() => expect(received.params).not.toBeNull());
+    expect(received.params?.get('code')).toBe('ab');
+    expect(received.params?.get('geoLocationId')).toBe('11111111-1111-4111-8111-111111111111');
+    expect(received.params?.get('reportDate')).toBe('2026-03-01');
   });
 
   it('con rol USER e includeInactive=true la petición va a /esavi-cases (no al admin)', async () => {

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import type { InvestigationDetail } from '@/contracts/declared/investigation';
 import { investigationResource } from '@/features/investigation/api';
 import {
   otherFindingsSaveSchema,
+  type InvestigationSectionHandle,
   type OtherFindingsFormValues,
 } from '@/features/investigation/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -26,6 +27,7 @@ export interface OtherFindingsSectionProps {
   onSaved: () => void;
   draftValues?: OtherFindingsFormValues;
   onValuesChange?: (values: OtherFindingsFormValues) => void;
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Section H of step 5 (SPEC FE13e §3.5 E, §3.6): `investigation.notes`, moved here from A1 (§8).
@@ -44,6 +46,7 @@ export function OtherFindingsSection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: OtherFindingsSectionProps) {
   const { t } = useTranslation();
   const update = investigationResource.useUpdate();
@@ -74,6 +77,15 @@ export function OtherFindingsSection({
       toast.error(getErrorMessage(err));
     }
   }
+
+  const performSaveRef = useRef(() => form.handleSubmit(handleSave)());
+  performSaveRef.current = () => form.handleSubmit(handleSave)();
+  const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty]);
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border p-4">

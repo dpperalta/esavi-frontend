@@ -19,6 +19,7 @@ import {
   investigationSaveSchema,
   type InvestigationAutopsyFormValues,
   type InvestigationFormValues,
+  type InvestigationSectionHandle,
 } from '@/features/investigation/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
@@ -86,6 +87,7 @@ export interface BasicInfoSectionProps {
     basicInfo: InvestigationFormValues;
     autopsy: InvestigationAutopsyFormValues;
   }) => void;
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Section A1 of step 5 (SPEC FE13a §3.5 A and C): the ten columns of `investigation` plus, inside
@@ -105,6 +107,7 @@ export function BasicInfoSection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: BasicInfoSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -284,6 +287,15 @@ export function BasicInfoSection({
     toast.success(t('common.toast.updated'));
     onSaved();
   }
+
+  const performSaveRef = useRef(handleSave);
+  performSaveRef.current = handleSave;
+  const isDirty = form.formState.isDirty || autopsyForm.formState.isDirty;
+  useEffect(() => {
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty]);
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border p-4">

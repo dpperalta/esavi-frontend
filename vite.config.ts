@@ -13,6 +13,12 @@ export default defineConfig({
     },
   },
   test: {
+    // The suite's wall time is dominated by jsdom's selector engine, not by this config. `nwsapi`
+    // 2.2.27 — what jsdom 25's range resolved to — answers `:fullscreen`/`:modal` by calling
+    // `Element.matches()`, which in jsdom *is* nwsapi, so every style resolution recurses through
+    // the pair. Radix's Popper calls `getComputedStyle` while a popover is mounted, and that turned
+    // one test with an open combobox into ~90s of CPU (measured: 84_022ms → 73ms). `overrides` in
+    // package.json pins 2.2.28, which breaks the cycle; drop it when jsdom itself moves past 25.
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],

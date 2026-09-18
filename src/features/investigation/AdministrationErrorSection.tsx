@@ -15,6 +15,7 @@ import {
   investigationAdministrationErrorSaveSchema,
   isSyringeBlockOpen,
   type InvestigationAdministrationErrorFormValues,
+  type InvestigationSectionHandle,
 } from '@/features/investigation/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
@@ -74,6 +75,7 @@ export interface AdministrationErrorSectionProps {
   onSaved: () => void;
   draftValues?: InvestigationAdministrationErrorFormValues;
   onValuesChange?: (values: InvestigationAdministrationErrorFormValues) => void;
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Secciones F (jeringas y agujas) y F2 (reconstitución + errores de administración) del paso 5
@@ -92,6 +94,7 @@ export function AdministrationErrorSection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: AdministrationErrorSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -214,6 +217,23 @@ export function AdministrationErrorSection({
   async function handlePracticesSave(values: InvestigationAdministrationErrorFormValues) {
     await saveRow(values, onSaved);
   }
+
+  // The imperative save never touches `onRevealPractices`/`onSaved` (§3.6's own advance-on-save
+  // side effect): it just persists the one row shared by F and F2, no matter which half is dirty.
+  const performSaveRef = useRef(() =>
+    form.handleSubmit((values) => saveRow(values, () => {}))(),
+  );
+  performSaveRef.current = () => form.handleSubmit((values) => saveRow(values, () => {}))();
+  const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    if (administrationError === null) {
+      onRegisterHandle?.(null);
+      return;
+    }
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty, administrationError === null]);
 
   if (administrationError === null && create.isError) {
     const message =

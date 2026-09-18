@@ -198,7 +198,9 @@ describe('DiagnosticList — C.17 (SPEC FE13c §4 paso 7)', () => {
 
     const editButtons = await screen.findAllByRole('button', { name: /Editar/ });
     await user.click(editButtons[0]);
-    const nameField = await screen.findByLabelText('Diagnóstico final o presuntivo');
+    // By role, not by label: `<TermSearchField>` gives the same accessible name to the input and
+    // to its listbox, so once the panel opens the label matches two elements.
+    const nameField = await screen.findByRole('combobox', { name: 'Diagnóstico final o presuntivo' });
     await user.type(nameField, ' persistente');
     await user.keyboard('{Escape}');
     await user.click(screen.getByRole('button', { name: 'Guardar' }));

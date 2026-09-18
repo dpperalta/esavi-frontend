@@ -32,6 +32,10 @@ const buttonVariants = cva(
         'icon-sm':
           'size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg',
         'icon-lg': 'size-9',
+        // Objetivo táctil de 44px (CONVENTIONS.md §10.2, SPEC FE15) — no es el `default`,
+        // se aplica explícitamente donde el hallazgo de FE15 lo señaló.
+        touch: 'h-11 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2',
+        'icon-touch': 'size-11',
       },
     },
     defaultVariants: {

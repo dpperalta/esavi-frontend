@@ -347,6 +347,7 @@ function ClosureStepOpen({ caseId, headingRef }: ClosureStepModeProps) {
       <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background/95 p-4 backdrop-blur-sm md:static md:border-t-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
         <div className="flex flex-col items-end gap-1">
           <Button
+            size="touch"
             onClick={() => setConfirmOpen(true)}
             disabled={!readiness.canClose}
             aria-describedby={!readiness.canClose && !hasLoadError ? BLOCKED_HINT_ID : undefined}
@@ -382,8 +383,8 @@ function ClosureStepOpen({ caseId, headingRef }: ClosureStepModeProps) {
             </div>
           )}
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmClose} disabled={closeCase.isPending}>
+            <AlertDialogCancel size="touch">{t('common.actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction size="touch" onClick={handleConfirmClose} disabled={closeCase.isPending}>
               {t('caseWorkflow.close.confirmAction')}
             </AlertDialogAction>
           </AlertDialogFooter>

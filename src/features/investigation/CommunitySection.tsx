@@ -15,6 +15,7 @@ import {
   investigationCommunitySaveSchema,
   isSimilarEventBlockOpen,
   type InvestigationCommunityFormValues,
+  type InvestigationSectionHandle,
 } from '@/features/investigation/schemas';
 import { usePatientResidenceCenter } from '@/features/investigation/usePatientResidenceCenter';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -54,6 +55,7 @@ export interface CommunitySectionProps {
   onSaved: () => void;
   draftValues?: InvestigationCommunityFormValues;
   onValuesChange?: (values: InvestigationCommunityFormValues) => void;
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Section G of step 5 (SPEC FE13e §3.5 D, §3.7): the home map with its preload and approximate-
@@ -70,6 +72,7 @@ export function CommunitySection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: CommunitySectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -198,6 +201,19 @@ export function CommunitySection({
       toast.error(getErrorMessage(err));
     }
   }
+
+  const performSaveRef = useRef(() => form.handleSubmit(handleSave)());
+  performSaveRef.current = () => form.handleSubmit(handleSave)();
+  const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    if (community === null) {
+      onRegisterHandle?.(null);
+      return;
+    }
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty, community === null]);
 
   if (community === null && create.isError) {
     const message =

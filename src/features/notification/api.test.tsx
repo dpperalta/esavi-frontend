@@ -278,10 +278,12 @@ describe('useWhodrugProductSearch — ESAVI-WHODPROD-006', () => {
   });
 
   it('con 3 caracteres pide term y limit=20', async () => {
-    let requestedUrl: URL | null = null;
+    // Holder object, not a `let`: the assignment happens inside the resolver, which the compiler
+    // can't see running, so a plain variable stays narrowed to `null` at the assertions below.
+    const requested: { url: URL | null } = { url: null };
     server.use(
       http.get('http://localhost:4500/api/whodrug-products/search', ({ request }) => {
-        requestedUrl = new URL(request.url);
+        requested.url = new URL(request.url);
         return HttpResponse.json({
           ok: true,
           message: 'ok',
@@ -294,7 +296,7 @@ describe('useWhodrugProductSearch — ESAVI-WHODPROD-006', () => {
     const { result } = renderHook(() => useWhodrugProductSearch('par'), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(requestedUrl?.searchParams.get('term')).toBe('par');
-    expect(requestedUrl?.searchParams.get('limit')).toBe('20');
+    expect(requested.url?.searchParams.get('term')).toBe('par');
+    expect(requested.url?.searchParams.get('limit')).toBe('20');
   });
 });

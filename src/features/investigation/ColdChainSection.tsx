@@ -11,6 +11,7 @@ import {
   investigationColdChainSaveSchema,
   isStorageBlockOpen,
   type InvestigationColdChainFormValues,
+  type InvestigationSectionHandle,
 } from '@/features/investigation/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
@@ -68,6 +69,7 @@ export interface ColdChainSectionProps {
   onSaved: () => void;
   draftValues?: InvestigationColdChainFormValues;
   onValuesChange?: (values: InvestigationColdChainFormValues) => void;
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Secciones E1 (almacenamiento) y E2 (transporte) del paso 5 (SPEC FE13d §3.5, §4 paso 9): una
@@ -84,6 +86,7 @@ export function ColdChainSection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: ColdChainSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -173,6 +176,19 @@ export function ColdChainSection({
       toast.error(getErrorMessage(err));
     }
   }
+
+  const performSaveRef = useRef(() => form.handleSubmit(handleValidSubmit)());
+  performSaveRef.current = () => form.handleSubmit(handleValidSubmit)();
+  const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    if (coldChain === null) {
+      onRegisterHandle?.(null);
+      return;
+    }
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty, coldChain === null]);
 
   if (coldChain === null && create.isError) {
     const message =

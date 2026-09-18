@@ -15,6 +15,7 @@ import type { NotificationDetail } from '@/contracts/declared/notification';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { esaviCaseResource } from '@/features/esaviCase/api';
+import { useCaseWizard } from '@/features/esaviCase/CaseWizardContext';
 import { AdministrationErrorSection } from '@/features/investigation/AdministrationErrorSection';
 import { BasicInfoSection } from '@/features/investigation/BasicInfoSection';
 import { ClinicalEvaluationSection } from '@/features/investigation/ClinicalEvaluationSection';
@@ -54,6 +55,7 @@ import type {
   InvestigationColdChainFormValues,
   InvestigationCommunityFormValues,
   InvestigationFormValues,
+  InvestigationSectionHandle,
   InvestigationSourceFormValues,
   InvestigationVaccinationContextFormValues,
   MedicalHistoryFormValues,
@@ -480,6 +482,47 @@ function InvestigationStepBody({
     }
   }, [frontier, advance]);
 
+  // The generic "Guardar" of `CaseWizardActionBar` never had a handle to save (SPEC FE13a's own
+  // `registerStep` omission): each of the ~10 sections below reports its own save/isDirty through
+  // `onRegisterHandle`, and this aggregates them so a section revisited after its own frontier
+  // moved past it — its own "Guardar y continuar" only ever shows at the frontier — still has a way
+  // to persist. `sectionHandleSettersRef` hands each section a stable setter, created once and
+  // keyed by id, so one section re-registering never changes another's identity and cascades into
+  // the render loop `ClassificationStep` already hit once (SPEC FE11 §9).
+  const { registerStep, unregisterStep } = useCaseWizard();
+  const [sectionHandles, setSectionHandles] = useState<
+    Partial<Record<InvestigationSectionId, InvestigationSectionHandle | null>>
+  >({});
+  const sectionHandleSettersRef = useRef<
+    Partial<Record<InvestigationSectionId, (handle: InvestigationSectionHandle | null) => void>>
+  >({});
+  function getSectionHandleSetter(id: InvestigationSectionId) {
+    const existing = sectionHandleSettersRef.current[id];
+    if (existing) return existing;
+    const setter = (handle: InvestigationSectionHandle | null) =>
+      setSectionHandles((current) => ({ ...current, [id]: handle }));
+    sectionHandleSettersRef.current[id] = setter;
+    return setter;
+  }
+
+  const dirtySectionHandles = Object.values(sectionHandles).filter(
+    (handle): handle is InvestigationSectionHandle => !!handle?.isDirty,
+  );
+  const isAnySectionDirty = dirtySectionHandles.length > 0;
+  const performSaveRef = useRef(() => Promise.all(dirtySectionHandles.map((handle) => handle.save())));
+  performSaveRef.current = () => Promise.all(dirtySectionHandles.map((handle) => handle.save()));
+
+  useEffect(() => {
+    registerStep({
+      save: async () => {
+        await performSaveRef.current();
+      },
+      isDirty: isAnySectionDirty,
+      getPendingFields: () => [],
+    });
+    return () => unregisterStep();
+  }, [registerStep, unregisterStep, isAnySectionDirty]);
+
   // The empty-sections warning's four satellite-list reads (SPEC FE13e §3.6): identical query
   // keys/params to the ones `TeamMemberList`/`EvaluationInstitutionList`/`DiagnosticList`/
   // `VaccineAdministeredList` already run once their own section is visible, so this never doubles
@@ -528,12 +571,13 @@ function InvestigationStepBody({
           showSaveButton={frontier === 'source'}
           onSaved={() => {
             clearDraft();
-            advance();
+            if (frontier === 'source') advance();
           }}
           draftValues={restoredValues.source}
           onValuesChange={(values) =>
             setPendingDraftValues((current) => ({ ...current, source: values }))
           }
+          onRegisterHandle={getSectionHandleSetter('source')}
         />
       )}
 
@@ -548,7 +592,7 @@ function InvestigationStepBody({
           showSaveButton={frontier === 'basicInfo'}
           onSaved={() => {
             clearDraft();
-            advance();
+            if (frontier === 'basicInfo') advance();
           }}
           draftValues={{ basicInfo: restoredValues.basicInfo ?? {}, autopsy: restoredValues.autopsy ?? {} } as {
             basicInfo: InvestigationFormValues;
@@ -561,6 +605,7 @@ function InvestigationStepBody({
               autopsy: values.autopsy,
             }))
           }
+          onRegisterHandle={getSectionHandleSetter('basicInfo')}
         />
       )}
 
@@ -575,12 +620,13 @@ function InvestigationStepBody({
           showSaveButton={frontier === 'medicalHistory'}
           onSaved={() => {
             clearDraft();
-            advance();
+            if (frontier === 'medicalHistory') advance();
           }}
           draftValues={restoredValues.medicalHistory}
           onValuesChange={(values) =>
             setPendingDraftValues((current) => ({ ...current, medicalHistory: values }))
           }
+          onRegisterHandle={getSectionHandleSetter('medicalHistory')}
         />
       )}
 
@@ -593,12 +639,13 @@ function InvestigationStepBody({
           showSaveButton={frontier === 'pregnancy'}
           onSaved={() => {
             clearDraft();
-            advance();
+            if (frontier === 'pregnancy') advance();
           }}
           draftValues={restoredValues.pregnancy}
           onValuesChange={(values) =>
             setPendingDraftValues((current) => ({ ...current, pregnancy: values }))
           }
+          onRegisterHandle={getSectionHandleSetter('pregnancy')}
         />
       )}
 
@@ -611,12 +658,13 @@ function InvestigationStepBody({
           showSaveButton={frontier === 'clinicalEvaluation'}
           onSaved={() => {
             clearDraft();
-            advance();
+            if (frontier === 'clinicalEvaluation') advance();
           }}
           draftValues={restoredValues.clinicalEvaluation}
           onValuesChange={(values) =>
             setPendingDraftValues((current) => ({ ...current, clinicalEvaluation: values }))
           }
+          onRegisterHandle={getSectionHandleSetter('clinicalEvaluation')}
         />
       )}
 
@@ -658,12 +706,13 @@ function InvestigationStepBody({
           showSaveButton={frontier === 'vaccinationContext'}
           onSaved={() => {
             clearDraft();
-            advance();
+            if (frontier === 'vaccinationContext') advance();
           }}
           draftValues={restoredValues.vaccinationContext}
           onValuesChange={(values) =>
             setPendingDraftValues((current) => ({ ...current, vaccinationContext: values }))
           }
+          onRegisterHandle={getSectionHandleSetter('vaccinationContext')}
         />
       )}
 
@@ -678,12 +727,13 @@ function InvestigationStepBody({
           showSaveButton={frontier === 'coldChainTransport'}
           onSaved={() => {
             clearDraft();
-            advance();
+            if (frontier === 'coldChainTransport') advance();
           }}
           draftValues={restoredValues.coldChain}
           onValuesChange={(values) =>
             setPendingDraftValues((current) => ({ ...current, coldChain: values }))
           }
+          onRegisterHandle={getSectionHandleSetter('coldChainStorage')}
         />
       )}
 
@@ -698,12 +748,13 @@ function InvestigationStepBody({
           showSaveButton={frontier === 'administrationErrorPractices'}
           onSaved={() => {
             clearDraft();
-            advance();
+            if (frontier === 'administrationErrorPractices') advance();
           }}
           draftValues={restoredValues.administrationError}
           onValuesChange={(values) =>
             setPendingDraftValues((current) => ({ ...current, administrationError: values }))
           }
+          onRegisterHandle={getSectionHandleSetter('administrationErrorSyringes')}
         />
       )}
 
@@ -717,12 +768,13 @@ function InvestigationStepBody({
           showSaveButton={frontier === 'community'}
           onSaved={() => {
             clearDraft();
-            advance();
+            if (frontier === 'community') advance();
           }}
           draftValues={restoredValues.community}
           onValuesChange={(values) =>
             setPendingDraftValues((current) => ({ ...current, community: values }))
           }
+          onRegisterHandle={getSectionHandleSetter('community')}
         />
       )}
 
@@ -735,12 +787,13 @@ function InvestigationStepBody({
             showSaveButton={frontier === 'otherFindings'}
             onSaved={() => {
               clearDraft();
-              advance();
+              if (frontier === 'otherFindings') advance();
             }}
             draftValues={restoredValues.otherFindings}
             onValuesChange={(values) =>
               setPendingDraftValues((current) => ({ ...current, otherFindings: values }))
             }
+            onRegisterHandle={getSectionHandleSetter('otherFindings')}
           />
 
           {/* The non-blocking warning of §3.6 — informational only, computed from server data.

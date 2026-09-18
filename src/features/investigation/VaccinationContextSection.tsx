@@ -15,6 +15,7 @@ import {
   investigationVaccinationContextSaveSchema,
   isClusterBlockOpen,
   isSameVialCountRequirementMet,
+  type InvestigationSectionHandle,
   type InvestigationVaccinationContextFormValues,
 } from '@/features/investigation/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
@@ -55,6 +56,7 @@ export interface VaccinationContextSectionProps {
   onSaved: () => void;
   draftValues?: InvestigationVaccinationContextFormValues;
   onValuesChange?: (values: InvestigationVaccinationContextFormValues) => void;
+  onRegisterHandle?: (handle: InvestigationSectionHandle | null) => void;
 }
 
 // Sección D — contexto de vacunación (D.3–D.6) y D1 — conglomerado (SPEC FE13d §3.5, §4 paso 8).
@@ -69,6 +71,7 @@ export function VaccinationContextSection({
   onSaved,
   draftValues,
   onValuesChange,
+  onRegisterHandle,
 }: VaccinationContextSectionProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -158,6 +161,19 @@ export function VaccinationContextSection({
       toast.error(getErrorMessage(err));
     }
   }
+
+  const performSaveRef = useRef(() => form.handleSubmit(handleValidSubmit)());
+  performSaveRef.current = () => form.handleSubmit(handleValidSubmit)();
+  const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    if (vaccinationContext === null) {
+      onRegisterHandle?.(null);
+      return;
+    }
+    onRegisterHandle?.({ save: () => performSaveRef.current(), isDirty });
+    return () => onRegisterHandle?.(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onRegisterHandle, isDirty, vaccinationContext === null]);
 
   // La fila todavía no existe, o el `POST` de apertura falló del todo (§3.6): no hay formulario
   // que pintar sobre una ficha que no se puede guardar. `INVVACTX_001_ALREADY_EXISTS` nunca llega

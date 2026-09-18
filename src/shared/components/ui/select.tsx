@@ -79,7 +79,7 @@ function SelectTrigger({
           }}
           onClick={(event) => {
             event.stopPropagation()
-            onClear()
+            onClear?.()
           }}
           // The 44px touch target below `md` is an ::after overlay, not a negative margin:
           // a negative margin on an absolutely positioned box moves it instead of growing it.

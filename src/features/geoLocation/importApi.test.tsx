@@ -121,8 +121,10 @@ describe('useImportGeoData — ESAVI-GEOLOC-006', () => {
   it('con dryRun: false invalida geoLocation y healthFacility', async () => {
     server.use(
       http.post('http://localhost:4500/api/geo-locations/import', async ({ request }) => {
-        const formData = await request.formData();
-        expect(formData.get('dryRun')).toBe('false');
+        // The raw body, not `request.formData()`: undici's multipart parser throws an assertion
+        // on this body under Node 24, and the throw surfaced as a 500 — as a failed mutation,
+        // never as the parse error it was.
+        expect(await request.text()).toContain('name="dryRun"\r\n\r\nfalse');
         return HttpResponse.json({
           ok: true,
           message: 'ok',

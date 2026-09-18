@@ -60,7 +60,7 @@ export function ReopenCaseButton({ caseId }: ReopenCaseButtonProps) {
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
+      <Button variant="outline" size="touch" onClick={() => setOpen(true)}>
         {t('caseWorkflow.reopen.action')}
       </Button>
 
@@ -71,8 +71,8 @@ export function ReopenCaseButton({ caseId }: ReopenCaseButtonProps) {
             <AlertDialogDescription>{t('caseWorkflow.reopen.confirmBody')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={reopen.isPending}>
+            <AlertDialogCancel size="touch">{t('common.actions.cancel')}</AlertDialogCancel>
+            <AlertDialogAction size="touch" onClick={handleConfirm} disabled={reopen.isPending}>
               {t('caseWorkflow.reopen.confirmAction')}
             </AlertDialogAction>
           </AlertDialogFooter>

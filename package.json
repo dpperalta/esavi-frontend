@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=20.19.0"
   },
+  "overrides": {
+    "nwsapi": "^2.2.28"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
