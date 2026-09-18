@@ -1672,6 +1672,11 @@
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"
   },
+  "shell": {
+    "userMenu": {
+      "trigger": "User menu"
+    }
+  },
   "settings": {
     "theme": {
       "light": "Light",
