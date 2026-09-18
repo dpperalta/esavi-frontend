@@ -1263,7 +1263,17 @@
       "vaccinationGeoLocationId": "Nivel geográfico subnacional",
       "mapLabel": "Dirección completa del lugar de vacunación",
       "hospitalizationDate": "Fecha de hospitalización",
-      "investigationStartDate": "Fecha de inicio de la investigación"
+      "investigationStartDate": "Fecha de inicio de la investigación",
+      "statusUnknownWarning": "El estado quedó en «Desconocido», el valor por defecto. Compruébalo si no es el que corresponde."
+    },
+    "pending": {
+      "entry": "{{section}} · {{field}}",
+      "investigationStartDate": "Fecha de inicio de la investigación",
+      "deathDate": "Fecha de fallecimiento",
+      "atLeastOneTeamMember": "Al menos un integrante",
+      "atLeastOneInstitution": "Al menos una institución",
+      "atLeastOneDiagnostic": "Al menos un diagnóstico",
+      "atLeastOneVaccine": "Al menos una vacuna"
     },
     "source": {
       "title": "Fuentes de información",
