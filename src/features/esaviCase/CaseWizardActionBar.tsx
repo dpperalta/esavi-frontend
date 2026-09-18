@@ -21,6 +21,7 @@ import { useCaseWizardStepFlags } from './CaseWizardStepper';
 import {
   CASE_WIZARD_STEPS,
   findNextRequiredStep,
+  findPreviousRequiredStep,
   isStepUnlocked,
   stageWorkflowKey,
   type CaseWizardStepSlug,
@@ -31,8 +32,8 @@ interface CaseWizardActionBarProps {
   activeSlug: CaseWizardStepSlug;
 }
 
-// Guardar · Completar etapa · Siguiente (SPEC FE08 §3.1). Only consumes `CaseWizardContext` —
-// it never knows Zod or the shape of any field (§3.5).
+// Anterior · Guardar · Completar etapa · Siguiente (SPEC FE08 §3.1, SPEC FE16 §3.7). Only
+// consumes `CaseWizardContext` — it never knows Zod or the shape of any field (§3.5).
 export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -59,6 +60,9 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
   const currentIndex = CASE_WIZARD_STEPS.findIndex((step) => step.slug === activeSlug);
   const nextStep = findNextRequiredStep(currentIndex, stages, flags);
   const nextUnlocked = nextStep ? isStepUnlocked(nextStep.slug, stages) : false;
+  const previousStep = findPreviousRequiredStep(currentIndex, stages, flags);
+  const pendingIndex = CASE_WIZARD_STEPS.findIndex((step) => step.slug === pendingNavigation);
+  const isGoingBack = pendingNavigation !== null && pendingIndex < currentIndex;
 
   function goToStep(slug: CaseWizardStepSlug) {
     navigate(`/esavi-cases/${caseId}/wizard/${slug}`);
@@ -97,6 +101,15 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
     goToStep(nextStep.slug);
   }
 
+  function handlePrevious() {
+    if (!previousStep) return;
+    if (isDirty) {
+      setPendingNavigation(previousStep.slug);
+      return;
+    }
+    goToStep(previousStep.slug);
+  }
+
   function confirmNavigation() {
     if (pendingNavigation) {
       goToStep(pendingNavigation);
@@ -120,30 +133,35 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
           </div>
         )}
 
-        <div className="flex flex-wrap justify-end gap-2">
-          {!isClosed && (
-            <Button
-              variant="outline"
-              size="touch"
-              onClick={() => void handleSave()}
-              disabled={!activeStep || isSaving}
-            >
-              {t('caseWizard.actions.save')}
-            </Button>
-          )}
-          {!isClosed && activeStepDefinition?.stage && (
-            <Button
-              variant="secondary"
-              size="touch"
-              onClick={handleCompleteStage}
-              disabled={!stageExists || stageCompleted || completeStage.isPending}
-            >
-              {t('caseWizard.actions.completeStage')}
-            </Button>
-          )}
-          <Button size="touch" onClick={handleNext} disabled={!nextStep || !nextUnlocked}>
-            {t('caseWizard.actions.next')}
+        <div className="flex flex-wrap justify-between gap-2">
+          <Button variant="ghost" size="touch" onClick={handlePrevious} disabled={!previousStep}>
+            {t('caseWizard.actions.previous')}
           </Button>
+          <div className="ml-auto flex flex-wrap justify-end gap-2">
+            {!isClosed && (
+              <Button
+                variant="outline"
+                size="touch"
+                onClick={() => void handleSave()}
+                disabled={!activeStep || isSaving}
+              >
+                {t('caseWizard.actions.save')}
+              </Button>
+            )}
+            {!isClosed && activeStepDefinition?.stage && (
+              <Button
+                variant="secondary"
+                size="touch"
+                onClick={handleCompleteStage}
+                disabled={!stageExists || stageCompleted || completeStage.isPending}
+              >
+                {t('caseWizard.actions.completeStage')}
+              </Button>
+            )}
+            <Button size="touch" onClick={handleNext} disabled={!nextStep || !nextUnlocked}>
+              {t('caseWizard.actions.next')}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -163,7 +181,7 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmNavigation}>
-              {t('caseWizard.actions.next')}
+              {t(isGoingBack ? 'caseWizard.actions.previous' : 'caseWizard.actions.next')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
