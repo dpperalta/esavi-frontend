@@ -144,6 +144,7 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
           {!isClosed && (
             <Button
               variant="outline"
+              size="touch"
               onClick={() => void handleSave()}
               disabled={!activeStep || isSaving}
             >
@@ -153,13 +154,14 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
           {!isClosed && activeStepDefinition?.stage && (
             <Button
               variant="secondary"
+              size="touch"
               onClick={handleCompleteStage}
               disabled={!stageExists || stageCompleted || completeStage.isPending}
             >
               {t('caseWizard.actions.completeStage')}
             </Button>
           )}
-          <Button onClick={handleNext} disabled={!nextStep || !nextUnlocked}>
+          <Button size="touch" onClick={handleNext} disabled={!nextStep || !nextUnlocked}>
             {t('caseWizard.actions.next')}
           </Button>
         </div>
