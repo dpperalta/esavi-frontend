@@ -1,6 +1,6 @@
 import i18next from 'i18next';
 import { z } from 'zod';
-import type { $ZodIssue } from 'zod/v4/core';
+import type { $ZodErrorMap, $ZodIssue } from 'zod/v4/core';
 
 // Zod's built-in messages ("Invalid UUID", "Too small: expected string to have >=1
 // characters") are always English and never pass through react-i18next — CLAUDE.md requires
@@ -34,5 +34,8 @@ function zodI18nErrorMap(issue: $ZodIssue): string {
 }
 
 export function registerZodI18nErrorMap(): void {
-  z.config({ customError: zodI18nErrorMap });
+  // The map is handed a *raw* issue, which types every field but `code` as `unknown`; the cast
+  // keeps the switch above readable. Only `code`, `minimum`, `maximum` and `format` are read, and
+  // a raw issue carries all four.
+  z.config({ customError: zodI18nErrorMap as $ZodErrorMap });
 }

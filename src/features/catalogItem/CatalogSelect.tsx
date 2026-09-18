@@ -13,6 +13,11 @@ import { getErrorMessage } from '@/shared/api/errorMessages';
 import { catalogTypeResource } from '@/features/catalogType/api';
 import { catalogItemResource } from './api';
 
+// `createResource` types `useListByParent` as optional because it only exists for a resource that
+// declares a `parent`; `catalogItem` declares one, so the hook is always there. Bound once at
+// module scope so the call below stays an unconditional hook call.
+const useCatalogItemsByType = catalogItemResource.useListByParent!;
+
 interface CatalogSelectProps {
   typeCode: string;
   // Always a string, never `undefined` — passing `undefined` to a controlled Radix `<Select>`
@@ -42,7 +47,7 @@ export function CatalogSelect({
   const typeList = catalogTypeResource.useList({ pageSize: 100 });
   const catalogTypeId =
     typeList.data?.rows.find((row) => row.code === typeCode)?.catalogTypeId ?? '';
-  const itemList = catalogItemResource.useListByParent(catalogTypeId, { pageSize: 100 });
+  const itemList = useCatalogItemsByType(catalogTypeId, { pageSize: 100 });
 
   if (typeList.isLoading) {
     return <Skeleton className="h-8 w-full" />;

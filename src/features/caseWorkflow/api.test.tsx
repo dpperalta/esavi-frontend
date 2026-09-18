@@ -279,10 +279,12 @@ describe('useCaseWorkflowList', () => {
 
   it('los tres filtros de la bandeja viajan como query params', async () => {
     mockCurrentUser('USER', 25);
-    let receivedParams: URLSearchParams | null = null;
+    // Holder object, not a `let`: the assignment happens inside the resolver, which the compiler
+    // can't see running, so a plain variable stays narrowed to `null` at the assertions below.
+    const received: { params: URLSearchParams | null } = { params: null };
     server.use(
       http.get('http://localhost:4500/api/case-workflows', ({ request }) => {
-        receivedParams = new URL(request.url).searchParams;
+        received.params = new URL(request.url).searchParams;
         return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
       }),
     );
@@ -297,10 +299,10 @@ describe('useCaseWorkflowList', () => {
       { wrapper: Wrapper },
     );
 
-    await waitFor(() => expect(receivedParams).not.toBeNull());
-    expect(receivedParams?.get('statusCode')).toBe('IN_INVESTIGATION');
-    expect(receivedParams?.get('openedFrom')).toBe('2026-01-01');
-    expect(receivedParams?.get('openedTo')).toBe('2026-03-01');
+    await waitFor(() => expect(received.params).not.toBeNull());
+    expect(received.params?.get('statusCode')).toBe('IN_INVESTIGATION');
+    expect(received.params?.get('openedFrom')).toBe('2026-01-01');
+    expect(received.params?.get('openedTo')).toBe('2026-03-01');
   });
 
   it('la clave de caché cambia cuando cambia cualquiera de los filtros', async () => {
@@ -315,7 +317,7 @@ describe('useCaseWorkflowList', () => {
     const { result, rerender } = renderHook(
       ({ statusCode }: { statusCode?: string }) =>
         useCaseWorkflowList({ pageSize: 10, filters: statusCode ? { statusCode } : undefined }),
-      { wrapper: Wrapper, initialProps: { statusCode: undefined } },
+      { wrapper: Wrapper, initialProps: { statusCode: undefined as string | undefined } },
     );
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));

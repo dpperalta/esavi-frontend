@@ -270,6 +270,10 @@ let communityRow: ReturnType<typeof emptyCommunityDetail> | null = null;
 
 beforeEach(() => {
   localStorage.clear();
+  // The drafts store is module state, so `localStorage.clear()` doesn't touch what's already in
+  // memory: without this, a draft seeded by one test — or one the sections themselves write from
+  // `onValuesChange` — is restored over the real rows of every test that runs after it.
+  useDraftsStore.getState().clearAll();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
   toastInfo.mockClear();
@@ -956,7 +960,14 @@ describe('InvestigationStep — revelado progresivo y borrador (SPEC FE13a §4 p
         'Se descartaron cambios sin guardar: el caso se editó en otro sitio.',
       ),
     );
-    expect(useDraftsStore.getState().get(CASE_1, 'investigation')).toBeUndefined();
+    // The discarded draft is gone, not the slot: the step re-arms its buffer against an accidental
+    // tab close as soon as the sections report their values, now based on the row's real
+    // `updatedAt`. What must not survive is the stale content.
+    const entry = useDraftsStore.getState().get(CASE_1, 'investigation');
+    expect((entry?.values as { source?: { other?: unknown } } | undefined)?.source?.other).not.toBe(
+      true,
+    );
+    expect(entry?.baseUpdatedAt).not.toBe('2026-01-01T00:00:00.000Z');
   });
 
   it('un borrador cuyo updatedAt coincide se restaura y avisa, sin bloquear el guardado', async () => {

@@ -41,15 +41,6 @@ function WorkflowStatusBlock({ caseId }: WorkflowStatusBlockProps) {
   const navigate = useNavigate();
   const workflow = useCaseWorkflow(caseId);
 
-  if (workflow.isLoading) {
-    return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-5 w-32" />
-        <Skeleton className="h-8 w-48" />
-      </div>
-    );
-  }
-
   // A failed 006 never blocks the 003's own detail (§3.6): the button re-enables without a
   // status label and lets the wizard resolve the reanudación itself on load (FE08 §3.2).
   if (workflow.isError) {
@@ -57,6 +48,15 @@ function WorkflowStatusBlock({ caseId }: WorkflowStatusBlockProps) {
       <Button type="button" onClick={() => navigate(`/esavi-cases/${caseId}/wizard`)}>
         {t('esaviCase.detail.openCase')}
       </Button>
+    );
+  }
+
+  if (workflow.isLoading || !workflow.data) {
+    return (
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-5 w-32" />
+        <Skeleton className="h-8 w-48" />
+      </div>
     );
   }
 

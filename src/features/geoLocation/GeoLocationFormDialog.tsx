@@ -113,7 +113,9 @@ export function GeoLocationFormDialog({
             schema={createGeoLocationSchema}
             defaultValues={{
               geoLevelTypeId: existing.data?.geoLevelTypeId ?? '',
-              parentGeoLocationId: existing.data?.parentGeoLocationId ?? null,
+              // `undefined`, not `null`: `createGeoLocationSchema` preprocesses `null` away, so
+              // the form value type is `string | undefined`.
+              parentGeoLocationId: existing.data?.parentGeoLocationId ?? undefined,
               name: existing.data?.name ?? '',
               externalCode: existing.data?.externalCode ?? '',
               officialName: existing.data?.officialName ?? '',
@@ -144,7 +146,7 @@ export function GeoLocationFormDialog({
                           // Changing the level can invalidate a parent already chosen for the
                           // previous level (it could now be too deep, or the same level as the
                           // new selection) — reset it rather than leave an inconsistent pair.
-                          form.setValue('parentGeoLocationId', null);
+                          form.setValue('parentGeoLocationId', undefined);
                         }}
                       >
                         <FormControl>

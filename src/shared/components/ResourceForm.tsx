@@ -52,7 +52,10 @@ export function ResourceForm<TFieldValues extends FieldValues>({
   // error ya mostrado desaparezca en cuanto el valor vuelve a ser válido, sin esperar a un nuevo
   // blur ni a un nuevo submit.
   const form = useForm<TFieldValues>({
-    resolver: zodResolver(schema),
+    // `ZodType<TFieldValues>` leaves the schema's *input* as `unknown`, and `zodResolver` only
+    // accepts a schema whose input extends `FieldValues`. Every caller's schema parses an object,
+    // so the cast states what the generic can't: the input side is that same form shape.
+    resolver: zodResolver(schema as ZodType<TFieldValues, TFieldValues>),
     defaultValues,
     mode: 'onTouched',
     reValidateMode: 'onChange',

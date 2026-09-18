@@ -23,7 +23,11 @@ export const SERIOUS_CRITERION_FIELDS = [
 
 export type SeverityCriterionField = (typeof SERIOUS_CRITERION_FIELDS)[number];
 
-export function hasAnySeriousCriterion(data: Record<SeverityCriterionField, boolean | null>): boolean {
+// `Partial`: a criterion the user hasn't answered yet is `undefined` in the form values, and an
+// unanswered criterion is not a marked one — the `=== true` below already says so.
+export function hasAnySeriousCriterion(
+  data: Partial<Record<SeverityCriterionField, boolean | null>>,
+): boolean {
   return SERIOUS_CRITERION_FIELDS.some((field) => data[field] === true);
 }
 

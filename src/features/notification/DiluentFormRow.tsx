@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import type { NotificationDiluentDetail } from '@/contracts/declared/notificationDiluent';
@@ -50,7 +50,11 @@ export function DiluentFormRow({ vaccineId, vaccinationDate, diluent, onDone }: 
   const mutation = isEditing ? update : create;
 
   const form = useForm<NotificationDiluentFormValues>({
-    resolver: zodResolver(createNotificationDiluentSchema({ vaccinationDate })),
+    // `as Resolver<…>`, same precedent as ClassificationStep: the `z.preprocess` fields type their
+    // *input* as `unknown`, so the inferred resolver never matches the contract-derived values.
+    resolver: zodResolver(
+      createNotificationDiluentSchema({ vaccinationDate }),
+    ) as Resolver<NotificationDiluentFormValues>,
     defaultValues: {
       diluentCatalogId: diluent?.diluentCatalogId ?? null,
       batchNumber: diluent?.batchNumber ?? null,

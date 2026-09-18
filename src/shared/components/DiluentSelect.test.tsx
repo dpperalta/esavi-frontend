@@ -62,7 +62,11 @@ describe('DiluentSelect', () => {
 
     const select = await screen.findByRole('combobox', {}, LONG_WAIT);
     expect(select).toBeDisabled();
-    expect(await screen.findByText(/diluent\.select\.empty/, {}, LONG_WAIT)).toBeInTheDocument();
+    // The rendered copy, not the key: `diluent.select.empty` has had a Spanish translation since
+    // SPEC FE12c, so matching the bare key only ever passed while the key was missing.
+    expect(
+      await screen.findByText(/no tiene diluyentes registrados/, {}, LONG_WAIT),
+    ).toBeInTheDocument();
   });
 
   it(

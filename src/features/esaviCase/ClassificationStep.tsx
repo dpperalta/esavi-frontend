@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm, useWatch, type Resolver } from 'react-hook-form';
-import { useTranslation, type TFunction } from 'react-i18next';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { CreateClassificationInput } from '@/contracts/classification';
