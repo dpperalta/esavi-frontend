@@ -1,4 +1,4 @@
-import { Languages, LogOut, Moon, Sun, SunMoon } from 'lucide-react';
+import { Languages, LogOut, Moon, Sun, SunMoon, User } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -90,13 +90,41 @@ export function Topbar() {
           (() => {
             const roleName = getEffectiveRoleName(user.roles);
             return (
-              <span className="flex items-center gap-2 text-sm text-muted-foreground">
-                {user.displayName}
-                {roleName && <Badge>{roleName}</Badge>}
-              </span>
+              <>
+                {/* < md (SPEC FE15 §3.3): nombre, insignia y «Cambiar contraseña» viven dentro de
+                    este menú en vez de sueltos en la barra, que desborda por debajo de md. */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-touch"
+                      className="md:hidden"
+                      aria-label={t('shell.userMenu.trigger')}
+                    >
+                      <User aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <div className="flex items-center gap-2 px-1.5 py-1 text-sm text-muted-foreground">
+                      <span>{user.displayName}</span>
+                      {roleName && <Badge>{roleName}</Badge>}
+                    </div>
+                    <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+                      <ChangePasswordDialog />
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {/* >= md: sin cambios respecto a hoy, sueltos en la barra. */}
+                <div className="hidden items-center gap-1 md:flex">
+                  <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                    {user.displayName}
+                    {roleName && <Badge>{roleName}</Badge>}
+                  </span>
+                  <ChangePasswordDialog />
+                </div>
+              </>
             );
           })()}
-        <ChangePasswordDialog />
         <Button
           variant="ghost"
           size="icon-sm"
