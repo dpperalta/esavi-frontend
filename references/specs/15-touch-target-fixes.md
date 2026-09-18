@@ -1,6 +1,6 @@
 # SPEC FE15 — Objetivo táctil: CTA del asistente y Topbar responsive
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (`Topbar`, shell y sidebar), SPEC FE08 (`CaseWizardActionBar`), SPEC FE14b (`ReopenCaseButton`, `ClosureStep`)
 > **Fecha:** 2026-09-17
 > **Objetivo:** Llevar a 44px los botones de acción primaria del asistente y colapsar el bloque de usuario del `Topbar` por debajo de `md`, dos gaps encontrados en la verificación manual de SPEC FE14b.
