@@ -1,6 +1,7 @@
 import '@/shared/config/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import { useEffect, type ReactNode } from 'react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router-dom';
@@ -9,7 +10,7 @@ import { setupUser } from '@/test/user';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
-import { CaseWizardProvider } from './CaseWizardContext';
+import { CaseWizardProvider, useCaseWizard } from './CaseWizardContext';
 import type { CaseWizardStepSlug } from './steps';
 
 const server = setupServer();
@@ -94,7 +95,10 @@ function renderActionBar() {
 }
 
 // SPEC FE14b §4 paso 8 — «Siguiente» sobre el paso no requerido.
-function mockFullWorkflow(stages: Record<string, { exists: boolean; endedAt: string | null }>) {
+function mockFullWorkflow(
+  stages: Record<string, { exists: boolean; endedAt: string | null }>,
+  statusCode = 'OPEN',
+) {
   server.use(
     http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
       HttpResponse.json({
@@ -103,7 +107,7 @@ function mockFullWorkflow(stages: Record<string, { exists: boolean; endedAt: str
         data: {
           caseWorkflowId: 'workflow-1',
           caseId: 'case-1',
-          status: { catalogItemId: 'status-1', code: 'OPEN', name: 'Abierto' },
+          status: { catalogItemId: 'status-1', code: statusCode, name: statusCode },
           previousStatus: null,
           openedAt: '2026-09-01T00:00:00.000Z',
           closedAt: null,
@@ -182,13 +186,14 @@ function mockNotification(requestInvestigation: boolean, delayMs = 0) {
   );
 }
 
-function renderActionBarAt(activeSlug: CaseWizardStepSlug) {
+function renderActionBarAt(activeSlug: CaseWizardStepSlug, extra?: ReactNode) {
   const router = createMemoryRouter(
     [
       {
         path: '/esavi-cases/:id/wizard/:step',
         element: (
           <CaseWizardProvider>
+            {extra}
             <CaseWizardActionBar caseId="case-1" activeSlug={activeSlug} />
           </CaseWizardProvider>
         ),
@@ -310,5 +315,127 @@ describe('CaseWizardActionBar — «Siguiente» salta los pasos no requeridos (S
     await user.click(nextButton);
 
     expect(router.state.location.pathname).toBe('/esavi-cases/case-1/wizard/investigation');
+  });
+});
+
+function DirtyStep() {
+  const { registerStep, unregisterStep } = useCaseWizard();
+  useEffect(() => {
+    registerStep({ save: async () => {}, isDirty: true, getPendingFields: () => [] });
+    return () => unregisterStep();
+  }, [registerStep, unregisterStep]);
+  return null;
+}
+
+describe('CaseWizardActionBar — «Anterior» (SPEC FE16 §4 paso 6)', () => {
+  const OPEN_STAGES = {
+    classification: { exists: true, endedAt: '2026-09-01' },
+    notification: { exists: true, endedAt: null },
+    investigation: { exists: false, endedAt: null },
+    finalClassification: { exists: false, endedAt: null },
+  };
+
+  it('en el primer paso se renderiza y está deshabilitado', async () => {
+    mockFullWorkflow(OPEN_STAGES);
+    mockClassification(false);
+    mockNotification(false);
+
+    renderActionBarAt('patient');
+
+    expect(await screen.findByRole('button', { name: 'Anterior' })).toBeDisabled();
+  });
+
+  it('desde notification vuelve a classification', async () => {
+    mockFullWorkflow(OPEN_STAGES);
+    mockClassification(false);
+    mockNotification(false);
+
+    const user = setupUser();
+    const router = renderActionBarAt('notification');
+
+    await user.click(await screen.findByRole('button', { name: 'Anterior' }));
+
+    expect(router.state.location.pathname).toBe('/esavi-cases/case-1/wizard/classification');
+  });
+
+  it('desde closure salta los pasos 5 y 6 cuando el caso no los requiere', async () => {
+    mockFullWorkflow(OPEN_STAGES);
+    mockClassification(false);
+    mockNotification(false);
+
+    const user = setupUser();
+    const router = renderActionBarAt('closure');
+
+    const previousButton = await screen.findByRole('button', { name: 'Anterior' });
+    // Same race as the «Siguiente» tests above: with `flags === null` the previous step is the
+    // immediate one, and pressing too early would test that instead of the skip rule.
+    await waitFor(() => expect(classificationCalls).toBeGreaterThan(0));
+    await waitFor(() => expect(notificationCalls).toBeGreaterThan(0));
+    await user.click(previousButton);
+
+    expect(router.state.location.pathname).toBe('/esavi-cases/case-1/wizard/notification');
+  });
+
+  it('con el expediente CLOSED se ven «Anterior» y «Siguiente», y no «Guardar» ni «Completar etapa»', async () => {
+    mockFullWorkflow(OPEN_STAGES, 'CLOSED');
+    mockClassification(false);
+    mockNotification(false);
+
+    renderActionBarAt('notification');
+
+    expect(await screen.findByRole('button', { name: 'Anterior' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument();
+  });
+
+  it('con el formulario sucio abre el diálogo de cambios sin guardar y confirmar navega', async () => {
+    mockFullWorkflow(OPEN_STAGES);
+    mockClassification(false);
+    mockNotification(false);
+
+    const user = setupUser();
+    const router = renderActionBarAt('notification', <DirtyStep />);
+
+    await user.click(await screen.findByRole('button', { name: 'Anterior' }));
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByText('Hay cambios sin guardar')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/esavi-cases/case-1/wizard/notification');
+
+    await user.click(within(dialog).getByRole('button', { name: 'Anterior' }));
+
+    expect(router.state.location.pathname).toBe('/esavi-cases/case-1/wizard/classification');
+  });
+
+  it('con el formulario sucio, cancelar el diálogo no navega', async () => {
+    mockFullWorkflow(OPEN_STAGES);
+    mockClassification(false);
+    mockNotification(false);
+
+    const user = setupUser();
+    const router = renderActionBarAt('notification', <DirtyStep />);
+
+    await user.click(await screen.findByRole('button', { name: 'Anterior' }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(router.state.location.pathname).toBe('/esavi-cases/case-1/wizard/notification');
+  });
+
+  it('con el formulario sucio, el diálogo hacia delante sigue confirmando con «Siguiente»', async () => {
+    mockFullWorkflow(OPEN_STAGES);
+    mockClassification(false);
+    mockNotification(false);
+
+    const user = setupUser();
+    renderActionBarAt('notification', <DirtyStep />);
+
+    await user.click(await screen.findByRole('button', { name: 'Siguiente' }));
+
+    const dialog = await screen.findByRole('alertdialog');
+    expect(within(dialog).getByRole('button', { name: 'Siguiente' })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: 'Anterior' })).not.toBeInTheDocument();
   });
 });

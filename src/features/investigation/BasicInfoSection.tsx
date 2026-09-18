@@ -322,6 +322,9 @@ export function BasicInfoSection({
   }
   const getPendingFieldsRef = useRef(getPendingFields);
   getPendingFieldsRef.current = getPendingFields;
+  // What the step aggregates only refreshes when this handle changes: `isDeath` resolves inside
+  // this section (the status catalog), so the step wouldn't re-render on its own when it does.
+  const pendingFieldsKey = getPendingFields().join('\n');
 
   useEffect(() => {
     onRegisterHandle?.({
@@ -331,7 +334,7 @@ export function BasicInfoSection({
     });
     return () => onRegisterHandle?.(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onRegisterHandle, isDirty]);
+  }, [onRegisterHandle, isDirty, pendingFieldsKey]);
 
   return (
     <div className="flex flex-col gap-4 rounded-lg border border-border p-4">

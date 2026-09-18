@@ -2,7 +2,7 @@ import '@/shared/config/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { setupUser } from '@/test/user';
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, delay, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,6 +10,7 @@ import type { AnswerOption } from '@/contracts/common';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { useDraftsStore } from '@/shared/stores/draftsStore';
+import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
 import { InvestigationStep } from './InvestigationStep';
 
@@ -2389,5 +2390,121 @@ describe('InvestigationStep — F/F2/G/H: error de administración, comunidad y 
     const warning = await screen.findByRole('status');
     expect(warning).not.toHaveTextContent('Error de administración');
     expect(warning).not.toHaveTextContent('Investigación comunitaria');
+  });
+});
+
+// SPEC FE16 §4 pasos 5-6: the action bar is mounted for real, so the test reads what the user reads.
+function renderInvestigationStepWithBar() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[`/esavi-cases/${CASE_1}/wizard/investigation`]}>
+        <CaseWizardProvider>
+          <InvestigationStep caseId={CASE_1} />
+          <CaseWizardActionBar caseId={CASE_1} activeSlug="investigation" />
+        </CaseWizardProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+const PENDING_TITLE = 'Faltan estos campos para completar la etapa';
+
+function mockFilledSatelliteLists(delayMs = 0) {
+  const respond = async () => {
+    if (delayMs > 0) await delay(delayMs);
+    return HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [] } });
+  };
+  server.use(
+    http.get(
+      `http://localhost:4500/api/investigation-team-members/investigation/${INVESTIGATION_1}`,
+      respond,
+    ),
+    http.get(
+      `http://localhost:4500/api/evaluation-institutions/investigation/${INVESTIGATION_1}`,
+      respond,
+    ),
+    http.get(`http://localhost:4500/api/investigation-diagnostics/case/${CASE_1}`, respond),
+    http.get(
+      `http://localhost:4500/api/investigation-vaccines-administered/investigation/${INVESTIGATION_1}`,
+      respond,
+    ),
+  );
+}
+
+function readPendingEntries(): string[] {
+  const title = screen.getByText(PENDING_TITLE);
+  return within(within(title.parentElement!).getByRole('list'))
+    .getAllByRole('listitem')
+    .map((item) => item.textContent ?? '');
+}
+
+describe('InvestigationStep — campos pendientes en la barra (SPEC FE16 §4 pasos 5-6)', () => {
+  it('con las cuatro listas vacías, sin fecha de inicio y en DEATH sin autopsia, lista los seis en orden', async () => {
+    mockWorkflow(true);
+    mockInvestigationStatusCatalog();
+    mockInvestigationDetail({
+      status: { catalogItemId: STATUS_DEATH, code: 'DEATH', name: 'Fallecido' },
+    });
+
+    renderInvestigationStepWithBar();
+
+    await waitFor(() =>
+      expect(readPendingEntries()).toEqual([
+        'Información básica · Fecha de inicio de la investigación',
+        'Información básica · Fecha de fallecimiento',
+        'Datos del equipo de investigación · Al menos un integrante',
+        'Instituciones que evaluaron al paciente · Al menos una institución',
+        'Diagnóstico final o presuntivo · Al menos un diagnóstico',
+        'Vacunas administradas · Al menos una vacuna',
+      ]),
+    );
+  });
+
+  it('«Completar etapa» sigue habilitado con pendientes: la lista informa, no bloquea', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail();
+
+    renderInvestigationStepWithBar();
+
+    await screen.findByText(PENDING_TITLE);
+    expect(screen.getByRole('button', { name: 'Completar etapa' })).toBeEnabled();
+  });
+
+  it('con todo completo no se pinta el bloque, tampoco mientras las listas cargan', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail({ investigationStartDate: '2026-01-10' });
+    mockFilledSatelliteLists(300);
+
+    renderInvestigationStepWithBar();
+
+    await screen.findByText('Información básica');
+    // The four reads are still in flight here: their `count` reads as `0` and must not be affirmed.
+    expect(screen.queryByText(PENDING_TITLE)).not.toBeInTheDocument();
+
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    expect(screen.queryByText(PENDING_TITLE)).not.toBeInTheDocument();
+  });
+
+  it('una lista que falla al leerse no afirma su pendiente, y las demás siguen listadas', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail({ investigationStartDate: '2026-01-10' });
+    server.use(
+      http.get(
+        `http://localhost:4500/api/investigation-team-members/investigation/${INVESTIGATION_1}`,
+        () =>
+          HttpResponse.json({ ok: false, message: 'error', code: 'UNKNOWN_ERROR' }, { status: 500 }),
+      ),
+    );
+
+    renderInvestigationStepWithBar();
+
+    await waitFor(() =>
+      expect(readPendingEntries()).toEqual([
+        'Instituciones que evaluaron al paciente · Al menos una institución',
+        'Diagnóstico final o presuntivo · Al menos un diagnóstico',
+        'Vacunas administradas · Al menos una vacuna',
+      ]),
+    );
   });
 });
