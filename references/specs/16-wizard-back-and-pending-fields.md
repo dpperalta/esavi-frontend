@@ -1,6 +1,6 @@
 # SPEC FE16 — Botón «Anterior» y campos pendientes en investigación
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (armazón del wizard y `CaseWizardStepHandle`), SPEC FE13a–FE13e (las diecisiete secciones del paso de investigación), SPEC FE14b (paso `closure` y `isStepRequired`)
 > **Fecha:** 2026-09-18
 > **Objetivo:** Completar la barra de acciones del wizard con navegación hacia atrás en los siete pasos y con la lista de campos pendientes que hoy falta en el paso de investigación.
