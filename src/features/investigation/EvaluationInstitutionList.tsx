@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 
 export interface EvaluationInstitutionListProps {
   // Names the clinical evaluation ficha, whose PK equals `investigation.investigationId`
@@ -46,6 +47,10 @@ export function EvaluationInstitutionList({ investigationId, disabled = false }:
     institution: null,
   });
   const [removeTarget, setRemoveTarget] = useState<EvaluationInstitutionDetail | null>(null);
+  useCloseWhenReadOnly(disabled, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   function handleConfirmRemove() {
     if (!removeTarget) return;

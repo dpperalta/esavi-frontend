@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 
 export interface VaccineAdministeredListProps {
   investigationId: string;
@@ -50,6 +51,10 @@ export function VaccineAdministeredList({ investigationId, disabled = false }: V
   const [removeTarget, setRemoveTarget] = useState<InvestigationVaccineAdministeredDetail | null>(
     null,
   );
+  useCloseWhenReadOnly(disabled, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   function handleConfirmRemove() {
     if (!removeTarget) return;

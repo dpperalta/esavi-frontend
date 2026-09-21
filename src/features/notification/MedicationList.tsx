@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 import { notificationMedicationResource, useNotificationMedicationsByCase } from './api';
 import { MedicationFormDialog } from './MedicationFormDialog';
 
@@ -52,6 +53,10 @@ export function MedicationList({
     medicationId: null,
   });
   const [removeTarget, setRemoveTarget] = useState<NotificationMedicationDetail | null>(null);
+  useCloseWhenReadOnly(readOnly, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   const rows = medications.data?.rows ?? [];
   const hasActiveRows = rows.length > 0;

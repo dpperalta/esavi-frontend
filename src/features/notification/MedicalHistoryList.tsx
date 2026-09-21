@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 import { notificationMedicalHistoryResource, useNotificationMedicalHistoriesByCase } from './api';
 import { MedicalHistoryFormDialog } from './MedicalHistoryFormDialog';
 
@@ -55,6 +56,10 @@ export function MedicalHistoryList({
     medicalHistoryId: null,
   });
   const [removeTarget, setRemoveTarget] = useState<NotificationMedicalHistoryDetail | null>(null);
+  useCloseWhenReadOnly(readOnly, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   if (notificationId === null) {
     return null;

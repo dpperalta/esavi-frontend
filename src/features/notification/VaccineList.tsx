@@ -17,6 +17,7 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { Badge } from '@/shared/components/ui/badge';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 import { notificationVaccineResource, notificationDiluentsByVaccineKey, useNotificationDiluentsByVaccine, useNotificationVaccinesByCase } from './api';
 import { VaccineFormDialog } from './VaccineFormDialog';
 
@@ -53,6 +54,10 @@ export function VaccineList({ caseId, notificationId, eventDate, readOnly = fals
     vaccineId: null,
   });
   const [removeTarget, setRemoveTarget] = useState<NotificationVaccineDetail | null>(null);
+  useCloseWhenReadOnly(readOnly, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
   // Se piden sus diluyentes antes de confirmar la baja (§2, §4 paso 10): sin ellos el usuario no
   // sabe qué está retirando, y el `404` heredado aparecería después sin explicación.
   const diluentsOfTarget = useNotificationDiluentsByVaccine(removeTarget?.vaccineId, removeTarget !== null);
