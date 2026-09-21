@@ -1,8 +1,9 @@
 # Inventario de rutas del backend
 
 > **Fuente:** `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES`
-> **Generado:** 2026-09-16 · **354 rutas** en **46 grupos**
+> **Generado:** 2026-09-21 · **354 rutas** en **46 grupos**
 > **Verificado:** 2026-09-16 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Cambios de la regeneración del 2026-09-21 (SPEC F60 del backend):** dieciocho rutas de los siete satélites del paso 4 con `isActive` cambiaron de rol mínimo. Once bajaron a `USER`: el `PUT` (`004`) y el `DELETE .../:id` (`005A`) de `NOTIFEVT`, `NOTIFVAC`, `NOTIFDIL` y `NOTIFMED`, y el `DELETE .../:id` (`005A`) de `NOTIFPRG`, `PREGCOMP` y `MEDHIST`. Siete `PATCH .../activate/:id` (`005B`), uno por cada una de esas siete entidades, bajaron de `SUPERADMIN` a `ADMIN`. Ningún grupo ni ruta nuevos; mismo total de 354/46. Los `002B` y los `005C` no cambian.
 > **Cambios de la regeneración del 2026-09-16:** cinco `DELETE .../:id` de satélites de la investigación bajaron de `ADMIN` a `USER` — `ESAVI-INVTEAM-005A`, `ESAVI-INVPREG-005A`, `ESAVI-EVALINST-005A`, `ESAVI-INVVACAD-005A` e `ESAVI-INVDIAG-005A`. Ningún grupo ni ruta nuevos; mismo total de 354/46 que la regeneración anterior.
 > **Cambios de la regeneración del 2026-09-08:** dos grupos nuevos, nueve rutas cada uno, ambos satélites con el mismo contrato (`001`, `002A`/`002B` por padre, `003`, `004`, `005A`/`005B`/`005C`, y un `006` que resuelve por caso):
 > - **`MEDHIST`** — `/api/notification-medical-histories`: los antecedentes médicos del paciente en la **notificación**. Escritura en `USER` (`001`/`004`), baja en `ADMIN`, reactivación en `SUPERADMIN`
@@ -424,10 +425,10 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/notification-medical-histories/admin/notification/:id` | ADMIN | `ESAVI-MEDHIST-002B` |
 | `GET` | `/api/notification-medical-histories/notification/:id` | USER | `ESAVI-MEDHIST-002A` |
 | `DELETE` | `/api/notification-medical-histories/purge/:id` | SUPERADMIN | `ESAVI-MEDHIST-005C` |
-| `PATCH` | `/api/notification-medical-histories/activate/:id` | SUPERADMIN | `ESAVI-MEDHIST-005B` |
+| `PATCH` | `/api/notification-medical-histories/activate/:id` | ADMIN | `ESAVI-MEDHIST-005B` |
 | `GET` | `/api/notification-medical-histories/:id` | USER | `ESAVI-MEDHIST-003` |
 | `PUT` | `/api/notification-medical-histories/:id` | USER | `ESAVI-MEDHIST-004` |
-| `DELETE` | `/api/notification-medical-histories/:id` | ADMIN | `ESAVI-MEDHIST-005A` |
+| `DELETE` | `/api/notification-medical-histories/:id` | USER | `ESAVI-MEDHIST-005A` |
 
 ### NOTIFCN
 
@@ -451,10 +452,10 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/notification-diluents/admin/vaccine/:id` | ADMIN | `ESAVI-NOTIFDIL-002B` |
 | `GET` | `/api/notification-diluents/vaccine/:id` | USER | `ESAVI-NOTIFDIL-002A` |
 | `DELETE` | `/api/notification-diluents/purge/:id` | SUPERADMIN | `ESAVI-NOTIFDIL-005C` |
-| `PATCH` | `/api/notification-diluents/activate/:id` | SUPERADMIN | `ESAVI-NOTIFDIL-005B` |
+| `PATCH` | `/api/notification-diluents/activate/:id` | ADMIN | `ESAVI-NOTIFDIL-005B` |
 | `GET` | `/api/notification-diluents/:id` | USER | `ESAVI-NOTIFDIL-003` |
-| `PUT` | `/api/notification-diluents/:id` | ADMIN | `ESAVI-NOTIFDIL-004` |
-| `DELETE` | `/api/notification-diluents/:id` | ADMIN | `ESAVI-NOTIFDIL-005A` |
+| `PUT` | `/api/notification-diluents/:id` | USER | `ESAVI-NOTIFDIL-004` |
+| `DELETE` | `/api/notification-diluents/:id` | USER | `ESAVI-NOTIFDIL-005A` |
 
 ### NOTIFEVT
 
@@ -465,10 +466,10 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/notification-events/admin/notification/:id` | ADMIN | `ESAVI-NOTIFEVT-002B` |
 | `GET` | `/api/notification-events/notification/:id` | USER | `ESAVI-NOTIFEVT-002A` |
 | `DELETE` | `/api/notification-events/purge/:id` | SUPERADMIN | `ESAVI-NOTIFEVT-005C` |
-| `PATCH` | `/api/notification-events/activate/:id` | SUPERADMIN | `ESAVI-NOTIFEVT-005B` |
+| `PATCH` | `/api/notification-events/activate/:id` | ADMIN | `ESAVI-NOTIFEVT-005B` |
 | `GET` | `/api/notification-events/:id` | USER | `ESAVI-NOTIFEVT-003` |
-| `PUT` | `/api/notification-events/:id` | ADMIN | `ESAVI-NOTIFEVT-004` |
-| `DELETE` | `/api/notification-events/:id` | ADMIN | `ESAVI-NOTIFEVT-005A` |
+| `PUT` | `/api/notification-events/:id` | USER | `ESAVI-NOTIFEVT-004` |
+| `DELETE` | `/api/notification-events/:id` | USER | `ESAVI-NOTIFEVT-005A` |
 
 ### NOTIFIER
 
@@ -492,10 +493,10 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/notification-medications/admin/notification/:id` | ADMIN | `ESAVI-NOTIFMED-002B` |
 | `GET` | `/api/notification-medications/notification/:id` | USER | `ESAVI-NOTIFMED-002A` |
 | `DELETE` | `/api/notification-medications/purge/:id` | SUPERADMIN | `ESAVI-NOTIFMED-005C` |
-| `PATCH` | `/api/notification-medications/activate/:id` | SUPERADMIN | `ESAVI-NOTIFMED-005B` |
+| `PATCH` | `/api/notification-medications/activate/:id` | ADMIN | `ESAVI-NOTIFMED-005B` |
 | `GET` | `/api/notification-medications/:id` | USER | `ESAVI-NOTIFMED-003` |
-| `PUT` | `/api/notification-medications/:id` | ADMIN | `ESAVI-NOTIFMED-004` |
-| `DELETE` | `/api/notification-medications/:id` | ADMIN | `ESAVI-NOTIFMED-005A` |
+| `PUT` | `/api/notification-medications/:id` | USER | `ESAVI-NOTIFMED-004` |
+| `DELETE` | `/api/notification-medications/:id` | USER | `ESAVI-NOTIFMED-005A` |
 
 ### NOTIFPRG
 
@@ -504,10 +505,10 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `POST` | `/api/notification-pregnancies` | USER | `ESAVI-NOTIFPRG-001` |
 | `GET` | `/api/notification-pregnancies/notification/:id` | USER | `ESAVI-NOTIFPRG-006` |
 | `DELETE` | `/api/notification-pregnancies/purge/:id` | SUPERADMIN | `ESAVI-NOTIFPRG-005C` |
-| `PATCH` | `/api/notification-pregnancies/activate/:id` | SUPERADMIN | `ESAVI-NOTIFPRG-005B` |
+| `PATCH` | `/api/notification-pregnancies/activate/:id` | ADMIN | `ESAVI-NOTIFPRG-005B` |
 | `GET` | `/api/notification-pregnancies/:id` | USER | `ESAVI-NOTIFPRG-003` |
 | `PUT` | `/api/notification-pregnancies/:id` | USER | `ESAVI-NOTIFPRG-004` |
-| `DELETE` | `/api/notification-pregnancies/:id` | ADMIN | `ESAVI-NOTIFPRG-005A` |
+| `DELETE` | `/api/notification-pregnancies/:id` | USER | `ESAVI-NOTIFPRG-005A` |
 
 ### NOTIFVAC
 
@@ -518,10 +519,10 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/notification-vaccines/admin/notification/:id` | ADMIN | `ESAVI-NOTIFVAC-002B` |
 | `GET` | `/api/notification-vaccines/notification/:id` | USER | `ESAVI-NOTIFVAC-002A` |
 | `DELETE` | `/api/notification-vaccines/purge/:id` | SUPERADMIN | `ESAVI-NOTIFVAC-005C` |
-| `PATCH` | `/api/notification-vaccines/activate/:id` | SUPERADMIN | `ESAVI-NOTIFVAC-005B` |
+| `PATCH` | `/api/notification-vaccines/activate/:id` | ADMIN | `ESAVI-NOTIFVAC-005B` |
 | `GET` | `/api/notification-vaccines/:id` | USER | `ESAVI-NOTIFVAC-003` |
-| `PUT` | `/api/notification-vaccines/:id` | ADMIN | `ESAVI-NOTIFVAC-004` |
-| `DELETE` | `/api/notification-vaccines/:id` | ADMIN | `ESAVI-NOTIFVAC-005A` |
+| `PUT` | `/api/notification-vaccines/:id` | USER | `ESAVI-NOTIFVAC-004` |
+| `DELETE` | `/api/notification-vaccines/:id` | USER | `ESAVI-NOTIFVAC-005A` |
 
 ### NSEVNOT
 
@@ -555,10 +556,10 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/notification-pregnancy-complications/admin/pregnancy/:id` | ADMIN | `ESAVI-PREGCOMP-002B` |
 | `GET` | `/api/notification-pregnancy-complications/pregnancy/:id` | USER | `ESAVI-PREGCOMP-002A` |
 | `DELETE` | `/api/notification-pregnancy-complications/purge/:id` | SUPERADMIN | `ESAVI-PREGCOMP-005C` |
-| `PATCH` | `/api/notification-pregnancy-complications/activate/:id` | SUPERADMIN | `ESAVI-PREGCOMP-005B` |
+| `PATCH` | `/api/notification-pregnancy-complications/activate/:id` | ADMIN | `ESAVI-PREGCOMP-005B` |
 | `GET` | `/api/notification-pregnancy-complications/:id` | USER | `ESAVI-PREGCOMP-003` |
 | `PUT` | `/api/notification-pregnancy-complications/:id` | USER | `ESAVI-PREGCOMP-004` |
-| `DELETE` | `/api/notification-pregnancy-complications/:id` | ADMIN | `ESAVI-PREGCOMP-005A` |
+| `DELETE` | `/api/notification-pregnancy-complications/:id` | USER | `ESAVI-PREGCOMP-005A` |
 
 ### SEVNOT
 
