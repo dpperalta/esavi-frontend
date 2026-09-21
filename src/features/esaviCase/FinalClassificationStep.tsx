@@ -6,7 +6,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { CreateFinalClassificationInput } from '@/contracts/finalClassification';
 import type { FinalClassificationDetail } from '@/contracts/declared/finalClassification';
-import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import {
   finalClassificationByCaseKey,
@@ -332,15 +331,6 @@ function FinalClassificationFormBody({
       } catch (err) {
         if (!(err instanceof EsaviApiError)) {
           throw err;
-        }
-        // `CASEFLOW_012_CASE_CLOSED` conmuta el armazón a sólo lectura sin esperar el próximo
-        // `006` de workflow (SPEC FE14a §3.5), mismo criterio que `ClassificationStep`.
-        if (err.code === 'CASEFLOW_012_CASE_CLOSED') {
-          queryClient.setQueryData<CaseWorkflowDetail>(['caseWorkflow', 'byCase', caseId], (old) =>
-            old ? { ...old, status: { ...old.status, code: 'CLOSED' } } : old,
-          );
-          toast.error(getErrorMessage(err));
-          return;
         }
         // El número de operación entre `FINCLASS` y el sufijo no está fijo (`00X`, SPEC FE14a
         // §3.5) — comparado por sufijo, mismo criterio que `BasicInfoSection` (FE13a).

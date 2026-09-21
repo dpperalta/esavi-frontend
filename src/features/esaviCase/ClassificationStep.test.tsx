@@ -7,6 +7,7 @@ import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
+import { createAppQueryClient } from '@/shared/api/queryClient';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
 import { ClassificationStep } from './ClassificationStep';
@@ -96,7 +97,11 @@ function mockPatientDetail(overrides: Record<string, unknown> = {}) {
   );
 }
 
-function mockWorkflow(classificationExists: boolean, notificationExists = false) {
+function mockWorkflow(
+  classificationExists: boolean,
+  notificationExists = false,
+  getStatusCode: () => string = () => 'OPEN',
+) {
   server.use(
     http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
       HttpResponse.json({
@@ -105,7 +110,7 @@ function mockWorkflow(classificationExists: boolean, notificationExists = false)
         data: {
           caseWorkflowId: 'workflow-1',
           caseId: CASE_1,
-          status: { catalogItemId: 'status-1', code: 'OPEN', name: 'Abierto' },
+          status: { catalogItemId: 'status-1', code: getStatusCode(), name: 'Abierto' },
           previousStatus: null,
           openedAt: '2026-01-01T00:00:00.000Z',
           closedAt: null,
@@ -235,8 +240,9 @@ function mockAgeUnitCatalog() {
   );
 }
 
-function renderClassificationStep() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderClassificationStep(
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[`/esavi-cases/${CASE_1}/wizard/classification`]}>
@@ -297,6 +303,34 @@ describe('ClassificationStep — alta sin datos previos (SPEC FE11 §3.4, §5)',
     expect(receivedBody).toMatchObject({ isSeriousEvent: true, causedDeath: true, caseId: CASE_1 });
     expect(receivedBody).not.toHaveProperty('age');
     expect(receivedBody).not.toHaveProperty('ageUnitItemId');
+  }, 30000);
+});
+
+describe('ClassificationStep — expediente cerrado por el servidor (SPEC FE17 §3.1, §4 paso 3)', () => {
+  it('un 409 CASEFLOW_012_CASE_CLOSED deja el paso en sólo lectura por la relectura del 006', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockPatientDetail();
+    let status = 'OPEN';
+    mockWorkflow(false, false, () => status);
+    server.use(
+      http.post('http://localhost:4500/api/classifications', () => {
+        status = 'CLOSED';
+        return HttpResponse.json(
+          { ok: false, message: 'El caso está cerrado.', code: 'CASEFLOW_012_CASE_CLOSED' },
+          { status: 409 },
+        );
+      }),
+    );
+
+    const queryClient = createAppQueryClient();
+    queryClient.setDefaultOptions({ queries: { retry: false } });
+    renderClassificationStep(queryClient);
+
+    await clickGate(user, 'No');
+    await clickSaveButton(user);
+
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument());
   }, 30000);
 });
 

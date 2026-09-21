@@ -13,7 +13,6 @@ import type { CreateSevereNotificationInput } from '@/contracts/severeNotificati
 import type { NonSevereNotificationDetail } from '@/contracts/declared/nonSevereNotification';
 import type { NotificationDetail } from '@/contracts/declared/notification';
 import type { SevereNotificationDetail } from '@/contracts/declared/severeNotification';
-import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import type { NotificationPregnancyDetail } from '@/contracts/declared/notificationPregnancy';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
@@ -579,15 +578,6 @@ function NotificationFormBody({
       } catch (err) {
         if (!(err instanceof EsaviApiError)) {
           throw err;
-        }
-        // Mismo mecanismo que `ClassificationStep` (SPEC FE11 §3.5): conmuta el armazón a sólo
-        // lectura sin esperar el próximo `006` de workflow.
-        if (err.code === 'CASEFLOW_012_CASE_CLOSED') {
-          queryClient.setQueryData<CaseWorkflowDetail>(['caseWorkflow', 'byCase', caseId], (old) =>
-            old ? { ...old, status: { ...old.status, code: 'CLOSED' } } : old,
-          );
-          toast.error(getErrorMessage(err));
-          return false;
         }
         // El caso ya tiene notificación (SPEC FE12a §3.5 "Con comportamiento propio"): se
         // invalida y se recarga en vez de insistir con un segundo `POST`.

@@ -11,7 +11,7 @@
 
 El SPEC F61 del backend cierra el pedido de `CASE-PROCESS.md` §10.3. Si el `caseWorkflow` está `CLOSED`, las 85 escrituras sobre el contenido del expediente responden `409` con un `code` de la forma `<PREFIJO>_<op>_CASE_CLOSED` (`esavi-backend/references/CONVENTIONS.md` §11, «Expediente cerrado»). El cliente tiene tres desajustes frente a ese contrato.
 
-**A — Sólo un código de los 85 tiene comportamiento propio.** `ClassificationStep.tsx:269` intercepta `CASEFLOW_012_CASE_CLOSED` y marca el caso como `CLOSED` en la caché. Con los códigos nuevos (`NOTIFEVT_004_CASE_CLOSED`, `INVDIAG_005A_CASE_CLOSED`, …) no pasa nada parecido. El toast sale bien, porque `getErrorMessage` recurre al `message` del servidor, pero el wizard sigue editable. El usuario puede volver a guardar y recibir el mismo 409 hasta que algo vuelva a pedir `ESAVI-CASEFLOW-006`. `QueryClient` se crea sin `MutationCache` (`providers.tsx:9`), así que no hay ningún sitio común donde reaccionar.
+**A — Sólo un código de los 85 tiene comportamiento propio.** `ClassificationStep.tsx:269`, `FinalClassificationStep.tsx:338` y `NotificationStep.tsx:585` interceptan `CASEFLOW_012_CASE_CLOSED` y marcan el caso como `CLOSED` en la caché, cada uno con su copia del mismo bloque. Con los códigos nuevos (`NOTIFEVT_004_CASE_CLOSED`, `INVDIAG_005A_CASE_CLOSED`, …) no pasa nada parecido. El toast sale bien, porque `getErrorMessage` recurre al `message` del servidor, pero el wizard sigue editable. El usuario puede volver a guardar y recibir el mismo 409 hasta que algo vuelva a pedir `ESAVI-CASEFLOW-006`. `QueryClient` se crea sin `MutationCache` (`providers.tsx:9`), así que no hay ningún sitio común donde reaccionar.
 
 **B — Un diálogo abierto sobrevive a la carrera.** Las listas de satélites dejan de ofrecer «Añadir», «Editar» y «Retirar» cuando reciben `readOnly`/`disabled`. Pero si el diálogo ya estaba abierto cuando otra persona cerró el caso, sigue abierto y habilitado, y cada «Guardar» termina en otro 409.
 
@@ -29,7 +29,7 @@ El SPEC F61 del backend cierra el pedido de `CASE-PROCESS.md` §10.3. Si el `cas
 
 - **Un manejador global de `_CASE_CLOSED`** en el `MutationCache` del `QueryClient`. Si el `code` de un `EsaviApiError` cumple `/_CASE_CLOSED$/`, invalida `['caseWorkflow']` entero. No muestra toast, porque el toast sigue en el `catch` de cada mutación.
 - **Sacar la creación del `QueryClient` de `providers.tsx`** a una función propia, para que los tests creen el mismo cliente con el mismo manejador.
-- **Quitar el caso especial de `ClassificationStep.tsx:269`.** Desaparecen el parche de caché y el `if`. `CASEFLOW_012_CASE_CLOSED` conserva su entrada en `ERROR_CODE_KEYS` y su texto propio.
+- **Quitar el caso especial de `CASEFLOW_012_CASE_CLOSED` de los tres pasos que lo copian** (`ClassificationStep`, `FinalClassificationStep` y `NotificationStep`). Desaparecen el parche de caché y el `if`. `CASEFLOW_012_CASE_CLOSED` conserva su entrada en `ERROR_CODE_KEYS` y su texto propio.
 - **Cerrar el diálogo abierto** cuando la lista que lo abrió pasa a `readOnly`/`disabled`. Aplica a todas las listas de satélites de notificación e investigación y a `NotifierList`.
 - **Sólo lectura en `CaseOpeningStep`**, igual que en los otros cuatro pasos: el formulario del caso deshabilitado, sin «Guardar», y `NotifierList` con `readOnly`.
 - **Conservar `draftsStore` ante un 409.** El borrador no se borra. Si un ADMIN reabre el caso, `resolveDraftConflict` resuelve el conflicto como ya lo hace.
@@ -58,7 +58,7 @@ Es un spec transversal de ampliación, así que no hay pantallas nuevas. Se usan
 |---|---|---|
 | `QueryClient` | `new QueryClient()` sin opciones (`app/providers.tsx:9`) | Lo crea `createAppQueryClient()` en `shared/api/queryClient.ts`, con un `MutationCache` cuyo `onError` reconoce `_CASE_CLOSED`. `providers.tsx` y los tests usan esa misma función |
 | 409 `*_CASE_CLOSED` en cualquier escritura del expediente | Toast con el `message` del servidor; el wizard sigue editable | Mismo toast, y además se invalida `['caseWorkflow']` entero. La consulta montada vuelve a pedir `ESAVI-CASEFLOW-006`, recibe `CLOSED` y el paso pasa a sólo lectura |
-| `CASEFLOW_012_CASE_CLOSED` en `ClassificationStep` | `if` propio que marca `CLOSED` en la caché (`:269`) | Sin rama propia: lo cubre el manejador global. Conserva su texto en `ERROR_CODE_KEYS` |
+| `CASEFLOW_012_CASE_CLOSED` en `ClassificationStep`, `FinalClassificationStep` y `NotificationStep` | Cada uno con su `if` que marca `CLOSED` en la caché | Sin rama propia: lo cubre el manejador global. Conserva su texto en `ERROR_CODE_KEYS` |
 | Diálogo de formulario o confirmación de retirar abierto cuando la lista pasa a sólo lectura | Sigue abierto y habilitado | Se cierra. `useCloseWhenReadOnly(readOnly, close)` en `shared/hooks/`, usado por las doce listas |
 | `CaseOpeningStep` con `CLOSED` | Editable: «Guardar» y las escrituras de `notifier` habilitadas | Formulario deshabilitado y sin «Guardar». Queda «Siguiente». `NotifierList` recibe `readOnly` |
 | `draftsStore` ante un 409 | — | Se conserva y no se borra (decisión 5) |
@@ -156,9 +156,9 @@ Comentario con la cita a SPEC F61 y a `ESAVI-CASEFLOW-006`.
 
 *Verificación:* la suite completa sigue en verde.
 
-**3. `ClassificationStep` sin caso especial.** Se quita la rama de `:266-275`: el comentario, el `if`, el `setQueryData` y el `return`. El código pasa por el `toast.error(getErrorMessage(err))` general. `ERROR_CODE_KEYS` conserva `CASEFLOW_012_CASE_CLOSED`, pero su comentario pasa a decir que el comportamiento lo pone el manejador global. `CaseWorkflowDetail` deja de importarse si nadie más lo usa.
+**3. Los tres pasos sin caso especial.** En `ClassificationStep`, `FinalClassificationStep` y `NotificationStep` se quita la rama de `CASEFLOW_012_CASE_CLOSED`: el comentario, el `if`, el `setQueryData` y el `return`. El código pasa por el `toast.error(getErrorMessage(err))` general (en `NotificationStep`, con el mismo `return false` de siempre). `ERROR_CODE_KEYS` conserva `CASEFLOW_012_CASE_CLOSED`, pero su comentario pasa a decir que el comportamiento lo pone el manejador global. `CaseWorkflowDetail` deja de importarse en los tres.
 
-*Verificación:* el test de `ClassificationStep` que cubría el 012, montado con `createAppQueryClient()`, sigue viendo el paso en sólo lectura después del 409. Ahora llega por la nueva petición al `006`, no por el parche.
+*Verificación:* el test de `FinalClassificationStep` que ya cubría el 012 y uno nuevo en `ClassificationStep`, ambos montados con `createAppQueryClient()`, ven el paso en sólo lectura después del 409, porque el `006` que sigue a la invalidación devuelve `CLOSED`. `NotificationStep` no tenía test del 012 y queda cubierto por el del paso 7.
 
 **4. `useCloseWhenReadOnly(readOnly, close)`.** Nuevo en `shared/hooks/`. Llama a `close()` cuando `readOnly` pasa de `false` a `true`. No hace nada al montar con `true`, ni al volver a `false`.
 
@@ -216,7 +216,7 @@ En los tres, el primer `006` devuelve `OPEN` y el siguiente `CLOSED`.
 - [ ] Un 409 `*_CASE_CLOSED` en cualquier escritura del expediente produce **un solo** toast, con el `message` del servidor (o el texto propio en `CASEFLOW_007` y `_012`), y una nueva petición a `ESAVI-CASEFLOW-006`.
 - [ ] Tras esa petición, el paso activo queda en sólo lectura y muestra el aviso de `CaseWizardPage.tsx:132`: «Reabrir» con ADMIN y «pide a un administrador» con USER.
 - [ ] Un error que no cumple el sufijo (`INVDIAG_005A_NOT_FOUND`, un `403`, un `500`) no invalida `['caseWorkflow']`.
-- [ ] `grep -n "CASEFLOW_012_CASE_CLOSED" src/features/esaviCase/ClassificationStep.tsx` no devuelve resultados, y `ERROR_CODE_KEYS` conserva la entrada.
+- [ ] `grep -rn "CASEFLOW_012_CASE_CLOSED" src/features/esaviCase/*Step.tsx` no devuelve resultados, y `ERROR_CODE_KEYS` conserva la entrada.
 - [ ] Con un diálogo de formulario o de confirmación abierto, el paso de la lista a sólo lectura lo cierra. Vale para las doce listas de §3.1.
 - [ ] `CaseOpeningStep` con `CLOSED` tiene el formulario deshabilitado, no pinta «Guardar» y `NotifierList` no ofrece «Añadir», «Editar» ni «Retirar». «Siguiente» sigue funcionando.
 - [ ] Tras un 409, `useDraftsStore.getState().get(caseId, stage)` conserva lo tecleado.
@@ -243,7 +243,7 @@ En los tres, el primer `006` devuelve `OPEN` y el siguiente `CLOSED`.
 - **Sí:** invalidar `['caseWorkflow']` entero en lugar de `byCase` de un caso concreto. El manejador global no conoce el `caseId`. Sólo se vuelven a pedir las consultas montadas, así que invalidar de más cuesta, como mucho, la bandeja si estuviera montada.
 - **Sí:** dejar el toast en el `catch` local. `getErrorMessage` ya devuelve el `message` del servidor con los códigos no registrados, y si el global también lo mostrara saldría dos veces.
 - **No:** registrar los 85 códigos en `ERROR_CODE_KEYS`. El servidor manda el texto traducido y con la salida («Reábralo antes de continuar»). Un texto propio sería una segunda traducción de lo mismo (`CONVENTIONS.md` §6.2).
-- **Sí:** quitar el caso especial de `CASEFLOW_012` en `ClassificationStep` (decisión 2). Con el manejador global sobra, y dos caminos para el mismo efecto acaban divergiendo. Conserva su texto propio porque ya existe y es el que ve el usuario.
+- **Sí:** quitar el caso especial de `CASEFLOW_012` de los tres pasos que lo copiaban (decisión 2; el spec listaba sólo `ClassificationStep` y el resto se encontró en la implementación). Con el manejador global sobra, y dos caminos para el mismo efecto acaban divergiendo. Conserva su texto propio porque ya existe y es el que ve el usuario.
 - **Sí:** cerrar el diálogo abierto cuando la lista pasa a sólo lectura (decisión 3). Dejarlo abierto con el formulario deshabilitado lleva a un callejón sin salida, y dejarlo habilitado lleva a otro 409 en cada intento.
 - **Sí:** un hook compartido, `useCloseWhenReadOnly`, y no la misma lógica escrita en doce listas. Se repite doce veces, así que es una pieza de `shared/`.
 - **Sí:** meter en este spec la sólo lectura de `CaseOpeningStep` (decisión 4). Es el único paso con contenido que no la tenía, y sin ella el punto 4 del aviso del backend falla justo ahí.
@@ -269,7 +269,7 @@ En los tres, el primer `006` devuelve `OPEN` y el siguiente `CLOSED`.
 | Archivo | Cambio |
 |---|---|
 | `app/providers.tsx` | Usa `createAppQueryClient()` |
-| `features/esaviCase/ClassificationStep.tsx` | Pierde la rama de `CASEFLOW_012_CASE_CLOSED` |
+| `features/esaviCase/ClassificationStep.tsx`, `FinalClassificationStep.tsx` y `NotificationStep.tsx` | Pierden la rama de `CASEFLOW_012_CASE_CLOSED` |
 | `shared/api/errorMessages.ts` | Sólo cambia el comentario de `CASEFLOW_012_CASE_CLOSED` |
 | `features/esaviCase/CaseOpeningStep.tsx` | Modo de sólo lectura con `CLOSED` |
 | `features/notifier/NotifierList.tsx` | Gana la prop `readOnly` |

@@ -104,8 +104,8 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   CLASSIF_004_INVALID_AGE_RANGE: 'classification.error.generic',
   CLASSIF_004_NOT_FOUND: 'classification.error.generic',
   CLASSIF_004_SEVERITY_INCOHERENT: 'classification.error.generic',
-  // El único con comportamiento propio además del texto: `ClassificationStep` fuerza el modo
-  // `CLOSED` del armazón al capturarlo, sin esperar el próximo `006` de workflow (SPEC FE11 §3.5).
+  // Conserva su texto propio; el cambio a sólo lectura ya no es de cada paso: lo hace el
+  // `MutationCache` global de `queryClient.ts` para todo `*_CASE_CLOSED` (SPEC FE17 §3.1).
   CASEFLOW_012_CASE_CLOSED: 'classification.error.caseClosed',
   // SPEC FE12a §3.5 — los `_CREATION_FAILED`, `_UPDATE_FAILED` y el `_NOT_FOUND`/`_CASE_NOT_FOUND`
   // de crear (`001`) y actualizar (`004`) de las tres entidades (o su equivalente
