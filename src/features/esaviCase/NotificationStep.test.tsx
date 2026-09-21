@@ -7,6 +7,7 @@ import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
+import { createAppQueryClient } from '@/shared/api/queryClient';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { useDraftsStore } from '@/shared/stores/draftsStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
@@ -580,8 +581,9 @@ function mockNotificationReentry(getCallCounter?: { count: number }) {
   );
 }
 
-function renderNotificationStep() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderNotificationStep(
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[`/esavi-cases/${CASE_1}/wizard/notification`]}>
@@ -618,6 +620,54 @@ describe('NotificationStep — alta sin fila previa (SPEC FE12a §3.4, §5, §4 
     // caseId]` dispara un refetch, que es justo lo que hace que el stepper deje de mostrar el
     // paso 4 como no iniciado.
     await waitFor(() => expect(workflowCalls.count).toBeGreaterThan(initialWorkflowCalls));
+  }, 30000);
+});
+
+describe('NotificationStep — expediente cerrado por el servidor (SPEC FE17 §4 paso 7)', () => {
+  it('un 409 NOTIFCN_004_CASE_CLOSED muestra un solo toast con el texto del servidor, relee el 006 y deja el paso en sólo lectura', async () => {
+    const user = setupUser();
+    mockCaseDetail();
+    mockClassificationDetail(true);
+    mockEmptyCatalogTypes();
+    mockNotificationReentry();
+    const serverMessage = 'El caso está cerrado. Reábralo antes de continuar con el expediente.';
+    let closed = false;
+    const workflowCalls = { count: 0 };
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () => {
+        workflowCalls.count++;
+        const body = workflowBody(true);
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: closed ? { ...body, status: { ...body.status, code: 'CLOSED', name: 'Cerrado' } } : body,
+        });
+      }),
+      http.put(`http://localhost:4500/api/notifications/${NOTIFICATION_1}`, () => {
+        closed = true;
+        return HttpResponse.json(
+          { ok: false, message: serverMessage, code: 'NOTIFCN_004_CASE_CLOSED' },
+          { status: 409 },
+        );
+      }),
+    );
+
+    const queryClient = createAppQueryClient();
+    queryClient.setDefaultOptions({ queries: { retry: false } });
+    renderNotificationStep(queryClient);
+
+    const description = await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
+    await waitFor(() => expect(description).toHaveValue('Reacción local en el sitio de aplicación'));
+    await user.type(description, ' con edema');
+    const callsBeforeSave = workflowCalls.count;
+    const saveButton = await screen.findByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    await user.click(saveButton);
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith(serverMessage));
+    await waitFor(() => expect(workflowCalls.count).toBeGreaterThan(callsBeforeSave));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument());
+    expect(toastError).toHaveBeenCalledTimes(1);
   }, 30000);
 });
 

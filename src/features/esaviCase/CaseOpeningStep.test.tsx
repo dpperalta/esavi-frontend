@@ -4,11 +4,23 @@ import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
+import { createAppQueryClient } from '@/shared/api/queryClient';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { CaseOpeningStep } from './CaseOpeningStep';
+
+const toastError = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    error: (...args: unknown[]) => toastError(...args),
+    success: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}));
 
 const server = setupServer();
 
@@ -94,6 +106,7 @@ function mockPregnancyGuardChainClosed() {
 
 beforeEach(() => {
   localStorage.clear();
+  toastError.mockClear();
   mockPregnancyGuardChainClosed();
 });
 
@@ -363,6 +376,86 @@ describe('CaseOpeningStep — expediente cerrado (SPEC FE17 §4 paso 6)', () => 
     expect(screen.queryByRole('button', { name: 'Quitar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Agregar notificador' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Siguiente' })).toBeEnabled();
+  }, 60000);
+});
+
+describe('CaseOpeningStep — 409 por expediente cerrado (SPEC FE17 §4 paso 7)', () => {
+  it('un 409 CASE_004_CASE_CLOSED muestra un solo toast con el texto del servidor, relee el 006 y deja el paso en sólo lectura', async () => {
+    const user = setupUser();
+    signInAs('ADMIN', 50);
+    mockHealthFacilitySearch();
+    mockEmptyNotifierList(CASE_1);
+    mockVaccines(CASE_1, []);
+    const serverMessage = 'El caso está cerrado. Reábralo antes de continuar con el expediente.';
+    let closed = false;
+    const workflowReads = { count: 0 };
+    server.use(
+      http.get(`http://localhost:4500/api/esavi-cases/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: makeCaseDetail() }),
+      ),
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () => {
+        workflowReads.count++;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            caseWorkflowId: 'workflow-1',
+            caseId: CASE_1,
+            status: closed
+              ? { catalogItemId: 'status-2', code: 'CLOSED', name: 'Cerrado' }
+              : { catalogItemId: 'status-1', code: 'IN_CASE_OPENING', name: 'Apertura' },
+            previousStatus: null,
+            openedAt: '2026-01-01T00:00:00.000Z',
+            closedAt: null,
+            lastReopenedAt: null,
+            reopenCount: 0,
+            stages: {
+              classification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+              notification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+              investigation: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+              finalClassification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+            },
+            totalDurationMinutes: null,
+            isActive: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+          },
+        });
+      }),
+      http.put(`http://localhost:4500/api/esavi-cases/${CASE_1}`, () => {
+        closed = true;
+        return HttpResponse.json(
+          { ok: false, message: serverMessage, code: 'CASE_004_CASE_CLOSED' },
+          { status: 409 },
+        );
+      }),
+    );
+
+    const router = createMemoryRouter(
+      [{ path: '/esavi-cases/:id/wizard/case-opening', element: <CaseOpeningStep /> }],
+      { initialEntries: [`/esavi-cases/${CASE_1}/wizard/case-opening`] },
+    );
+    const queryClient = createAppQueryClient();
+    queryClient.setDefaultOptions({ queries: { retry: false } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+
+    await user.type(await screen.findByLabelText('Detalles'), 'Nota nueva');
+    const saveButton = screen.getByRole('button', { name: 'Guardar' });
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    const readsBeforeSave = workflowReads.count;
+    await user.click(saveButton);
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith(serverMessage));
+    await waitFor(() => expect(workflowReads.count).toBeGreaterThan(readsBeforeSave));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument());
+    expect(screen.getByLabelText('Detalles')).toBeDisabled();
+    expect(toastError).toHaveBeenCalledTimes(1);
   }, 60000);
 });
 
