@@ -281,6 +281,91 @@ describe('CaseOpeningStep — reentrada (SPEC FE10 §5)', () => {
   }, 60000);
 });
 
+describe('CaseOpeningStep — expediente cerrado (SPEC FE17 §4 paso 6)', () => {
+  it('con el flujo en CLOSED, el formulario queda deshabilitado, sin «Guardar», y los notificadores sin acciones', async () => {
+    signInAs('ADMIN', 50);
+    mockHealthFacilitySearch();
+    server.use(
+      http.get(`http://localhost:4500/api/esavi-cases/${CASE_1}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: makeCaseDetail() }),
+      ),
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            caseWorkflowId: 'workflow-1',
+            caseId: CASE_1,
+            status: { catalogItemId: 'status-2', code: 'CLOSED', name: 'Cerrado' },
+            previousStatus: null,
+            openedAt: '2026-01-01T00:00:00.000Z',
+            closedAt: '2026-01-02T00:00:00.000Z',
+            lastReopenedAt: null,
+            reopenCount: 0,
+            stages: {
+              classification: { exists: true, id: 'c-1', startedAt: null, endedAt: null, durationMinutes: null },
+              notification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+              investigation: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+              finalClassification: { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null },
+            },
+            totalDurationMinutes: null,
+            isActive: true,
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: null,
+            deletedAt: null,
+            appDetails: [],
+          },
+        }),
+      ),
+      http.get('http://localhost:4500/api/notifiers', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 1,
+            rows: [
+              {
+                notifierId: 'notifier-1',
+                firstName: 'Juan',
+                lastName: 'Gómez',
+                email: null,
+                phoneNumber: null,
+                room: null,
+                address: null,
+                isActive: true,
+                case: { caseId: CASE_1, caseCode: 'ESAVI-2026-0001', reportDate: null },
+                profession: null,
+                geoLocation: null,
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    mockVaccines(CASE_1, []);
+
+    const router = createMemoryRouter(
+      [{ path: '/esavi-cases/:id/wizard/case-opening', element: <CaseOpeningStep /> }],
+      { initialEntries: [`/esavi-cases/${CASE_1}/wizard/case-opening`] },
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText('Juan Gómez');
+    await waitFor(() => expect(screen.getByLabelText('Detalles')).toBeDisabled());
+    expect(screen.getByLabelText('Organización que notifica')).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Quitar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Agregar notificador' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeEnabled();
+  }, 60000);
+});
+
 describe('CaseOpeningStep — cadena CASE-001 → NOTIFIER-001 (SPEC FE10 §3.2, §5, §6)', () => {
   it('crea el caso, abre el modal de notificador; si el POST del notificador falla, el caso sigue creado y visible, con reintento', async () => {
     const user = setupUser();

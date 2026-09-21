@@ -107,11 +107,11 @@ function mockGeoLocationPickerEmpty() {
   );
 }
 
-function renderList() {
+function renderList(readOnly = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <NotifierList caseId={CASE_1} />
+      <NotifierList caseId={CASE_1} readOnly={readOnly} />
     </QueryClientProvider>,
   );
 }
@@ -134,6 +134,20 @@ describe('NotifierList — «Quitar» exige ADMIN (SPEC FE10 §7 riesgo, §4 pas
     renderList();
 
     expect(await screen.findByRole('button', { name: 'Quitar' })).toBeInTheDocument();
+  });
+});
+
+describe('NotifierList — sólo lectura con el caso cerrado (SPEC FE17 §4 paso 6)', () => {
+  it('con readOnly y ADMIN, la fila se pinta sin «Editar», «Quitar» ni «Añadir»', async () => {
+    signInAs('ADMIN', 50);
+    mockList([makeListRow()]);
+
+    renderList(true);
+
+    expect(await screen.findByText('Juan Gómez')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Quitar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Agregar notificador' })).not.toBeInTheDocument();
   });
 });
 

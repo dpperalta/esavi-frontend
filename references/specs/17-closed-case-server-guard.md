@@ -168,9 +168,10 @@ Comentario con la cita a SPEC F61 y a `ESAVI-CASEFLOW-006`.
 
 *Verificación:* un test por familia (`EventList` y `DiagnosticList`). Con el diálogo abierto, un `rerender` con `readOnly`/`disabled` en `true` lo cierra.
 
-**6. `CaseOpeningStep` en sólo lectura.** Lee `useCaseWorkflowByCase(caseId)` cuando hay caso. Con `CLOSED`:
+**6. `CaseOpeningStep` en sólo lectura.** Lee `useCaseWorkflow(caseId)` (`caseWorkflow/api.ts`) cuando hay caso. Con `CLOSED`:
 
 - el formulario del caso queda dentro de un `<fieldset disabled>`;
+- `<ResourceForm>` gana la prop opcional `hideActions`, que no pinta su barra de acciones, y aquí se pone en `true`. Es retrocompatible: ningún otro llamador la pasa;
 - «Guardar» no se pinta;
 - «Siguiente» sigue.
 
@@ -229,7 +230,7 @@ En los tres, el primer `006` devuelve `OPEN` y el siguiente `CLOSED`.
 **Bloque de cierre:**
 
 - [ ] **Tema oscuro.** Los pasos en sólo lectura se ven correctos en `dark`, y `grep -rnE "bg-(slate|gray|zinc|white|black)|#[0-9a-fA-F]{3,6}" src/shared/hooks/useCloseWhenReadOnly.ts src/shared/api/queryClient.ts src/features/esaviCase/CaseOpeningStep.tsx src/features/notifier/` no devuelve resultados.
-- [ ] **Por debajo de `md`.** `CaseOpeningStep` en sólo lectura no hace scroll horizontal a 375px, y la barra fija abajo sólo muestra «Siguiente».
+- [ ] **Por debajo de `md`.** `CaseOpeningStep` en sólo lectura no hace scroll horizontal a 375px, y la barra fija de `<ResourceForm>` no aparece, mientras que «Siguiente» sigue visible.
 - [ ] **Rol bajo.** Con `USER` y el caso cerrado, ningún paso ofrece «Reabrir», y un 409 provocado por la carrera termina en el aviso, no en una pantalla en blanco.
 - [ ] **Sin literales.** Ningún texto visible nuevo fuera de i18n. Este spec no añade claves, y `npm run i18n:check` sale en 0.
 - [ ] **Estado en una sola capa.** `CLOSED` sólo se lee de `['caseWorkflow','byCase',caseId]`: ni el manejador ni ninguna lista lo copian a `useState` ni a un store.
@@ -273,6 +274,7 @@ En los tres, el primer `006` devuelve `OPEN` y el siguiente `CLOSED`.
 | `shared/api/errorMessages.ts` | Sólo cambia el comentario de `CASEFLOW_012_CASE_CLOSED` |
 | `features/esaviCase/CaseOpeningStep.tsx` | Modo de sólo lectura con `CLOSED` |
 | `features/notifier/NotifierList.tsx` | Gana la prop `readOnly` |
+| `shared/components/ResourceForm.tsx` | Gana la prop opcional `hideActions`. Ningún llamador actual cambia |
 | Las once listas de notificación e investigación | Llaman a `useCloseWhenReadOnly`. Sus props no cambian |
 | `references/CASE-PROCESS.md` | §4.5, §6.3, §10.3, cabecera de §10 y tabla de `:26` |
 

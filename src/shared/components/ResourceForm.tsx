@@ -24,6 +24,8 @@ export interface ResourceFormProps<TFieldValues extends FieldValues> {
   // (`getErrorMessage`, CONVENTIONS.md §6.2). Never called for a mapped code.
   onUnmappedError?: (error: EsaviApiError) => void;
   isSubmitting?: boolean;
+  // SPEC FE17 §4 paso 6 — a step shown read-only has nothing to save, so the whole action bar goes.
+  hideActions?: boolean;
   onCancel?: () => void;
   submitLabel?: string;
   cancelLabel?: string;
@@ -41,6 +43,7 @@ export function ResourceForm<TFieldValues extends FieldValues>({
   errorFieldMap,
   onUnmappedError,
   isSubmitting = false,
+  hideActions = false,
   onCancel,
   submitLabel = 'common.actions.save',
   cancelLabel = 'common.actions.cancel',
@@ -88,16 +91,18 @@ export function ResourceForm<TFieldValues extends FieldValues>({
             box anchors to the dialog, not the viewport, and freezes over the last fields.
             `bg-popover` because every consumer is a <Dialog>, whose surface is that token —
             `--background` is a darker shade in the dark theme and would read as a band. */}
-        <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 border-t bg-popover py-3 md:static md:z-auto md:border-0 md:bg-transparent md:py-0">
-          {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-              {t(cancelLabel)}
+        {!hideActions && (
+          <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 border-t bg-popover py-3 md:static md:z-auto md:border-0 md:bg-transparent md:py-0">
+            {onCancel && (
+              <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+                {t(cancelLabel)}
+              </Button>
+            )}
+            <Button type="submit" disabled={isSubmitting}>
+              {t(submitLabel)}
             </Button>
-          )}
-          <Button type="submit" disabled={isSubmitting}>
-            {t(submitLabel)}
-          </Button>
-        </div>
+          </div>
+        )}
       </form>
     </Form>
   );
