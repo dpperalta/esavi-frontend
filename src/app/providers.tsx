@@ -1,12 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import { createAppQueryClient } from '@/shared/api/queryClient';
 import '@/shared/config/i18n';
 import { Toaster } from '@/shared/components/ui/sonner';
 import { TooltipProvider } from '@/shared/components/ui/tooltip';
 import { useSyncLanguage } from '@/shared/hooks/useSyncLanguage';
 import { useSyncTheme } from '@/shared/hooks/useSyncTheme';
 
-const queryClient = new QueryClient();
+const queryClient = createAppQueryClient();
 
 interface AppProvidersProps {
   children: ReactNode;
