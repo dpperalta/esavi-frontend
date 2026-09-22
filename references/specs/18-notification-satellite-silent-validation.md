@@ -1,6 +1,6 @@
 # SPEC FE18 — Validación silenciosa en los diálogos satélite de notificación
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE12b (`EventFormDialog`, `notificationEventSchema`), SPEC FE12c (`VaccineFormDialog`, `DiluentFormRow`, `notificationVaccine`/`notificationDiluent` schemas), SPEC FE12d (`PregnancyComplicationFormDialog`, `notificationPregnancyComplicationSchema`)
 > **Fecha:** 2026-09-22
 > **Objetivo:** Que un error de validación en `startTime`, `vaccinationTime`, `reconstitutionTime` o `complicationTypeItemId` se vea en pantalla en vez de dejar «Guardar» sin efecto y sin aviso.

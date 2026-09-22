@@ -16,28 +16,33 @@ describe('filterNavigationByLevel', () => {
     expect(visible.some((item) => item.key === 'nav.home')).toBe(true);
   });
 
-  it('con USER aparecen todos los hijos menos «Usuarios»', () => {
+  it('con USER aparecen todos los hijos menos «Usuarios» y «Configuraciones»', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.USER);
 
-    expect(countChildren(visible)).toBe(17);
+    expect(countChildren(visible)).toBe(16);
     const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
     expect(allKeys).not.toContain('nav.items.user');
     expect(allKeys).not.toContain('nav.items.geoBulkImport');
+    // SPEC FE19 §2, §6 — desviación declarada: systemConfig exige SUPERADMIN, no USER.
+    expect(allKeys).not.toContain('nav.items.systemConfig');
   });
 
-  it('con ADMIN aparecen los diecinueve hijos', () => {
+  it('con ADMIN aparecen dieciocho hijos, sin «Configuraciones»', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.ADMIN);
 
-    expect(countChildren(visible)).toBe(19);
+    expect(countChildren(visible)).toBe(18);
     const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
     expect(allKeys).toContain('nav.items.user');
     // SPEC FE07 §3.1 — geoBulkImport's minLevel is ADMIN, the real minimum of ESAVI-GEOLOC-007.
     expect(allKeys).toContain('nav.items.geoBulkImport');
+    expect(allKeys).not.toContain('nav.items.systemConfig');
   });
 
-  it('con SUPERADMIN también aparecen los diecinueve', () => {
+  it('con SUPERADMIN aparecen los diecinueve, incluida «Configuraciones»', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.SUPERADMIN);
 
     expect(countChildren(visible)).toBe(19);
+    const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
+    expect(allKeys).toContain('nav.items.systemConfig');
   });
 });

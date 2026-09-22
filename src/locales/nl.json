@@ -1700,6 +1700,89 @@
       "nl": "Nederlands"
     }
   },
+  "systemConfig": {
+    "field": {
+      "code": "Code",
+      "name": "Naam",
+      "description": "Omschrijving",
+      "scope": "Bereik",
+      "valueType": "Waardetype",
+      "value": "Waarde",
+      "isEncrypted": "Versleuteld",
+      "isEditable": "Bewerkbaar",
+      "changeReason": "Reden van wijziging"
+    },
+    "help": {
+      "code": "Kan niet worden gewijzigd nadat de configuratie is aangemaakt.",
+      "scope": "Standaard GLOBAL. Kan niet worden gewijzigd nadat de configuratie is aangemaakt.",
+      "isEncrypted": "Kan niet worden gewijzigd nadat de configuratie is aangemaakt.",
+      "isEditable": "Als dit wordt uitgeschakeld, kan niemand deze configuratie wijzigen totdat het weer wordt ingeschakeld."
+    },
+    "valueType": {
+      "string": "Tekst",
+      "number": "Getal",
+      "boolean": "Waar/onwaar",
+      "json": "JSON",
+      "array": "Lijst"
+    },
+    "validation": {
+      "invalidJson": "De tekst is geen geldige JSON.",
+      "invalidArray": "De JSON moet een lijst zijn, tussen vierkante haken.",
+      "changeReasonRequired": "Geef de reden van de wijziging op voordat je opslaat."
+    },
+    "form": {
+      "createTitle": "Configuratie toevoegen",
+      "editTitle": "Configuratie bewerken"
+    },
+    "roleForbidden": "Configuraties beheren vereist een superbeheerder in deze implementatie.",
+    "status": {
+      "inactive": "Inactief"
+    },
+    "badge": {
+      "protected": "Beschermd"
+    },
+    "value": {
+      "encrypted": "Versleuteld"
+    },
+    "list": {
+      "title": "Systeemconfiguraties",
+      "empty": "Er zijn nog geen configuraties. Zaai de initiële catalogus om te beginnen.",
+      "emptyFiltered": "Geen enkele configuratie voldoet aan de filters."
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Naam",
+      "value": "Waarde",
+      "scope": "Bereik",
+      "valueType": "Type"
+    },
+    "filters": {
+      "name": "Naam",
+      "code": "Code",
+      "scope": "Bereik",
+      "valueType": "Waardetype",
+      "valueTypePlaceholder": "Alle"
+    },
+    "history": {
+      "action": "Geschiedenis bekijken",
+      "title": "Waardegeschiedenis",
+      "empty": "Deze configuratie is nog nooit van waarde veranderd.",
+      "previousValue": "Voor",
+      "newValue": "Na",
+      "changedBy": "Gewijzigd door",
+      "unknownAuthor": "Auteur niet beschikbaar"
+    },
+    "sync": {
+      "action": "Configuraties zaaien",
+      "confirmTitle": "De initiële configuraties zaaien?",
+      "confirmBody": "Maakt de rijen van de initiële catalogus aan die nog niet bestaan. Geen enkele bestaande rij wordt gewijzigd, actief of inactief.",
+      "success": "{{created}} configuraties aangemaakt; {{skipped}} bestonden al.",
+      "nothingToDo": "Er viel niets te zaaien: alle configuraties van de catalogus bestonden al."
+    },
+    "delete": {
+      "confirm": "Configuratie «{{code}}» buiten gebruik stellen?"
+    }
+  },
   "errors": {
     "network": "We konden geen verbinding maken met de server. Controleer uw internetverbinding.",
     "unexpected": "Er is iets misgegaan. Probeer het opnieuw.",

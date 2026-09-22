@@ -1700,6 +1700,89 @@
       "nl": "Neerlandés"
     }
   },
+  "systemConfig": {
+    "field": {
+      "code": "Código",
+      "name": "Nombre",
+      "description": "Descripción",
+      "scope": "Ámbito",
+      "valueType": "Tipo de valor",
+      "value": "Valor",
+      "isEncrypted": "Cifrado",
+      "isEditable": "Editable",
+      "changeReason": "Motivo del cambio"
+    },
+    "help": {
+      "code": "No se puede cambiar después de crear el parámetro.",
+      "scope": "Por defecto GLOBAL. No se puede cambiar después de crear el parámetro.",
+      "isEncrypted": "No se puede cambiar después de crear el parámetro.",
+      "isEditable": "Si se desactiva, nadie podrá modificar este parámetro hasta reactivarlo."
+    },
+    "valueType": {
+      "string": "Texto",
+      "number": "Número",
+      "boolean": "Verdadero/falso",
+      "json": "JSON",
+      "array": "Lista"
+    },
+    "validation": {
+      "invalidJson": "El texto no es un JSON válido.",
+      "invalidArray": "El JSON tiene que ser una lista, entre corchetes.",
+      "changeReasonRequired": "Indica el motivo del cambio antes de guardar."
+    },
+    "form": {
+      "createTitle": "Añadir configuración",
+      "editTitle": "Editar configuración"
+    },
+    "roleForbidden": "Administrar configuraciones exige un superadministrador en este despliegue.",
+    "status": {
+      "inactive": "Inactivo"
+    },
+    "badge": {
+      "protected": "Protegida"
+    },
+    "value": {
+      "encrypted": "Cifrado"
+    },
+    "list": {
+      "title": "Configuraciones del sistema",
+      "empty": "Todavía no hay configuraciones. Siembra el catálogo inicial para empezar.",
+      "emptyFiltered": "Ninguna configuración coincide con los filtros."
+    },
+    "columns": {
+      "code": "Código",
+      "name": "Nombre",
+      "value": "Valor",
+      "scope": "Ámbito",
+      "valueType": "Tipo"
+    },
+    "filters": {
+      "name": "Nombre",
+      "code": "Código",
+      "scope": "Ámbito",
+      "valueType": "Tipo de valor",
+      "valueTypePlaceholder": "Todos"
+    },
+    "history": {
+      "action": "Ver historial",
+      "title": "Historial de valores",
+      "empty": "Esta configuración todavía no cambió de valor.",
+      "previousValue": "Antes",
+      "newValue": "Después",
+      "changedBy": "Cambiado por",
+      "unknownAuthor": "Autor no disponible"
+    },
+    "sync": {
+      "action": "Sembrar configuraciones",
+      "confirmTitle": "¿Sembrar las configuraciones iniciales?",
+      "confirmBody": "Crea las filas del catálogo inicial que todavía no existan. Ninguna fila existente se modifica, esté activa o inactiva.",
+      "success": "Se crearon {{created}} configuraciones; {{skipped}} ya existían.",
+      "nothingToDo": "No había nada que sembrar: todas las configuraciones del catálogo ya existían."
+    },
+    "delete": {
+      "confirm": "¿Dar de baja la configuración «{{code}}»?"
+    }
+  },
   "errors": {
     "network": "No pudimos conectar con el servidor. Comprueba tu conexión.",
     "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo.",

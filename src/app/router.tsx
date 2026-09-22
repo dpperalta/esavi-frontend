@@ -14,6 +14,7 @@ import { GeoLocationListPage } from '@/features/geoLocation/GeoLocationListPage'
 import { HealthFacilityListPage } from '@/features/healthFacility/HealthFacilityListPage';
 import { HomePage } from '@/features/home/HomePage';
 import { PatientStep } from '@/features/patient/PatientStep';
+import { SystemConfigListPage } from '@/features/systemConfig/SystemConfigListPage';
 import { RequireAuth } from '@/shared/components/RequireAuth';
 import { RequireRole } from '@/shared/components/RequireRole';
 import { ROLE_LEVELS } from '@/shared/config/roles';
@@ -34,6 +35,12 @@ export function AppRouter() {
                 generic route — so a future param route under /geo-locations never shadows it. */}
             <Route element={<RequireRole level={ROLE_LEVELS.ADMIN} />}>
               <Route path="/geo-locations/import" element={<GeoBulkImportPage />} />
+            </Route>
+            {/* SPEC FE19 §2, §6: desviación declarada del rol mínimo real de ESAVI-SYSCONF-002A
+                (USER) — las nueve operaciones útiles de esta pantalla son SUPERADMIN, así que se
+                exige el nivel de la pantalla completa, no el de la lectura más baja. */}
+            <Route element={<RequireRole level={ROLE_LEVELS.SUPERADMIN} />}>
+              <Route path="/system-configs" element={<SystemConfigListPage />} />
             </Route>
             <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
               <Route path="/catalog-types" element={<CatalogTypeListPage />} />
