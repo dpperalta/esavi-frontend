@@ -43,6 +43,13 @@ export function TimeField({ value, onChange, ariaLabel, id, disabled }: TimeFiel
   useEffect(() => {
     setDraft(toDisplayValue(value));
     setInvalid(false);
+
+    // Server values arrive as `HH:MM:SS` (see `toDisplayValue` above); only the display was
+    // truncated, so the resolver kept validating the untrimmed value the user never saw.
+    if (value && value.length > 5) {
+      onChange(value.slice(0, 5));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   function commit(raw: string) {

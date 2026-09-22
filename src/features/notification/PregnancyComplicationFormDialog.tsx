@@ -11,7 +11,7 @@ import { ResourceForm } from '@/shared/components/ResourceForm';
 import type { TermSearchOption } from '@/shared/components/TermSearchField';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
-import { FormControl, FormField, FormItem, FormLabel } from '@/shared/components/ui/form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
@@ -171,6 +171,7 @@ function PregnancyComplicationFormFields({
                 ariaLabel={t('notification.pregnancy.complications.field.complicationTypeItemId')}
               />
             </FormControl>
+            <FormMessage />
             {complicationTypeCatalogEmpty && (
               <p className="text-sm text-destructive">
                 {t('notification.pregnancy.complications.error.typeCatalogEmpty')}

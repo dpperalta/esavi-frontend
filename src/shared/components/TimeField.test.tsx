@@ -24,11 +24,20 @@ describe('TimeField', () => {
     expect(screen.getByText(/no es válida/)).toBeInTheDocument();
   });
 
-  it('muestra 08:30:00 que venga del servidor sin perderlo', () => {
+  it('muestra 08:30:00 que venga del servidor sin perderlo y sincroniza el valor validado', () => {
     const onChange = vi.fn();
     render(<TimeField value="08:30:00" onChange={onChange} ariaLabel="Hora de inicio" />);
 
     expect(screen.getByLabelText('Hora de inicio')).toHaveValue('08:30');
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange).toHaveBeenCalledWith('08:30');
+  });
+
+  it('no llama a onChange al montar con un valor de 5 caracteres', () => {
+    const onChange = vi.fn();
+    render(<TimeField value="08:30" onChange={onChange} ariaLabel="Hora de inicio" />);
+
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('vaciar el campo emite null', () => {

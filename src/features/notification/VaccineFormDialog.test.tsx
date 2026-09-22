@@ -272,6 +272,61 @@ describe('VaccineFormDialog — SPEC FE12c §4 paso 8', () => {
     expect(diluentRequests).toBe(1);
   });
 
+  // SPEC FE18 §4 paso 3 — vaccinationTime sincroniza HH:mm:ss del servidor con HH:mm validado.
+  it('un vaccinationTime de servidor en HH:mm:ss se muestra en HH:mm y el PUT lo reenvía sin tocarlo', async () => {
+    let requestBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_ID}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { count: 1, rows: [vaccineRow({ vaccinationTime: '11:15:00' })] },
+        }),
+      ),
+      http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () => treeResponse([])),
+      http.put('http://localhost:4500/api/notification-vaccines/v-1', async ({ request }) => {
+        requestBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ok: true, message: 'ok', data: vaccineRow({}) });
+      }),
+    );
+
+    const user = setupUser();
+    renderDialog('v-1');
+
+    expect(await screen.findByLabelText('Hora de vacunación')).toHaveValue('11:15');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(requestBody).not.toBeNull());
+    expect(requestBody).toMatchObject({ vaccinationTime: '11:15' });
+  });
+
+  it('un vaccinationTime de servidor inválido muestra el mensaje de error y no dispara el PUT', async () => {
+    let putCalled = false;
+    server.use(
+      http.get(`http://localhost:4500/api/notification-vaccines/case/${CASE_ID}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { count: 1, rows: [vaccineRow({ vaccinationTime: 'xx:xx:xx' })] },
+        }),
+      ),
+      http.get('http://localhost:4500/api/whodrug-vaccines/abbreviations', () => treeResponse([])),
+      http.put('http://localhost:4500/api/notification-vaccines/v-1', () => {
+        putCalled = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: vaccineRow({}) });
+      }),
+    );
+
+    const user = setupUser();
+    renderDialog('v-1');
+
+    await screen.findByLabelText('Hora de vacunación');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText('Este valor no es válido.')).toBeInTheDocument();
+    expect(putCalled).toBe(false);
+  });
+
   it('vaccinationDate posterior a eventDate del caso bloquea el guardado con el error de coherencia temporal (§3.5)', async () => {
     let vaccinePosted = false;
     server.use(

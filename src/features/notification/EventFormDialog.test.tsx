@@ -210,6 +210,55 @@ describe('EventFormDialog — SPEC FE12b §4 paso 9', () => {
     expect(requestBody).toMatchObject({ esaviName: 'fiebre altisima', esaviCode: 'FIEBRE01' });
   }, 60000);
 
+  // SPEC FE18 §4 paso 2 — startTime sincroniza HH:mm:ss del servidor con HH:mm validado.
+  it('un startTime de servidor en HH:mm:ss se muestra en HH:mm y el PUT lo reenvía sin tocarlo', async () => {
+    server.use(
+      http.get(`http://localhost:4500/api/notification-events/${EVENT_ID}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: baseEventRow({ startTime: '10:59:00' }) }),
+      ),
+    );
+    let requestBody: Record<string, unknown> | null = null;
+    server.use(
+      http.put(`http://localhost:4500/api/notification-events/${EVENT_ID}`, async ({ request }) => {
+        requestBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ok: true, message: 'ok', data: baseEventRow() });
+      }),
+    );
+
+    const user = setupUser();
+    renderDialog(EVENT_ID);
+
+    expect(await screen.findByLabelText('Hora de inicio')).toHaveValue('10:59');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(requestBody).not.toBeNull());
+    expect(requestBody).toMatchObject({ startTime: '10:59' });
+  }, 60000);
+
+  it('un startTime de servidor inválido muestra el mensaje de error y no dispara el PUT', async () => {
+    server.use(
+      http.get(`http://localhost:4500/api/notification-events/${EVENT_ID}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: baseEventRow({ startTime: 'aa:bb:cc' }) }),
+      ),
+    );
+    let putCalled = false;
+    server.use(
+      http.put(`http://localhost:4500/api/notification-events/${EVENT_ID}`, () => {
+        putCalled = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: baseEventRow() });
+      }),
+    );
+
+    const user = setupUser();
+    renderDialog(EVENT_ID);
+
+    await screen.findByLabelText('Hora de inicio');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText('Este valor no es válido.')).toBeInTheDocument();
+    expect(putCalled).toBe(false);
+  }, 60000);
+
   // SPEC FE12b §4 paso 13 — el aviso de administrador de §10.4, no un toast genérico.
   it('un 403 AUTH_ROLE_FORBIDDEN en el PUT muestra el aviso de administrador, no un toast genérico', async () => {
     server.use(
