@@ -1754,8 +1754,7 @@
       "name": "Naam",
       "value": "Waarde",
       "scope": "Bereik",
-      "valueType": "Type",
-      "status": "Status"
+      "valueType": "Type"
     },
     "filters": {
       "name": "Naam",

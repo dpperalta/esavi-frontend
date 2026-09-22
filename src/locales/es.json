@@ -1754,8 +1754,7 @@
       "name": "Nombre",
       "value": "Valor",
       "scope": "Ámbito",
-      "valueType": "Tipo",
-      "status": "Estado"
+      "valueType": "Tipo"
     },
     "filters": {
       "name": "Nombre",
