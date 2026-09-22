@@ -1,6 +1,6 @@
 # SPEC FE17 — Expediente cerrado rechazado por el servidor
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC F61 del backend (guardia `assertCaseIsOpen`, en la rama `spec-61-closed-case-write-guard`, todavía sin fusionar), SPEC FE08 (armazón del wizard), SPEC FE11 (manejo de `CASEFLOW_012_CASE_CLOSED`), SPEC FE14b (cierre, reapertura y modo de sólo lectura)
 > **Fecha:** 2026-09-21
 > **Objetivo:** Cuando el servidor rechaza con un 409 `*_CASE_CLOSED` una escritura sobre un expediente cerrado, el wizard pasa a sólo lectura sin error genérico, y el paso de apertura del caso deja de estar editable con el caso cerrado.

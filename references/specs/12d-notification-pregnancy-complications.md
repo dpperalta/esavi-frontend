@@ -1,6 +1,6 @@
 # SPEC FE12d — Paso 4: embarazo y complicaciones
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (armazón del wizard), SPEC FE10 (paciente y apertura del caso — de ahí salen `sexItemId`, `birthDate` y `eventDate`, y este spec les añade un bloqueo), SPEC FE11 (la edad calculada por el backend, que la compuerta lee y no recalcula), SPEC FE12a (la cabecera y la rama — sin su fila no hay `notificationId`, y de ella sale `hasPregnancyComplications`, que este spec convierte en derivado; también la compuerta de §7.4 y `useCatalogItemsByTypeCode`), SPEC FE12b (de ahí salen `<SatelliteList>` y `<MeddraSearchField>`, que este spec consume sin volver a escribirlas). Del backend: SPEC F25 (notificationPregnancy), SPEC F27 (notificationPregnancyComplication), SPEC F15 (diagnosticTerm y su resolución), SPEC F55 (búsqueda de términos MedDRA) y SPEC F26 (systemConfig).
 > **Fecha:** 2026-09-05
 > **Objetivo:** El bloque de embarazo del paso 4 —formulario 1:1 y su lista anidada de complicaciones— detrás de la compuerta de §7.4, con el rango de Naegele y las dos declaraciones de complicaciones derivadas de las filas.
