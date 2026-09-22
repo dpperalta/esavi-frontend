@@ -5,6 +5,21 @@
 > **Fecha:** 2026-09-21
 > **Objetivo:** Cuando el servidor rechaza con un 409 `*_CASE_CLOSED` una escritura sobre un expediente cerrado, el wizard pasa a sólo lectura sin error genérico, y el paso de apertura del caso deja de estar editable con el caso cerrado.
 
+> **Nota de implementación (2026-09-21) — comprobación manual del paso 9.** Hecha contra `esavi-backend` en `spec-61-closed-case-write-guard` y el caso cerrado `HOSPSE-17092026-0002`, con un usuario `USER`. La carrera no se provocó cerrando el caso desde otra pestaña, porque no hay ADMIN para reabrirlo: el navegador recibió una lectura obsoleta de `ESAVI-CASEFLOW-006` (interceptada, con estado `IN_INVESTIGATION`) mientras las escrituras iban al backend real, que respondió el `409` verdadero. Ninguna escritura cambió datos: el caso conserva sus filas y `details` sigue en `null`.
+>
+> | # | Escritura | Respuesta | Toast | Relee el `006` | Paso en sólo lectura |
+> |---|---|---|---|---|---|
+> | 1 | `POST` diagnóstico | `409 INVDIAG_001_CASE_CLOSED` (el toast lo confirma; el código no se capturó) | 1, texto del servidor | sí | sí, diálogo cerrado |
+> | 2 | `DELETE` vacuna administrada | `409` | 1 | sí | sí |
+> | 3 | `PUT` miembro del equipo | `409` | 1 | sí | sí |
+> | 4 | `PUT` evento de notificación | `409` | 1 | sí | sí |
+> | 5 | `PUT` clasificación final | `409` | 1 | sí | sí, sin «Guardar» |
+> | 6 | `PUT` `ESAVI-CASE-004` | `409` | 1 | sí | sí, sin «Guardar» |
+>
+> En los seis, el aviso mostró «Pide a un administrador que lo reabra» (rol `USER`). Con `PUT` de cuerpo vacío el servidor también respondió `409` con `INVTEAM_004`, `NOTIFEVT_004`, `FINCLASS_004` y `CASE_004_CASE_CLOSED`.
+>
+> **Sin comprobar:** que tras reabrir con `ESAVI-CASEFLOW-009` las mismas escrituras vuelvan a funcionar, porque el usuario disponible no es ADMIN. **Hallazgo aparte, no de este spec:** editar un evento de notificación cuyo `startTime` llega del servidor como `HH:mm:ss` no envía nada al pulsar «Guardar» y no muestra ningún error, hasta que se vuelve a escribir la hora (el esquema exige `HH:mm`).
+
 ---
 
 ## 1. Por qué existe este spec
