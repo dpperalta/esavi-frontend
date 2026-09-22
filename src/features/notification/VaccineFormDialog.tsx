@@ -12,7 +12,14 @@ import { TimeField } from '@/shared/components/TimeField';
 import { WhodrugTreePicker, type WhodrugResolution } from '@/shared/components/WhodrugTreePicker';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
-import { FormControl, FormDescription, FormField, FormItem, FormLabel } from '@/shared/components/ui/form';
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { notificationVaccineResource, useNotificationVaccinesByCase } from './api';
@@ -210,6 +217,7 @@ function VaccineFormFields({
                 ariaLabel={t('notificationVaccine.field.vaccinationTime')}
               />
             </FormControl>
+            <FormMessage />
           </FormItem>
         )}
       />
