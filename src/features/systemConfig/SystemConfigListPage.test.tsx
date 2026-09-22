@@ -179,4 +179,79 @@ describe('SystemConfigListPage — SPEC FE19 §4 paso 6', () => {
     await waitFor(() => expect(syncCalled).toBe(true));
     await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith('Se crearon 1 configuraciones; 1 ya existían.'));
   });
+
+  it('sembrar sin nada pendiente muestra el toast de «nada que sembrar»', async () => {
+    const user = setupUser();
+    server.use(
+      http.get('http://localhost:4500/api/system-configs', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.post('http://localhost:4500/api/system-configs/sync', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { created: [], skipped: [{ code: 'A', scope: 'GLOBAL' }] },
+        }),
+      ),
+    );
+
+    renderPage();
+
+    const [firstTrigger] = await screen.findAllByRole('button', { name: 'Sembrar configuraciones' });
+    await user.click(firstTrigger);
+    const buttonsWithDialogOpen = await screen.findAllByRole('button', {
+      name: 'Sembrar configuraciones',
+    });
+    await user.click(buttonsWithDialogOpen[buttonsWithDialogOpen.length - 1]);
+
+    await waitFor(() =>
+      expect(toastSuccess).toHaveBeenCalledWith(
+        'No había nada que sembrar: todas las configuraciones del catálogo ya existían.',
+      ),
+    );
+  });
+
+  it('el listado se refresca solo después de que la siembra responde, sin recargar la página', async () => {
+    const user = setupUser();
+    let seeded = false;
+    let getCallCount = 0;
+    server.use(
+      http.get('http://localhost:4500/api/system-configs', () => {
+        getCallCount += 1;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: seeded
+            ? { count: 1, rows: [makeRow({ code: 'ESAVI_NEW_SEEDED' })] }
+            : { count: 0, rows: [] },
+        });
+      }),
+      http.post('http://localhost:4500/api/system-configs/sync', () => {
+        seeded = true;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { created: [{ code: 'ESAVI_NEW_SEEDED', scope: 'GLOBAL' }], skipped: [] },
+        });
+      }),
+    );
+
+    renderPage();
+
+    expect(
+      await screen.findByText('Todavía no hay configuraciones. Siembra el catálogo inicial para empezar.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('ESAVI_NEW_SEEDED')).not.toBeInTheDocument();
+
+    const [firstTrigger] = await screen.findAllByRole('button', { name: 'Sembrar configuraciones' });
+    await user.click(firstTrigger);
+    const buttonsWithDialogOpen = await screen.findAllByRole('button', {
+      name: 'Sembrar configuraciones',
+    });
+    await user.click(buttonsWithDialogOpen[buttonsWithDialogOpen.length - 1]);
+
+    await waitFor(() => expect(seeded).toBe(true));
+    await waitFor(() => expect(getCallCount).toBeGreaterThan(1));
+    await waitFor(() => expect(screen.getAllByText('ESAVI_NEW_SEEDED').length).toBeGreaterThan(0));
+  });
 });
