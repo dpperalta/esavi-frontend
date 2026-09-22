@@ -31,6 +31,7 @@ import {
 } from '@/shared/components/ui/select';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { systemConfigResource, useSyncSystemConfigDefaults } from './api';
+import { SystemConfigAuditSheet } from './SystemConfigAuditSheet';
 import { SystemConfigFormDialog } from './SystemConfigFormDialog';
 import { SystemConfigHistorySheet } from './SystemConfigHistorySheet';
 
@@ -199,6 +200,7 @@ export function SystemConfigListPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [historyId, setHistoryId] = useState<string | null>(null);
+  const [auditId, setAuditId] = useState<string | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; code: string; action: ConfirmAction } | null>(
     null,
   );
@@ -260,9 +262,9 @@ export function SystemConfigListPage() {
   function handleHistory(id: string) {
     setHistoryId(id);
   }
-  // `<SystemConfigAuditSheet>` llega en el paso 8.
+
   function handleAudit(id: string) {
-    void id;
+    setAuditId(id);
   }
 
   function handleConfirm() {
@@ -455,6 +457,16 @@ export function SystemConfigListPage() {
         onOpenChange={(open) => {
           if (!open) {
             setHistoryId(null);
+          }
+        }}
+      />
+
+      <SystemConfigAuditSheet
+        open={auditId !== null}
+        systemConfigId={auditId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAuditId(null);
           }
         }}
       />
