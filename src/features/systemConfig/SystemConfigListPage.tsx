@@ -115,7 +115,11 @@ function ValuePreview({ row }: ValuePreviewProps) {
       ? JSON.stringify(row.value)
       : String(row.value);
 
-  return <span className="line-clamp-1 font-mono text-xs">{preview}</span>;
+  return (
+    <span title={preview} className="line-clamp-1 font-mono text-xs">
+      {preview}
+    </span>
+  );
 }
 
 // SPEC FE19 §3.6 — sustituye a `<ResourceTable>` por completo cuando no hay ni una fila y ningún
@@ -330,13 +334,19 @@ export function SystemConfigListPage() {
     {
       key: 'name',
       header: 'systemConfig.columns.name',
-      render: (row) => row.name,
+      render: (row) => (
+        <span title={row.name} className="line-clamp-1">
+          {row.name}
+        </span>
+      ),
+      className: 'max-w-[16rem]',
     },
     {
       key: 'value',
       header: 'systemConfig.columns.value',
       render: (row) => <ValuePreview row={row} />,
       card: 'secondary',
+      className: 'max-w-[20rem]',
     },
     {
       key: 'scope',
