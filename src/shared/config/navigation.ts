@@ -204,9 +204,10 @@ export const NAVIGATION: NavItem[] = [
       {
         key: 'nav.items.systemConfig',
         icon: Sliders,
-        path: '/system-config',
-        minLevel: ROLE_LEVELS.USER,
-        disabled: true,
+        path: '/system-configs',
+        // SPEC FE19 §2, §6: desviación declarada — las nueve operaciones útiles de la pantalla
+        // son SUPERADMIN, así que el ítem se oculta a ADMIN también, no sólo a USER.
+        minLevel: ROLE_LEVELS.SUPERADMIN,
       },
     ],
   },
