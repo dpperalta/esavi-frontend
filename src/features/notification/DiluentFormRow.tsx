@@ -12,7 +12,7 @@ import { DateField } from '@/shared/components/DateField';
 import { DiluentSelect } from '@/shared/components/DiluentSelect';
 import { TimeField } from '@/shared/components/TimeField';
 import { Button } from '@/shared/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/shared/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
 import { notificationDiluentResource } from './api';
 import {
@@ -287,6 +287,7 @@ export function DiluentFormRow({ vaccineId, vaccinationDate, diluent, onDone }: 
                   ariaLabel={t('notificationDiluent.field.reconstitutionTime')}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />

@@ -96,6 +96,112 @@ describe('DiluentList — SPEC FE12c §4 paso 9', () => {
     await waitFor(() => expect(deleteCalls).toBe(1));
   });
 
+  // SPEC FE18 §4 paso 4 — reconstitutionTime sincroniza HH:mm:ss del servidor con HH:mm validado.
+  it('un reconstitutionTime de servidor en HH:mm:ss se muestra en HH:mm y el PUT lo reenvía sin tocarlo', async () => {
+    let requestBody: Record<string, unknown> | null = null;
+    server.use(
+      http.get('http://localhost:4500/api/notification-diluents/vaccine/v-1', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 1,
+            rows: [
+              {
+                diluentId: 'd-1',
+                vaccineId: 'v-1',
+                diluentCatalogId: null,
+                sortOrder: 1,
+                batchNumber: null,
+                expirationDate: null,
+                reconstitutionDate: null,
+                reconstitutionTime: '09:45:00',
+                diluentName: 'Agua estéril',
+                diluentCode: null,
+                isActive: true,
+                createdAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: null,
+                deletedAt: null,
+                appDetails: [],
+                diluentCatalog: null,
+              },
+            ],
+          },
+        }),
+      ),
+      http.get('http://localhost:4500/api/diluents', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.put('http://localhost:4500/api/notification-diluents/d-1', async ({ request }) => {
+        requestBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ok: true, message: 'ok' });
+      }),
+    );
+
+    const user = setupUser();
+    renderList('v-1');
+
+    await user.click(await screen.findByRole('button', { name: 'Editar Agua estéril' }));
+
+    expect(await screen.findByLabelText('Hora de reconstitución')).toHaveValue('09:45');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    await waitFor(() => expect(requestBody).not.toBeNull());
+    expect(requestBody).toMatchObject({ reconstitutionTime: '09:45' });
+  });
+
+  it('un reconstitutionTime de servidor inválido muestra el mensaje de error y no dispara el PUT', async () => {
+    let putCalled = false;
+    server.use(
+      http.get('http://localhost:4500/api/notification-diluents/vaccine/v-1', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 1,
+            rows: [
+              {
+                diluentId: 'd-1',
+                vaccineId: 'v-1',
+                diluentCatalogId: null,
+                sortOrder: 1,
+                batchNumber: null,
+                expirationDate: null,
+                reconstitutionDate: null,
+                reconstitutionTime: 'xx:xx:xx',
+                diluentName: 'Agua estéril',
+                diluentCode: null,
+                isActive: true,
+                createdAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: null,
+                deletedAt: null,
+                appDetails: [],
+                diluentCatalog: null,
+              },
+            ],
+          },
+        }),
+      ),
+      http.get('http://localhost:4500/api/diluents', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.put('http://localhost:4500/api/notification-diluents/d-1', () => {
+        putCalled = true;
+        return HttpResponse.json({ ok: true, message: 'ok' });
+      }),
+    );
+
+    const user = setupUser();
+    renderList('v-1');
+
+    await user.click(await screen.findByRole('button', { name: 'Editar Agua estéril' }));
+    await screen.findByLabelText('Hora de reconstitución');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText('Este valor no es válido.')).toBeInTheDocument();
+    expect(putCalled).toBe(false);
+  });
+
   it('reconstitutionDate posterior a vaccinationDate bloquea el guardado con el error de coherencia temporal (§3.5)', async () => {
     let diluentPosted = false;
     server.use(
