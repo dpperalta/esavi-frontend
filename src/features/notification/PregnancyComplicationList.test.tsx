@@ -182,6 +182,40 @@ describe('PregnancyComplicationList — SPEC FE12d §4 paso 9', () => {
     });
   }, 60000);
 
+  // SPEC FE18 §4 paso 5 — complicationTypeItemId gana FormMessage: guardar sin elegir tipo no es
+  // invisible. El `defaultValues` de creación deja el campo en `''`, que falla el formato UUID
+  // (`invalid_format`), no el tipo (`invalid_type`) que asumía §3.5 — el mensaje real es
+  // `errors.validation.invalidUuid`, no `errors.validation.required` (decidido con el usuario:
+  // se acepta el mensaje real, el defecto de fondo — el fallo silencioso — ya queda corregido).
+  it('guardar sin elegir complicationTypeItemId muestra un mensaje de error y no llama al POST', async () => {
+    const user = setupUser();
+    mockComplicationTypeCatalog();
+    let postCalled = false;
+    server.use(
+      http.get(
+        `http://localhost:4500/api/notification-pregnancy-complications/pregnancy/${PREGNANCY_ID}`,
+        () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get('http://localhost:4500/api/meddra/search', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.post('http://localhost:4500/api/notification-pregnancy-complications', () => {
+        postCalled = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: complicationRow({}) });
+      }),
+    );
+
+    renderList(PREGNANCY_ID);
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir' }));
+    await user.type(await screen.findByLabelText('Complicación'), 'Preeclampsia');
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', { name: 'Guardar' }));
+
+    expect(await screen.findByText('Selecciona una opción válida.')).toBeInTheDocument();
+    expect(postCalled).toBe(false);
+  }, 60000);
+
   it('dar de baja pide confirmación nombrando la fila y llama al DELETE sólo tras confirmar', async () => {
     const user = setupUser();
     mockEmptyComplicationTypeCatalog();
