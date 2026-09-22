@@ -13,7 +13,7 @@ import { TimeField } from '@/shared/components/TimeField';
 import { Button } from '@/shared/components/ui/button';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
-import { FormControl, FormField, FormItem, FormLabel } from '@/shared/components/ui/form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -254,6 +254,7 @@ function EventFormFields({ form, mutationError, onSaveAsFreeText }: EventFormFie
                 ariaLabel={t('notification.events.fields.startTime')}
               />
             </FormControl>
+            <FormMessage />
           </FormItem>
         )}
       />
