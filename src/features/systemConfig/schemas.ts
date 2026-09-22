@@ -53,8 +53,11 @@ function validateValueAgainstType(
   }
 }
 
-// The eight data columns of §3.5's table, minus `changeReason` — that one only exists on the
-// update variant below, because the create form never shows it (SPEC FE19 §3.5: "no se muestra").
+// The eight data columns of §3.5's table, plus `changeReason` — always optional at the type
+// level (`CreateSystemConfigInput.changeReason` is optional on the `001` too), even though the
+// create form never shows the field (SPEC FE19 §3.5: "no se muestra"). Sharing one object type
+// between `createSystemConfigSchema` and `createUpdateSystemConfigSchema` is what lets
+// `SystemConfigFormDialog` use a single `<ResourceForm<SystemConfigFormValues>>` for both modes.
 const systemConfigBaseSchema = z.object({
   code: z.string().trim().min(1).max(150),
   name: z.string().trim().min(1).max(200),
@@ -67,6 +70,7 @@ const systemConfigBaseSchema = z.object({
   value: z.unknown(),
   isEncrypted: z.boolean().optional(),
   isEditable: z.boolean().optional(),
+  changeReason: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
 });
 
 export const createSystemConfigSchema = systemConfigBaseSchema.superRefine((data, ctx) => {
@@ -75,32 +79,25 @@ export const createSystemConfigSchema = systemConfigBaseSchema.superRefine((data
 
 export type SystemConfigFormValues = z.infer<typeof createSystemConfigSchema>;
 
-// SPEC FE19 §3.5 — `changeReason` is required only when `value` actually changed. `valueChanged`
-// is computed by the caller from `formState.dirtyFields.value` (`SystemConfigFormDialog`, SPEC
-// FE19 §4 paso 5); this factory never inspects the payload to decide that for itself, same
-// precedent as `createNotificationVaccineSchema({ eventDate })` taking its cross-field context as
-// a parameter instead of reaching for it on its own.
-export function createUpdateSystemConfigSchema({ valueChanged }: { valueChanged: boolean }) {
-  return systemConfigBaseSchema
-    .extend({
-      changeReason: z.preprocess(emptyToUndefined, z.string().nullable().optional()),
-    })
-    .superRefine((data, ctx) => {
-      validateValueAgainstType(data.value, data.valueType, ctx);
-      if (valueChanged && !data.changeReason?.trim()) {
-        ctx.addIssue({ code: 'custom', message: 'changeReasonRequired', path: ['changeReason'] });
-      }
-    });
+// SPEC FE19 §3.5 — `changeReason` is required only when `value` actually changed. `originalValue`
+// is the row's value in its form-native shape, captured once when `SystemConfigFormDialog` (SPEC
+// FE19 §4 paso 5) mounts the edit form — the same `ResourceForm key={id}` remount precedent as
+// `createNotificationVaccineSchema({ eventDate })` taking its cross-field context as a parameter.
+// Comparing here, inside the schema, means the error surfaces through the normal
+// `zodResolver` → `fieldState.error` path, same as every other field — no `form.setError` reached
+// for from outside `<ResourceForm>`.
+export function createUpdateSystemConfigSchema({ originalValue }: { originalValue: unknown }) {
+  return systemConfigBaseSchema.superRefine((data, ctx) => {
+    validateValueAgainstType(data.value, data.valueType, ctx);
+    const valueChanged = JSON.stringify(data.value) !== JSON.stringify(originalValue);
+    if (valueChanged && !data.changeReason?.trim()) {
+      ctx.addIssue({ code: 'custom', message: 'changeReasonRequired', path: ['changeReason'] });
+    }
+  });
 }
 
-export type SystemConfigUpdateFormValues = SystemConfigFormValues & {
-  changeReason?: string | null;
-};
-
 // SPEC FE19 §3.5, "Errores del backend mapeados a campo".
-export const systemConfigErrorFieldMap: Partial<
-  Record<string, keyof SystemConfigUpdateFormValues>
-> = {
+export const systemConfigErrorFieldMap: Partial<Record<string, keyof SystemConfigFormValues>> = {
   SYSCONF_001_CODE_EXISTS: 'code',
   SYSCONF_001_VALUE_TYPE_MISMATCH: 'value',
   SYSCONF_004_VALUE_TYPE_MISMATCH: 'value',

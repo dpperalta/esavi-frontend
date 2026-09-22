@@ -1700,6 +1700,42 @@
       "nl": "Nederlands"
     }
   },
+  "systemConfig": {
+    "field": {
+      "code": "Code",
+      "name": "Naam",
+      "description": "Omschrijving",
+      "scope": "Bereik",
+      "valueType": "Waardetype",
+      "value": "Waarde",
+      "isEncrypted": "Versleuteld",
+      "isEditable": "Bewerkbaar",
+      "changeReason": "Reden van wijziging"
+    },
+    "help": {
+      "code": "Kan niet worden gewijzigd nadat de configuratie is aangemaakt.",
+      "scope": "Standaard GLOBAL. Kan niet worden gewijzigd nadat de configuratie is aangemaakt.",
+      "isEncrypted": "Kan niet worden gewijzigd nadat de configuratie is aangemaakt.",
+      "isEditable": "Als dit wordt uitgeschakeld, kan niemand deze configuratie wijzigen totdat het weer wordt ingeschakeld."
+    },
+    "valueType": {
+      "string": "Tekst",
+      "number": "Getal",
+      "boolean": "Waar/onwaar",
+      "json": "JSON",
+      "array": "Lijst"
+    },
+    "validation": {
+      "invalidJson": "De tekst is geen geldige JSON.",
+      "invalidArray": "De JSON moet een lijst zijn, tussen vierkante haken.",
+      "changeReasonRequired": "Geef de reden van de wijziging op voordat je opslaat."
+    },
+    "form": {
+      "createTitle": "Configuratie toevoegen",
+      "editTitle": "Configuratie bewerken"
+    },
+    "roleForbidden": "Configuraties beheren vereist een superbeheerder in deze implementatie."
+  },
   "errors": {
     "network": "We konden geen verbinding maken met de server. Controleer uw internetverbinding.",
     "unexpected": "Er is iets misgegaan. Probeer het opnieuw.",

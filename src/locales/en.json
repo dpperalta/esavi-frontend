@@ -1700,6 +1700,42 @@
       "nl": "Dutch"
     }
   },
+  "systemConfig": {
+    "field": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Description",
+      "scope": "Scope",
+      "valueType": "Value type",
+      "value": "Value",
+      "isEncrypted": "Encrypted",
+      "isEditable": "Editable",
+      "changeReason": "Change reason"
+    },
+    "help": {
+      "code": "Cannot be changed after the parameter is created.",
+      "scope": "Defaults to GLOBAL. Cannot be changed after the parameter is created.",
+      "isEncrypted": "Cannot be changed after the parameter is created.",
+      "isEditable": "If turned off, nobody will be able to modify this parameter until it's turned back on."
+    },
+    "valueType": {
+      "string": "Text",
+      "number": "Number",
+      "boolean": "True/false",
+      "json": "JSON",
+      "array": "List"
+    },
+    "validation": {
+      "invalidJson": "The text is not valid JSON.",
+      "invalidArray": "The JSON must be a list, in brackets.",
+      "changeReasonRequired": "State the reason for the change before saving."
+    },
+    "form": {
+      "createTitle": "Add configuration",
+      "editTitle": "Edit configuration"
+    },
+    "roleForbidden": "Managing configurations requires a superadmin in this deployment."
+  },
   "errors": {
     "network": "We couldn't reach the server. Check your connection.",
     "unexpected": "Something went wrong. Please try again.",

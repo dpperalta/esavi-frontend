@@ -80,9 +80,9 @@ describe('createSystemConfigSchema — value contra valueType', () => {
 });
 
 describe('createUpdateSystemConfigSchema — changeReason condicional', () => {
-  it('con valueChanged: true y sin changeReason, falla', () => {
-    const schema = createUpdateSystemConfigSchema({ valueChanged: true });
-    const result = schema.safeParse(base());
+  it('con value distinto del original y sin changeReason, falla', () => {
+    const schema = createUpdateSystemConfigSchema({ originalValue: 10 });
+    const result = schema.safeParse(base({ value: 42 }));
 
     expect(result.success).toBe(false);
     if (!result.success) {
@@ -92,16 +92,18 @@ describe('createUpdateSystemConfigSchema — changeReason condicional', () => {
     }
   });
 
-  it('con valueChanged: true y changeReason presente, pasa', () => {
-    const schema = createUpdateSystemConfigSchema({ valueChanged: true });
-    const result = schema.safeParse(base({ changeReason: 'Ajuste de límite acordado con soporte' }));
+  it('con value distinto del original y changeReason presente, pasa', () => {
+    const schema = createUpdateSystemConfigSchema({ originalValue: 10 });
+    const result = schema.safeParse(
+      base({ value: 42, changeReason: 'Ajuste de límite acordado con soporte' }),
+    );
 
     expect(result.success).toBe(true);
   });
 
-  it('con valueChanged: false y sin changeReason, pasa', () => {
-    const schema = createUpdateSystemConfigSchema({ valueChanged: false });
-    const result = schema.safeParse(base());
+  it('con value igual al original y sin changeReason, pasa', () => {
+    const schema = createUpdateSystemConfigSchema({ originalValue: 42 });
+    const result = schema.safeParse(base({ value: 42 }));
 
     expect(result.success).toBe(true);
   });

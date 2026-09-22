@@ -1700,6 +1700,42 @@
       "nl": "Neerlandés"
     }
   },
+  "systemConfig": {
+    "field": {
+      "code": "Código",
+      "name": "Nombre",
+      "description": "Descripción",
+      "scope": "Ámbito",
+      "valueType": "Tipo de valor",
+      "value": "Valor",
+      "isEncrypted": "Cifrado",
+      "isEditable": "Editable",
+      "changeReason": "Motivo del cambio"
+    },
+    "help": {
+      "code": "No se puede cambiar después de crear el parámetro.",
+      "scope": "Por defecto GLOBAL. No se puede cambiar después de crear el parámetro.",
+      "isEncrypted": "No se puede cambiar después de crear el parámetro.",
+      "isEditable": "Si se desactiva, nadie podrá modificar este parámetro hasta reactivarlo."
+    },
+    "valueType": {
+      "string": "Texto",
+      "number": "Número",
+      "boolean": "Verdadero/falso",
+      "json": "JSON",
+      "array": "Lista"
+    },
+    "validation": {
+      "invalidJson": "El texto no es un JSON válido.",
+      "invalidArray": "El JSON tiene que ser una lista, entre corchetes.",
+      "changeReasonRequired": "Indica el motivo del cambio antes de guardar."
+    },
+    "form": {
+      "createTitle": "Añadir configuración",
+      "editTitle": "Editar configuración"
+    },
+    "roleForbidden": "Administrar configuraciones exige un superadministrador en este despliegue."
+  },
   "errors": {
     "network": "No pudimos conectar con el servidor. Comprueba tu conexión.",
     "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo.",
