@@ -32,6 +32,7 @@ import {
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { systemConfigResource, useSyncSystemConfigDefaults } from './api';
 import { SystemConfigFormDialog } from './SystemConfigFormDialog';
+import { SystemConfigHistorySheet } from './SystemConfigHistorySheet';
 
 const SEARCH_DEBOUNCE_MS = 400;
 const SYSTEM_CONFIG_VALUE_TYPES: readonly SystemConfigValueType[] = [
@@ -197,6 +198,7 @@ export function SystemConfigListPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [historyId, setHistoryId] = useState<string | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; code: string; action: ConfirmAction } | null>(
     null,
   );
@@ -255,9 +257,8 @@ export function SystemConfigListPage() {
     setFormOpen(true);
   }
 
-  // `<SystemConfigHistorySheet>` llega en el paso 7.
   function handleHistory(id: string) {
-    void id;
+    setHistoryId(id);
   }
   // `<SystemConfigAuditSheet>` llega en el paso 8.
   function handleAudit(id: string) {
@@ -447,6 +448,16 @@ export function SystemConfigListPage() {
       )}
 
       <SystemConfigFormDialog open={formOpen} systemConfigId={editingId} onOpenChange={setFormOpen} />
+
+      <SystemConfigHistorySheet
+        open={historyId !== null}
+        systemConfigId={historyId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setHistoryId(null);
+          }
+        }}
+      />
 
       <AlertDialog
         open={confirmTarget !== null}

@@ -1765,7 +1765,13 @@
       "valueTypePlaceholder": "All"
     },
     "history": {
-      "action": "View history"
+      "action": "View history",
+      "title": "Value history",
+      "empty": "This configuration hasn't changed value yet.",
+      "previousValue": "Before",
+      "newValue": "After",
+      "changedBy": "Changed by",
+      "unknownAuthor": "Author not available"
     },
     "sync": {
       "action": "Seed configurations",

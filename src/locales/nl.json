@@ -1765,7 +1765,13 @@
       "valueTypePlaceholder": "Alle"
     },
     "history": {
-      "action": "Geschiedenis bekijken"
+      "action": "Geschiedenis bekijken",
+      "title": "Waardegeschiedenis",
+      "empty": "Deze configuratie is nog nooit van waarde veranderd.",
+      "previousValue": "Voor",
+      "newValue": "Na",
+      "changedBy": "Gewijzigd door",
+      "unknownAuthor": "Auteur niet beschikbaar"
     },
     "sync": {
       "action": "Configuraties zaaien",

@@ -1765,7 +1765,13 @@
       "valueTypePlaceholder": "Todos"
     },
     "history": {
-      "action": "Ver historial"
+      "action": "Ver historial",
+      "title": "Historial de valores",
+      "empty": "Esta configuración todavía no cambió de valor.",
+      "previousValue": "Antes",
+      "newValue": "Después",
+      "changedBy": "Cambiado por",
+      "unknownAuthor": "Autor no disponible"
     },
     "sync": {
       "action": "Sembrar configuraciones",
