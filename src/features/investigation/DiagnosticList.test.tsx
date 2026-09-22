@@ -145,6 +145,32 @@ describe('DiagnosticList — C.17 (SPEC FE13c §4 paso 7)', () => {
     await waitFor(() => expect(deleteCalls).toBe(1));
   });
 
+  it('con la confirmación de baja abierta, el paso a disabled la cierra (SPEC FE17 §4 paso 5)', async () => {
+    const user = setupUser();
+    mockList([diagnosticRow()]);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const tree = (disabled: boolean) => (
+      <QueryClientProvider client={queryClient}>
+        <DiagnosticList
+          caseId={CASE_1}
+          investigationId={INVESTIGATION_1}
+          disabled={disabled}
+          onMissingInvestigation={() => {}}
+        />
+      </QueryClientProvider>
+    );
+    const view = render(tree(false));
+
+    const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Fiebre alta' });
+    await user.click(deleteButton);
+    const confirmation = '¿Dar de baja «Fiebre alta»? Esta acción no se puede deshacer desde aquí.';
+    expect(await screen.findByText(confirmation)).toBeInTheDocument();
+
+    view.rerender(tree(true));
+
+    await waitFor(() => expect(screen.queryByText(confirmation)).not.toBeInTheDocument());
+  });
+
   it('con disabled, no hay botón de borrar', async () => {
     mockList([diagnosticRow()]);
     renderList(true);

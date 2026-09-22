@@ -96,4 +96,12 @@ describe('ResourceForm — acciones', () => {
     expect(screen.getByRole('button', { name: 'Guardar' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancelar' })).toBeInTheDocument();
   });
+
+  it('con hideActions no renderiza ni Guardar ni Cancelar (SPEC FE17 §4 paso 6)', () => {
+    renderForm({ onCancel: () => {}, hideActions: true });
+
+    expect(screen.getByLabelText('Nombre')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument();
+  });
 });

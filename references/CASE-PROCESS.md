@@ -23,7 +23,7 @@ Las reglas del recorrido que va del paciente al expediente cerrado. **No describ
 | `PREGNANCY_FEMALE_SEX_ITEM` sin sembrar | **§10.6** — **resuelto el 2026-09-08**: sembrada. Deja de bloquear `FE12d` |
 | Fila `systemConfig` con el código de país | **§10.1** — decidida, con respaldo en `.env` |
 | `ESAVI-NOTIFIER-005A` debe admitir USER | **§10.2** — pedido |
-| Comprobación de `CLOSED` en los cuatro `PUT` de fase | **§10.3** — pedido |
+| Comprobación de `CLOSED` en las escrituras del expediente | **§10.3** — **resuelto el 2026-09-21** (SPEC F61 del backend, en la rama `spec-61-closed-case-write-guard`) |
 
 **Antes de implementar, leer en este orden:** §5.0 (el método y qué va al spec), el §5.x del paso que toque, y §7 entero (las reglas transversales, que son las que se rompen). §6 se lee una vez y se recuerda: las seis contradicciones del modelo aparecen repartidas por todos los pasos.
 
@@ -193,7 +193,11 @@ Si el bloqueo colgara de la fase completada, cualquiera podría dejar su propio 
 
 **Reabrir es la operación de «descompletar» y ya existe.** `PATCH /api/case-workflows/case/:id/reopen` exige que el estado sea `CLOSED` (`409 CASEFLOW_009_NOT_CLOSED` si no lo está), lo pasa a `REOPENED`, sella `lastReopenedAt` e incrementa `reopenCount`. Un expediente reabierto se edita con normalidad y se vuelve a cerrar con `008`. **El contador y la fecha ya instrumentan la regla**: cuántas veces se descompletó un caso y cuándo fue la última es dato consultable, no hay que añadir nada.
 
-> **El bloqueo es del cliente, no del backend.** Verificado: sólo la **creación** de una fase comprueba `CLOSED`, y lo hace a través de `012`. Los `PUT /:id` de `classification`, `notification`, `investigation`, `finalClassification` y `esaviCase` **no miran el workflow**: una escritura sobre un caso cerrado se acepta hoy sin protestar. Deshabilitar los formularios es entonces experiencia de usuario, exactamente igual que `useCan()` — y a diferencia de los roles, aquí el backend **no** es la red de seguridad. Si esta regla importa de verdad, es una dependencia del otro repositorio: la comprobación de `CLOSED` tendría que bajar a los cuatro `004`.
+> **Desde el SPEC F61 del backend, el servidor también rechaza.** Toda escritura sobre el **contenido** del expediente de un caso `CLOSED` —el `PUT` de `esaviCase`, las cuatro escrituras de `notifier`, `004`, `005A` y `005B` de las cuatro cabeceras de fase, y `001`, `004`, `005A` y `005B` de todo satélite de notificación y de investigación: 85 rutas— responde `409` con un `code` `<PREFIJO>_<op>_CASE_CLOSED`, el mismo sufijo que ya usaban `CASEFLOW_007`, `_010` y `_012`. Quedan fuera las lecturas, todo `005C`, `ESAVI-CASE-001`, `-005A` y `-005B`, y `patient` (se comparte entre casos). Solo `CLOSED` bloquea, y un caso sin fila de `caseWorkflow` no se bloquea.
+>
+> **Deshabilitar los formularios sigue siendo la experiencia**, y el `409` es la red: llega a quien se salte la interfaz o pierda una carrera con el cierre. El cliente lo trata en un solo sitio (SPEC FE17): un `onError` del `MutationCache` reconoce el sufijo `_CASE_CLOSED` y vuelve a pedir `ESAVI-CASEFLOW-006`, con lo que el paso pasa a sólo lectura. El `message` viene traducido y dice qué hacer, así que se muestra tal cual.
+>
+> Hasta el 2026-09-21 esto no era así: los `PUT /:id` de fase y de `esaviCase` no miraban el workflow y una escritura sobre un caso cerrado se aceptaba sin protestar. Ver §6.3 y §10.3.
 
 Cuando el expediente está `CLOSED`, el wizard entero es de sólo lectura: campos deshabilitados, sin «Guardar», sin «Completar etapa», y un aviso que nombra la salida —«pide a un administrador que reabra el expediente»— en vez de un botón que el usuario no puede pulsar.
 
@@ -2147,7 +2151,7 @@ Lo que sí es de este paso: **las incoherencias que los pasos anteriores dejaron
 
 **El criterio que separa las dos columnas, y es una regla y no una lista:** se **bloquea** lo que ya no puede resolverse por sí solo —una contradicción entre dos hechos registrados— y se **avisa** de lo que sigue siendo un dato legítimamente incompleto. Bloquear lo segundo obligaría a inventar información para poder archivar, que es la peor forma de cerrar un expediente de vigilancia.
 
-> **Y ninguna de estas cinco la comprueba el backend.** `ESAVI-CASEFLOW-008` verifica que las filas **existan**, no que sean coherentes entre sí. Las cinco viven enteras en el cliente, igual que la regla de §4.5 sobre `CLOSED` — con la diferencia de que aquéllas ya están pedidas (§10.3) y éstas no: son criterio de este proceso, no del modelo, y pedirlas al backend sería pedirle que adopte nuestras decisiones de interfaz.
+> **Y ninguna de estas cinco la comprueba el backend.** `ESAVI-CASEFLOW-008` verifica que las filas **existan**, no que sean coherentes entre sí. Las cinco viven enteras en el cliente, igual que la regla de §4.5 sobre `CLOSED` lo hizo hasta el 2026-09-21 — con la diferencia de que aquélla se pidió y ya la respalda el servidor (§10.3, SPEC F61) y éstas no: son criterio de este proceso, no del modelo, y pedirlas al backend sería pedirle que adopte nuestras decisiones de interfaz.
 
 **La pantalla de cierre las lista todas antes de dejar pulsar**, con las bloqueantes separadas de las avisadas y cada una con su enlace al paso que la corrige. Un botón apagado sin explicación es la peor versión de esta regla (§4.2).
 
@@ -2202,7 +2206,9 @@ Anomalías equivalentes que `006` deja visibles a propósito, en lugar de escond
 
 ### 6.3 Un caso cerrado sigue aceptando escrituras
 
-Los cuatro `PUT` de fase y el de `esaviCase` no consultan el `caseWorkflow`. La regla de §4.5 vive entera en el cliente y el backend no la respalda. Documentado aquí para que quien lo descubra no crea que es un bug del frontend, y para que quien evalúe el backend sepa dónde tendría que bajar la comprobación.
+> **Resuelto el 2026-09-21 (SPEC F61 del backend).** El servidor ya rechaza con `409 *_CASE_CLOSED` las escrituras sobre el contenido de un expediente cerrado; ver §4.5 y §10.3. Se conserva el texto original como registro de cómo era el comportamiento antes.
+
+Los cuatro `PUT` de fase y el de `esaviCase` no consultaban el `caseWorkflow`. La regla de §4.5 vivía entera en el cliente y el backend no la respaldaba. Documentado aquí para que quien lo descubriera no creyera que era un bug del frontend, y para que quien evaluara el backend supiera dónde tenía que bajar la comprobación.
 
 ### 6.4 El esquema no impone el orden de las fases
 
@@ -2492,7 +2498,7 @@ Y lo que no es una primitiva:
 
 ## 10. Dependencias del otro repositorio
 
-Lo que este proceso necesita de `esavi-backend` y no puede resolverse aquí. Se acumula a medida que §5 avanza. Ocho entradas: cuatro abiertas (§10.1, §10.3, §10.5, §10.6), una **abierta a medias** (§10.4), dos resueltas (§10.2 y §10.8) y una pregunta contestada (§10.7). §10.4 a §10.6 y §10.8 salieron del paso 4, §10.7 del paso 5.
+Lo que este proceso necesita de `esavi-backend` y no puede resolverse aquí. Se acumula a medida que §5 avanza. Ocho entradas: tres abiertas (§10.1, §10.5, §10.6), una **abierta a medias** (§10.4), tres resueltas (§10.2, §10.3 y §10.8) y una pregunta contestada (§10.7). §10.4 a §10.6 y §10.8 salieron del paso 4, §10.7 del paso 5.
 
 ### 10.1 Fila `systemConfig` con el código de país · **decidido, pendiente de crear**
 
@@ -2522,7 +2528,9 @@ La crea un SUPERADMIN con `ESAVI-SYSCONF-001`. El cliente la lee con `ESAVI-SYSC
 
 Hasta entonces, el botón de quitar se oculta con `useCan()` y el usuario pide ayuda a un administrador.
 
-### 10.3 Comprobación de `CLOSED` en los cuatro `PUT` de fase · **pedido**
+### 10.3 Comprobación de `CLOSED` en las escrituras del expediente · **resuelto el 2026-09-21**
+
+> **Atendido, y con más alcance del pedido.** El SPEC F61 del backend (rama `spec-61-closed-case-write-guard`, todavía sin fusionar a `main` ni desplegada: confirmar con el equipo de backend en qué ambiente está antes de probar contra él) cubre las 85 escrituras sobre el contenido del expediente, no sólo los cuatro `004`: también los satélites de notificación y de investigación, los notificadores y el `PUT` de `esaviCase`. El `code` es `<PREFIJO>_<op>_CASE_CLOSED` (`CASE_004_CASE_CLOSED`, `NOTIFEVT_004_CASE_CLOSED`, `INVDIAG_005A_CASE_CLOSED`) y se detecta por el sufijo. Un `PUT` sobre un caso cerrado responde `409` aunque no cambie nada, y un id que no existe sigue siendo `404`. Reabrir con `ESAVI-CASEFLOW-009` (ADMIN) devuelve las escrituras a como estaban. El cliente lo consume en el SPEC FE17. Se conserva el texto original porque explica la razón de fondo.
 
 Ver §6.3. La regla de §4.5 —un expediente cerrado no se edita, y sólo un ADMIN puede reabrirlo con `009`— vive hoy **entera** en el cliente. Deshabilitar formularios es experiencia de usuario; aquí, además, es el único control que existe, y una regla que separa lo que puede hacer un USER de lo que necesita un ADMIN no debería depender de que nadie abra las herramientas de desarrollo.
 

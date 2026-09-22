@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { Checkbox } from '@/shared/components/ui/checkbox';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 import { notificationEventResource, useNotificationEventsByCase } from './api';
 import { EventFormDialog } from './EventFormDialog';
 
@@ -47,6 +48,10 @@ export function EventList({ caseId, notificationId, readOnly = false }: EventLis
     eventId: null,
   });
   const [removeTarget, setRemoveTarget] = useState<NotificationEventDetail | null>(null);
+  useCloseWhenReadOnly(readOnly, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   if (notificationId === null) {
     return null;

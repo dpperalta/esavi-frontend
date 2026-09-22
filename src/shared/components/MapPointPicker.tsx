@@ -120,7 +120,11 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
   const initialCenterRef = useRef<LatLng | null>(null);
   const onChangeRef = useRef(onChange);
   const disabledRef = useRef(!!disabled);
+  const valueRef = useRef(value);
+  const fallbackCenterRef = useRef(fallbackCenter);
   onChangeRef.current = onChange;
+  valueRef.current = value;
+  fallbackCenterRef.current = fallbackCenter;
 
   const [latDraft, setLatDraft] = useState(value ? String(value.lat) : '');
   const [lngDraft, setLngDraft] = useState(value ? String(value.lng) : '');
@@ -134,16 +138,39 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
     onChangeRef.current(toLatLng(lat, lng));
   }
 
+  // Idempotent by design (guards on `markerRef.current`): safe to call both right after creating
+  // the map and again from the `[value]` effect below without producing a second marker.
+  function applyValue(map: L.Map, val: LatLng | null) {
+    if (!val) {
+      markerRef.current?.remove();
+      markerRef.current = null;
+      return;
+    }
+    if (!markerRef.current) {
+      const marker = L.marker([val.lat, val.lng], { draggable: !disabledRef.current }).addTo(map);
+      marker.on('dragend', () => {
+        const position = marker.getLatLng();
+        emit(position.lat, wrapLongitude(position.lng));
+      });
+      markerRef.current = marker;
+    } else {
+      markerRef.current.setLatLng([val.lat, val.lng]);
+    }
+    map.panTo([val.lat, val.lng]);
+  }
+
   // Monta el mapa una sola vez. `value`, `disabled` y `ariaLabel` se sincronizan aparte, en los
   // efectos de abajo, porque Leaflet es imperativo y no vuelve a montarse en cada cambio.
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) {
+    const container = containerRef.current;
+    if (!container) {
       return undefined;
     }
-    const initialCenter = value ?? fallbackCenter ?? resolveEnvDefaultCenter() ?? ABSOLUTE_FALLBACK_CENTER;
-    const map = L.map(containerRef.current, {
+    const initialCenter =
+      valueRef.current ?? fallbackCenterRef.current ?? resolveEnvDefaultCenter() ?? ABSOLUTE_FALLBACK_CENTER;
+    const map = L.map(container, {
       center: [initialCenter.lat, initialCenter.lng],
-      zoom: value ? 15 : 6,
+      zoom: valueRef.current ? 15 : 6,
     });
     L.tileLayer(resolveTileUrl(), {
       // Texto exigido verbatim por la política de uso de OpenStreetMap — no es texto de la
@@ -161,17 +188,30 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
     mapRef.current = map;
     initialCenterRef.current = initialCenter;
 
-    // Leaflet measures its container once, at creation. When the container is laid out later or
-    // changes width (a section revealed progressively, the sidebar collapsing), the map keeps the
-    // stale size: tiles cover only part of it and clicks resolve to the wrong coordinates.
+    // Leaflet reads the container's size once, when it's constructed. A progressively-revealed
+    // section (`investigationCommunity`'s map, deep in the wizard — SPEC FE13e) can mount while
+    // the container still measures 0×0, a moment before layout settles. `invalidateSize()` alone
+    // updates the stored size but, starting from an invalid tile grid, doesn't repaint any tile —
+    // the map stays fully black instead of merely mis-cropped. The first resize away from zero
+    // needs a full `setView` (which recomputes the pixel origin and reloads every tile), not just
+    // `invalidateSize()`; later resizes (the sidebar collapsing, etc.) are the ordinary case and
+    // only need the cheaper call.
+    let hadZeroSize = container.getBoundingClientRect().width === 0 || container.getBoundingClientRect().height === 0;
     const resizeObserver = new ResizeObserver(() => {
       map.invalidateSize();
+      if (hadZeroSize) {
+        const rect = container.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          hadZeroSize = false;
+          map.setView(map.getCenter(), map.getZoom(), { animate: false });
+        }
+      }
     });
-    resizeObserver.observe(containerRef.current);
+    resizeObserver.observe(container);
 
     return () => {
       resizeObserver.disconnect();
-      map.remove();
+      mapRef.current?.remove();
       mapRef.current = null;
       markerRef.current = null;
     };
@@ -206,22 +246,8 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
     if (!map) {
       return;
     }
-    if (!value) {
-      markerRef.current?.remove();
-      markerRef.current = null;
-      return;
-    }
-    if (!markerRef.current) {
-      const marker = L.marker([value.lat, value.lng], { draggable: !disabledRef.current }).addTo(map);
-      marker.on('dragend', () => {
-        const position = marker.getLatLng();
-        emit(position.lat, wrapLongitude(position.lng));
-      });
-      markerRef.current = marker;
-    } else {
-      markerRef.current.setLatLng([value.lat, value.lng]);
-    }
-    map.panTo([value.lat, value.lng]);
+    applyValue(map, value);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   useEffect(() => {

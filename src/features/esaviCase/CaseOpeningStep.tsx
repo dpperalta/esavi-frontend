@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { CreateEsaviCaseInput } from '@/contracts/esaviCase';
 import { useCurrentUser } from '@/features/auth/api';
+import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { NotifierFormDialog } from '@/features/notifier/NotifierFormDialog';
 import { NotifierList } from '@/features/notifier/NotifierList';
 import { useNotificationVaccinesByCase } from '@/features/notification/api';
@@ -47,6 +48,10 @@ export function CaseOpeningStep() {
   const isEditing = !!effectiveCaseId;
 
   const existingCase = esaviCaseResource.useOne(effectiveCaseId ?? '');
+  // ESAVI-CASEFLOW-006 — SPEC FE17 §4 paso 6: a closed case is read-only here like in the other
+  // four content steps. Without a case yet (the alta) the query is off and `isClosed` stays false.
+  const workflow = useCaseWorkflow(effectiveCaseId ?? undefined);
+  const isClosed = workflow.data?.status.code === 'CLOSED';
   // SPEC FE12c §8: warns, never blocks — the backend doesn't validate `eventDate` against
   // vaccines, so the client isn't stricter than the server.
   const vaccines = useNotificationVaccinesByCase(effectiveCaseId ?? undefined, isEditing);
@@ -197,10 +202,11 @@ export function CaseOpeningStep() {
         errorFieldMap={caseOpeningErrorFieldMap}
         onUnmappedError={handleUnmappedError}
         isSubmitting={mutation.isPending || (isEditing && !pregnancyGuard.isReady)}
+        hideActions={isClosed}
         submitLabel={isEditing ? 'common.actions.save' : 'esaviCase.opening.createButton'}
       >
         {(form) => (
-          <>
+          <fieldset disabled={isClosed} className="flex min-w-0 flex-col gap-4 border-0 p-0">
             <FormField
               control={form.control}
               name="healthFacilityId"
@@ -324,13 +330,17 @@ export function CaseOpeningStep() {
                 </FormItem>
               )}
             />
-          </>
+          </fieldset>
         )}
       </ResourceForm>
 
       {isEditing && effectiveCaseId && (
         <>
-          <NotifierList caseId={effectiveCaseId} onCountChange={(count) => setHasNotifier(count > 0)} />
+          <NotifierList
+            caseId={effectiveCaseId}
+            onCountChange={(count) => setHasNotifier(count > 0)}
+            readOnly={isClosed}
+          />
           <Button type="button" onClick={handleContinue} disabled={!hasNotifier} className="self-start">
             {t('esaviCase.opening.continueButton')}
           </Button>

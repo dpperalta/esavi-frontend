@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { Button } from '@/shared/components/ui/button';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 import {
   investigationMedicalHistoryResource,
   investigationPregnancyConditionResource,
@@ -53,6 +54,10 @@ export function NewbornConditionList({ investigationId, disabled = false }: Newb
   const [removeTarget, setRemoveTarget] = useState<InvestigationPregnancyConditionDetail | null>(
     null,
   );
+  useCloseWhenReadOnly(disabled, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   function handleConfirmRemove() {
     if (!removeTarget) return;

@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 import { notificationPregnancyComplicationResource, useNotificationPregnancyComplicationsByPregnancy } from './api';
 import { PregnancyComplicationFormDialog } from './PregnancyComplicationFormDialog';
 
@@ -52,6 +53,10 @@ export function PregnancyComplicationList({ pregnancyId, readOnly = false }: Pre
     complicationId: null,
   });
   const [removeTarget, setRemoveTarget] = useState<NotificationPregnancyComplicationDetail | null>(null);
+  useCloseWhenReadOnly(readOnly, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   // Deshabilitada con su explicación (§3.6): guardar el bloque es lo que crea `pregnancyId`, y
   // sin él no hay padre al que colgar ninguna complicación — mismo criterio que `EventList`

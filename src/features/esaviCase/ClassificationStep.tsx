@@ -7,7 +7,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { CreateClassificationInput } from '@/contracts/classification';
 import type { ClassificationDetail } from '@/contracts/declared/classification';
-import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import {
   classificationByCaseKey,
@@ -262,16 +261,6 @@ function ClassificationFormBody({
       } catch (err) {
         if (!(err instanceof EsaviApiError)) {
           throw err;
-        }
-        // `CASEFLOW_012_CASE_CLOSED` conmuta el armazón a sólo lectura sin esperar el próximo
-        // `006` de workflow (SPEC FE11 §3.5): parcheando la caché directamente, `CaseWizardPage`
-        // lo ve en el siguiente render porque lee la misma clave.
-        if (err.code === 'CASEFLOW_012_CASE_CLOSED') {
-          queryClient.setQueryData<CaseWorkflowDetail>(['caseWorkflow', 'byCase', caseId], (old) =>
-            old ? { ...old, status: { ...old.status, code: 'CLOSED' } } : old,
-          );
-          toast.error(getErrorMessage(err));
-          return;
         }
         const field = classificationErrorFieldMap[err.code];
         if (field) {

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import type { NotificationDiluentDetail } from '@/contracts/declared/notificationDiluent';
 import type { CreateNotificationDiluentInput } from '@/contracts/notificationDiluent';
+import { diluentResource } from '@/features/diluent/api';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { DateField } from '@/shared/components/DateField';
@@ -19,6 +20,10 @@ import {
   notificationDiluentErrorFieldMap,
   type NotificationDiluentFormValues,
 } from './schemas';
+
+// `code` normalizado con `toConstantCase` en el `diluentCatalog` seeded a mano (SPEC F23 §3.5
+// backend) — no hay un valor fijo en el contrato, es una decisión de este despliegue.
+const OTHER_DILUENT_CODE = 'OTHER';
 
 export interface DiluentFormRowProps {
   vaccineId: string;
@@ -67,6 +72,23 @@ export function DiluentFormRow({ vaccineId, vaccinationDate, diluent, onDone }: 
     mode: 'onTouched',
     reValidateMode: 'onChange',
   });
+
+  // El desplegable ya carga esta misma lista (`<DiluentSelect>`), así que esto reutiliza la
+  // caché de TanStack Query en vez de pedirla dos veces — sólo hace falta el `code` de la fila
+  // elegida, que `<DiluentSelect>` no expone.
+  const diluentCatalogId = form.watch('diluentCatalogId');
+  const diluentCatalog = diluentResource.useList({ pageSize: 100 });
+  const diluentCatalogRows = diluentCatalog.data?.rows ?? [];
+  const selectedDiluentCode =
+    diluentCatalogRows.find((row) => row.diluentCatalogId === diluentCatalogId)?.code ?? null;
+  // El maestro sin semillas (§10.5: la situación de todo despliegue de hoy salvo que alguien lo
+  // llene a mano) es el único caso donde «sin fila elegida» significa registro crudo — ahí
+  // `diluentName`/`diluentCode` son la única forma de satisfacer la guarda de contenido mínimo.
+  // Con el maestro sembrado, no elegir nada todavía no es eso: se queda oculto hasta que el
+  // usuario elija explícitamente «Otro diluyente», la fila que no está codificada por la FK.
+  const isCatalogUnseeded = diluentCatalog.isSuccess && diluentCatalogRows.length === 0;
+  const showsFreeTextFields =
+    selectedDiluentCode === OTHER_DILUENT_CODE || (isCatalogUnseeded && diluentCatalogId === null);
 
   const mutationError = mutation.error instanceof EsaviApiError ? mutation.error : null;
 
@@ -138,7 +160,15 @@ export function DiluentFormRow({ vaccineId, vaccinationDate, diluent, onDone }: 
               <FormControl>
                 <DiluentSelect
                   value={field.value ?? null}
-                  onChange={field.onChange}
+                  onChange={(next) => {
+                    field.onChange(next);
+                    const nextCode =
+                      diluentCatalog.data?.rows.find((row) => row.diluentCatalogId === next)?.code ?? null;
+                    if (next !== null && nextCode !== OTHER_DILUENT_CODE) {
+                      form.setValue('diluentName', null, { shouldDirty: true, shouldValidate: true });
+                      form.setValue('diluentCode', null, { shouldDirty: true });
+                    }
+                  }}
                   ariaLabel={t('notificationDiluent.field.diluentCatalogId')}
                 />
               </FormControl>
@@ -146,40 +176,46 @@ export function DiluentFormRow({ vaccineId, vaccinationDate, diluent, onDone }: 
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="diluentName"
-          render={({ field, fieldState }) => (
-            <FormItem>
-              <FormLabel>{t('notificationDiluent.field.diluentName')}</FormLabel>
-              <FormControl>
-                <Input
-                  value={field.value ?? ''}
-                  onChange={(event) => field.onChange(event.target.value || null)}
-                />
-              </FormControl>
-              {fieldState.error && (
-                <p className="text-sm text-destructive">{t('notificationDiluent.error.diluentRequired')}</p>
-              )}
-            </FormItem>
-          )}
-        />
+        <div aria-live="polite" className="flex flex-col gap-3">
+          {showsFreeTextFields && (
+            <>
+              <FormField
+                control={form.control}
+                name="diluentName"
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel>{t('notificationDiluent.field.diluentName')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        value={field.value ?? ''}
+                        onChange={(event) => field.onChange(event.target.value || null)}
+                      />
+                    </FormControl>
+                    {fieldState.error && (
+                      <p className="text-sm text-destructive">{t('notificationDiluent.error.diluentRequired')}</p>
+                    )}
+                  </FormItem>
+                )}
+              />
 
-        <FormField
-          control={form.control}
-          name="diluentCode"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('notificationDiluent.field.diluentCode')}</FormLabel>
-              <FormControl>
-                <Input
-                  value={field.value ?? ''}
-                  onChange={(event) => field.onChange(event.target.value || null)}
-                />
-              </FormControl>
-            </FormItem>
+              <FormField
+                control={form.control}
+                name="diluentCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('notificationDiluent.field.diluentCode')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        value={field.value ?? ''}
+                        onChange={(event) => field.onChange(event.target.value || null)}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </>
           )}
-        />
+        </div>
 
         <FormField
           control={form.control}

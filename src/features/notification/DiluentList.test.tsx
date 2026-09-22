@@ -102,6 +102,12 @@ describe('DiluentList — SPEC FE12c §4 paso 9', () => {
       http.get('http://localhost:4500/api/notification-diluents/vaccine/v-1', () =>
         HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
       ),
+      // Maestro sin semillas (§10.5): `diluentName` es la única forma de satisfacer la guarda de
+      // contenido mínimo sin `diluentCatalogId`, y es lo que este caso prueba — no la selección
+      // de «Otro diluyente».
+      http.get('http://localhost:4500/api/diluents', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
       http.post('http://localhost:4500/api/notification-diluents', () => {
         diluentPosted = true;
         return HttpResponse.json({ ok: true, message: 'ok' });
@@ -112,7 +118,7 @@ describe('DiluentList — SPEC FE12c §4 paso 9', () => {
     renderList('v-1', '2026-03-10');
 
     await user.click(await screen.findByRole('button', { name: 'Añadir diluyente' }));
-    await user.type(screen.getByLabelText('Describa el diluyente'), 'Agua estéril');
+    await user.type(await screen.findByLabelText('Describa el diluyente'), 'Agua estéril');
     fireEvent.change(screen.getByLabelText('Fecha de reconstitución'), { target: { value: '2026-03-15' } });
     await user.click(screen.getByRole('button', { name: 'Guardar' }));
 

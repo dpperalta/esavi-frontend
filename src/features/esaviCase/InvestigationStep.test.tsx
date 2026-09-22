@@ -8,6 +8,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AnswerOption } from '@/contracts/common';
 import { setAccessToken } from '@/shared/api/client';
+import { createAppQueryClient } from '@/shared/api/queryClient';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { useDraftsStore } from '@/shared/stores/draftsStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
@@ -662,7 +663,11 @@ function investigationDetail(overrides: Partial<Record<string, unknown>> = {}) {
 // flips to `true` as soon as `postCount` rises, without waiting for a second mock per test —
 // same mechanism as the first "empty but alive" test, extracted for reuse in the progressive
 // reveal.
-function mockWorkflowDynamic(getInvestigationExists: () => boolean) {
+function mockWorkflowDynamic(
+  getInvestigationExists: () => boolean,
+  // Called once per read of the workflow, so a test can count reads and flip the status in one place.
+  getStatusCode: () => string = () => 'OPEN',
+) {
   server.use(
     http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
       HttpResponse.json({
@@ -671,7 +676,7 @@ function mockWorkflowDynamic(getInvestigationExists: () => boolean) {
         data: {
           caseWorkflowId: 'workflow-1',
           caseId: CASE_1,
-          status: { catalogItemId: 'status-1', code: 'OPEN', name: 'Abierto' },
+          status: { catalogItemId: 'status-1', code: getStatusCode(), name: 'Abierto' },
           previousStatus: null,
           openedAt: '2026-01-01T00:00:00.000Z',
           closedAt: null,
@@ -778,8 +783,9 @@ function mockInvestigationDetail(overrides: Partial<Record<string, unknown>> = {
   );
 }
 
-function renderInvestigationStep() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderInvestigationStep(
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[`/esavi-cases/${CASE_1}/wizard/investigation`]}>
@@ -1947,6 +1953,80 @@ describe('InvestigationStep — el recorrido completo del tramo C (SPEC FE13c §
     // confirmado del cuelgue de entorno documentado en el paso 7 (reproducido incluso en un test
     // preexistente sin tocar). No se duplica esa interacción en este archivo, más pesado de montar.
   });
+
+  it('un 409 INVDIAG_005A_CASE_CLOSED al retirar un diagnóstico muestra un solo toast, relee el 006 y deja el paso en sólo lectura (SPEC FE17 §4 paso 7)', async () => {
+    const serverMessage = 'El caso está cerrado. Reábralo antes de continuar con el expediente.';
+    let closed = false;
+    const workflowReads = { count: 0 };
+    mockWorkflowDynamic(
+      () => true,
+      () => {
+        workflowReads.count++;
+        return closed ? 'CLOSED' : 'OPEN';
+      },
+    );
+    mockInvestigationDetail();
+    clinicalEvaluationRow = emptyClinicalEvaluationDetail();
+    server.use(
+      http.get(`http://localhost:4500/api/investigation-diagnostics/case/${CASE_1}`, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 1,
+            rows: [
+              {
+                diagnosticId: 'diagnostic-1',
+                investigationId: INVESTIGATION_1,
+                sortOrder: 1,
+                diagnosticTermId: null,
+                diagnosticRaw: 'Fiebre alta persistente',
+                diagnosticDate: null,
+                diagnosticTypeItemId: null,
+                notes: null,
+                isActive: true,
+                diagnosticTerm: null,
+                diagnosticType: null,
+                createdAt: '2026-01-01T00:00:00.000Z',
+                updatedAt: null,
+                deletedAt: null,
+                appDetails: [],
+              },
+            ],
+          },
+        }),
+      ),
+      http.delete('http://localhost:4500/api/investigation-diagnostics/diagnostic-1', () => {
+        closed = true;
+        return HttpResponse.json(
+          { ok: false, message: serverMessage, code: 'INVDIAG_005A_CASE_CLOSED' },
+          { status: 409 },
+        );
+      }),
+    );
+
+    const user = setupUser();
+    const queryClient = createAppQueryClient();
+    queryClient.setDefaultOptions({ queries: { retry: false } });
+    renderInvestigationStep(queryClient);
+
+    const [deleteButton] = await screen.findAllByRole('button', { name: 'Eliminar Fiebre alta persistente' });
+    const readsBeforeDelete = workflowReads.count;
+    await user.click(deleteButton);
+    const confirmation = '¿Dar de baja «Fiebre alta persistente»? Esta acción no se puede deshacer desde aquí.';
+    expect(await screen.findByText(confirmation)).toBeInTheDocument();
+    const [confirmButton] = await screen.findAllByRole('button', { name: 'Dar de baja' });
+    await user.click(confirmButton);
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith(serverMessage));
+    await waitFor(() => expect(workflowReads.count).toBeGreaterThan(readsBeforeDelete));
+    await waitFor(() => expect(screen.queryByText(confirmation)).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Añadir diagnóstico' })).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByRole('button', { name: /^Eliminar / })).not.toBeInTheDocument();
+    expect(toastError).toHaveBeenCalledTimes(1);
+  }, 30000);
 
   it('expediente CLOSED: las tres secciones nuevas son de sólo lectura', async () => {
     mockWorkflowClosed();

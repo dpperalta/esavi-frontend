@@ -18,6 +18,7 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { Button } from '@/shared/components/ui/button';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 
 export interface DiagnosticListProps {
   caseId: string;
@@ -52,6 +53,10 @@ export function DiagnosticList({ caseId, investigationId, disabled = false, onMi
     diagnostic: null,
   });
   const [removeTarget, setRemoveTarget] = useState<InvestigationDiagnosticDetail | null>(null);
+  useCloseWhenReadOnly(disabled, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   function handleConfirmRemove() {
     if (!removeTarget) return;

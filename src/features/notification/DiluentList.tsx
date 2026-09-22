@@ -17,6 +17,7 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 import { notificationDiluentResource, useNotificationDiluentsByVaccine } from './api';
 import { DiluentFormRow } from './DiluentFormRow';
 
@@ -43,6 +44,10 @@ export function DiluentList({ vaccineId, vaccinationDate, disabled = false }: Di
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState<'new' | string | null>(null);
   const [removeTarget, setRemoveTarget] = useState<NotificationDiluentDetail | null>(null);
+  useCloseWhenReadOnly(disabled, () => {
+    setExpanded(null);
+    setRemoveTarget(null);
+  });
   const diluents = useNotificationDiluentsByVaccine(vaccineId ?? undefined, vaccineId !== null);
   const deactivate = notificationDiluentResource.useDeactivate();
 

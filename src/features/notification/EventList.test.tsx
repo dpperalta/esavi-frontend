@@ -85,6 +85,32 @@ describe('EventList — SPEC FE12b §4 paso 8', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('con el diálogo de alta abierto, el paso a readOnly lo cierra (SPEC FE17 §4 paso 5)', async () => {
+    const user = setupUser();
+    server.use(
+      http.get(`http://localhost:4500/api/notification-events/case/case-1`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get('http://localhost:4500/api/meddra/search', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const tree = (readOnly: boolean) => (
+      <QueryClientProvider client={queryClient}>
+        <EventList caseId="case-1" notificationId={NOTIFICATION_ID} readOnly={readOnly} />
+      </QueryClientProvider>
+    );
+    const view = render(tree(false));
+
+    await user.click(await screen.findByRole('button', { name: 'Añadir' }));
+    expect(await screen.findByLabelText('Evento adverso')).toBeInTheDocument();
+
+    view.rerender(tree(true));
+
+    await waitFor(() => expect(screen.queryByLabelText('Evento adverso')).not.toBeInTheDocument());
+  }, 60000);
+
   it('crear un evento envía esaviName y notificationId', async () => {
     const user = setupUser();
     server.use(

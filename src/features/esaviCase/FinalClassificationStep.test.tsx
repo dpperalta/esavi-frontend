@@ -7,6 +7,7 @@ import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
+import { createAppQueryClient } from '@/shared/api/queryClient';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { useDraftsStore } from '@/shared/stores/draftsStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
@@ -180,8 +181,9 @@ function renderStep() {
 // Con la barra de acciones montada al lado, como en `ClassificationStep.test.tsx` — «Guardar» y
 // «Completar etapa» viven en `CaseWizardActionBar`, atados a `useCaseWizard()` (SPEC FE14a §4
 // paso 8).
-function renderStepWithActionBar() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function renderStepWithActionBar(
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={['/esavi-cases/case-1/wizard/final-classification']}>
@@ -208,6 +210,7 @@ function mockSaveFlow(options: { postStatus?: number; postCode?: string } = {}) 
   const calls = { post: 0, put: 0, get: 0 };
   let row: Record<string, unknown> | null = null;
   let exists = false;
+  let statusCode = 'OPEN';
 
   server.use(
     http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
@@ -217,7 +220,7 @@ function mockSaveFlow(options: { postStatus?: number; postCode?: string } = {}) 
         data: {
           caseWorkflowId: 'workflow-1',
           caseId: 'case-1',
-          status: { catalogItemId: 'status-1', code: 'OPEN', name: 'OPEN' },
+          status: { catalogItemId: 'status-1', code: statusCode, name: statusCode },
           previousStatus: null,
           openedAt: '2026-09-01T00:00:00.000Z',
           closedAt: null,
@@ -247,6 +250,9 @@ function mockSaveFlow(options: { postStatus?: number; postCode?: string } = {}) 
     http.post('http://localhost:4500/api/final-classifications', async ({ request }) => {
       calls.post += 1;
       if (options.postStatus) {
+        if (options.postCode?.endsWith('_CASE_CLOSED')) {
+          statusCode = 'CLOSED';
+        }
         return HttpResponse.json(
           { ok: false, message: 'error del servidor', code: options.postCode },
           { status: options.postStatus },
@@ -594,11 +600,13 @@ describe('FinalClassificationStep — guardar (SPEC FE14a §4 paso 8)', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument();
   }, 30000);
 
-  it('CASEFLOW_012_CASE_CLOSED deja el asistente en sólo lectura', async () => {
+  it('CASEFLOW_012_CASE_CLOSED deja el asistente en sólo lectura por la relectura del 006', async () => {
     mockCatalog();
     const { calls } = mockSaveFlow({ postStatus: 409, postCode: 'CASEFLOW_012_CASE_CLOSED' });
 
-    renderStepWithActionBar();
+    const queryClient = createAppQueryClient();
+    queryClient.setDefaultOptions({ queries: { retry: false } });
+    renderStepWithActionBar(queryClient);
     const user = setupUser();
 
     await screen.findByRole('combobox', { name: 'Importancia A' });

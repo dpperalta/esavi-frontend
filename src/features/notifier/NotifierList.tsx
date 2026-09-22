@@ -17,6 +17,7 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 import { NotifierFormDialog } from './NotifierFormDialog';
 import { notifierResource } from './api';
 
@@ -26,16 +27,20 @@ export interface NotifierListProps {
   // reusing the count `useList` already fetches here instead of a second, separate query for the
   // same rows.
   onCountChange?: (count: number) => void;
+  // SPEC FE17 §4 paso 6 — a closed case's notifiers can't be added, edited or removed.
+  readOnly?: boolean;
 }
 
 function NotifierRow({
   row,
   canRemove,
+  readOnly,
   onEdit,
   onRemove,
 }: {
   row: NotifierListRow;
   canRemove: boolean;
+  readOnly: boolean;
   onEdit: () => void;
   onRemove: () => void;
 }) {
@@ -49,19 +54,21 @@ function NotifierRow({
           </p>
           <p className="text-sm text-muted-foreground">{row.profession?.name ?? '—'}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={onEdit}>
-            {t('common.actions.edit')}
-          </Button>
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={onEdit}>
+              {t('common.actions.edit')}
+            </Button>
           {/* NOTIFIER-005A exige ADMIN (SPEC FE10 §7 riesgo): oculto, no deshabilitado, hasta que
               el rol baje — la interfaz lo dice explícitamente en vez de dejar el botón sin
               explicación. */}
-          {canRemove && (
-            <Button type="button" variant="destructive" size="sm" onClick={onRemove}>
-              {t('notifier.list.removeButton')}
-            </Button>
-          )}
-        </div>
+            {canRemove && (
+              <Button type="button" variant="destructive" size="sm" onClick={onRemove}>
+                {t('notifier.list.removeButton')}
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -71,7 +78,7 @@ function NotifierRow({
 // profesión por fila, *Editar* siempre visible y *Quitar* sólo con `useCan(ADMIN)`. La fila lee
 // `row.profession`/`row.case` resueltos — nunca un `professionItemId`/`caseId` plano, que
 // `NotifierListRow` no declara al primer nivel (SPEC FE10 §3.3).
-export function NotifierList({ caseId, onCountChange }: NotifierListProps) {
+export function NotifierList({ caseId, onCountChange, readOnly = false }: NotifierListProps) {
   const { t } = useTranslation();
   const canRemove = useCan(ROLE_LEVELS.ADMIN);
   const list = notifierResource.useList({ pageSize: 100, filters: { caseId } });
@@ -82,6 +89,10 @@ export function NotifierList({ caseId, onCountChange }: NotifierListProps) {
     notifierId: null,
   });
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  useCloseWhenReadOnly(readOnly, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   useEffect(() => {
     if (list.data) {
@@ -128,6 +139,7 @@ export function NotifierList({ caseId, onCountChange }: NotifierListProps) {
               key={row.notifierId}
               row={row}
               canRemove={canRemove}
+              readOnly={readOnly}
               onEdit={() => setDialog({ open: true, notifierId: row.notifierId })}
               onRemove={() => setRemoveTarget(row.notifierId)}
             />
@@ -135,14 +147,16 @@ export function NotifierList({ caseId, onCountChange }: NotifierListProps) {
         </div>
       )}
 
-      <Button
-        type="button"
-        variant="outline"
-        className="self-start"
-        onClick={() => setDialog({ open: true, notifierId: null })}
-      >
-        {t('notifier.list.addButton')}
-      </Button>
+      {!readOnly && (
+        <Button
+          type="button"
+          variant="outline"
+          className="self-start"
+          onClick={() => setDialog({ open: true, notifierId: null })}
+        >
+          {t('notifier.list.addButton')}
+        </Button>
+      )}
 
       <NotifierFormDialog
         open={dialog.open}

@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
+import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 
 export interface TeamMemberListProps {
   investigationId: string;
@@ -44,6 +45,10 @@ export function TeamMemberList({ investigationId, disabled }: TeamMemberListProp
     memberId: null,
   });
   const [removeTarget, setRemoveTarget] = useState<InvestigationTeamMemberDetail | null>(null);
+  useCloseWhenReadOnly(disabled ?? false, () => {
+    setDialog((prev) => ({ ...prev, open: false }));
+    setRemoveTarget(null);
+  });
 
   function handleConfirmRemove() {
     if (!removeTarget) return;
