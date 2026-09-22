@@ -1734,7 +1734,49 @@
       "createTitle": "Añadir configuración",
       "editTitle": "Editar configuración"
     },
-    "roleForbidden": "Administrar configuraciones exige un superadministrador en este despliegue."
+    "roleForbidden": "Administrar configuraciones exige un superadministrador en este despliegue.",
+    "status": {
+      "inactive": "Inactivo"
+    },
+    "badge": {
+      "protected": "Protegida"
+    },
+    "value": {
+      "encrypted": "Cifrado"
+    },
+    "list": {
+      "title": "Configuraciones del sistema",
+      "empty": "Todavía no hay configuraciones. Siembra el catálogo inicial para empezar.",
+      "emptyFiltered": "Ninguna configuración coincide con los filtros."
+    },
+    "columns": {
+      "code": "Código",
+      "name": "Nombre",
+      "value": "Valor",
+      "scope": "Ámbito",
+      "valueType": "Tipo",
+      "status": "Estado"
+    },
+    "filters": {
+      "name": "Nombre",
+      "code": "Código",
+      "scope": "Ámbito",
+      "valueType": "Tipo de valor",
+      "valueTypePlaceholder": "Todos"
+    },
+    "history": {
+      "action": "Ver historial"
+    },
+    "sync": {
+      "action": "Sembrar configuraciones",
+      "confirmTitle": "¿Sembrar las configuraciones iniciales?",
+      "confirmBody": "Crea las filas del catálogo inicial que todavía no existan. Ninguna fila existente se modifica, esté activa o inactiva.",
+      "success": "Se crearon {{created}} configuraciones; {{skipped}} ya existían.",
+      "nothingToDo": "No había nada que sembrar: todas las configuraciones del catálogo ya existían."
+    },
+    "delete": {
+      "confirm": "¿Dar de baja la configuración «{{code}}»?"
+    }
   },
   "errors": {
     "network": "No pudimos conectar con el servidor. Comprueba tu conexión.",

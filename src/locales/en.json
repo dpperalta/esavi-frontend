@@ -1734,7 +1734,49 @@
       "createTitle": "Add configuration",
       "editTitle": "Edit configuration"
     },
-    "roleForbidden": "Managing configurations requires a superadmin in this deployment."
+    "roleForbidden": "Managing configurations requires a superadmin in this deployment.",
+    "status": {
+      "inactive": "Inactive"
+    },
+    "badge": {
+      "protected": "Protected"
+    },
+    "value": {
+      "encrypted": "Encrypted"
+    },
+    "list": {
+      "title": "System configurations",
+      "empty": "There are no configurations yet. Seed the initial catalog to get started.",
+      "emptyFiltered": "No configuration matches the filters."
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "value": "Value",
+      "scope": "Scope",
+      "valueType": "Type",
+      "status": "Status"
+    },
+    "filters": {
+      "name": "Name",
+      "code": "Code",
+      "scope": "Scope",
+      "valueType": "Value type",
+      "valueTypePlaceholder": "All"
+    },
+    "history": {
+      "action": "View history"
+    },
+    "sync": {
+      "action": "Seed configurations",
+      "confirmTitle": "Seed the initial configurations?",
+      "confirmBody": "Creates the initial catalog's rows that don't exist yet. No existing row is changed, active or inactive.",
+      "success": "Created {{created}} configurations; {{skipped}} already existed.",
+      "nothingToDo": "There was nothing to seed: every configuration in the catalog already existed."
+    },
+    "delete": {
+      "confirm": "Deactivate configuration «{{code}}»?"
+    }
   },
   "errors": {
     "network": "We couldn't reach the server. Check your connection.",

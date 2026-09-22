@@ -1734,7 +1734,49 @@
       "createTitle": "Configuratie toevoegen",
       "editTitle": "Configuratie bewerken"
     },
-    "roleForbidden": "Configuraties beheren vereist een superbeheerder in deze implementatie."
+    "roleForbidden": "Configuraties beheren vereist een superbeheerder in deze implementatie.",
+    "status": {
+      "inactive": "Inactief"
+    },
+    "badge": {
+      "protected": "Beschermd"
+    },
+    "value": {
+      "encrypted": "Versleuteld"
+    },
+    "list": {
+      "title": "Systeemconfiguraties",
+      "empty": "Er zijn nog geen configuraties. Zaai de initiële catalogus om te beginnen.",
+      "emptyFiltered": "Geen enkele configuratie voldoet aan de filters."
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Naam",
+      "value": "Waarde",
+      "scope": "Bereik",
+      "valueType": "Type",
+      "status": "Status"
+    },
+    "filters": {
+      "name": "Naam",
+      "code": "Code",
+      "scope": "Bereik",
+      "valueType": "Waardetype",
+      "valueTypePlaceholder": "Alle"
+    },
+    "history": {
+      "action": "Geschiedenis bekijken"
+    },
+    "sync": {
+      "action": "Configuraties zaaien",
+      "confirmTitle": "De initiële configuraties zaaien?",
+      "confirmBody": "Maakt de rijen van de initiële catalogus aan die nog niet bestaan. Geen enkele bestaande rij wordt gewijzigd, actief of inactief.",
+      "success": "{{created}} configuraties aangemaakt; {{skipped}} bestonden al.",
+      "nothingToDo": "Er viel niets te zaaien: alle configuraties van de catalogus bestonden al."
+    },
+    "delete": {
+      "confirm": "Configuratie «{{code}}» buiten gebruik stellen?"
+    }
   },
   "errors": {
     "network": "We konden geen verbinding maken met de server. Controleer uw internetverbinding.",
