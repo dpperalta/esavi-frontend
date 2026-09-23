@@ -1853,6 +1853,59 @@
       "assignmentExists": "De rollen van deze gebruiker zijn gewijzigd tijdens het bewerken. Controleer de selectie en sla opnieuw op."
     }
   },
+  "appRole": {
+    "list": {
+      "title": "Rollen",
+      "empty": "Nog geen rollen. Maak de eerste aan om te beginnen.",
+      "emptySearch": "Geen rol komt overeen met de zoekopdracht.",
+      "error": "We konden de rollen niet laden.",
+      "createLabel": "Rol aanmaken"
+    },
+    "search": {
+      "placeholder": "Naam of code"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Naam",
+      "description": "Omschrijving",
+      "level": "Niveau",
+      "systemRole": "Systeemrol",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Actief",
+      "inactive": "Inactief"
+    },
+    "badges": {
+      "systemRole": "Systeem"
+    },
+    "form": {
+      "createTitle": "Rol aanmaken",
+      "editTitle": "Rol bewerken",
+      "normalizedPreview": "Wordt opgeslagen als {{value}}",
+      "levelHint": "Bekende niveaus: 10 ANALYTICS, 25 USER, 50 ADMIN, 100 SUPERADMIN.",
+      "levelMax": "Jouw maximale niveau is {{level}}."
+    },
+    "deactivate": {
+      "title": "Deze rol intrekken?",
+      "confirm": "Rol intrekken",
+      "holders_one": "{{count}} gebruiker heeft deze rol.",
+      "holders_other": "{{count}} gebruikers hebben deze rol.",
+      "viewHolders": "Bekijk wie"
+    },
+    "holders": {
+      "title": "Wie heeft deze rol",
+      "empty": "Niemand heeft deze rol."
+    },
+    "errors": {
+      "codeExists": "Er bestaat al een rol met die code.",
+      "nameExists": "Er bestaat al een rol met die naam.",
+      "levelExceeded": "Je kunt geen rol boven je eigen niveau aanmaken.",
+      "systemRole": "Dit is een systeemrol: wijzigen vereist een superbeheerder.",
+      "superAdminRole": "De rol SUPERADMIN kan niet worden ingetrokken.",
+      "hasActiveAssignments": "Een rol die gebruikers nog hebben, kan niet worden ingetrokken."
+    }
+  },
   "errors": {
     "network": "We konden geen verbinding maken met de server. Controleer uw internetverbinding.",
     "unexpected": "Er is iets misgegaan. Probeer het opnieuw.",
