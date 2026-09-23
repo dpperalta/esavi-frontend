@@ -1862,7 +1862,8 @@
       "createLabel": "Rol aanmaken"
     },
     "search": {
-      "placeholder": "Naam of code"
+      "placeholder": "Naam of code",
+      "clear": "Zoekopdracht wissen"
     },
     "columns": {
       "code": "Code",

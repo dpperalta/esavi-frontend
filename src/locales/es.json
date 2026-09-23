@@ -1862,7 +1862,8 @@
       "createLabel": "Crear rol"
     },
     "search": {
-      "placeholder": "Nombre o código"
+      "placeholder": "Nombre o código",
+      "clear": "Limpiar búsqueda"
     },
     "columns": {
       "code": "Código",

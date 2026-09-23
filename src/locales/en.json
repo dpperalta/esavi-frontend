@@ -1862,7 +1862,8 @@
       "createLabel": "Create role"
     },
     "search": {
-      "placeholder": "Name or code"
+      "placeholder": "Name or code",
+      "clear": "Clear search"
     },
     "columns": {
       "code": "Code",
