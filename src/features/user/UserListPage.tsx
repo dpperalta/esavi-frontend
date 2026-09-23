@@ -12,6 +12,7 @@ import { useCan } from '@/shared/hooks/useCan';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { SEARCH_MIN_LENGTH, useUserSearch, userResource } from './api';
 import { UserAuditSheet } from './UserAuditSheet';
+import { UserFormDialog } from './UserFormDialog';
 import { UserSearchField } from './UserSearchField';
 
 function formatCreatedAt(value: string): string {
@@ -50,6 +51,7 @@ export function UserListPage() {
   const page = Number(searchParams.get('page') ?? '1') || 1;
   const pageSize = usePreferencesStore((state) => state.pageSize);
   const canViewInactive = useCan(ROLE_LEVELS.ADMIN);
+  const canCreate = useCan(ROLE_LEVELS.ADMIN);
 
   // Derived from `q`, never stored: a `mode` param could contradict the term it depends on.
   const isSearching = q.trim().length >= SEARCH_MIN_LENGTH;
@@ -70,6 +72,7 @@ export function UserListPage() {
   const queryRequired = searchError?.code === 'USER_008_QUERY_REQUIRED';
 
   const [auditId, setAuditId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   // §3.5: the search and the inactive toggle are mutually exclusive, because `canViewInactive` on
   // the backend is SUPERADMIN-only (permissions.helper.ts:24-26) and an ADMIN searching with the
@@ -202,6 +205,9 @@ export function UserListPage() {
           onIncludeInactiveChange={
             !isSearching && canViewInactive ? handleIncludeInactiveChange : undefined
           }
+          canCreate={canCreate}
+          onCreate={() => setCreateOpen(true)}
+          createLabel="user.list.createLabel"
           emptyKey="user.list.empty"
           isFiltered={isSearching}
           emptyFilteredKey="user.list.emptySearch"
@@ -211,6 +217,9 @@ export function UserListPage() {
           rowActions={(row) => <UserRowActions row={row} onAudit={setAuditId} />}
         />
       )}
+
+      {/* Create only: editing a user happens in the ficha, which is what the linked name opens. */}
+      <UserFormDialog open={createOpen} userId={null} onOpenChange={setCreateOpen} />
 
       <UserAuditSheet
         open={auditId !== null}

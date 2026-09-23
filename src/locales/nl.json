@@ -1841,7 +1841,6 @@
       "save": "Rollen opslaan",
       "saved": "De rollen zijn bijgewerkt.",
       "partial": "Sommige rollen konden niet worden ingetrokken: {{roles}}.",
-      "placeholder": "Kies een of meer rollen",
       "empty": "Deze gebruiker heeft geen rol en kan niets doen totdat er een wordt toegewezen."
     },
     "errors": {

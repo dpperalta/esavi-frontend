@@ -1841,7 +1841,6 @@
       "save": "Save roles",
       "saved": "The roles were updated.",
       "partial": "Some roles could not be revoked: {{roles}}.",
-      "placeholder": "Pick one or more roles",
       "empty": "This user holds no role and cannot do anything until one is assigned."
     },
     "errors": {

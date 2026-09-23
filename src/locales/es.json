@@ -1841,7 +1841,6 @@
       "save": "Guardar roles",
       "saved": "Los roles se actualizaron correctamente.",
       "partial": "Algunos roles no se pudieron retirar: {{roles}}.",
-      "placeholder": "Elige uno o más roles",
       "empty": "Este usuario no tiene ningún rol asignado y no podrá hacer nada hasta que se le asigne uno."
     },
     "errors": {

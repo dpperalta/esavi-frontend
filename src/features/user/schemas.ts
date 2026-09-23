@@ -23,10 +23,15 @@ export const createUserSchema = z.object({
   roleIds: z.array(z.string().uuid()).min(1),
 });
 
-// ESAVI-USER-004's five fields, all optional. No `password` and no `roleIds`: the first belongs to
-// the change-password operation and the second to the user-role endpoints (updateUserValidator).
-// The full object travels anyway — the differential update is the backend's (CONVENTIONS.md §6.5).
-export const updateUserSchema = createUserSchema.omit({ password: true, roleIds: true }).partial();
+// ESAVI-USER-004's five fields. No `password` and no `roleIds`: the first belongs to the
+// change-password operation and the second to the user-role endpoints (updateUserValidator).
+//
+// Not `.partial()`, even though §3.5 calls the five optional: the full object travels on every PUT
+// (CONVENTIONS.md §6.5, no diff computed here), and `updateUserValidator` answers 400 for a field
+// that travels empty — `body('email').optional().notEmpty()`. Optional means "may be absent", not
+// "may be blank", so the three the backend will not accept blank stay required here, exactly as
+// `UpdateUserInput` (§3.3) declares them. `username` and `phone` keep their `optional()`.
+export const updateUserSchema = createUserSchema.omit({ password: true, roleIds: true });
 
 export type UserFormValues = z.infer<typeof createUserSchema>;
 export type UserUpdateFormValues = z.infer<typeof updateUserSchema>;
@@ -40,4 +45,11 @@ export const userErrorFieldMap: Partial<Record<string, keyof UserFormValues>> = 
   USER_004_USERNAME_EXISTS: 'username',
   USER_001_ROLE_NOT_FOUND: 'roleIds',
   USER_001_ROLE_LEVEL_EXCEEDED: 'roleIds',
+};
+
+// The edit form has neither `password` nor `roleIds`, so only the two `004` codes can land on a
+// field. The `001` codes are unreachable from a `PUT` and would not type-check against its values.
+export const userUpdateErrorFieldMap: Partial<Record<string, keyof UserUpdateFormValues>> = {
+  USER_004_EMAIL_EXISTS: 'email',
+  USER_004_USERNAME_EXISTS: 'username',
 };
