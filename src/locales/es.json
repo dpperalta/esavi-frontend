@@ -1907,6 +1907,65 @@
       "hasActiveAssignments": "No se puede retirar un rol que todavía portan usuarios."
     }
   },
+  "userGeoLocation": {
+    "title": "Cobertura geográfica",
+    "empty": "Este usuario no tiene cobertura asignada.",
+    "emptyAll": "Este usuario no tiene ninguna asignación, ni vigente ni cerrada.",
+    "error": "No pudimos cargar la cobertura de este usuario.",
+    "showAll": "Mostrar cerradas y vencidas",
+    "badges": {
+      "current": "Vigente",
+      "expired": "Vencida",
+      "closed": "Cerrada"
+    },
+    "columns": {
+      "location": "Ubicación",
+      "level": "Nivel",
+      "validity": "Vigencia",
+      "assignedBy": "Asignada por"
+    },
+    "validity": {
+      "open": "Sin fecha de fin",
+      "title": "Editar vigencia",
+      "from": "Desde",
+      "to": "Hasta",
+      "submit": "Guardar vigencia"
+    },
+    "add": {
+      "title": "Añadir ubicaciones",
+      "picker": "Elegir ubicación",
+      "selected": "Ubicaciones elegidas",
+      "remove": "Quitar {{name}} de la lista",
+      "submit": "Añadir ubicaciones",
+      "alreadyAssigned": "Las ubicaciones que este usuario ya cubre no aparecen en el selector."
+    },
+    "reassign": {
+      "title": "Mover a otra ubicación",
+      "warning": "La asignación actual se cerrará y la nueva quedará vigente. Las dos escrituras ocurren en una sola transacción.",
+      "submit": "Mover"
+    },
+    "close": {
+      "title": "Cerrar la asignación",
+      "confirm": "Cerrar asignación",
+      "lastOneWarning": "Es la última asignación vigente de este usuario. Al cerrarla se quedará sin cobertura y dejará de ver unidades de salud al abrir un caso."
+    },
+    "coverage": {
+      "title": "Cobertura efectiva",
+      "count_one": "Cubre {{count}} ubicación.",
+      "count_other": "Cubre {{count}} ubicaciones.",
+      "empty": "No cubre ninguna ubicación.",
+      "expand": "Ver las ubicaciones cubiertas"
+    },
+    "errors": {
+      "geoNotFound": "Alguna de las ubicaciones elegidas dejó de estar activa. Revisa la lista.",
+      "assignmentExists": "Alguna de las ubicaciones ya estaba asignada. Vuelve a intentarlo con la lista actualizada.",
+      "invalidDateRange": "La fecha de fin tiene que ser posterior a la de inicio.",
+      "duplicateLocation": "Hay una ubicación repetida en la lista.",
+      "sameGeoLocation": "Es la misma ubicación que la actual.",
+      "alreadyInactive": "Esta asignación ya está cerrada.",
+      "alreadyActive": "Esta asignación ya está vigente."
+    }
+  },
   "errors": {
     "network": "No pudimos conectar con el servidor. Comprueba tu conexión.",
     "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo.",
