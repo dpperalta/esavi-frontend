@@ -16,7 +16,7 @@ const WHOLE_LIST_LIMIT = 100;
 
 // The validator's minimum for `q`. Below it the `008` answers 400 USER_008_QUERY_REQUIRED, and
 // that response is reserved for a `q` the backend cannot tokenize — never for a short one.
-const SEARCH_MIN_LENGTH = 2;
+export const SEARCH_MIN_LENGTH = 2;
 
 // POST   /api/users               ESAVI-USER-001   ADMIN       create, roleId: string | string[]
 // GET    /api/users               ESAVI-USER-002A  ADMIN       listing, active only

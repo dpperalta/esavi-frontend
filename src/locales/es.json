@@ -1792,6 +1792,7 @@
       "createLabel": "Crear usuario"
     },
     "search": {
+      "label": "Buscar usuario",
       "placeholder": "Nombre o correo",
       "hint": "Busca por palabra completa. El correo y el nombre de usuario se buscan enteros.",
       "usernameCaseHint": "El nombre de usuario distingue mayúsculas y minúsculas.",

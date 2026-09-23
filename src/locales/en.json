@@ -1792,6 +1792,7 @@
       "createLabel": "Create user"
     },
     "search": {
+      "label": "Search user",
       "placeholder": "Name or email",
       "hint": "Search by whole word. Email and username are searched in full.",
       "usernameCaseHint": "The username is case-sensitive.",

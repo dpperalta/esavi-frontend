@@ -1792,6 +1792,7 @@
       "createLabel": "Gebruiker aanmaken"
     },
     "search": {
+      "label": "Gebruiker zoeken",
       "placeholder": "Naam of e-mail",
       "hint": "Zoek per heel woord. E-mail en gebruikersnaam worden volledig gezocht.",
       "usernameCaseHint": "De gebruikersnaam is gevoelig voor hoofdletters.",
