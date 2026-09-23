@@ -1,5 +1,13 @@
 const fs = require('fs');
-const src = fs.readFileSync('tests/auth/roles.test.ts', 'utf8');
+// ROUTE_RULES moved out of the role test into its own setup module; the older path is kept
+// as a fallback so the script still works against an earlier checkout of the backend.
+const SOURCES = ['tests/setup/routeRules.ts', 'tests/auth/roles.test.ts'];
+const sourcePath = SOURCES.find((p) => fs.existsSync(p) && fs.readFileSync(p, 'utf8').includes('ROUTE_RULES'));
+if (!sourcePath) {
+  console.error('ROUTE_RULES not found in any of:', SOURCES.join(', '));
+  process.exit(1);
+}
+const src = fs.readFileSync(sourcePath, 'utf8');
 const start = src.indexOf('const ROUTE_RULES');
 const end = src.indexOf('\n];', start);
 const block = src.slice(start, end);
@@ -21,4 +29,4 @@ for (const [g, rs] of [...groups.entries()].sort((a, b) => a[0].localeCompare(b[
   for (const r of rs) out += `| \`${r.method}\` | \`${r.path}\` | ${r.minRole} | \`${r.code}\` |\n`;
 }
 fs.writeFileSync(process.argv[2], out);
-console.log('rutas:', rows.length, '| grupos:', groups.size);
+console.log('fuente:', sourcePath, '| rutas:', rows.length, '| grupos:', groups.size);

@@ -7,7 +7,7 @@ Todo lo que hay que tener claro antes de escribir una línea del frontend. Siete
 | **[CONVENTIONS.md](./CONVENTIONS.md)** | Cómo se escribe el código: nomenclatura, artefactos, capas, checklist | **Siempre**, antes de tocar `src/` |
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Qué construimos y con qué decisiones ya tomadas | Antes de empezar, y cada vez que aparezca una duda de diseño |
 | **[API-CONTRACT.md](./API-CONTRACT.md)** | Cómo se habla con el backend: envelope, auth, paginación, idioma, auditoría | Al escribir `client.ts` y `createResource.ts` |
-| **[API-ROUTES.md](./API-ROUTES.md)** | Las 354 rutas con su rol mínimo y su código de operación | Al construir cada pantalla |
+| **[API-ROUTES.md](./API-ROUTES.md)** | Las 355 rutas con su rol mínimo y su código de operación | Al construir cada pantalla |
 | **[DOMAIN-MODEL.md](./DOMAIN-MODEL.md)** | Qué entidades existen y cómo se conectan | Al diseñar formularios y decidir el orden de los pasos |
 | **[CASE-PROCESS.md](./CASE-PROCESS.md)** | Las reglas del recorrido del caso: seis pasos, cuatro fases, qué habilita y qué bloquea cada acción | Al redactar e implementar cualquier spec del wizard (`FE08`–`FE14`) |
 | **[ESAVI-FORM.md](./ESAVI-FORM.md)** | Qué se ve en pantalla: las secciones de los cuatro formularios, en su orden, con el texto exacto de cada pregunta | Al redactar cualquier spec que produzca pantalla del expediente |
@@ -19,7 +19,7 @@ Ninguno de estos documentos es una interpretación libre: todos salen de fuentes
 | Documento | Fuente |
 |---|---|
 | `CONVENTIONS.md` | Decisiones de este proyecto, derivadas de `ARCHITECTURE.md` y del canon del backend |
-| `API-ROUTES.md` | `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES` |
+| `API-ROUTES.md` | `esavi-backend/tests/setup/routeRules.ts` → `ROUTE_RULES` |
 | `API-CONTRACT.md` | `src/app.ts`, `src/middlewares/`, `src/services/auth.service.ts`, `references/CONVENTIONS.md`, `.env.example` |
 | `DOMAIN-MODEL.md` | `src/models/associations/*.ts`, `esaviapp.sql` |
 | `CASE-PROCESS.md` | `esaviapp.sql`, `src/services/*.service.ts`, `src/validators/*.validator.ts`, `references/functional/specs/`, y `references/external/` para los componentes de WHODrug y MedDRA |
@@ -48,9 +48,9 @@ node ../esavi-frontend/references/scripts/extract-routes.cjs \
 
 Luego se sustituye la sección «Rutas por entidad» de `API-ROUTES.md` por el contenido generado, y se actualizan la fecha y los totales de la cabecera.
 
-El script lee `ROUTE_RULES` del test de roles del backend, que es la matriz canónica de la §9 de `CONVENTIONS.md`: **una ruta que no está ahí no está protegida por la suite**, así que también sirve como aviso de endpoints sin cubrir.
+El script lee `ROUTE_RULES` de `tests/setup/routeRules.ts` —el módulo de apoyo del test de roles, con `tests/auth/roles.test.ts` como respaldo para un checkout anterior—, que es la matriz canónica de la §9 de `CONVENTIONS.md`: **una ruta que no está ahí no está protegida por la suite**, así que también sirve como aviso de endpoints sin cubrir.
 
-Y por eso mismo no basta con regenerar: el script sólo ve lo que el test declara. Para saber si el backend añadió una ruta **sin** darla de alta en `ROUTE_RULES` —que es el caso que dejaría un endpoint fuera de este inventario y sin cobertura— hay que cruzar la matriz contra los routers reales de `esavi-backend/src/routes/`. Cruce del 2026-09-08: las 354 filas cubren todo lo registrado salvo las cinco rutas abiertas de autenticación, `GET /api/health` y `POST /api/seed/admin`, las siete documentadas en la cabecera de `API-ROUTES.md`.
+Y por eso mismo no basta con regenerar: el script sólo ve lo que el test declara. Para saber si el backend añadió una ruta **sin** darla de alta en `ROUTE_RULES` —que es el caso que dejaría un endpoint fuera de este inventario y sin cobertura— hay que cruzar la matriz contra los routers reales de `esavi-backend/src/routes/`. Cruce del 2026-09-23: las 355 filas cubren todo lo registrado salvo las cinco rutas abiertas de autenticación, `GET /api/health` y `POST /api/seed/admin`, las siete documentadas en la cabecera de `API-ROUTES.md` — 362 registros de ruta en `src/routes/`, 355 + 7.
 
 ## Documentos del backend que conviene tener a mano
 

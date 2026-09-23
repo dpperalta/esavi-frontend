@@ -1,8 +1,10 @@
 # Inventario de rutas del backend
 
-> **Fuente:** `esavi-backend/tests/auth/roles.test.ts` → `ROUTE_RULES`
-> **Generado:** 2026-09-21 · **354 rutas** en **46 grupos**
-> **Verificado:** 2026-09-16 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Fuente:** `esavi-backend/tests/setup/routeRules.ts` → `ROUTE_RULES`
+> **Generado:** 2026-09-23 · **355 rutas** en **46 grupos**
+> **Verificado:** 2026-09-23 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Cambios de la regeneración del 2026-09-23 (SPEC F62 del backend):** una ruta nueva, `ESAVI-USER-008` — `GET /api/users/search?q=…`, rol mínimo `ADMIN`, el mismo que los dos listados de usuarios. Es el único filtro de texto que acepta `appUser`: `002A` y `002B` siguen sin aceptar nada más que `limit` y `offset`. Un solo parámetro `q`, resuelto por tres ramas en `OR` — tokens de `firstName`+`lastName` (palabra completa, desacentuada, conjuntiva), `email` exacto y `username` exacto sensible a mayúsculas —, porque las cinco columnas están cifradas y no admiten `ILIKE`. Ningún grupo nuevo; 354 → 355 rutas, 46 grupos.
+> **La fuente se movió:** `ROUTE_RULES` ya no vive en `tests/auth/roles.test.ts` sino en `tests/setup/routeRules.ts`; `references/scripts/extract-routes.cjs` busca ahora la primera de las dos.
 > **Cambios de la regeneración del 2026-09-21 (SPEC F60 del backend):** dieciocho rutas de los siete satélites del paso 4 con `isActive` cambiaron de rol mínimo. Once bajaron a `USER`: el `PUT` (`004`) y el `DELETE .../:id` (`005A`) de `NOTIFEVT`, `NOTIFVAC`, `NOTIFDIL` y `NOTIFMED`, y el `DELETE .../:id` (`005A`) de `NOTIFPRG`, `PREGCOMP` y `MEDHIST`. Siete `PATCH .../activate/:id` (`005B`), uno por cada una de esas siete entidades, bajaron de `SUPERADMIN` a `ADMIN`. Ningún grupo ni ruta nuevos; mismo total de 354/46. Los `002B` y los `005C` no cambian.
 > **Cambios de la regeneración del 2026-09-16:** cinco `DELETE .../:id` de satélites de la investigación bajaron de `ADMIN` a `USER` — `ESAVI-INVTEAM-005A`, `ESAVI-INVPREG-005A`, `ESAVI-EVALINST-005A`, `ESAVI-INVVACAD-005A` e `ESAVI-INVDIAG-005A`. Ningún grupo ni ruta nuevos; mismo total de 354/46 que la regeneración anterior.
 > **Cambios de la regeneración del 2026-09-08:** dos grupos nuevos, nueve rutas cada uno, ambos satélites con el mismo contrato (`001`, `002A`/`002B` por padre, `003`, `004`, `005A`/`005B`/`005C`, y un `006` que resuelve por caso):
@@ -70,7 +72,6 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 ---
 
 ## Rutas por entidad
-
 ### APPROLE
 
 | Método | Ruta | Rol mínimo | Código |
@@ -593,6 +594,7 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `POST` | `/api/users` | ADMIN | `ESAVI-USER-001` |
 | `GET` | `/api/users` | ADMIN | `ESAVI-USER-002A` |
 | `GET` | `/api/users/admin` | ADMIN | `ESAVI-USER-002B` |
+| `GET` | `/api/users/search?q=x` | ADMIN | `ESAVI-USER-008` |
 | `GET` | `/api/users/me` | USER | `ESAVI-USER-007` |
 | `PATCH` | `/api/users/me/password` | USER | `ESAVI-USER-006` |
 | `GET` | `/api/users/:id` | ADMIN | `ESAVI-USER-003` |

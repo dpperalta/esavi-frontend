@@ -29,7 +29,7 @@ Antes de escribir código, lee lo que corresponda de `references/`. Son decision
 - **`CONVENTIONS.md`** — la norma de código. Se lee siempre.
 - **`ARCHITECTURE.md`** — stack, tres capas de estado, capa de recurso genérica, sidebar, temas, preferencias, responsividad, seguridad de sesión y orden de construcción.
 - **`API-CONTRACT.md`** — envelope, auth, paginación, idioma, auditoría. Es la referencia de `client.ts` y `createResource.ts`.
-- **`API-ROUTES.md`** — las 354 rutas con su rol mínimo y su código de operación. **Generado, no se edita a mano** (ver `references/README.md`).
+- **`API-ROUTES.md`** — las 355 rutas con su rol mínimo y su código de operación. **Generado, no se edita a mano** (ver `references/README.md`).
 - **`DOMAIN-MODEL.md`** — entidades y relaciones; decide el orden de los pasos del wizard.
 - **`CASE-PROCESS.md`** — las reglas del recorrido del caso, columna por columna, contrastadas contra el validador y el servicio del backend. **Es la fuente de los specs `FE08`–`FE14`** y ninguno de ellos repite lo que dice: lo citan. Completo: los seis pasos, más `notificationMedicalHistory` (§5.4b) e `investigationDiagnostic` (§5.5.6) desde el 2026-09-08.
 
