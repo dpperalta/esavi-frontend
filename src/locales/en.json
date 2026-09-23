@@ -1853,6 +1853,60 @@
       "assignmentExists": "This user's roles changed while you were editing. Review the selection and save again."
     }
   },
+  "appRole": {
+    "list": {
+      "title": "Roles",
+      "empty": "No roles yet. Create the first one to get started.",
+      "emptySearch": "No role matches the search.",
+      "error": "We couldn't load the roles.",
+      "createLabel": "Create role"
+    },
+    "search": {
+      "placeholder": "Name or code",
+      "clear": "Clear search"
+    },
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Description",
+      "level": "Level",
+      "systemRole": "System role",
+      "status": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "badges": {
+      "systemRole": "System"
+    },
+    "form": {
+      "createTitle": "Create role",
+      "editTitle": "Edit role",
+      "normalizedPreview": "Will be saved as {{value}}",
+      "levelHint": "Known levels: 10 ANALYTICS, 25 USER, 50 ADMIN, 100 SUPERADMIN.",
+      "levelMax": "Your maximum level is {{level}}."
+    },
+    "deactivate": {
+      "title": "Retire this role?",
+      "confirm": "Retire role",
+      "holders_one": "{{count}} user holds this role.",
+      "holders_other": "{{count}} users hold this role.",
+      "viewHolders": "See who"
+    },
+    "holders": {
+      "title": "Who holds this role",
+      "empty": "Nobody holds this role."
+    },
+    "errors": {
+      "codeExists": "There is already a role with that code.",
+      "nameExists": "There is already a role with that name.",
+      "levelExceeded": "You can't create a role above your own level.",
+      "systemRole": "This is a system role: changing it requires a superadministrator.",
+      "superAdminRole": "The SUPERADMIN role can't be retired.",
+      "hasActiveAssignments": "A role that users still hold can't be retired."
+    }
+  },
   "errors": {
     "network": "We couldn't reach the server. Check your connection.",
     "unexpected": "Something went wrong. Please try again.",

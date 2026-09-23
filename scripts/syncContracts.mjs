@@ -19,6 +19,7 @@ const CONTRACTS_DIR = path.resolve(__dirname, '../src/contracts');
 const SYNC_MAP = [
   { source: 'user/user.types.ts', dest: 'user.ts' },
   { source: 'user/appUserRole.types.ts', dest: 'appUserRole.ts' },
+  { source: 'user/appRole.types.ts', dest: 'appRole.ts' },
   { source: 'common/audit.types.ts', dest: 'common.ts' },
   { source: 'catalog/catalogType.types.ts', dest: 'catalogType.ts' },
   { source: 'catalog/catalogItem.types.ts', dest: 'catalogItem.ts' },

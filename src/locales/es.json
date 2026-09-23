@@ -1853,6 +1853,60 @@
       "assignmentExists": "Los roles de este usuario cambiaron mientras editabas. Revisa la selección y vuelve a guardar."
     }
   },
+  "appRole": {
+    "list": {
+      "title": "Roles",
+      "empty": "Todavía no hay roles. Crea el primero para empezar.",
+      "emptySearch": "Ningún rol coincide con la búsqueda.",
+      "error": "No pudimos cargar los roles.",
+      "createLabel": "Crear rol"
+    },
+    "search": {
+      "placeholder": "Nombre o código",
+      "clear": "Limpiar búsqueda"
+    },
+    "columns": {
+      "code": "Código",
+      "name": "Nombre",
+      "description": "Descripción",
+      "level": "Nivel",
+      "systemRole": "Rol de sistema",
+      "status": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "badges": {
+      "systemRole": "Sistema"
+    },
+    "form": {
+      "createTitle": "Crear rol",
+      "editTitle": "Editar rol",
+      "normalizedPreview": "Se guardará como {{value}}",
+      "levelHint": "Niveles conocidos: 10 ANALYTICS, 25 USER, 50 ADMIN, 100 SUPERADMIN.",
+      "levelMax": "Tu nivel máximo es {{level}}."
+    },
+    "deactivate": {
+      "title": "¿Retirar este rol?",
+      "confirm": "Retirar rol",
+      "holders_one": "{{count}} usuario porta este rol.",
+      "holders_other": "{{count}} usuarios portan este rol.",
+      "viewHolders": "Ver quiénes"
+    },
+    "holders": {
+      "title": "Quién porta este rol",
+      "empty": "Nadie porta este rol."
+    },
+    "errors": {
+      "codeExists": "Ya hay un rol con ese código.",
+      "nameExists": "Ya hay un rol con ese nombre.",
+      "levelExceeded": "No puedes crear un rol por encima de tu propio nivel.",
+      "systemRole": "Es un rol de sistema: modificarlo exige un superadministrador.",
+      "superAdminRole": "El rol SUPERADMIN no se puede retirar.",
+      "hasActiveAssignments": "No se puede retirar un rol que todavía portan usuarios."
+    }
+  },
   "errors": {
     "network": "No pudimos conectar con el servidor. Comprueba tu conexión.",
     "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo.",

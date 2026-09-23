@@ -255,6 +255,14 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   // text asks for another attempt after `UserRolesCard` invalidates the assignments.
   USERROLE_007_ROLE_LEVEL_EXCEEDED: 'user.errors.roleLevelExceeded',
   USERROLE_007_ASSIGNMENT_EXISTS: 'user.errors.assignmentExists',
+  // SPEC FE21 §3.5 — the appRole codes with no field to mark. The duplicate and escalation codes
+  // of `001`/`004` are absent: `appRoleErrorFieldMap` routes those to `code`, `name` and `level`.
+  // These three reach the listing's row menu, which hides the action the backend refuses — they
+  // are the stale-tab case, and each needs a text that says which guard stopped it.
+  APPROLE_004_SYSTEM_ROLE: 'appRole.errors.systemRole',
+  APPROLE_005A_SYSTEM_ROLE: 'appRole.errors.systemRole',
+  APPROLE_005A_SUPERADMIN_ROLE: 'appRole.errors.superAdminRole',
+  APPROLE_005A_HAS_ACTIVE_ASSIGNMENTS: 'appRole.errors.hasActiveAssignments',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {
