@@ -71,7 +71,8 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   CASEFLOW_008_CLASSIFICATION_REQUIRED: 'caseWorkflow.errors.CASEFLOW_008_CLASSIFICATION_REQUIRED',
   CASEFLOW_008_NOTIFICATION_REQUIRED: 'caseWorkflow.errors.CASEFLOW_008_NOTIFICATION_REQUIRED',
   CASEFLOW_008_INVESTIGATION_REQUIRED: 'caseWorkflow.errors.CASEFLOW_008_INVESTIGATION_REQUIRED',
-  CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED: 'caseWorkflow.errors.CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED',
+  CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED:
+    'caseWorkflow.errors.CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED',
   CASEFLOW_008_CLOSE_FAILED: 'caseWorkflow.errors.CASEFLOW_008_CLOSE_FAILED',
   CASEFLOW_009_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_009_NOT_FOUND',
   CASEFLOW_009_NOT_CLOSED: 'caseWorkflow.errors.CASEFLOW_009_NOT_CLOSED',
@@ -234,10 +235,26 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   // either of these two (the description obligation is validated client-side and closing the gate
   // always clears the five fields in the same request), but the server's precedence between them
   // isn't reproduced, so both codes are registered regardless.
-  INVCOMM_001_SIMILAR_EVENT_DESCRIPTION_REQUIRED: 'investigation.community.errors.similarEventDescriptionRequired',
-  INVCOMM_004_SIMILAR_EVENT_DESCRIPTION_REQUIRED: 'investigation.community.errors.similarEventDescriptionRequired',
-  INVCOMM_001_SIMILAR_EVENT_FIELDS_NOT_ALLOWED: 'investigation.community.errors.similarEventFieldsNotAllowed',
-  INVCOMM_004_SIMILAR_EVENT_FIELDS_NOT_ALLOWED: 'investigation.community.errors.similarEventFieldsNotAllowed',
+  INVCOMM_001_SIMILAR_EVENT_DESCRIPTION_REQUIRED:
+    'investigation.community.errors.similarEventDescriptionRequired',
+  INVCOMM_004_SIMILAR_EVENT_DESCRIPTION_REQUIRED:
+    'investigation.community.errors.similarEventDescriptionRequired',
+  INVCOMM_001_SIMILAR_EVENT_FIELDS_NOT_ALLOWED:
+    'investigation.community.errors.similarEventFieldsNotAllowed',
+  INVCOMM_004_SIMILAR_EVENT_FIELDS_NOT_ALLOWED:
+    'investigation.community.errors.similarEventFieldsNotAllowed',
+  // SPEC FE20 §3.5 — the codes of the user screens that reach a toast. The six that go to a field
+  // (`USER_001_*`/`USER_004_*` duplicates and the two role codes of the alta) are absent: they are
+  // routed by `userErrorFieldMap` (features/user/schemas.ts) and never get here.
+  //
+  // The two 409 of `005A` need a text of their own: deactivating yourself and deactivating the last
+  // superadministrator are the two things an administrator has to understand at once.
+  USER_005A_SELF_DEACTIVATION: 'user.errors.selfDeactivation',
+  USER_005A_LAST_SUPERADMIN: 'user.errors.lastSuperAdmin',
+  // The roles block. `ASSIGNMENT_EXISTS` is not a rule the user broke: the cache was stale, so its
+  // text asks for another attempt after `UserRolesCard` invalidates the assignments.
+  USERROLE_007_ROLE_LEVEL_EXCEEDED: 'user.errors.roleLevelExceeded',
+  USERROLE_007_ASSIGNMENT_EXISTS: 'user.errors.assignmentExists',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {
