@@ -12,6 +12,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -20,12 +21,14 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { DropdownMenuItem } from '@/shared/components/ui/dropdown-menu';
 import { Input } from '@/shared/components/ui/input';
+import { Skeleton } from '@/shared/components/ui/skeleton';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
-import { appRoleResource } from './api';
+import { appRoleResource, useAppRoleDetail } from './api';
 import { AppRoleAuditSheet } from './AppRoleAuditSheet';
 import { AppRoleFormDialog } from './AppRoleFormDialog';
+import { AppRoleHoldersSheet } from './AppRoleHoldersSheet';
 import { formatRoleLevel, SUPERADMIN_ROLE_CODE } from './roleLevels';
 
 // The minimum of appRoleListValidator (`isLength({ min: 2 })` on both parameters): below it the
@@ -183,14 +186,21 @@ export function AppRoleListPage() {
   // page never names `roles/admin`. Ordered `level DESC, name ASC` by the backend, which is why
   // no sort control is offered.
   const list = appRoleResource.useList({ page, pageSize, includeInactive, filters });
-  // ESAVI-APPROLE-005B — `hasActivate` defaults true, so this hook always exists.
+  // ESAVI-APPROLE-005A / 005B — `hasActivate` defaults true, so both hooks always exist.
+  const deactivate = appRoleResource.useDeactivate();
   const activate = appRoleResource.useActivate!();
 
   const [auditId, setAuditId] = useState<string | null>(null);
   const [activateId, setActivateId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [, setRetiringId] = useState<string | null>(null);
+  const [retiringId, setRetiringId] = useState<string | null>(null);
+  const [holdersId, setHoldersId] = useState<string | null>(null);
+
+  // ESAVI-APPROLE-003 — asked when the confirmation opens and never while the listing is merely
+  // on screen: `activeUserCount` is one COUNT per call, which is why no list row carries it.
+  const retiring = useAppRoleDetail(retiringId ?? '', retiringId !== null);
+  const holderCount = retiring.data?.activeUserCount ?? 0;
 
   const listError = list.error instanceof EsaviApiError ? list.error : null;
 
@@ -234,6 +244,44 @@ export function AppRoleListPage() {
   function handleEdit(id: string) {
     setEditingId(id);
     setFormOpen(true);
+  }
+
+  function handleViewHolders(id: string) {
+    // The confirmation closes before the panel opens: two stacked Radix overlays fight over the
+    // focus trap. Nothing is lost — the row menu still offers to retire afterwards, and the
+    // count was never a guard, only a warning.
+    setRetiringId(null);
+    setHoldersId(id);
+  }
+
+  function handleRetire() {
+    if (!retiringId) {
+      return;
+    }
+    const id = retiringId;
+    deactivate.mutate(id, {
+      onSuccess: () => {
+        toast.success(t('common.toast.deactivated'));
+        setRetiringId(null);
+      },
+      onError: (error) => {
+        if (error instanceof EsaviApiError) {
+          // The count read on opening can go stale between the 003 and the DELETE; the 409 is the
+          // authority, and its message leads to the names behind the number.
+          if (error.code === 'APPROLE_005A_HAS_ACTIVE_ASSIGNMENTS') {
+            toast.error(getErrorMessage(error), {
+              action: {
+                label: t('appRole.deactivate.viewHolders'),
+                onClick: () => handleViewHolders(id),
+              },
+            });
+          } else {
+            toast.error(getErrorMessage(error));
+          }
+        }
+        setRetiringId(null);
+      },
+    });
   }
 
   function handleActivate() {
@@ -341,6 +389,48 @@ export function AppRoleListPage() {
       <AppRoleFormDialog open={formOpen} roleId={editingId} onOpenChange={setFormOpen} />
 
       <AlertDialog
+        open={retiringId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRetiringId(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('appRole.deactivate.title')}</AlertDialogTitle>
+            {retiring.isLoading ? (
+              <Skeleton className="h-4 w-48" />
+            ) : (
+              holderCount > 0 && (
+                <AlertDialogDescription>
+                  {t('appRole.deactivate.holders', { count: holderCount })}
+                </AlertDialogDescription>
+              )
+            )}
+          </AlertDialogHeader>
+          {holderCount > 0 && (
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto self-start p-0"
+              onClick={() => retiringId && handleViewHolders(retiringId)}
+            >
+              {t('appRole.deactivate.viewHolders')}
+            </Button>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.actions.cancel')}</AlertDialogCancel>
+            {/* Never disabled by the count: the backend decides, and disabling here would be
+                wrong the moment the count changes between the read and the send. */}
+            <AlertDialogAction onClick={handleRetire}>
+              {t('appRole.deactivate.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
         open={activateId !== null}
         onOpenChange={(open) => {
           if (!open) {
@@ -360,6 +450,16 @@ export function AppRoleListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AppRoleHoldersSheet
+        open={holdersId !== null}
+        roleId={holdersId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setHoldersId(null);
+          }
+        }}
+      />
 
       <AppRoleAuditSheet
         open={auditId !== null}

@@ -255,3 +255,115 @@ describe('AppRoleListPage — roles de sistema y ciclo de vida', () => {
     expect(screen.queryByRole('menuitem', { name: 'Ver auditoría' })).not.toBeInTheDocument();
   });
 });
+
+describe('AppRoleListPage — la retirada informada', () => {
+  function mockDetail(activeUserCount: number) {
+    const calls: string[] = [];
+    server.use(
+      http.get('http://localhost:4500/api/roles/role-1', ({ request }) => {
+        calls.push(request.url);
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { ...makeRole(), activeUserCount },
+        });
+      }),
+    );
+    return calls;
+  }
+
+  it('con el diálogo cerrado no pide el detalle', async () => {
+    signInAs('ADMIN', 50);
+    mockListing();
+    const detailCalls = mockDetail(0);
+
+    renderPage();
+    await screen.findAllByText('SUPERVISOR');
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    expect(detailCalls.length).toBe(0);
+  });
+
+  it('al abrirlo pide el detalle una sola vez y muestra el recuento antes del DELETE', async () => {
+    signInAs('ADMIN', 50);
+    mockListing();
+    const detailCalls = mockDetail(4);
+    let deleteCalls = 0;
+    server.use(
+      http.delete('http://localhost:4500/api/roles/role-1', () => {
+        deleteCalls += 1;
+        return HttpResponse.json({ ok: true, message: 'ok', data: {} });
+      }),
+    );
+    const user = setupUser();
+
+    renderPage();
+    const menus = await screen.findAllByRole('button', { name: 'Acciones de la fila' });
+    await user.click(menus[0]);
+    await user.click(await screen.findByRole('menuitem', { name: 'Dar de baja' }));
+
+    expect(await screen.findByText('4 usuarios portan este rol.')).toBeInTheDocument();
+    await waitFor(() => expect(detailCalls.length).toBe(1));
+    expect(deleteCalls).toBe(0);
+
+    await user.click(screen.getByRole('button', { name: 'Retirar rol' }));
+    await waitFor(() => expect(deleteCalls).toBe(1));
+  });
+
+  it('«ver quiénes» abre el Sheet de portadores', async () => {
+    signInAs('ADMIN', 50);
+    mockListing();
+    mockDetail(4);
+    server.use(
+      http.get('http://localhost:4500/api/user-roles/role/role-1', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 1,
+            role: { roleId: 'role-1', code: 'SUPERVISOR', name: 'SUPERVISOR', level: 60 },
+            rows: [
+              {
+                userRoleId: 'ur-1',
+                userId: 'user-1',
+                roleId: 'role-1',
+                assignedByUserId: null,
+                isActive: true,
+                user: {
+                  userId: 'user-1',
+                  username: 'aperez',
+                  firstName: 'Ana',
+                  lastName: 'Pérez',
+                  email: 'ana@minsa.gob',
+                },
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    const user = setupUser();
+
+    renderPage();
+    const menus = await screen.findAllByRole('button', { name: 'Acciones de la fila' });
+    await user.click(menus[0]);
+    await user.click(await screen.findByRole('menuitem', { name: 'Dar de baja' }));
+    await user.click(await screen.findByRole('button', { name: 'Ver quiénes' }));
+
+    expect(await screen.findByText('Ana Pérez')).toBeInTheDocument();
+  });
+
+  it('la página del Sheet no aparece en searchParams', async () => {
+    signInAs('ADMIN', 50);
+    mockListing();
+    mockDetail(0);
+    const user = setupUser();
+
+    const router = renderPage();
+    const menus = await screen.findAllByRole('button', { name: 'Acciones de la fila' });
+    await user.click(menus[0]);
+    await user.click(await screen.findByRole('menuitem', { name: 'Dar de baja' }));
+
+    expect(router.state.location.search).toBe('');
+  });
+});
