@@ -1,6 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { BulkAssignGeoLocationsInput, ReassignGeoLocationInput } from '@/contracts/appUserGeoLocation';
-import type { GeoAssignment, UpdateGeoValidityInput, UserGeoCoverage } from '@/contracts/declared/userGeoLocation';
+import type {
+  BulkAssignGeoLocationsInput,
+  ReassignGeoLocationInput,
+} from '@/contracts/appUserGeoLocation';
+import type {
+  GeoAssignment,
+  UpdateGeoValidityInput,
+  UserGeoCoverage,
+} from '@/contracts/declared/userGeoLocation';
 import { client } from '@/shared/api/client';
 import { createResource } from '@/shared/api/createResource';
 
@@ -13,20 +20,22 @@ import { createResource } from '@/shared/api/createResource';
 // The factory's `useCreate` and `useOne` are deliberately left unused: SPEC FE22 §3.2 consumes
 // neither ESAVI-USERGEO-001 (the bulk 007 covers one location and many with one transaction)
 // nor ESAVI-USERGEO-003 (the listing already carries the whole row).
-export const userGeoLocationResource = createResource<GeoAssignment, never, UpdateGeoValidityInput>({
-  key: 'userGeoLocation',
-  path: 'user-geo-locations',
-  idField: 'userGeoLocationId',
-  inactiveMode: 'adminPath',
-  // Required by `assertConfig` whenever `inactiveMode` is `'adminPath'`, though this entity is
-  // only ever listed by parent: there is no flat `GET /api/user-geo-locations` in the inventory.
-  adminPath: 'user-geo-locations/admin',
-  parent: {
-    operation: 'byUser',
-    segment: 'user/:parentId',
-    adminSegment: 'admin/user/:parentId',
+export const userGeoLocationResource = createResource<GeoAssignment, never, UpdateGeoValidityInput>(
+  {
+    key: 'userGeoLocation',
+    path: 'user-geo-locations',
+    idField: 'userGeoLocationId',
+    inactiveMode: 'adminPath',
+    // Required by `assertConfig` whenever `inactiveMode` is `'adminPath'`, though this entity is
+    // only ever listed by parent: there is no flat `GET /api/user-geo-locations` in the inventory.
+    adminPath: 'user-geo-locations/admin',
+    parent: {
+      operation: 'byUser',
+      segment: 'user/:parentId',
+      adminSegment: 'admin/user/:parentId',
+    },
   },
-});
+);
 
 // ESAVI-USERGEO-008 — the endpoint SPEC FE10 §3.1 declared: `CaseOpeningStep` imports it to cross
 // the health-facility search against the caller's coverage. Its `staleTime` is what makes the
@@ -36,7 +45,9 @@ export function useUserGeoCoverage(userId: string) {
   return useQuery({
     queryKey: ['userGeoLocation', 'coverage', userId],
     queryFn: async () => {
-      const response = await client.get<UserGeoCoverage>(`user-geo-locations/user/${userId}/coverage`);
+      const response = await client.get<UserGeoCoverage>(
+        `user-geo-locations/user/${userId}/coverage`,
+      );
       return response.data;
     },
     enabled: !!userId,
@@ -81,7 +92,13 @@ export function useUpdateGeoValidity() {
 export function useReassignGeoLocation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ userGeoLocationId, data }: { userGeoLocationId: string; data: ReassignGeoLocationInput }) => {
+    mutationFn: async ({
+      userGeoLocationId,
+      data,
+    }: {
+      userGeoLocationId: string;
+      data: ReassignGeoLocationInput;
+    }) => {
       await client.patch(`user-geo-locations/reassign/${userGeoLocationId}`, data);
     },
     onSuccess: () => {

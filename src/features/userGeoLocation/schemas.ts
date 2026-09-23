@@ -27,7 +27,10 @@ export function composeValidTo(isoDay: string): string {
 }
 
 // The day the `<DateField>` primitive produces: YYYY-MM-DD, or null when the field is cleared.
-const validityDayField = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable();
+const validityDayField = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .nullable();
 
 interface ValidityDays {
   validFrom: string | null;

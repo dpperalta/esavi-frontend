@@ -8,7 +8,12 @@ import type { AssignedUser } from '@/contracts/declared/appUserRole';
 // assigned can still notify at a facility in one of its cantons, which is in `coverage` alone.
 export interface UserGeoCoverage {
   assigned: { geoLocationId: string; name: string; level: number }[];
-  coverage: { geoLocationId: string; name: string; level: number; parentGeoLocationId: string | null }[];
+  coverage: {
+    geoLocationId: string;
+    name: string;
+    level: number;
+    parentGeoLocationId: string | null;
+  }[];
   count: number;
 }
 
@@ -28,7 +33,12 @@ export interface GeoAssignment {
   updatedAt: string | null;
   deletedAt: string | null;
   appDetails: AppDetails[] | null;
-  geoLocation: { geoLocationId: string; name: string; level: number; parentGeoLocationId: string | null };
+  geoLocation: {
+    geoLocationId: string;
+    name: string;
+    level: number;
+    parentGeoLocationId: string | null;
+  };
 }
 
 // 002A/002B answer `{ count, user, rows }`: the user once, not per row. `user` is the same

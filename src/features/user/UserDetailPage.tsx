@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
+import { UserGeoCoverageCard } from '@/features/userGeoLocation/UserGeoCoverageCard';
 import { userResource } from './api';
 import { UserFormDialog } from './UserFormDialog';
 import { UserRolesCard } from './UserRolesCard';
@@ -192,6 +193,10 @@ export function UserDetailPage() {
 
         <UserRolesCard userId={userId} readOnly={!isActive} />
       </div>
+
+      {/* SPEC FE22 §3.1 — the third block, full width: its rows carry a name, a badge and a date
+          range, and splitting them into half a ficha would wrap every one of them. */}
+      <UserGeoCoverageCard userId={userId} />
 
       <UserFormDialog open={editOpen} userId={userId} onOpenChange={setEditOpen} />
 
