@@ -21,6 +21,11 @@ export interface GeoLocationPickerProps {
   // filters by id equality in whatever options each level actually loads — it doesn't resolve
   // the full subtree, which the backend has no recursive endpoint for.
   excludeSubtreeOf?: string;
+  // geoLocationIds this picker must not offer, at whatever level each one sits (SPEC FE22 §3.5):
+  // what the user already covers, plus what is already in the dialog's preview list. Like
+  // `excludeSubtreeOf` it filters by id equality on the options each level loads — it does not
+  // resolve subtrees, so a descendant of an excluded node is still offered.
+  excludeIds?: string[];
   // geoLevelTypeId of the entity the parent is being chosen for (the level selected elsewhere in
   // the same form/filter row). The cascade stops one level short of it — offering a level-3
   // parent for a level-3 entity would create a location that's its own sibling's child, not an
@@ -32,6 +37,7 @@ export interface GeoLocationPickerProps {
 interface LevelProps {
   filters: Record<string, string>;
   excludeSubtreeOf?: string;
+  excludeIds?: string[];
   maxSortOrder?: number;
   isTopLevel: boolean;
   onFinalChange: (geoLocationId: string | null) => void;
@@ -44,6 +50,7 @@ interface LevelProps {
 function GeoLocationPickerLevel({
   filters,
   excludeSubtreeOf,
+  excludeIds,
   maxSortOrder,
   isTopLevel,
   onFinalChange,
@@ -64,7 +71,9 @@ function GeoLocationPickerLevel({
 
   if (list.isError) {
     const message =
-      list.error instanceof EsaviApiError ? getErrorMessage(list.error) : t('common.errors.unexpected');
+      list.error instanceof EsaviApiError
+        ? getErrorMessage(list.error)
+        : t('common.errors.unexpected');
     return (
       <div className="flex items-center gap-2">
         <p className="text-sm text-destructive">{message}</p>
@@ -75,14 +84,17 @@ function GeoLocationPickerLevel({
     );
   }
 
-  const rows = (list.data?.rows ?? []).filter((row) => row.geoLocationId !== excludeSubtreeOf);
+  const rows = (list.data?.rows ?? [])
+    .filter((row) => row.geoLocationId !== excludeSubtreeOf)
+    .filter((row) => !excludeIds?.includes(row.geoLocationId));
 
   const levelSortOrder = levelTypes.data?.rows.find(
     (row) => row.geoLevelTypeId === rows[0]?.geoLevelTypeId,
   )?.sortOrder;
   // The level being created/filtered can't be its own parent's level, nor deeper — never render
   // a level whose sortOrder reaches maxSortOrder.
-  const tooDeep = maxSortOrder !== undefined && levelSortOrder !== undefined && levelSortOrder >= maxSortOrder;
+  const tooDeep =
+    maxSortOrder !== undefined && levelSortOrder !== undefined && levelSortOrder >= maxSortOrder;
 
   if (tooDeep && isTopLevel) {
     // No level qualifies as a possible parent at all (e.g. creating a root-level entity) — say
@@ -104,8 +116,7 @@ function GeoLocationPickerLevel({
   }
 
   const levelName =
-    levelTypes.data?.rows.find((row) => row.geoLevelTypeId === rows[0]?.geoLevelTypeId)?.name ??
-    '';
+    levelTypes.data?.rows.find((row) => row.geoLevelTypeId === rows[0]?.geoLevelTypeId)?.name ?? '';
 
   return (
     <div className="flex flex-col gap-2">
@@ -139,6 +150,7 @@ function GeoLocationPickerLevel({
           key={selected}
           filters={{ parentId: selected }}
           excludeSubtreeOf={excludeSubtreeOf}
+          excludeIds={excludeIds}
           maxSortOrder={maxSortOrder}
           isTopLevel={false}
           onFinalChange={onFinalChange}
@@ -154,6 +166,7 @@ export function GeoLocationPicker({
   value,
   onChange,
   excludeSubtreeOf,
+  excludeIds,
   maxLevelTypeId,
 }: GeoLocationPickerProps) {
   const { t } = useTranslation();
@@ -239,6 +252,7 @@ export function GeoLocationPicker({
       key={resetToken}
       filters={{ geoLevelId: rootLevelTypeId }}
       excludeSubtreeOf={excludeSubtreeOf}
+      excludeIds={excludeIds}
       maxSortOrder={maxSortOrder}
       isTopLevel
       onFinalChange={handleFinalChange}

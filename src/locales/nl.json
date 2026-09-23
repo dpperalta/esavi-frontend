@@ -1937,6 +1937,7 @@
       "selected": "Gekozen locaties",
       "remove": "{{name}} uit de lijst verwijderen",
       "submit": "Locaties toevoegen",
+      "toList": "Aan de lijst toevoegen",
       "alreadyAssigned": "Locaties die deze gebruiker al dekt, worden niet in de keuzelijst aangeboden."
     },
     "reassign": {

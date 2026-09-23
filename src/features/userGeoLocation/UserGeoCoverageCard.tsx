@@ -11,9 +11,12 @@ import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Switch } from '@/shared/components/ui/switch';
+import { ROLE_LEVELS } from '@/shared/config/roles';
+import { useCan } from '@/shared/hooks/useCan';
 import { cn } from '@/shared/lib/utils';
 import type { Language } from '@/shared/stores/preferences.types';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
+import { AddGeoAssignmentsDialog } from './AddGeoAssignmentsDialog';
 import { useGeoAssignmentsByUser } from './api';
 import { CoverageSummary } from './CoverageSummary';
 
@@ -60,6 +63,9 @@ export function UserGeoCoverageCard({ userId }: UserGeoCoverageCardProps) {
   // The only piece of this block's state that is not in the URL, declared as an exception in §3.4:
   // the ficha already has a link of its own, and the page of one of its cards is not shared.
   const [page, setPage] = useState(1);
+  const [addOpen, setAddOpen] = useState(false);
+  // ESAVI-USERGEO-007 is ADMIN in the inventory, same as the ficha's own guard.
+  const canEdit = useCan(ROLE_LEVELS.ADMIN);
 
   // ESAVI-USERGEO-002A with the toggle off, ESAVI-USERGEO-002B with it on — the hook carries both
   // dimensions, the route and `?current=`.
@@ -87,16 +93,24 @@ export function UserGeoCoverageCard({ userId }: UserGeoCoverageCardProps) {
     <Card>
       <CardHeader className="flex flex-wrap items-center justify-between gap-3">
         <CardTitle className="text-pretty">{t('userGeoLocation.title')}</CardTitle>
-        {/* The whole label is the hit target, and `min-h-11` gives it the 44px the switch alone
-            does not reach (CONVENTIONS.md §10.2). */}
-        <label className="flex min-h-11 items-center gap-2 text-sm text-muted-foreground">
-          <Switch
-            checked={coverageAll}
-            onCheckedChange={handleToggle}
-            aria-label={t('userGeoLocation.showAll')}
-          />
-          <span>{t('userGeoLocation.showAll')}</span>
-        </label>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* The whole label is the hit target, and `min-h-11` gives it the 44px the switch alone
+              does not reach (CONVENTIONS.md §10.2). */}
+          <label className="flex min-h-11 items-center gap-2 text-sm text-muted-foreground">
+            <Switch
+              checked={coverageAll}
+              onCheckedChange={handleToggle}
+              aria-label={t('userGeoLocation.showAll')}
+            />
+            <span>{t('userGeoLocation.showAll')}</span>
+          </label>
+          {/* Hidden, not disabled, for a role that will never be able to press it (§4.4). */}
+          {canEdit && (
+            <Button type="button" variant="outline" onClick={() => setAddOpen(true)}>
+              {t('userGeoLocation.add.title')}
+            </Button>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="flex flex-col gap-4">
@@ -203,6 +217,8 @@ export function UserGeoCoverageCard({ userId }: UserGeoCoverageCardProps) {
           </nav>
         )}
       </CardContent>
+
+      <AddGeoAssignmentsDialog open={addOpen} onOpenChange={setAddOpen} userId={userId} />
     </Card>
   );
 }

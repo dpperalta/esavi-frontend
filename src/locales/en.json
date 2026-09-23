@@ -1937,6 +1937,7 @@
       "selected": "Chosen locations",
       "remove": "Remove {{name}} from the list",
       "submit": "Add locations",
+      "toList": "Add to the list",
       "alreadyAssigned": "Locations this user already covers are not offered in the picker."
     },
     "reassign": {

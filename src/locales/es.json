@@ -1937,6 +1937,7 @@
       "selected": "Ubicaciones elegidas",
       "remove": "Quitar {{name}} de la lista",
       "submit": "Añadir ubicaciones",
+      "toList": "Añadir a la lista",
       "alreadyAssigned": "Las ubicaciones que este usuario ya cubre no aparecen en el selector."
     },
     "reassign": {

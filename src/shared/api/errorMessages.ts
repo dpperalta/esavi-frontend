@@ -263,6 +263,15 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   APPROLE_005A_SYSTEM_ROLE: 'appRole.errors.systemRole',
   APPROLE_005A_SUPERADMIN_ROLE: 'appRole.errors.superAdminRole',
   APPROLE_005A_HAS_ACTIVE_ASSIGNMENTS: 'appRole.errors.hasActiveAssignments',
+  // SPEC FE22 §3.5 — the userGeoLocation codes with no field to mark. `007_ASSIGNMENT_EXISTS` is
+  // here and not in a field map on purpose: it means the picker's exclusion was stale, so the
+  // text asks for another attempt after the listing is invalidated. The other three describe the
+  // state of a row the action menu already hides — the stale-tab case.
+  USERGEO_007_ASSIGNMENT_EXISTS: 'userGeoLocation.errors.assignmentExists',
+  USERGEO_004_ALREADY_INACTIVE: 'userGeoLocation.errors.alreadyInactive',
+  USERGEO_005A_ALREADY_INACTIVE: 'userGeoLocation.errors.alreadyInactive',
+  USERGEO_006_ALREADY_INACTIVE: 'userGeoLocation.errors.alreadyInactive',
+  USERGEO_005B_ALREADY_ACTIVE: 'userGeoLocation.errors.alreadyActive',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {
