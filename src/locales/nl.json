@@ -1783,6 +1783,72 @@
       "confirm": "Configuratie «{{code}}» buiten gebruik stellen?"
     }
   },
+  "user": {
+    "list": {
+      "title": "Gebruikers",
+      "empty": "Nog geen gebruikers. Maak de eerste aan om te beginnen.",
+      "emptySearch": "Geen gebruiker komt overeen met de zoekopdracht. Namen worden per heel woord gezocht, e-mail en gebruikersnaam volledig.",
+      "error": "We konden de gebruikers niet laden.",
+      "createLabel": "Gebruiker aanmaken"
+    },
+    "search": {
+      "placeholder": "Naam of e-mail",
+      "hint": "Zoek per heel woord. E-mail en gebruikersnaam worden volledig gezocht.",
+      "usernameCaseHint": "De gebruikersnaam is gevoelig voor hoofdletters.",
+      "disablesInactive": "Bij zoeken worden alleen actieve gebruikers weergegeven.",
+      "queryRequired": "Typ minstens één zoekbaar woord.",
+      "resultsAnnounce": "{{count}} gebruikers gevonden",
+      "clear": "Zoekopdracht wissen"
+    },
+    "columns": {
+      "displayName": "Naam",
+      "email": "E-mail",
+      "username": "Gebruikersnaam",
+      "phone": "Telefoon",
+      "roles": "Rollen",
+      "status": "Status",
+      "createdAt": "Aangemaakt"
+    },
+    "field": {
+      "firstName": "Voornaam",
+      "lastName": "Achternaam",
+      "email": "E-mail",
+      "username": "Gebruikersnaam",
+      "phone": "Telefoon",
+      "roles": "Rollen"
+    },
+    "form": {
+      "createTitle": "Gebruiker aanmaken",
+      "editTitle": "Gebruiker bewerken",
+      "password": "Wachtwoord",
+      "passwordHint": "Minimaal 8 tekens.",
+      "usernameHint": "Optioneel. Gevoelig voor hoofdletters.",
+      "requiresPasswordChange": "De gebruiker moet het wachtwoord bij de eerste aanmelding wijzigen."
+    },
+    "detail": {
+      "title": "Gebruikersgegevens",
+      "notFound": "Deze gebruiker bestaat niet of is verwijderd.",
+      "inactive": "Inactief",
+      "backToList": "Terug naar gebruikers"
+    },
+    "roles": {
+      "title": "Toegewezen rollen",
+      "save": "Rollen opslaan",
+      "saved": "De rollen zijn bijgewerkt.",
+      "partial": "Sommige rollen konden niet worden ingetrokken: {{roles}}.",
+      "placeholder": "Kies een of meer rollen",
+      "empty": "Deze gebruiker heeft geen rol en kan niets doen totdat er een wordt toegewezen."
+    },
+    "errors": {
+      "emailExists": "Er bestaat al een gebruiker met dat e-mailadres.",
+      "usernameExists": "Er bestaat al een gebruiker met die gebruikersnaam.",
+      "roleNotFound": "Een van de gekozen rollen bestaat niet meer.",
+      "roleLevelExceeded": "Je kunt geen rol toewijzen die hoger is dan je eigen rol.",
+      "selfDeactivation": "Je kunt je eigen account niet deactiveren.",
+      "lastSuperAdmin": "De laatste superbeheerder kan niet worden gedeactiveerd.",
+      "assignmentExists": "De rollen van deze gebruiker zijn gewijzigd tijdens het bewerken. Controleer de selectie en sla opnieuw op."
+    }
+  },
   "errors": {
     "network": "We konden geen verbinding maken met de server. Controleer uw internetverbinding.",
     "unexpected": "Er is iets misgegaan. Probeer het opnieuw.",

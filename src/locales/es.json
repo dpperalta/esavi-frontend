@@ -1783,6 +1783,72 @@
       "confirm": "¿Dar de baja la configuración «{{code}}»?"
     }
   },
+  "user": {
+    "list": {
+      "title": "Usuarios",
+      "empty": "Todavía no hay usuarios. Crea el primero para empezar.",
+      "emptySearch": "Ningún usuario coincide con la búsqueda. Recuerda que el nombre se busca por palabra completa, y el correo y el usuario, enteros.",
+      "error": "No pudimos cargar los usuarios.",
+      "createLabel": "Crear usuario"
+    },
+    "search": {
+      "placeholder": "Nombre o correo",
+      "hint": "Busca por palabra completa. El correo y el nombre de usuario se buscan enteros.",
+      "usernameCaseHint": "El nombre de usuario distingue mayúsculas y minúsculas.",
+      "disablesInactive": "Al buscar sólo se ven usuarios activos.",
+      "queryRequired": "Escribe al menos una palabra que se pueda buscar.",
+      "resultsAnnounce": "{{count}} usuarios encontrados",
+      "clear": "Limpiar búsqueda"
+    },
+    "columns": {
+      "displayName": "Nombre",
+      "email": "Correo",
+      "username": "Usuario",
+      "phone": "Teléfono",
+      "roles": "Roles",
+      "status": "Estado",
+      "createdAt": "Creado"
+    },
+    "field": {
+      "firstName": "Nombres",
+      "lastName": "Apellidos",
+      "email": "Correo",
+      "username": "Nombre de usuario",
+      "phone": "Teléfono",
+      "roles": "Roles"
+    },
+    "form": {
+      "createTitle": "Crear usuario",
+      "editTitle": "Editar usuario",
+      "password": "Contraseña",
+      "passwordHint": "Mínimo 8 caracteres.",
+      "usernameHint": "Opcional. Distingue mayúsculas y minúsculas.",
+      "requiresPasswordChange": "El usuario tendrá que cambiar la contraseña la primera vez que entre."
+    },
+    "detail": {
+      "title": "Ficha del usuario",
+      "notFound": "Este usuario no existe o fue eliminado.",
+      "inactive": "Inactivo",
+      "backToList": "Volver a usuarios"
+    },
+    "roles": {
+      "title": "Roles asignados",
+      "save": "Guardar roles",
+      "saved": "Los roles se actualizaron correctamente.",
+      "partial": "Algunos roles no se pudieron retirar: {{roles}}.",
+      "placeholder": "Elige uno o más roles",
+      "empty": "Este usuario no tiene ningún rol asignado y no podrá hacer nada hasta que se le asigne uno."
+    },
+    "errors": {
+      "emailExists": "Ya hay un usuario con ese correo.",
+      "usernameExists": "Ya hay un usuario con ese nombre de usuario.",
+      "roleNotFound": "Alguno de los roles elegidos ya no existe.",
+      "roleLevelExceeded": "No puedes asignar un rol por encima del tuyo.",
+      "selfDeactivation": "No puedes darte de baja a ti mismo.",
+      "lastSuperAdmin": "No se puede dar de baja al último superadministrador.",
+      "assignmentExists": "Los roles de este usuario cambiaron mientras editabas. Revisa la selección y vuelve a guardar."
+    }
+  },
   "errors": {
     "network": "No pudimos conectar con el servidor. Comprueba tu conexión.",
     "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo.",
