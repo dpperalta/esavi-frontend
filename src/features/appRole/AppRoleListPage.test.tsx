@@ -256,6 +256,61 @@ describe('AppRoleListPage — roles de sistema y ciclo de vida', () => {
   });
 });
 
+describe('AppRoleListPage — la vista es reproducible desde el enlace', () => {
+  it('un enlace con búsqueda y página pinta esa misma vista, sin tocar nada', async () => {
+    signInAs('ADMIN', 50);
+    const calls = mockListing();
+
+    renderPage('/roles?q=su&page=2');
+
+    await screen.findAllByText('SUPERVISOR');
+    const search = calls[0].searchParams;
+    expect(search.get('name')).toBe('su');
+    expect(search.get('code')).toBe('su');
+    expect(Number(search.get('offset'))).toBe(Number(search.get('limit')));
+    // El campo se resiembra desde la URL: el término no vive en el componente.
+    expect(screen.getByLabelText('Nombre o código')).toHaveValue('su');
+  });
+});
+
+describe('AppRoleListPage — la auditoría', () => {
+  it('con SUPERADMIN, «Ver auditoría» pide el detalle y pinta el historial', async () => {
+    signInAs('SUPERADMIN', 100);
+    mockListing();
+    let detailCalls = 0;
+    server.use(
+      http.get('http://localhost:4500/api/roles/role-1', () => {
+        detailCalls += 1;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            ...makeRole(),
+            activeUserCount: 0,
+            appDetails: [
+              {
+                createdAt: '2026-09-01T10:00:00.000Z',
+                user: 'me-1',
+                method: 'ESAVI-APPROLE-001',
+                detail: 'App role created by service',
+              },
+            ],
+          },
+        });
+      }),
+    );
+    const user = setupUser();
+
+    renderPage();
+    const menus = await screen.findAllByRole('button', { name: 'Acciones de la fila' });
+    await user.click(menus[0]);
+    await user.click(await screen.findByRole('menuitem', { name: 'Ver auditoría' }));
+
+    await waitFor(() => expect(detailCalls).toBe(1));
+    expect(await screen.findByText('ESAVI-APPROLE-001')).toBeInTheDocument();
+  });
+});
+
 describe('AppRoleListPage — la retirada informada', () => {
   function mockDetail(activeUserCount: number) {
     const calls: string[] = [];

@@ -4,9 +4,10 @@ import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import type { ReactNode } from 'react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { useAppRoles } from '@/features/user/api';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
-import { useAppRoleDetail, useRoleHolders } from './api';
+import { appRoleResource, useAppRoleDetail, useRoleHolders } from './api';
 
 const server = setupServer();
 
@@ -124,5 +125,33 @@ describe('useRoleHolders — ESAVI-USERROLE-006', () => {
 
     await waitFor(() => expect(result.current.fetchStatus).toBe('idle'));
     expect(result.current.data).toBeUndefined();
+  });
+});
+
+// The clave de caché compartida is what makes this free (SPEC FE21 §3.4, §8): FE20's selector
+// reads `['appRole', 'list']`, this screen invalidates `['appRole']` whole, and a role retired
+// here stops being offered in the user form without a reload.
+describe('invalidación de appRole — ESAVI-APPROLE-005A', () => {
+  it('retirar un rol refresca el selector de roles de la ficha de usuario de FE20', async () => {
+    let listCalls = 0;
+    server.use(
+      http.get('http://localhost:4500/api/roles', () => {
+        listCalls += 1;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+      http.delete(`http://localhost:4500/api/roles/${ROLE_ID}`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: {} }),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+
+    const selector = renderHook(() => useAppRoles(), { wrapper: Wrapper });
+    await waitFor(() => expect(selector.result.current.isSuccess).toBe(true));
+    expect(listCalls).toBe(1);
+
+    const deactivate = renderHook(() => appRoleResource.useDeactivate(), { wrapper: Wrapper });
+    deactivate.result.current.mutate(ROLE_ID);
+
+    await waitFor(() => expect(listCalls).toBe(2));
   });
 });

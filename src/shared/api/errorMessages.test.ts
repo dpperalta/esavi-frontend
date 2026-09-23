@@ -32,11 +32,17 @@ describe('getErrorMessage', () => {
   it.each([
     ['CASEFLOW_008_NOT_FOUND', 'El caso no tiene expediente de flujo.'],
     ['CASEFLOW_008_ALREADY_CLOSED', 'Este expediente ya estaba cerrado.'],
-    ['CASEFLOW_008_PENDING_VALIDATION', 'No se puede cerrar: el expediente está pendiente de validación.'],
+    [
+      'CASEFLOW_008_PENDING_VALIDATION',
+      'No se puede cerrar: el expediente está pendiente de validación.',
+    ],
     ['CASEFLOW_008_CLASSIFICATION_REQUIRED', 'No se puede cerrar: falta la clasificación inicial.'],
     ['CASEFLOW_008_NOTIFICATION_REQUIRED', 'No se puede cerrar: falta la notificación.'],
     ['CASEFLOW_008_INVESTIGATION_REQUIRED', 'No se puede cerrar: falta la investigación.'],
-    ['CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED', 'No se puede cerrar: falta la clasificación final.'],
+    [
+      'CASEFLOW_008_FINAL_CLASSIFICATION_REQUIRED',
+      'No se puede cerrar: falta la clasificación final.',
+    ],
     ['CASEFLOW_008_CLOSE_FAILED', 'No pudimos cerrar el expediente. Intenta de nuevo.'],
     ['CASEFLOW_009_NOT_FOUND', 'El caso no tiene expediente de flujo.'],
     ['CASEFLOW_009_NOT_CLOSED', 'Este expediente ya no está cerrado.'],
@@ -54,13 +60,34 @@ describe('getErrorMessage', () => {
     ['NOTIFCN_004_UPDATE_FAILED', 'No pudimos guardar la notificación. Intenta de nuevo.'],
     ['NOTIFCN_004_NOT_FOUND', 'No pudimos guardar la notificación. Intenta de nuevo.'],
     ['NOTIFCN_001_CASE_NOT_FOUND', 'No pudimos guardar la notificación. Intenta de nuevo.'],
-    ['SEVNOT_001_CREATION_FAILED', 'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.'],
-    ['SEVNOT_004_UPDATE_FAILED', 'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.'],
-    ['SEVNOT_004_NOT_FOUND', 'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.'],
-    ['SEVNOT_001_NOTIFICATION_NOT_FOUND', 'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.'],
-    ['NSEVNOT_001_CREATION_FAILED', 'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.'],
-    ['NSEVNOT_004_UPDATE_FAILED', 'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.'],
-    ['NSEVNOT_004_NOT_FOUND', 'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.'],
+    [
+      'SEVNOT_001_CREATION_FAILED',
+      'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.',
+    ],
+    [
+      'SEVNOT_004_UPDATE_FAILED',
+      'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.',
+    ],
+    [
+      'SEVNOT_004_NOT_FOUND',
+      'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.',
+    ],
+    [
+      'SEVNOT_001_NOTIFICATION_NOT_FOUND',
+      'No pudimos guardar la ficha de notificación grave. Intenta de nuevo.',
+    ],
+    [
+      'NSEVNOT_001_CREATION_FAILED',
+      'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.',
+    ],
+    [
+      'NSEVNOT_004_UPDATE_FAILED',
+      'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.',
+    ],
+    [
+      'NSEVNOT_004_NOT_FOUND',
+      'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.',
+    ],
     [
       'NSEVNOT_001_NOTIFICATION_NOT_FOUND',
       'No pudimos guardar la ficha de notificación no grave. Intenta de nuevo.',
@@ -75,5 +102,34 @@ describe('getErrorMessage', () => {
     const error = new EsaviApiError('mensaje del backend', 500, code);
 
     expect(getErrorMessage(error)).toBe(expected);
+  });
+
+  // SPEC FE21 §3.5 — los cuatro códigos de appRole que llegan al toast. Los de duplicado y
+  // escalada no están aquí a propósito: `appRoleErrorFieldMap` los lleva a su campo.
+  it.each([
+    ['APPROLE_004_SYSTEM_ROLE', 'Es un rol de sistema: modificarlo exige un superadministrador.'],
+    ['APPROLE_005A_SYSTEM_ROLE', 'Es un rol de sistema: modificarlo exige un superadministrador.'],
+    ['APPROLE_005A_SUPERADMIN_ROLE', 'El rol SUPERADMIN no se puede retirar.'],
+    [
+      'APPROLE_005A_HAS_ACTIVE_ASSIGNMENTS',
+      'No se puede retirar un rol que todavía portan usuarios.',
+    ],
+  ])('mapea %s al texto de appRole', (code, expected) => {
+    const error = new EsaviApiError('mensaje del backend', 409, code);
+
+    expect(getErrorMessage(error)).toBe(expected);
+  });
+
+  // SPEC FE21 §3.5 — el duplicado se pinta bajo su campo con el `message` del backend, que ya
+  // viene traducido (CONVENTIONS.md §6.2). Si algún día llegara a un toast, el texto sería ese
+  // mismo y no una clave del cliente.
+  it('no mapea los códigos de duplicado de appRole: son de campo, no de toast', () => {
+    const error = new EsaviApiError(
+      'Ya existe un rol con el código SUPERVISOR.',
+      409,
+      'APPROLE_001_CODE_EXISTS',
+    );
+
+    expect(getErrorMessage(error)).toBe('Ya existe un rol con el código SUPERVISOR.');
   });
 });
