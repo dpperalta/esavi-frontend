@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { AppRoleListPage } from '@/features/appRole/AppRoleListPage';
 import { CatalogItemListPage } from '@/features/catalogItem/CatalogItemListPage';
 import { CatalogTypeListPage } from '@/features/catalogType/CatalogTypeListPage';
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
@@ -43,6 +44,11 @@ export function AppRouter() {
                   button, not by the route: an ADMIN has everything else to do here. */}
               <Route path="/users" element={<UserListPage />} />
               <Route path="/users/:id" element={<UserDetailPage />} />
+              {/* SPEC FE21 §3.1, §6: desviación declarada del rol mínimo real de
+                  ESAVI-APPROLE-002A (USER) — cinco de las siete operaciones del grupo exigen
+                  ADMIN o más. La única de SUPERADMIN (ESAVI-APPROLE-005B) se guarda ocultando su
+                  botón, no con la ruta. */}
+              <Route path="/roles" element={<AppRoleListPage />} />
             </Route>
             {/* SPEC FE19 §2, §6: desviación declarada del rol mínimo real de ESAVI-SYSCONF-002A
                 (USER) — las nueve operaciones útiles de esta pantalla son SUPERADMIN, así que se

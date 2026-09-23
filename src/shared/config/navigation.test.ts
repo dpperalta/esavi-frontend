@@ -16,15 +16,18 @@ describe('filterNavigationByLevel', () => {
     expect(visible.some((item) => item.key === 'nav.home')).toBe(true);
   });
 
-  it('con USER aparecen todos los hijos menos «Usuarios» y «Configuraciones»', () => {
+  it('con USER aparecen todos los hijos menos «Usuarios», «Roles» y «Configuraciones»', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.USER);
 
-    expect(countChildren(visible)).toBe(16);
+    expect(countChildren(visible)).toBe(15);
     const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
     expect(allKeys).not.toContain('nav.items.user');
     expect(allKeys).not.toContain('nav.items.geoBulkImport');
     // SPEC FE19 §2, §6 — desviación declarada: systemConfig exige SUPERADMIN, no USER.
     expect(allKeys).not.toContain('nav.items.systemConfig');
+    // SPEC FE21 §3.1, §6 — desviación declarada: appRole exige ADMIN aunque el rol mínimo real
+    // de ESAVI-APPROLE-002A sea USER. Hasta este spec el ítem estaba `disabled`.
+    expect(allKeys).not.toContain('nav.items.appRole');
   });
 
   it('con ADMIN aparecen dieciocho hijos, sin «Configuraciones»', () => {
@@ -33,6 +36,7 @@ describe('filterNavigationByLevel', () => {
     expect(countChildren(visible)).toBe(18);
     const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
     expect(allKeys).toContain('nav.items.user');
+    expect(allKeys).toContain('nav.items.appRole');
     // SPEC FE07 §3.1 — geoBulkImport's minLevel is ADMIN, the real minimum of ESAVI-GEOLOC-007.
     expect(allKeys).toContain('nav.items.geoBulkImport');
     expect(allKeys).not.toContain('nav.items.systemConfig');

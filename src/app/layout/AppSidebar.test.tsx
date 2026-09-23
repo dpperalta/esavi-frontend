@@ -69,13 +69,16 @@ describe('AppSidebar — filtro por rol', () => {
     expect(screen.getByText('nav.items.caseBrowse')).toBeInTheDocument();
     expect(screen.queryByText('nav.items.user')).not.toBeInTheDocument();
     expect(screen.getByText('nav.groups.administration')).toBeInTheDocument();
-    expect(screen.getByText('nav.items.appRole')).toBeInTheDocument();
+    // SPEC FE21 §3.1, §6 — desviación declarada: hasta este spec el ítem estaba `disabled` con
+    // minLevel USER; ahora exige ADMIN, porque cinco de las siete operaciones lo exigen.
+    expect(screen.queryByText('nav.items.appRole')).not.toBeInTheDocument();
   });
 
-  it('con ADMIN muestra los diecinueve hijos, incluido «Usuarios»', async () => {
+  it('con ADMIN muestra los diecinueve hijos, incluidos «Usuarios» y «Roles»', async () => {
     renderSidebar([{ name: 'ADMIN', level: 50 }]);
 
     await waitFor(() => expect(screen.getByText('nav.items.user')).toBeInTheDocument());
+    expect(screen.getByText('nav.items.appRole')).toBeInTheDocument();
   });
 });
 

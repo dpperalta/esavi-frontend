@@ -185,8 +185,10 @@ export const NAVIGATION: NavItem[] = [
         key: 'nav.items.appRole',
         icon: ShieldCheck,
         path: '/roles',
-        minLevel: ROLE_LEVELS.USER,
-        disabled: true,
+        // SPEC FE21 §3.1, §6 — declared deviation from the real minimum of ESAVI-APPROLE-002A
+        // (USER): five of the seven operations of the group demand ADMIN or more, and a listing
+        // where nothing can be done is worse than not offering it. Same precedent as FE19.
+        minLevel: ROLE_LEVELS.ADMIN,
       },
       {
         key: 'nav.items.catalogType',
