@@ -38,6 +38,7 @@ import { AddGeoAssignmentsDialog } from './AddGeoAssignmentsDialog';
 import { useActiveGeoAssignments, useGeoAssignmentsByUser, userGeoLocationResource } from './api';
 import { CoverageSummary } from './CoverageSummary';
 import { GeoAssignmentValidityDialog } from './GeoAssignmentValidityDialog';
+import { ReassignGeoDialog } from './ReassignGeoDialog';
 
 const DATE_FNS_LOCALES: Record<Language, typeof es> = { es, en: enUS, nl };
 
@@ -85,6 +86,7 @@ export function UserGeoCoverageCard({ userId }: UserGeoCoverageCardProps) {
   const [addOpen, setAddOpen] = useState(false);
   const [validityRow, setValidityRow] = useState<GeoAssignment | null>(null);
   const [closingRow, setClosingRow] = useState<GeoAssignment | null>(null);
+  const [reassignRow, setReassignRow] = useState<GeoAssignment | null>(null);
   // ESAVI-USERGEO-007 is ADMIN in the inventory, same as the ficha's own guard.
   const canEdit = useCan(ROLE_LEVELS.ADMIN);
   // ESAVI-USERGEO-005B is SUPERADMIN, so «Reabrir» is not even rendered below that level.
@@ -270,6 +272,13 @@ export function UserGeoCoverageCard({ userId }: UserGeoCoverageCardProps) {
                               {t('userGeoLocation.validity.title')}
                             </DropdownMenuItem>
                           )}
+                          {/* The `006` answers 409 USERGEO_006_ALREADY_INACTIVE on a closed row,
+                              so it shares the same condition. */}
+                          {status !== 'closed' && (
+                            <DropdownMenuItem onSelect={() => setReassignRow(row)}>
+                              {t('userGeoLocation.reassign.title')}
+                            </DropdownMenuItem>
+                          )}
                           {status !== 'closed' && (
                             <DropdownMenuItem onSelect={() => setClosingRow(row)}>
                               {t('userGeoLocation.close.title')}
@@ -329,6 +338,17 @@ export function UserGeoCoverageCard({ userId }: UserGeoCoverageCardProps) {
           }
         }}
         assignment={validityRow}
+      />
+
+      <ReassignGeoDialog
+        open={reassignRow !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            setReassignRow(null);
+          }
+        }}
+        userId={userId}
+        assignment={reassignRow}
       />
 
       <AlertDialog
