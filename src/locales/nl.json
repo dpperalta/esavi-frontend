@@ -1810,6 +1810,10 @@
       "status": "Status",
       "createdAt": "Aangemaakt"
     },
+    "status": {
+      "active": "Actief",
+      "inactive": "Inactief"
+    },
     "field": {
       "firstName": "Voornaam",
       "lastName": "Achternaam",
