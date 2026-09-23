@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from '@/shared/components/ui/form';
 import { toast } from 'sonner';
-import { useBulkAssignGeoLocations, useGeoAssignmentsByUser } from './api';
+import { useActiveGeoAssignments, useBulkAssignGeoLocations } from './api';
 import {
   bulkAssignGeoErrorFieldMap,
   bulkAssignGeoSchema,
@@ -27,12 +27,6 @@ import {
   composeValidTo,
   type BulkAssignGeoFormValues,
 } from './schemas';
-
-// The exclusion set has to cover every ACTIVE row, in force or expired alike: the 409 of the
-// `007` fires on `isActive` and never looks at the validity (appUserGeoLocation.service.ts:471).
-// So the dialog reads the admin listing whole — the backend's own ceiling for `limit` — instead
-// of reusing the card's page of ten.
-const WHOLE_LIST_LIMIT = 100;
 
 interface SelectedLocationProps {
   geoLocationId: string;
@@ -79,17 +73,7 @@ export function AddGeoAssignmentsDialog({
   const bulkAssign = useBulkAssignGeoLocations();
   // An empty `parentId` keeps the factory's own `enabled: !!parentId` off, so the listing is not
   // read while the dialog is closed — the same technique as `useNewbornConditionsByMedicalHistory`.
-  const assignments = useGeoAssignmentsByUser(open ? userId : '', {
-    page: 1,
-    pageSize: WHOLE_LIST_LIMIT,
-    coverageAll: true,
-  });
-
-  // A closed assignment is NOT excluded: the `007` reactivates the pair instead of duplicating it
-  // (appUserGeoLocation.service.ts:485-497), which is exactly the wanted behaviour (§3.5).
-  const assignedIds = (assignments.data?.rows ?? [])
-    .filter((row) => row.isActive)
-    .map((row) => row.geoLocationId);
+  const assignedIds = useActiveGeoAssignments(open ? userId : '').map((row) => row.geoLocationId);
 
   const [picked, setPicked] = useState<string | null>(null);
 

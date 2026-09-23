@@ -80,6 +80,24 @@ export function useGeoAssignmentsByUser(userId: string, params: GeoAssignmentLis
   });
 }
 
+// The backend's own ceiling for `limit`. Two questions of this feature need every ACTIVE row and
+// not the card's page of ten — which locations the picker must exclude, and whether the row being
+// closed is the last one active — because the 409 of the `007` fires on `isActive` and never
+// looks at the validity (appUserGeoLocation.service.ts:471). Asked with the same parameters from
+// both places on purpose: one query key, one request.
+export const WHOLE_LIST_LIMIT = 100;
+
+export function useActiveGeoAssignments(userId: string) {
+  const assignments = useGeoAssignmentsByUser(userId, {
+    page: 1,
+    pageSize: WHOLE_LIST_LIMIT,
+    coverageAll: true,
+  });
+  // A closed row is never excluded nor counted: the `007` reactivates that pair instead of
+  // duplicating it (appUserGeoLocation.service.ts:485-497), which is the wanted behaviour (§3.5).
+  return (assignments.data?.rows ?? []).filter((row) => row.isActive);
+}
+
 // ESAVI-USERGEO-004 — PUT /api/user-geo-locations/:id, validity only: `userId` or `geoLocationId`
 // in the body answer 400, and a closed row answers 409 USERGEO_004_ALREADY_INACTIVE.
 export function useUpdateGeoValidity() {
