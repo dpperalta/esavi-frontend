@@ -1,6 +1,6 @@
 # SPEC FE20 — Gestión de usuarios
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell, autenticación y `useCan`), SPEC FE02 (capa de recurso genérica), SPEC F04 del backend (`appUser`: CRUD, cifrado PII y roles del alta), SPEC F62 del backend (búsqueda de usuarios, `ESAVI-USER-008`), SPEC F02 del backend (`appUserRole`: asignación y revocación), SPEC F03 del backend (`appRole`, del que aquí sólo se lee el listado)
 > **Fecha:** 2026-09-23
 > **Objetivo:** Dar a un ADMIN la pantalla para dar de alta usuarios, corregir sus datos, buscarlos, desactivarlos y decidir qué roles tiene cada uno.
