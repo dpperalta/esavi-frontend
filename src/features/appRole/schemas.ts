@@ -30,3 +30,16 @@ export function updateAppRoleSchema(maxLevel: number) {
 }
 
 export type AppRoleFormValues = z.infer<ReturnType<typeof createAppRoleSchema>>;
+
+// SPEC FE21 §3.5. The three lifecycle codes of `005A` are absent on purpose: they reach the
+// toast through `errorMessages.ts`, not a field — there is no field to mark for "this role still
+// has holders". The message shown under a field is the backend's own, already translated
+// (CONVENTIONS.md §6.2).
+export const appRoleErrorFieldMap: Partial<Record<string, keyof AppRoleFormValues>> = {
+  APPROLE_001_CODE_EXISTS: 'code',
+  APPROLE_004_CODE_EXISTS: 'code',
+  APPROLE_001_NAME_EXISTS: 'name',
+  APPROLE_004_NAME_EXISTS: 'name',
+  APPROLE_001_LEVEL_EXCEEDED: 'level',
+  APPROLE_004_LEVEL_EXCEEDED: 'level',
+};

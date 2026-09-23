@@ -25,6 +25,7 @@ import { useCan } from '@/shared/hooks/useCan';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { appRoleResource } from './api';
 import { AppRoleAuditSheet } from './AppRoleAuditSheet';
+import { AppRoleFormDialog } from './AppRoleFormDialog';
 import { formatRoleLevel, SUPERADMIN_ROLE_CODE } from './roleLevels';
 
 // The minimum of appRoleListValidator (`isLength({ min: 2 })` on both parameters): below it the
@@ -187,7 +188,8 @@ export function AppRoleListPage() {
 
   const [auditId, setAuditId] = useState<string | null>(null);
   const [activateId, setActivateId] = useState<string | null>(null);
-  const [, setEditingId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [, setRetiringId] = useState<string | null>(null);
 
   const listError = list.error instanceof EsaviApiError ? list.error : null;
@@ -222,6 +224,16 @@ export function AppRoleListPage() {
       params.set('page', String(nextPage));
     }
     setSearchParams(params);
+  }
+
+  function handleCreate() {
+    setEditingId(null);
+    setFormOpen(true);
+  }
+
+  function handleEdit(id: string) {
+    setEditingId(id);
+    setFormOpen(true);
   }
 
   function handleActivate() {
@@ -307,6 +319,7 @@ export function AppRoleListPage() {
         includeInactive={includeInactive}
         onIncludeInactiveChange={canViewInactive ? handleIncludeInactiveChange : undefined}
         canCreate={canCreate}
+        onCreate={handleCreate}
         createLabel="appRole.list.createLabel"
         emptyKey="appRole.list.empty"
         isFiltered={isSearching}
@@ -317,13 +330,15 @@ export function AppRoleListPage() {
         rowActions={(row) => (
           <AppRoleRowActions
             row={row}
-            onEdit={setEditingId}
+            onEdit={handleEdit}
             onRetire={setRetiringId}
             onActivate={setActivateId}
             onAudit={setAuditId}
           />
         )}
       />
+
+      <AppRoleFormDialog open={formOpen} roleId={editingId} onOpenChange={setFormOpen} />
 
       <AlertDialog
         open={activateId !== null}
