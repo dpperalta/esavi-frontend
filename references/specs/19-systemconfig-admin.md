@@ -1,6 +1,6 @@
 # SPEC FE19 — Administración de configuraciones del sistema
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell, autenticación y guards por rol), SPEC FE02 (`createResource`), SPEC FE03 (precedente de CRUD administrado con diálogo y *sheet* de auditoría), SPEC F26 del backend (CRUD de `systemConfig` con historial de cambios)
 > **Fecha:** 2026-09-22
 > **Objetivo:** Dar al SUPERADMIN la pantalla para consultar, crear, editar, proteger, retirar y sembrar los parámetros de `systemConfig`, con su historial de valores.

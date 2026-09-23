@@ -15,6 +15,8 @@ import { HealthFacilityListPage } from '@/features/healthFacility/HealthFacility
 import { HomePage } from '@/features/home/HomePage';
 import { PatientStep } from '@/features/patient/PatientStep';
 import { SystemConfigListPage } from '@/features/systemConfig/SystemConfigListPage';
+import { UserDetailPage } from '@/features/user/UserDetailPage';
+import { UserListPage } from '@/features/user/UserListPage';
 import { RequireAuth } from '@/shared/components/RequireAuth';
 import { RequireRole } from '@/shared/components/RequireRole';
 import { ROLE_LEVELS } from '@/shared/config/roles';
@@ -35,6 +37,12 @@ export function AppRouter() {
                 generic route — so a future param route under /geo-locations never shadows it. */}
             <Route element={<RequireRole level={ROLE_LEVELS.ADMIN} />}>
               <Route path="/geo-locations/import" element={<GeoBulkImportPage />} />
+              {/* SPEC FE20 §3.1: ADMIN is the real minimum of the whole user group in
+                  API-ROUTES.md — the two listings, the search, the detail and the alta. The one
+                  SUPERADMIN operation of the screen (ESAVI-USER-005B) is guarded by hiding its
+                  button, not by the route: an ADMIN has everything else to do here. */}
+              <Route path="/users" element={<UserListPage />} />
+              <Route path="/users/:id" element={<UserDetailPage />} />
             </Route>
             {/* SPEC FE19 §2, §6: desviación declarada del rol mínimo real de ESAVI-SYSCONF-002A
                 (USER) — las nueve operaciones útiles de esta pantalla son SUPERADMIN, así que se

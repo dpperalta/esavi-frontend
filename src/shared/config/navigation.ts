@@ -180,7 +180,6 @@ export const NAVIGATION: NavItem[] = [
         icon: UserCog,
         path: '/users',
         minLevel: ROLE_LEVELS.ADMIN,
-        disabled: true,
       },
       {
         key: 'nav.items.appRole',

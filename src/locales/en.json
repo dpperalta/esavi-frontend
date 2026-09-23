@@ -1783,6 +1783,76 @@
       "confirm": "Deactivate configuration «{{code}}»?"
     }
   },
+  "user": {
+    "list": {
+      "title": "Users",
+      "empty": "No users yet. Create the first one to get started.",
+      "emptySearch": "No user matches the search. Remember that names are searched by whole word, and email and username in full.",
+      "error": "We could not load the users.",
+      "createLabel": "Create user"
+    },
+    "search": {
+      "label": "Search user",
+      "placeholder": "Name or email",
+      "hint": "Search by whole word. Email and username are searched in full.",
+      "usernameCaseHint": "The username is case-sensitive.",
+      "disablesInactive": "Searching shows active users only.",
+      "queryRequired": "Type at least one searchable word.",
+      "resultsAnnounce": "{{count}} users found",
+      "clear": "Clear search"
+    },
+    "columns": {
+      "displayName": "Name",
+      "email": "Email",
+      "username": "Username",
+      "phone": "Phone",
+      "roles": "Roles",
+      "status": "Status",
+      "createdAt": "Created"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "field": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "username": "Username",
+      "phone": "Phone",
+      "roles": "Roles"
+    },
+    "form": {
+      "createTitle": "Create user",
+      "editTitle": "Edit user",
+      "password": "Password",
+      "passwordHint": "At least 8 characters.",
+      "usernameHint": "Optional. Case-sensitive.",
+      "requiresPasswordChange": "The user will have to change the password on first sign-in."
+    },
+    "detail": {
+      "title": "User details",
+      "notFound": "This user does not exist or was removed.",
+      "inactive": "Inactive",
+      "backToList": "Back to users"
+    },
+    "roles": {
+      "title": "Assigned roles",
+      "save": "Save roles",
+      "saved": "The roles were updated.",
+      "partial": "Some roles could not be revoked: {{roles}}.",
+      "empty": "This user holds no role and cannot do anything until one is assigned."
+    },
+    "errors": {
+      "emailExists": "A user with that email already exists.",
+      "usernameExists": "A user with that username already exists.",
+      "roleNotFound": "One of the chosen roles no longer exists.",
+      "roleLevelExceeded": "You cannot assign a role above your own.",
+      "selfDeactivation": "You cannot deactivate your own account.",
+      "lastSuperAdmin": "The last superadministrator cannot be deactivated.",
+      "assignmentExists": "This user's roles changed while you were editing. Review the selection and save again."
+    }
+  },
   "errors": {
     "network": "We couldn't reach the server. Check your connection.",
     "unexpected": "Something went wrong. Please try again.",
