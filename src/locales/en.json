@@ -57,7 +57,9 @@
       "clear": "Clear selection"
     },
     "catalogSelect": {
-      "empty": "This catalog has no data loaded yet."
+      "empty": "This catalog has no data loaded yet.",
+      "searchPlaceholder": "Search…",
+      "noResults": "No matches"
     },
     "dateField": {
       "openCalendar": "Open calendar — {{field}}"
@@ -72,7 +74,12 @@
     "mapPointPicker": {
       "latitude": "Latitude",
       "longitude": "Longitude",
-      "clearPoint": "Clear point"
+      "clearPoint": "Clear point",
+      "searchLabel": "Search address on the map",
+      "searchPlaceholder": "Search address or place",
+      "search": "Search",
+      "noResults": "No places found",
+      "searchError": "The address search could not be reached"
     },
     "satelliteList": {
       "add": "Add",

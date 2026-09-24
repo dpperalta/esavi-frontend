@@ -57,7 +57,9 @@
       "clear": "Selectie wissen"
     },
     "catalogSelect": {
-      "empty": "Deze catalogus heeft nog geen gegevens geladen."
+      "empty": "Deze catalogus heeft nog geen gegevens geladen.",
+      "searchPlaceholder": "Zoeken…",
+      "noResults": "Geen overeenkomsten"
     },
     "dateField": {
       "openCalendar": "Kalender openen — {{field}}"
@@ -72,7 +74,12 @@
     "mapPointPicker": {
       "latitude": "Breedtegraad",
       "longitude": "Lengtegraad",
-      "clearPoint": "Punt wissen"
+      "clearPoint": "Punt wissen",
+      "searchLabel": "Adres zoeken op de kaart",
+      "searchPlaceholder": "Zoek adres of plaats",
+      "search": "Zoeken",
+      "noResults": "Geen plaatsen gevonden",
+      "searchError": "De adreszoeker kon niet worden bereikt"
     },
     "satelliteList": {
       "add": "Toevoegen",

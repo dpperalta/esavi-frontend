@@ -57,7 +57,9 @@
       "clear": "Limpiar selección"
     },
     "catalogSelect": {
-      "empty": "Este catálogo no tiene datos cargados todavía."
+      "empty": "Este catálogo no tiene datos cargados todavía.",
+      "searchPlaceholder": "Buscar…",
+      "noResults": "No hay coincidencias"
     },
     "dateField": {
       "openCalendar": "Abrir calendario — {{field}}"
@@ -72,7 +74,12 @@
     "mapPointPicker": {
       "latitude": "Latitud",
       "longitude": "Longitud",
-      "clearPoint": "Borrar punto"
+      "clearPoint": "Borrar punto",
+      "searchLabel": "Buscar dirección en el mapa",
+      "searchPlaceholder": "Buscar dirección o lugar",
+      "search": "Buscar",
+      "noResults": "No se encontraron lugares",
+      "searchError": "No se pudo consultar el buscador de direcciones"
     },
     "satelliteList": {
       "add": "Añadir",

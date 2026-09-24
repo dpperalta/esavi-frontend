@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import L from 'leaflet';
 import '@/shared/config/i18n';
@@ -79,6 +79,10 @@ vi.mock('leaflet', () => {
 
     getZoom() {
       return 6;
+    }
+
+    getBounds() {
+      return { toBBoxString: () => '-79,-1,-78,0' };
     }
 
     invalidateSize() {}
@@ -258,5 +262,51 @@ describe('MapPointPicker', () => {
     );
 
     expect(lastMap().setView).not.toHaveBeenCalled();
+  });
+
+  it('buscar con Enter consulta el geocodificador, y elegir un resultado fija el punto y centra el mapa', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [{ place_id: 1, display_name: 'Julio Andrade, Carchi, Ecuador', lat: '0.6583', lon: '-77.7039' }],
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const onChange = vi.fn();
+    render(<MapPointPicker value={null} onChange={onChange} ariaLabel="Lugar de vacunación" />);
+
+    const input = screen.getByRole('searchbox', { name: 'Buscar dirección en el mapa' });
+    fireEvent.change(input, { target: { value: 'Julio Andrade' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    const result = await screen.findByRole('button', { name: 'Julio Andrade, Carchi, Ecuador' });
+    const requested = new URL(fetchMock.mock.calls[0][0] as URL);
+    expect(requested.searchParams.get('q')).toBe('Julio Andrade');
+    expect(requested.searchParams.get('viewbox')).toBe('-79,-1,-78,0');
+
+    fireEvent.click(result);
+
+    expect(onChange).toHaveBeenCalledWith({ lat: 0.6583, lng: -77.7039 });
+    expect(lastMap().setView).toHaveBeenCalledWith([0.6583, -77.7039], 17);
+    vi.unstubAllGlobals();
+  });
+
+  it('un fallo del geocodificador se muestra como aviso, no como «sin resultados»', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 503 }));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(<MapPointPicker value={null} onChange={vi.fn()} ariaLabel="Lugar de vacunación" />);
+
+    const input = screen.getByRole('searchbox', { name: 'Buscar dirección en el mapa' });
+    fireEvent.change(input, { target: { value: 'Quito' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Buscar' }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent('No se pudo consultar el buscador de direcciones'),
+    );
+    vi.unstubAllGlobals();
+  });
+
+  it('en modo solo lectura no muestra el buscador', () => {
+    render(<MapPointPicker value={null} onChange={vi.fn()} disabled ariaLabel="Lugar de vacunación" />);
+
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
   });
 });
