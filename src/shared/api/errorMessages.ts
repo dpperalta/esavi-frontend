@@ -77,6 +77,19 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   CASEFLOW_009_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_009_NOT_FOUND',
   CASEFLOW_009_NOT_CLOSED: 'caseWorkflow.errors.CASEFLOW_009_NOT_CLOSED',
   CASEFLOW_009_REOPEN_FAILED: 'caseWorkflow.errors.CASEFLOW_009_REOPEN_FAILED',
+  // SPEC FE23 §3.5 — request (010) and resolve (011) validation. The three `409`s are races with
+  // another tab; the hooks re-read `006` on them. `011_PREVIOUS_STATUS_MISSING` is a data
+  // inconsistency in the backend and is not retried.
+  CASEFLOW_010_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_010_NOT_FOUND',
+  CASEFLOW_010_ALREADY_PENDING: 'caseWorkflow.errors.CASEFLOW_010_ALREADY_PENDING',
+  CASEFLOW_010_CASE_CLOSED: 'caseWorkflow.errors.CASEFLOW_010_CASE_CLOSED',
+  CASEFLOW_010_STATUS_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_010_STATUS_NOT_FOUND',
+  CASEFLOW_010_REQUEST_FAILED: 'caseWorkflow.errors.CASEFLOW_010_REQUEST_FAILED',
+  CASEFLOW_011_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_011_NOT_FOUND',
+  CASEFLOW_011_NOT_PENDING: 'caseWorkflow.errors.CASEFLOW_011_NOT_PENDING',
+  CASEFLOW_011_PREVIOUS_STATUS_MISSING: 'caseWorkflow.errors.CASEFLOW_011_PREVIOUS_STATUS_MISSING',
+  CASEFLOW_011_STATUS_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_011_STATUS_NOT_FOUND',
+  CASEFLOW_011_RESOLVE_FAILED: 'caseWorkflow.errors.CASEFLOW_011_RESOLVE_FAILED',
   // SPEC FE09 §4.14 — deactivate/reactivate from the list's row menu, same four-code shape as
   // every other entity's 005A/005B.
   CASE_005A_NOT_FOUND: 'esaviCase.errors.CASE_005A_NOT_FOUND',

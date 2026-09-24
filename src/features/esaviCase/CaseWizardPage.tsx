@@ -139,6 +139,17 @@ export function CaseWizardPage() {
             </div>
           )}
 
+          {/* SPEC FE23 §3.1 — informative only: the backend accepts writes while pending, so the
+              step stays editable. Skipped on «Cierre», whose `notPendingValidation` line says it. */}
+          {status.code === 'PENDING_VALIDATION' && step !== 'closure' && (
+            <div
+              role="status"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground"
+            >
+              {t('caseWizard.readOnly.pendingValidationBanner')}
+            </div>
+          )}
+
           {/* patient, case-opening y closure llevan su propia barra de acciones (o ninguna) —
               Continuar / Crear caso · Guardar · Siguiente (SPEC FE10 §2), «Cerrar expediente» /
               «Reabrir» (SPEC FE14b §2) — y no tienen `stage`, así que la barra genérica

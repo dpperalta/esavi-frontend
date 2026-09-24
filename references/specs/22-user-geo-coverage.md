@@ -1,6 +1,6 @@
 # SPEC FE22 — Cobertura geográfica del usuario
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell, autenticación y `useCan`), SPEC FE02 (capa de recurso genérica, con listado por padre), SPEC FE04 (`<GeoLocationPicker>`), **SPEC FE20 (gestión de usuarios: el bloque vive en `/users/:id`)**, SPEC FE10 (que ya consume `ESAVI-USERGEO-008`), SPEC F01 del backend (`appUserGeoLocation`: las diez operaciones, la vigencia y la cobertura efectiva)
 > **Fecha:** 2026-09-23
 > **Objetivo:** Dar a un ADMIN el bloque de la ficha de usuario donde asigna, reasigna, cierra y fecha el territorio que cada usuario cubre.

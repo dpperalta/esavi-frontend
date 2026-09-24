@@ -53,6 +53,36 @@ describe('getErrorMessage', () => {
     expect(getErrorMessage(error)).toBe(expected);
   });
 
+  // SPEC FE23 §3.5, plan step 1 — request (010) and resolve (011) validation.
+  it.each([
+    ['CASEFLOW_010_NOT_FOUND', 'El caso no tiene expediente de flujo.'],
+    ['CASEFLOW_010_ALREADY_PENDING', 'Este expediente ya estaba pendiente de validación.'],
+    ['CASEFLOW_010_CASE_CLOSED', 'No se puede pedir la validación: el expediente está cerrado.'],
+    [
+      'CASEFLOW_010_STATUS_NOT_FOUND',
+      'Falta el estado «Pendiente de validación» en el catálogo. Avisa al administrador.',
+    ],
+    [
+      'CASEFLOW_010_REQUEST_FAILED',
+      'No pudimos enviar el expediente a validación. Intenta de nuevo.',
+    ],
+    ['CASEFLOW_011_NOT_FOUND', 'El caso no tiene expediente de flujo.'],
+    ['CASEFLOW_011_NOT_PENDING', 'Este expediente ya no está pendiente de validación.'],
+    [
+      'CASEFLOW_011_PREVIOUS_STATUS_MISSING',
+      'No se sabe a qué estado debe volver el expediente. Avisa al administrador.',
+    ],
+    [
+      'CASEFLOW_011_STATUS_NOT_FOUND',
+      'Falta el estado anterior en el catálogo. Avisa al administrador.',
+    ],
+    ['CASEFLOW_011_RESOLVE_FAILED', 'No pudimos resolver la validación. Intenta de nuevo.'],
+  ])('mapea %s a su texto propio', (code, expected) => {
+    const error = new EsaviApiError('mensaje del backend', 409, code);
+
+    expect(getErrorMessage(error)).toBe(expected);
+  });
+
   // SPEC FE12a §3.5, plan step 15 — un texto genérico por entidad para los `_CREATION_FAILED`/
   // `_UPDATE_FAILED`/`_NOT_FOUND` de guardado, y uno solo compartido para los `006` de lectura.
   it.each([

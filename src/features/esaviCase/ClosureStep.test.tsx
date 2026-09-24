@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { format } from 'date-fns';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
@@ -201,6 +201,63 @@ describe('ClosureStep — modo abierto', () => {
     await user.click(confirmButtons[confirmButtons.length - 1]);
 
     await waitFor(() => expect(closeCalls).toBe(1));
+  });
+
+  // SPEC FE23 §4 paso 5
+  it('con PENDING_VALIDATION, «Resolver validación» está en su línea y resolver la deja cumplida', async () => {
+    const stages = { classification: YES_STAGE, notification: YES_STAGE };
+    const inNotification = {
+      catalogItemId: 'status-3',
+      code: 'IN_NOTIFICATION',
+      name: 'En notificación',
+    };
+    const pending = { catalogItemId: 'status-7', code: 'PENDING_VALIDATION', name: 'Pendiente' };
+    let isPending = true;
+    server.use(
+      http.get(`http://localhost:4500/api/case-workflows/case/${CASE_1}`, () =>
+        ok(
+          isPending
+            ? { ...workflow(stages), status: pending, previousStatus: inNotification }
+            : { ...workflow(stages), status: inNotification },
+        ),
+      ),
+      http.patch(
+        `http://localhost:4500/api/case-workflows/case/${CASE_1}/resolve-validation`,
+        () => {
+          isPending = false;
+          return ok(workflow(stages));
+        },
+      ),
+      http.get(`http://localhost:4500/api/classifications/case/${CASE_1}`, () =>
+        ok({ classificationId: 'c1', isSeriousEvent: false, isActive: true }),
+      ),
+      http.get(`http://localhost:4500/api/notifications/case/${CASE_1}`, () =>
+        ok({
+          notificationId: 'n1',
+          requestInvestigation: false,
+          notificationType: 'NON_SEVERE',
+          takesMedication: 'YES',
+          outcome: null,
+          isActive: true,
+        }),
+      ),
+    );
+
+    const user = setupUser();
+    renderStep();
+
+    const lineLabel = await screen.findByText('El expediente no está pendiente de validación');
+    const line = lineLabel.closest('li') as HTMLElement;
+    expect(within(line).getByText(/Pendiente$/)).toBeInTheDocument();
+    const closeButton = screen.getByRole('button', { name: 'Cerrar expediente' });
+    expect(closeButton).toBeDisabled();
+
+    await user.click(await within(line).findByRole('button', { name: 'Resolver validación' }));
+    await user.click(await screen.findByRole('button', { name: 'Resolver' }));
+
+    await waitFor(() => expect(within(line).getByText(/Cumplido$/)).toBeInTheDocument());
+    expect(within(line).queryByRole('button', { name: 'Resolver validación' })).toBeNull();
+    await waitFor(() => expect(closeButton).toBeEnabled());
   });
 
   it('el enlace «Revisar la autopsia» navega al paso de investigación', async () => {

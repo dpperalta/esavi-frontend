@@ -91,6 +91,22 @@ async function reopenCaseWorkflow(caseId: string): Promise<CaseWorkflowDetail> {
   return response.data;
 }
 
+// ESAVI-CASEFLOW-010 — no body (F44 forbids a client-sent statusItemId); answers the full workflow
+async function requestCaseValidation(caseId: string): Promise<CaseWorkflowDetail> {
+  const response = await client.patch<CaseWorkflowDetail>(
+    `/case-workflows/case/${caseId}/request-validation`,
+  );
+  return response.data;
+}
+
+// ESAVI-CASEFLOW-011 — no body; restores previousStatus server-side and answers the full workflow
+async function resolveCaseValidation(caseId: string): Promise<CaseWorkflowDetail> {
+  const response = await client.patch<CaseWorkflowDetail>(
+    `/case-workflows/case/${caseId}/resolve-validation`,
+  );
+  return response.data;
+}
+
 // The seven phase reads the closure step evaluates (SPEC FE14b §3.4). Keys are repeated here
 // instead of imported: a feature doesn't import another feature's api (CONVENTIONS.md §3).
 const CLOSE_READINESS_ENTITIES = [
@@ -144,6 +160,39 @@ export function useReopenCase(caseId: string) {
       }
     },
   });
+}
+
+// SPEC FE23 §3.4 — these three 409s mean another tab or user got there first; re-reading `006`
+// shows the right button (or read-only, if the case closed meanwhile).
+const VALIDATION_CONFLICT_CODES = [
+  'CASEFLOW_010_ALREADY_PENDING',
+  'CASEFLOW_010_CASE_CLOSED',
+  'CASEFLOW_011_NOT_PENDING',
+] as const;
+
+function useValidationTransition(
+  caseId: string,
+  mutationFn: (caseId: string) => Promise<CaseWorkflowDetail>,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => mutationFn(caseId),
+    onSuccess: () => invalidateWorkflowTransition(queryClient, caseId),
+    onError: (error) => {
+      if (VALIDATION_CONFLICT_CODES.some((code) => isConflictOf(error, code))) {
+        void queryClient.invalidateQueries({ queryKey: caseWorkflowByCaseKey(caseId) });
+      }
+    },
+  });
+}
+
+export function useRequestValidation(caseId: string) {
+  return useValidationTransition(caseId, requestCaseValidation);
+}
+
+export function useResolveValidation(caseId: string) {
+  return useValidationTransition(caseId, resolveCaseValidation);
 }
 
 export function useCompleteStage(caseId: string) {

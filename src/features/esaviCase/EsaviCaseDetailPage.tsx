@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { esaviCaseResource } from '@/features/esaviCase/api';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
+import { CaseValidationActions } from '@/features/caseWorkflow/CaseValidationActions';
 import { ReopenCaseButton } from '@/features/caseWorkflow/ReopenCaseButton';
+import { WorkflowStatusBadge } from '@/features/caseWorkflow/WorkflowStatusBadge';
 import { EsaviCaseNotFound } from '@/features/esaviCase/EsaviCaseNotFound';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { AuditTrail } from '@/shared/components/AuditTrail';
-import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Skeleton } from '@/shared/components/ui/skeleton';
@@ -64,10 +65,11 @@ function WorkflowStatusBlock({ caseId }: WorkflowStatusBlockProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="sr-only">{t('esaviCase.detail.workflowStatus')}</span>
-        <Badge variant={isClosed ? 'outline' : 'default'}>{workflow.data.status.name}</Badge>
+        <WorkflowStatusBadge workflow={workflow.data} />
         {isClosed && <ReopenCaseButton caseId={caseId} />}
+        <CaseValidationActions caseId={caseId} />
       </div>
       <Button type="button" onClick={() => navigate(`/esavi-cases/${caseId}/wizard`)}>
         {t(isClosed ? 'esaviCase.detail.viewCaseReadOnly' : 'esaviCase.detail.openCase')}

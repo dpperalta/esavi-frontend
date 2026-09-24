@@ -501,7 +501,17 @@
       "CASEFLOW_008_CLOSE_FAILED": "We couldn't close the case file. Please try again.",
       "CASEFLOW_009_NOT_FOUND": "The case has no workflow record.",
       "CASEFLOW_009_NOT_CLOSED": "This case file is no longer closed.",
-      "CASEFLOW_009_REOPEN_FAILED": "We couldn't reopen the case file. Please try again."
+      "CASEFLOW_009_REOPEN_FAILED": "We couldn't reopen the case file. Please try again.",
+      "CASEFLOW_010_NOT_FOUND": "The case has no workflow record.",
+      "CASEFLOW_010_ALREADY_PENDING": "This case file was already pending validation.",
+      "CASEFLOW_010_CASE_CLOSED": "Validation can't be requested: the case file is closed.",
+      "CASEFLOW_010_STATUS_NOT_FOUND": "The \"Pending validation\" status is missing from the catalog. Contact the administrator.",
+      "CASEFLOW_010_REQUEST_FAILED": "We couldn't send the case file to validation. Please try again.",
+      "CASEFLOW_011_NOT_FOUND": "The case has no workflow record.",
+      "CASEFLOW_011_NOT_PENDING": "This case file is no longer pending validation.",
+      "CASEFLOW_011_PREVIOUS_STATUS_MISSING": "It's unknown which status the case file should return to. Contact the administrator.",
+      "CASEFLOW_011_STATUS_NOT_FOUND": "The previous status is missing from the catalog. Contact the administrator.",
+      "CASEFLOW_011_RESOLVE_FAILED": "We couldn't resolve the validation. Please try again."
     },
     "list": {
       "columns": {
@@ -596,6 +606,23 @@
       "lastReopenedAt": "Last reopened",
       "never": "Never",
       "askAdmin": "Ask an administrator to reopen it."
+    },
+    "validation": {
+      "request": {
+        "action": "Request validation",
+        "confirmTitle": "Send the case file for validation?",
+        "confirmBody": "The case file will stay editable, but it can't be closed until someone resolves the validation.",
+        "confirmAction": "Send for validation",
+        "success": "Case file sent for validation"
+      },
+      "resolve": {
+        "action": "Resolve validation",
+        "confirmTitle": "Resolve the validation?",
+        "confirmBody": "The case file will return to the {{previous}} status.",
+        "confirmAction": "Resolve",
+        "success": "Validation resolved"
+      },
+      "statusWithPrevious": "{{status}} · was {{previous}}"
     }
   },
   "esaviCase": {
@@ -775,7 +802,8 @@
     },
     "readOnly": {
       "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again.",
-      "closedBannerAdmin": "This case file is closed."
+      "closedBannerAdmin": "This case file is closed.",
+      "pendingValidationBanner": "This case file is pending validation. You can keep working, but it can't be closed until the validation is resolved."
     }
   },
   "patient": {

@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { AnswerOption } from '@/contracts/common';
 import { useCaseWorkflow, useCloseCase } from '@/features/caseWorkflow/api';
+import { CaseValidationActions } from '@/features/caseWorkflow/CaseValidationActions';
 import { ReopenCaseButton } from '@/features/caseWorkflow/ReopenCaseButton';
 import { type CloseReadinessContext, useCloseReadiness } from '@/features/caseWorkflow/useCloseReadiness';
 import type { CloseCheckId, CloseCheckKind, CloseCheckLine, CloseCheckState } from '@/features/caseWorkflow/closeReadiness';
@@ -223,6 +224,13 @@ function ClosureCheckRow({
                   {t(link.labelKey)}
                 </Button>
               ))}
+            </div>
+          )}
+          {/* SPEC FE23 §6 — an action, not a link: validation has no step of its own, so
+              `closeReadiness.ts` keeps `links: []` and the way out is rendered here instead. */}
+          {line.id === 'notPendingValidation' && line.state === 'unmet' && (
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <CaseValidationActions caseId={caseId} mode="resolveOnly" />
             </div>
           )}
         </div>
