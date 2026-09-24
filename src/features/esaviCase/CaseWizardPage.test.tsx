@@ -495,3 +495,48 @@ describe('CaseWizardPage — paso closure', () => {
     expect(screen.queryByRole('button', { name: 'Reabrir' })).not.toBeInTheDocument();
   });
 });
+
+// SPEC FE23 §4 paso 4
+describe('CaseWizardPage — PENDING_VALIDATION', () => {
+  const PENDING_BANNER =
+    'Este expediente está pendiente de validación. Puedes seguir trabajando, pero no se podrá cerrar hasta resolverla.';
+
+  it('en notification muestra el aviso y el paso sigue editable', async () => {
+    mockCase();
+    mockClassification();
+    server.use(
+      http.get('http://localhost:4500/api/catalog-types', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+    mockWorkflow('PENDING_VALIDATION', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: false, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    renderPage('/esavi-cases/case-1/wizard/notification');
+
+    expect(await screen.findByText(PENDING_BANNER)).toHaveAttribute('role', 'status');
+    expect(await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)')).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Guardar' })).toBeEnabled();
+  });
+
+  it('en closure no muestra el aviso', async () => {
+    mockCase();
+    mockWorkflow('PENDING_VALIDATION', {
+      classification: { exists: false, endedAt: null },
+      notification: { exists: false, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    renderPage('/esavi-cases/case-1/wizard/closure');
+
+    expect(
+      await screen.findByRole('heading', { name: 'Cierre del expediente' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(PENDING_BANNER)).not.toBeInTheDocument();
+  });
+});

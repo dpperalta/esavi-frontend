@@ -1,11 +1,12 @@
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { esaviCaseResource } from './api';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
+import { CaseValidationActions } from '@/features/caseWorkflow/CaseValidationActions';
+import { WorkflowStatusBadge } from '@/features/caseWorkflow/WorkflowStatusBadge';
 
 interface CaseWizardHeaderProps {
   caseId: string;
@@ -30,7 +31,7 @@ export function CaseWizardHeader({ caseId }: CaseWizardHeaderProps) {
   }
 
   const { caseCode, patient, healthFacility } = caseDetail.data;
-  const { status, openedAt } = workflow.data;
+  const { openedAt } = workflow.data;
 
   return (
     <div className="flex flex-col gap-2 border-b border-border pb-4">
@@ -38,7 +39,8 @@ export function CaseWizardHeader({ caseId }: CaseWizardHeaderProps) {
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-lg font-medium text-foreground">{caseCode}</h1>
           <span className="sr-only">{t('caseWizard.header.status')}</span>
-          <Badge variant={status.code === 'CLOSED' ? 'outline' : 'default'}>{status.name}</Badge>
+          <WorkflowStatusBadge workflow={workflow.data} />
+          <CaseValidationActions caseId={caseId} />
         </div>
         {/* Not in SPEC FE08's original plan — the wizard shipped before /esavi-cases existed to
             return to. Added once FE09 built the listing behind it: the menu's own way back

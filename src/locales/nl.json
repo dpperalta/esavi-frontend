@@ -501,7 +501,17 @@
       "CASEFLOW_008_CLOSE_FAILED": "We konden het dossier niet sluiten. Probeer het opnieuw.",
       "CASEFLOW_009_NOT_FOUND": "Het geval heeft geen workflowdossier.",
       "CASEFLOW_009_NOT_CLOSED": "Dit dossier is niet meer gesloten.",
-      "CASEFLOW_009_REOPEN_FAILED": "We konden het dossier niet heropenen. Probeer het opnieuw."
+      "CASEFLOW_009_REOPEN_FAILED": "We konden het dossier niet heropenen. Probeer het opnieuw.",
+      "CASEFLOW_010_NOT_FOUND": "Het geval heeft geen workflowdossier.",
+      "CASEFLOW_010_ALREADY_PENDING": "Dit dossier wachtte al op validatie.",
+      "CASEFLOW_010_CASE_CLOSED": "Validatie kan niet worden aangevraagd: het dossier is gesloten.",
+      "CASEFLOW_010_STATUS_NOT_FOUND": "De status \"Wacht op validatie\" ontbreekt in de catalogus. Neem contact op met de beheerder.",
+      "CASEFLOW_010_REQUEST_FAILED": "We konden het dossier niet ter validatie sturen. Probeer het opnieuw.",
+      "CASEFLOW_011_NOT_FOUND": "Het geval heeft geen workflowdossier.",
+      "CASEFLOW_011_NOT_PENDING": "Dit dossier wacht niet meer op validatie.",
+      "CASEFLOW_011_PREVIOUS_STATUS_MISSING": "Onbekend naar welke status het dossier moet terugkeren. Neem contact op met de beheerder.",
+      "CASEFLOW_011_STATUS_NOT_FOUND": "De vorige status ontbreekt in de catalogus. Neem contact op met de beheerder.",
+      "CASEFLOW_011_RESOLVE_FAILED": "We konden de validatie niet afronden. Probeer het opnieuw."
     },
     "list": {
       "columns": {
@@ -596,6 +606,23 @@
       "lastReopenedAt": "Laatst heropend",
       "never": "Nooit",
       "askAdmin": "Vraag een beheerder om het te heropenen."
+    },
+    "validation": {
+      "request": {
+        "action": "Validatie aanvragen",
+        "confirmTitle": "Het dossier ter validatie sturen?",
+        "confirmBody": "Het dossier blijft bewerkbaar, maar kan pas worden gesloten als iemand de validatie afrondt.",
+        "confirmAction": "Ter validatie sturen",
+        "success": "Dossier ter validatie gestuurd"
+      },
+      "resolve": {
+        "action": "Validatie afronden",
+        "confirmTitle": "De validatie afronden?",
+        "confirmBody": "Het dossier keert terug naar de status {{previous}}.",
+        "confirmAction": "Afronden",
+        "success": "Validatie afgerond"
+      },
+      "statusWithPrevious": "{{status}} · was {{previous}}"
     }
   },
   "esaviCase": {
@@ -775,7 +802,8 @@
     },
     "readOnly": {
       "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken.",
-      "closedBannerAdmin": "Dit dossier is gesloten."
+      "closedBannerAdmin": "Dit dossier is gesloten.",
+      "pendingValidationBanner": "Dit dossier wacht op validatie. Je kunt verder werken, maar het kan pas worden gesloten als de validatie is afgerond."
     }
   },
   "patient": {

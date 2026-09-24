@@ -14,7 +14,7 @@ Las reglas del recorrido que va del paciente al expediente cerrado. **No describ
 
 **No queda ninguna sesión de redacción pendiente.** Lo que sigue es escribir los specs `FE08`–`FE14` (§9), y ninguno reabre esto: lo citan.
 
-**Lo que sí queda abierto, y no depende de este repositorio** — las seis peticiones de §10:
+**Lo que sí queda abierto, y no depende de este repositorio** — las siete peticiones de §10:
 
 | Pieza | Estado |
 |---|---|
@@ -24,6 +24,7 @@ Las reglas del recorrido que va del paciente al expediente cerrado. **No describ
 | Fila `systemConfig` con el código de país | **§10.1** — decidida, con respaldo en `.env` |
 | `ESAVI-NOTIFIER-005A` debe admitir USER | **§10.2** — pedido |
 | Comprobación de `CLOSED` en las escrituras del expediente | **§10.3** — **resuelto el 2026-09-21** (SPEC F61 del backend, en la rama `spec-61-closed-case-write-guard`) |
+| `ESAVI-CASEFLOW-011` (resolver validación) debería exigir ADMIN | **§10.9** — pedido el 2026-09-24. La interfaz no cambia hasta que cambie la ruta |
 
 **Antes de implementar, leer en este orden:** §5.0 (el método y qué va al spec), el §5.x del paso que toque, y §7 entero (las reglas transversales, que son las que se rompen). §6 se lee una vez y se recuerda: las seis contradicciones del modelo aparecen repartidas por todos los pasos.
 
@@ -2498,7 +2499,7 @@ Y lo que no es una primitiva:
 
 ## 10. Dependencias del otro repositorio
 
-Lo que este proceso necesita de `esavi-backend` y no puede resolverse aquí. Se acumula a medida que §5 avanza. Ocho entradas: tres abiertas (§10.1, §10.5, §10.6), una **abierta a medias** (§10.4), tres resueltas (§10.2, §10.3 y §10.8) y una pregunta contestada (§10.7). §10.4 a §10.6 y §10.8 salieron del paso 4, §10.7 del paso 5.
+Lo que este proceso necesita de `esavi-backend` y no puede resolverse aquí. Se acumula a medida que §5 avanza. Nueve entradas: cuatro abiertas (§10.1, §10.5, §10.6 y §10.9), una **abierta a medias** (§10.4), tres resueltas (§10.2, §10.3 y §10.8) y una pregunta contestada (§10.7). §10.4 a §10.6 y §10.8 salieron del paso 4, §10.7 del paso 5 y §10.9 del SPEC FE23.
 
 ### 10.1 Fila `systemConfig` con el código de país · **decidido, pendiente de crear**
 
@@ -2669,3 +2670,15 @@ Es la segunda fila de configuración que este proceso necesita, junto a la de §
 **Consecuencia para `FE12b`, y por eso se registra en vez de esperar:** el spec construye los dos campos como `<Input>` de texto libre, y el aterrizaje posterior es **sustituir dos `<Input>` por un componente**. No toca el contrato, ni el esquema Zod, ni las filas ya cargadas. Escribir `FE12b` ahora no genera trabajo que haya que deshacer.
 
 **Lo que se pide al otro repositorio:** un endpoint de búsqueda de medicamentos sobre WHODrug con rol `USER`, que devuelva al menos `code` y `name`, con mínimo de caracteres y limitador declarados —los dos precedentes están en `WHODRUG-006*` y `MEDDRA-006`—. Al añadirlo, `API-ROUTES.md` se regenera (`references/README.md`).
+
+### 10.9 `ESAVI-CASEFLOW-011` debería exigir ADMIN · **pedido el 2026-09-24**
+
+Salió al escribir el SPEC FE23, que consume `010` (pedir validación) y `011` (resolver validación) desde el expediente (§4.3).
+
+**Hoy las dos rutas son `USER`** (`API-ROUTES.md`). La consecuencia es que **quien pide la revisión puede resolverla él mismo al instante**: `PENDING_VALIDATION` bloquea el cierre (§4.4), pero no garantiza que otra persona haya mirado el expediente. El estado queda en un trámite de dos clics que no revisa nada. `appDetails` registra quién hizo cada una, y `<AuditTrail>` lo muestra a SUPERADMIN, pero eso es una traza a posteriori, no un control.
+
+**Petición:** subir el rol mínimo de `ESAVI-CASEFLOW-011` a `ADMIN` en `ROUTE_RULES`. `010` se queda en `USER`: pedir la revisión es trabajo de quien carga el caso. Al hacerlo, `API-ROUTES.md` se regenera (`references/README.md`).
+
+Alcance a decidir por el backend, no por aquí: si además debe impedirse que resuelva la misma persona que pidió, aunque sea ADMIN. Eso necesita saber quién hizo el `010`, que hoy sólo está en `appDetails`.
+
+**Qué hace el cliente mientras tanto:** FE23 muestra «Resolver validación» a todo USER, porque es el rol real de la ruta. Ocultarlo sólo en la interfaz escondería la acción a quien sí puede usarla y no protegería nada, porque la API la seguiría aceptando (FE23 §6; `CONVENTIONS.md` §11). Cuando la ruta suba a ADMIN, el componente `CaseValidationActions` gana un `useCan(ROLE_LEVELS.ADMIN)` sólo para «Resolver», como `ReopenCaseButton`.

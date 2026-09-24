@@ -501,7 +501,17 @@
       "CASEFLOW_008_CLOSE_FAILED": "No pudimos cerrar el expediente. Intenta de nuevo.",
       "CASEFLOW_009_NOT_FOUND": "El caso no tiene expediente de flujo.",
       "CASEFLOW_009_NOT_CLOSED": "Este expediente ya no está cerrado.",
-      "CASEFLOW_009_REOPEN_FAILED": "No pudimos reabrir el expediente. Intenta de nuevo."
+      "CASEFLOW_009_REOPEN_FAILED": "No pudimos reabrir el expediente. Intenta de nuevo.",
+      "CASEFLOW_010_NOT_FOUND": "El caso no tiene expediente de flujo.",
+      "CASEFLOW_010_ALREADY_PENDING": "Este expediente ya estaba pendiente de validación.",
+      "CASEFLOW_010_CASE_CLOSED": "No se puede pedir la validación: el expediente está cerrado.",
+      "CASEFLOW_010_STATUS_NOT_FOUND": "Falta el estado «Pendiente de validación» en el catálogo. Avisa al administrador.",
+      "CASEFLOW_010_REQUEST_FAILED": "No pudimos enviar el expediente a validación. Intenta de nuevo.",
+      "CASEFLOW_011_NOT_FOUND": "El caso no tiene expediente de flujo.",
+      "CASEFLOW_011_NOT_PENDING": "Este expediente ya no está pendiente de validación.",
+      "CASEFLOW_011_PREVIOUS_STATUS_MISSING": "No se sabe a qué estado debe volver el expediente. Avisa al administrador.",
+      "CASEFLOW_011_STATUS_NOT_FOUND": "Falta el estado anterior en el catálogo. Avisa al administrador.",
+      "CASEFLOW_011_RESOLVE_FAILED": "No pudimos resolver la validación. Intenta de nuevo."
     },
     "list": {
       "columns": {
@@ -596,6 +606,23 @@
       "lastReopenedAt": "Última reapertura",
       "never": "Nunca",
       "askAdmin": "Pídeselo a un administrador para reabrirlo."
+    },
+    "validation": {
+      "request": {
+        "action": "Pedir validación",
+        "confirmTitle": "¿Enviar el expediente a validación?",
+        "confirmBody": "El expediente seguirá editable, pero no se podrá cerrar hasta que alguien resuelva la validación.",
+        "confirmAction": "Enviar a validación",
+        "success": "Expediente enviado a validación"
+      },
+      "resolve": {
+        "action": "Resolver validación",
+        "confirmTitle": "¿Resolver la validación?",
+        "confirmBody": "El expediente volverá al estado {{previous}}.",
+        "confirmAction": "Resolver",
+        "success": "Validación resuelta"
+      },
+      "statusWithPrevious": "{{status}} · venía de {{previous}}"
     }
   },
   "esaviCase": {
@@ -775,7 +802,8 @@
     },
     "readOnly": {
       "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo.",
-      "closedBannerAdmin": "Este expediente está cerrado."
+      "closedBannerAdmin": "Este expediente está cerrado.",
+      "pendingValidationBanner": "Este expediente está pendiente de validación. Puedes seguir trabajando, pero no se podrá cerrar hasta resolverla."
     }
   },
   "patient": {

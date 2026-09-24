@@ -6,7 +6,15 @@ import type { ReactNode } from 'react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
-import { useCaseWorkflow, useCaseWorkflowList, useCloseCase, useCompleteStage, useReopenCase } from './api';
+import {
+  useCaseWorkflow,
+  useCaseWorkflowList,
+  useCloseCase,
+  useCompleteStage,
+  useReopenCase,
+  useRequestValidation,
+  useResolveValidation,
+} from './api';
 
 const server = setupServer();
 
@@ -232,6 +240,85 @@ describe('useReopenCase — ESAVI-CASEFLOW-009', () => {
     const { Wrapper, queryClient } = createWrapper();
     seedCache(queryClient);
     const { result } = renderHook(() => useReopenCase('case-1'), { wrapper: Wrapper });
+
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(invalidatedKeys(queryClient)).toEqual([['caseWorkflow', 'byCase', 'case-1']]);
+  });
+});
+
+// SPEC FE23 §3.4 — request (010) and resolve (011) validation share one invalidation policy.
+describe.each([
+  [
+    'useRequestValidation — ESAVI-CASEFLOW-010',
+    useRequestValidation,
+    'request-validation',
+    'CASEFLOW_010_REQUEST_FAILED',
+  ],
+  [
+    'useResolveValidation — ESAVI-CASEFLOW-011',
+    useResolveValidation,
+    'resolve-validation',
+    'CASEFLOW_011_PREVIOUS_STATUS_MISSING',
+  ],
+] as const)('%s', (_title, useHook, path, failureCode) => {
+  const url = `http://localhost:4500/api/case-workflows/case/case-1/${path}`;
+
+  it('sale sin body a su ruta y con 200 invalida las tres claves del workflow', async () => {
+    let body: string | null = null;
+    server.use(
+      http.patch(url, async ({ request }) => {
+        body = await request.text();
+        return HttpResponse.json({ ok: true, message: 'ok', data: caseWorkflowDetail });
+      }),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useHook('case-1'), { wrapper: Wrapper });
+
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(body).toBe('');
+    expect(invalidatedKeys(queryClient)).toEqual(expect.arrayContaining(TRANSITION_KEYS));
+    expect(invalidatedKeys(queryClient)).toHaveLength(3);
+  });
+
+  it(`con 500 ${failureCode} no invalida nada`, async () => {
+    server.use(
+      http.patch(url, () =>
+        HttpResponse.json({ ok: false, message: 'boom', code: failureCode }, { status: 500 }),
+      ),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useHook('case-1'), { wrapper: Wrapper });
+
+    result.current.mutate();
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(invalidatedKeys(queryClient)).toHaveLength(0);
+  });
+});
+
+describe.each([
+  ['CASEFLOW_010_ALREADY_PENDING', useRequestValidation, 'request-validation'],
+  ['CASEFLOW_010_CASE_CLOSED', useRequestValidation, 'request-validation'],
+  ['CASEFLOW_011_NOT_PENDING', useResolveValidation, 'resolve-validation'],
+] as const)('409 %s', (code, useHook, path) => {
+  it('invalida sólo el workflow', async () => {
+    server.use(
+      http.patch(`http://localhost:4500/api/case-workflows/case/case-1/${path}`, () =>
+        conflict(code),
+      ),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useHook('case-1'), { wrapper: Wrapper });
 
     result.current.mutate();
 

@@ -280,6 +280,75 @@ describe('EsaviCaseDetailPage — ReopenCaseButton (ESAVI-CASEFLOW-009)', () => 
   });
 });
 
+// SPEC FE23 §4 paso 3
+describe('EsaviCaseDetailPage — validación (ESAVI-CASEFLOW-010 / ESAVI-CASEFLOW-011)', () => {
+  const IN_NOTIFICATION = {
+    catalogItemId: 'item-notif',
+    code: 'IN_NOTIFICATION',
+    name: 'En notificación',
+  };
+  const PENDING_VALIDATION = {
+    catalogItemId: 'item-pending',
+    code: 'PENDING_VALIDATION',
+    name: 'Pendiente de validación',
+  };
+
+  function mockReads(workflowOverrides: Record<string, unknown>) {
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: caseDetail() }),
+      ),
+      http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: workflowDetail(workflowOverrides) }),
+      ),
+    );
+  }
+
+  it('con un estado abierto ofrece «Pedir validación» junto a la insignia', async () => {
+    mockCurrentUser('USER', 25);
+    mockReads({ status: IN_NOTIFICATION });
+
+    renderPage();
+
+    expect(await screen.findByText('En notificación')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Pedir validación' })).toBeInTheDocument();
+  });
+
+  it('en revisión, la insignia nombra el estado anterior y ofrece «Resolver validación»', async () => {
+    mockCurrentUser('USER', 25);
+    mockReads({ status: PENDING_VALIDATION, previousStatus: IN_NOTIFICATION });
+
+    renderPage();
+
+    expect(
+      await screen.findByText('Pendiente de validación · venía de En notificación'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Resolver validación' })).toBeInTheDocument();
+  });
+
+  it('con previousStatus null, la insignia muestra sólo el nombre del estado', async () => {
+    mockCurrentUser('USER', 25);
+    mockReads({ status: PENDING_VALIDATION, previousStatus: null });
+
+    renderPage();
+
+    expect(await screen.findByText('Pendiente de validación')).toBeInTheDocument();
+    expect(screen.queryByText(/venía de/)).not.toBeInTheDocument();
+  });
+
+  it('con CLOSED sólo aparecen «Reabrir» y «Ver expediente», sin acciones de validación', async () => {
+    mockCurrentUser('ADMIN', 50);
+    mockReads({ status: { catalogItemId: 'item-closed', code: 'CLOSED', name: 'Cerrado' } });
+
+    renderPage();
+
+    expect(await screen.findByRole('button', { name: 'Reabrir' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ver expediente (sólo lectura)' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Pedir validación' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Resolver validación' })).not.toBeInTheDocument();
+  });
+});
+
 describe('EsaviCaseDetailPage — auditoría', () => {
   it('un USER no ve <AuditTrail>', async () => {
     mockCurrentUser('USER', 25);
