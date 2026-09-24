@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/components/ui/table';
+import { cn } from '@/shared/lib/utils';
 
 export interface SatelliteListColumn<T> {
   key: string;
@@ -120,8 +121,14 @@ export function SatelliteList<T>({
               <TableHeader className="bg-primary/8">
                 <TableRow>
                   {columns.map((column) => (
-                    <TableHead key={column.key} className={column.className}>
-                      {t(column.header)}
+                    <TableHead
+                      key={column.key}
+                      className={cn('h-auto py-2 align-bottom whitespace-normal', column.className)}
+                    >
+                      {/* The shared <Table> never wraps, so a long header ("Contacto de la persona
+                          que realizó la atención inicial") set the column width on its own. The
+                          block's max-width caps that, and the label breaks into two or three lines. */}
+                      <span className="block max-w-44">{t(column.header)}</span>
                     </TableHead>
                   ))}
                   {hasRowActions && (
@@ -137,8 +144,8 @@ export function SatelliteList<T>({
                   return (
                     <TableRow key={String(row[idField])}>
                       {columns.map((column) => (
-                        <TableCell key={column.key} className={column.className}>
-                          {column.render(row)}
+                        <TableCell key={column.key} className={cn('whitespace-normal', column.className)}>
+                          <div className="max-w-64 break-words">{column.render(row)}</div>
                         </TableCell>
                       ))}
                       {hasRowActions && (
