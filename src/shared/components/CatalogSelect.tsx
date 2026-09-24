@@ -1,6 +1,8 @@
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
+import { SearchableSelect } from '@/shared/components/SearchableSelect';
 import { Button } from '@/shared/components/ui/button';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 import {
@@ -24,6 +26,16 @@ export interface CatalogSelectProps {
   ariaLabel: string;
   disabled?: boolean;
   emit?: 'id' | 'code';
+  // A long catalog (`pharmaceuticalForm`, `administrationRoute`) renders as `<SearchableSelect>`
+  // instead (ARCHITECTURE.md §4.3). The rows are already in memory, so the text only filters them
+  // here — no extra request, and no `?name=` round-trip per keystroke.
+  searchable?: boolean;
+}
+
+// Local filter over rows already fetched: case- and accent-insensitive, unlike the backend's
+// `?name=` (SPEC F52), because here nothing leaves the client.
+function normalizeForSearch(text: string): string {
+  return text.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();
 }
 
 // ESAVI-CATTYPE-002 (resolves `typeCode` → `catalogTypeId`) + ESAVI-CATITEM-002A/002B (items of
@@ -33,10 +45,31 @@ export interface CatalogSelectProps {
 // resources declare their own 30-minute `staleTime` (CONVENTIONS.md §6.3); nothing is redeclared
 // here, so two instances with the same `typeCode` share both cache entries and cost one request
 // per hop, not one per instance.
-export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled, emit = 'code' }: CatalogSelectProps) {
+export function CatalogSelect({
+  typeCode,
+  value,
+  onChange,
+  ariaLabel,
+  disabled,
+  emit = 'code',
+  searchable = false,
+}: CatalogSelectProps) {
   const { t } = useTranslation();
   const { isLoading, isError, error, catalogTypeId, rows, refetch } =
     useCatalogItemsByTypeCode(typeCode);
+  const [search, setSearch] = useState('');
+
+  const emittedValue = (row: (typeof rows)[number]) => (emit === 'id' ? row.catalogItemId : row.code);
+
+  const searchOptions = useMemo(() => {
+    if (!searchable) {
+      return [];
+    }
+    const needle = normalizeForSearch(search);
+    return rows
+      .filter((row) => !needle || normalizeForSearch(row.name).includes(needle))
+      .map((row) => ({ value: emit === 'id' ? row.catalogItemId : row.code, label: row.name }));
+  }, [searchable, search, rows, emit]);
 
   if (isLoading) {
     return <Skeleton className="h-8 w-full" />;
@@ -74,7 +107,23 @@ export function CatalogSelect({ typeCode, value, onChange, ariaLabel, disabled, 
     );
   }
 
-  const emittedValue = (row: (typeof rows)[number]) => (emit === 'id' ? row.catalogItemId : row.code);
+  if (searchable) {
+    const selected = rows.find((row) => emittedValue(row) === value);
+    return (
+      <SearchableSelect
+        value={value}
+        onChange={onChange}
+        search={search}
+        onSearchChange={setSearch}
+        options={searchOptions}
+        placeholder={t('common.catalogSelect.searchPlaceholder')}
+        ariaLabel={ariaLabel}
+        emptyMessage={t('common.catalogSelect.noResults')}
+        selectedLabel={selected?.name}
+        disabled={disabled}
+      />
+    );
+  }
 
   return (
     <Select value={value ?? ''} onValueChange={(nextValue) => onChange(nextValue || null)} disabled={disabled}>

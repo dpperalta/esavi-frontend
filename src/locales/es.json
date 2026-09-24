@@ -57,7 +57,9 @@
       "clear": "Limpiar selección"
     },
     "catalogSelect": {
-      "empty": "Este catálogo no tiene datos cargados todavía."
+      "empty": "Este catálogo no tiene datos cargados todavía.",
+      "searchPlaceholder": "Buscar…",
+      "noResults": "No hay coincidencias"
     },
     "dateField": {
       "openCalendar": "Abrir calendario — {{field}}"

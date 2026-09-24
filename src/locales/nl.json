@@ -57,7 +57,9 @@
       "clear": "Selectie wissen"
     },
     "catalogSelect": {
-      "empty": "Deze catalogus heeft nog geen gegevens geladen."
+      "empty": "Deze catalogus heeft nog geen gegevens geladen.",
+      "searchPlaceholder": "Zoeken…",
+      "noResults": "Geen overeenkomsten"
     },
     "dateField": {
       "openCalendar": "Kalender openen — {{field}}"

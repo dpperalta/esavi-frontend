@@ -79,7 +79,12 @@ function mockCatalogItems(requestCounter?: { count: number }) {
   );
 }
 
-function renderSelect(props: { typeCode?: string; value?: string | null; onChange?: (id: string | null) => void }) {
+function renderSelect(props: {
+  typeCode?: string;
+  value?: string | null;
+  onChange?: (id: string | null) => void;
+  searchable?: boolean;
+}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return {
     queryClient,
@@ -90,6 +95,7 @@ function renderSelect(props: { typeCode?: string; value?: string | null; onChang
           value={props.value ?? null}
           onChange={props.onChange ?? vi.fn()}
           ariaLabel="Estado del expediente"
+          searchable={props.searchable}
         />
       </QueryClientProvider>,
     ),
@@ -172,5 +178,52 @@ describe('CatalogSelect', () => {
     await user.click(await screen.findByRole('option', { name: 'Cerrado' }));
 
     expect(onChange).toHaveBeenCalledWith('CLOSED');
+  });
+
+  it('con searchable, el texto filtra los ítems ya cargados sin distinguir tildes ni mayúsculas', async () => {
+    const itemsRequests = { count: 0 };
+    mockCatalogTypes();
+    server.use(
+      http.get('http://localhost:4500/api/catalog-items/type/type-workflow-status', () => {
+        itemsRequests.count += 1;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            count: 2,
+            rows: [
+              statusItem({ catalogItemId: 'item-oral', code: 'ORAL', name: 'Vía Oral' }),
+              statusItem({ catalogItemId: 'item-im', code: 'IM', name: 'Vía Intramuscular', sortOrder: 2 }),
+            ],
+          },
+        });
+      }),
+    );
+    const onChange = vi.fn();
+    const user = setupUser();
+
+    renderSelect({ onChange, searchable: true });
+
+    await user.click(await screen.findByRole('combobox', { name: 'Estado del expediente' }));
+    await user.keyboard('via INTRA');
+
+    expect(screen.queryByRole('option', { name: 'Vía Oral' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('option', { name: 'Vía Intramuscular' }));
+
+    expect(onChange).toHaveBeenCalledWith('IM');
+    expect(itemsRequests.count).toBe(1);
+  });
+
+  it('con searchable, un texto sin coincidencias lo dice en vez de mostrar una lista vacía', async () => {
+    mockCatalogTypes();
+    mockCatalogItems();
+    const user = setupUser();
+
+    renderSelect({ searchable: true });
+
+    await user.click(await screen.findByRole('combobox', { name: 'Estado del expediente' }));
+    await user.keyboard('zzz');
+
+    expect(screen.getByText('No hay coincidencias')).toBeInTheDocument();
   });
 });

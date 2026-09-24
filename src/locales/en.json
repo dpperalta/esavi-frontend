@@ -57,7 +57,9 @@
       "clear": "Clear selection"
     },
     "catalogSelect": {
-      "empty": "This catalog has no data loaded yet."
+      "empty": "This catalog has no data loaded yet.",
+      "searchPlaceholder": "Search…",
+      "noResults": "No matches"
     },
     "dateField": {
       "openCalendar": "Open calendar — {{field}}"

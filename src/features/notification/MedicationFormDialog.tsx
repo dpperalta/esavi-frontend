@@ -140,6 +140,7 @@ function MedicationFormFields({ form }: { form: UseFormReturn<NotificationMedica
               <CatalogSelect
                 typeCode="pharmaceuticalForm"
                 emit="id"
+                searchable
                 value={field.value ?? null}
                 onChange={field.onChange}
                 ariaLabel={t('notification.medications.fields.pharmaceuticalFormItemId')}
@@ -159,6 +160,7 @@ function MedicationFormFields({ form }: { form: UseFormReturn<NotificationMedica
               <CatalogSelect
                 typeCode="administrationRoute"
                 emit="id"
+                searchable
                 value={field.value ?? null}
                 onChange={field.onChange}
                 ariaLabel={t('notification.medications.fields.administrationRouteItemId')}
