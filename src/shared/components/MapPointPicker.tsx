@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { type KeyboardEvent, useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { LoaderIcon, SearchIcon } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -35,6 +36,10 @@ export interface MapPointPickerProps {
 }
 
 const DEFAULT_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const DEFAULT_GEOCODER_URL = 'https://nominatim.openstreetmap.org/search';
+const GEOCODER_RESULT_LIMIT = 5;
+const SEARCH_RESULT_ZOOM = 17;
+const SEARCH_MIN_LENGTH = 3;
 // Último recurso si ni el `value`, ni `fallbackCenter`, ni `VITE_MAP_DEFAULT_CENTER` resuelven —
 // nunca geolocalización del navegador (§3.7).
 const ABSOLUTE_FALLBACK_CENTER: LatLng = { lat: 0, lng: 0 };
@@ -59,6 +64,51 @@ function resolveTileUrl(): string {
     );
   }
   return DEFAULT_TILE_URL;
+}
+
+interface GeocoderResult {
+  id: string;
+  label: string;
+  lat: number;
+  lng: number;
+}
+
+interface NominatimPlace {
+  place_id: number;
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
+// Nominatim's usage policy forbids autocomplete (at most one request per second), so the search
+// runs on an explicit submit, never per keystroke. A closed-network deployment points
+// VITE_MAP_GEOCODER_URL at its own Nominatim-compatible instance, same as the tile server.
+async function geocode(
+  query: string,
+  language: string,
+  bounds: L.LatLngBounds | null,
+  signal: AbortSignal,
+): Promise<GeocoderResult[]> {
+  const url = new URL((import.meta.env.VITE_MAP_GEOCODER_URL as string | undefined) || DEFAULT_GEOCODER_URL);
+  url.searchParams.set('q', query);
+  url.searchParams.set('format', 'jsonv2');
+  url.searchParams.set('limit', String(GEOCODER_RESULT_LIMIT));
+  url.searchParams.set('accept-language', language);
+  if (bounds) {
+    // Biases results toward what the user is looking at, without excluding the rest.
+    url.searchParams.set('viewbox', bounds.toBBoxString());
+  }
+  const response = await fetch(url, { signal, headers: { Accept: 'application/json' } });
+  if (!response.ok) {
+    throw new Error(`Geocoder responded ${response.status}`);
+  }
+  const places = (await response.json()) as NominatimPlace[];
+  return places.map((place) => ({
+    id: String(place.place_id),
+    label: place.display_name,
+    lat: Number(place.lat),
+    lng: Number(place.lon),
+  }));
 }
 
 function parseLatLng(raw: string | undefined): LatLng | null {
@@ -111,7 +161,7 @@ function wrapLongitude(lng: number): number {
 // `VITE_MAP_TILE_URL`, con dos campos numéricos como alternativa sin ratón: el mapa y los campos
 // son dos vistas del mismo `value`, nunca dos dueños (SPEC FE13a §3.4).
 export function MapPointPicker({ value, onChange, fallbackCenter, disabled, ariaLabel }: MapPointPickerProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const latId = useId();
   const lngId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -128,6 +178,15 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
 
   const [latDraft, setLatDraft] = useState(value ? String(value.lat) : '');
   const [lngDraft, setLngDraft] = useState(value ? String(value.lng) : '');
+
+  // Ephemeral UI state of the search overlay: it only moves the map and proposes a point — the
+  // chosen point still lives solely in `value`.
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchStatus, setSearchStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [searchResults, setSearchResults] = useState<GeocoderResult[]>([]);
+  const searchAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => searchAbortRef.current?.abort(), []);
 
   useEffect(() => {
     setLatDraft(value ? String(value.lat) : '');
@@ -291,6 +350,47 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
     emit(value?.lat ?? fallbackCenter?.lat ?? resolveEnvDefaultCenter()?.lat ?? ABSOLUTE_FALLBACK_CENTER.lat, Number(trimmed));
   }
 
+  async function runSearch() {
+    const query = searchQuery.trim();
+    if (query.length < SEARCH_MIN_LENGTH) {
+      return;
+    }
+    searchAbortRef.current?.abort();
+    const controller = new AbortController();
+    searchAbortRef.current = controller;
+    setSearchStatus('loading');
+    try {
+      const results = await geocode(query, i18n.language, mapRef.current?.getBounds() ?? null, controller.signal);
+      setSearchResults(results);
+      setSearchStatus('done');
+    } catch (error) {
+      if (controller.signal.aborted) {
+        return;
+      }
+      console.warn('<MapPointPicker> geocoder request failed', error);
+      setSearchResults([]);
+      setSearchStatus('error');
+    }
+  }
+
+  // The field sits inside the case form: Enter must search, never submit the surrounding form.
+  function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      void runSearch();
+    } else if (event.key === 'Escape') {
+      setSearchStatus('idle');
+      setSearchResults([]);
+    }
+  }
+
+  function handlePickResult(result: GeocoderResult) {
+    mapRef.current?.setView([result.lat, result.lng], SEARCH_RESULT_ZOOM);
+    emit(result.lat, result.lng);
+    setSearchStatus('idle');
+    setSearchResults([]);
+  }
+
   function handleClear() {
     setLatDraft('');
     setLngDraft('');
@@ -299,15 +399,72 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
 
   return (
     <div className="flex flex-col gap-2">
-      <div
-        ref={containerRef}
-        role="application"
-        aria-label={ariaLabel}
-        className={cn(
-          'isolate aspect-[16/10] w-full rounded-md border',
-          disabled && 'pointer-events-none',
+      <div className="relative isolate">
+        <div
+          ref={containerRef}
+          role="application"
+          aria-label={ariaLabel}
+          className={cn(
+            'isolate aspect-[16/10] w-full rounded-md border',
+            disabled && 'pointer-events-none',
+          )}
+        />
+        {!disabled && (
+          // Sibling of the Leaflet container, not a child: clicks and scrolls on the overlay never
+          // reach the map, so they can't drop a point or pan it. z-[1000] matches Leaflet's controls.
+          <div className="absolute top-2 right-2 z-[1000] flex w-72 max-w-[calc(100%-4rem)] flex-col gap-1">
+            <div className="flex items-center rounded-md border bg-background shadow-sm">
+              <Input
+                type="search"
+                aria-label={t('common.mapPointPicker.searchLabel')}
+                placeholder={t('common.mapPointPicker.searchPlaceholder')}
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                className="h-11 flex-1 border-0 shadow-none focus-visible:ring-0"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label={t('common.mapPointPicker.search')}
+                onClick={() => void runSearch()}
+                disabled={searchQuery.trim().length < SEARCH_MIN_LENGTH || searchStatus === 'loading'}
+                className="size-11 shrink-0"
+              >
+                {searchStatus === 'loading' ? <LoaderIcon className="animate-spin" /> : <SearchIcon />}
+              </Button>
+            </div>
+            {(searchStatus === 'done' || searchStatus === 'error') && (
+              <div className="max-h-60 overflow-y-auto rounded-md border bg-popover text-popover-foreground shadow-md">
+                {searchStatus === 'error' && (
+                  <p role="alert" className="px-3 py-2 text-sm text-destructive">
+                    {t('common.mapPointPicker.searchError')}
+                  </p>
+                )}
+                {searchStatus === 'done' && searchResults.length === 0 && (
+                  <p className="px-3 py-2 text-sm text-muted-foreground">{t('common.mapPointPicker.noResults')}</p>
+                )}
+                {searchResults.length > 0 && (
+                  <ul>
+                    {searchResults.map((result) => (
+                      <li key={result.id}>
+                        <button
+                          type="button"
+                          onClick={() => handlePickResult(result)}
+                          className="min-h-11 w-full px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:outline-none"
+                        >
+                          {result.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
         )}
-      />
+      </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input
           id={latId}

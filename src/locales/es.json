@@ -72,7 +72,12 @@
     "mapPointPicker": {
       "latitude": "Latitud",
       "longitude": "Longitud",
-      "clearPoint": "Borrar punto"
+      "clearPoint": "Borrar punto",
+      "searchLabel": "Buscar dirección en el mapa",
+      "searchPlaceholder": "Buscar dirección o lugar",
+      "search": "Buscar",
+      "noResults": "No se encontraron lugares",
+      "searchError": "No se pudo consultar el buscador de direcciones"
     },
     "satelliteList": {
       "add": "Añadir",

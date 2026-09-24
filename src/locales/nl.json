@@ -72,7 +72,12 @@
     "mapPointPicker": {
       "latitude": "Breedtegraad",
       "longitude": "Lengtegraad",
-      "clearPoint": "Punt wissen"
+      "clearPoint": "Punt wissen",
+      "searchLabel": "Adres zoeken op de kaart",
+      "searchPlaceholder": "Zoek adres of plaats",
+      "search": "Zoeken",
+      "noResults": "Geen plaatsen gevonden",
+      "searchError": "De adreszoeker kon niet worden bereikt"
     },
     "satelliteList": {
       "add": "Toevoegen",
