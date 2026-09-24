@@ -7,10 +7,12 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import {
+  useActivateCaseWorkflow,
   useCaseWorkflow,
   useCaseWorkflowList,
   useCloseCase,
   useCompleteStage,
+  useDeactivateCaseWorkflow,
   useReopenCase,
   useRequestValidation,
   useResolveValidation,
@@ -324,6 +326,85 @@ describe.each([
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(invalidatedKeys(queryClient)).toEqual([['caseWorkflow', 'byCase', 'case-1']]);
+  });
+});
+
+// SPEC FE24 §3.4 — 005A/005B act on the record by caseWorkflowId and never touch ['esaviCase'].
+const RECORD_KEYS = [
+  ['caseWorkflow', 'list', {}],
+  ['caseWorkflow', 'byCase', 'case-1'],
+];
+
+const recordTarget = { caseWorkflowId: 'workflow-1', caseId: 'case-1' };
+
+describe.each([
+  [
+    'useDeactivateCaseWorkflow — ESAVI-CASEFLOW-005A',
+    useDeactivateCaseWorkflow,
+    http.delete,
+    'http://localhost:4500/api/case-workflows/:id',
+    'CASEFLOW_005A_ALREADY_INACTIVE',
+    'CASEFLOW_005A_DELETE_FAILED',
+  ],
+  [
+    'useActivateCaseWorkflow — ESAVI-CASEFLOW-005B',
+    useActivateCaseWorkflow,
+    http.patch,
+    'http://localhost:4500/api/case-workflows/activate/:id',
+    'CASEFLOW_005B_ALREADY_ACTIVE',
+    'CASEFLOW_005B_ACTIVATE_FAILED',
+  ],
+] as const)('%s', (_title, useHook, method, url, conflictCode, failureCode) => {
+  it('sale con el caseWorkflowId y con 200 invalida list y byCase, no esaviCase', async () => {
+    let requestedId: string | undefined;
+    server.use(
+      method(url, ({ params }) => {
+        requestedId = params.id as string;
+        return HttpResponse.json({ ok: true, message: 'ok' });
+      }),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useHook(), { wrapper: Wrapper });
+
+    result.current.mutate(recordTarget);
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(requestedId).toBe('workflow-1');
+    expect(invalidatedKeys(queryClient)).toEqual(expect.arrayContaining(RECORD_KEYS));
+    expect(invalidatedKeys(queryClient)).toHaveLength(2);
+  });
+
+  it(`con 409 ${conflictCode} invalida list y byCase`, async () => {
+    server.use(method(url, () => conflict(conflictCode)));
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useHook(), { wrapper: Wrapper });
+
+    result.current.mutate(recordTarget);
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(invalidatedKeys(queryClient)).toEqual(expect.arrayContaining(RECORD_KEYS));
+    expect(invalidatedKeys(queryClient)).toHaveLength(2);
+  });
+
+  it(`con 500 ${failureCode} no invalida nada`, async () => {
+    server.use(
+      method(url, () =>
+        HttpResponse.json({ ok: false, message: 'boom', code: failureCode }, { status: 500 }),
+      ),
+    );
+
+    const { Wrapper, queryClient } = createWrapper();
+    seedCache(queryClient);
+    const { result } = renderHook(() => useHook(), { wrapper: Wrapper });
+
+    result.current.mutate(recordTarget);
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(invalidatedKeys(queryClient)).toHaveLength(0);
   });
 });
 

@@ -511,7 +511,13 @@
       "CASEFLOW_011_NOT_PENDING": "This case file is no longer pending validation.",
       "CASEFLOW_011_PREVIOUS_STATUS_MISSING": "It's unknown which status the case file should return to. Contact the administrator.",
       "CASEFLOW_011_STATUS_NOT_FOUND": "The previous status is missing from the catalog. Contact the administrator.",
-      "CASEFLOW_011_RESOLVE_FAILED": "We couldn't resolve the validation. Please try again."
+      "CASEFLOW_011_RESOLVE_FAILED": "We couldn't resolve the validation. Please try again.",
+      "CASEFLOW_005A_NOT_FOUND": "The workflow record doesn't exist.",
+      "CASEFLOW_005A_ALREADY_INACTIVE": "This workflow record was already deactivated.",
+      "CASEFLOW_005A_DELETE_FAILED": "We couldn't deactivate the workflow record. Please try again.",
+      "CASEFLOW_005B_NOT_FOUND": "The workflow record doesn't exist.",
+      "CASEFLOW_005B_ALREADY_ACTIVE": "This workflow record was already active.",
+      "CASEFLOW_005B_ACTIVATE_FAILED": "We couldn't reactivate the workflow record. Please try again."
     },
     "list": {
       "columns": {
@@ -528,7 +534,24 @@
         "openedTo": "Opened before"
       },
       "empty": "There are no case files to show.",
-      "emptyFiltered": "No case file matches the filters."
+      "emptyFiltered": "No case file matches the filters.",
+      "rowActions": "Record actions"
+    },
+    "lifecycle": {
+      "deactivate": {
+        "action": "Deactivate workflow record",
+        "confirmTitle": "Deactivate the workflow record?",
+        "confirmBody": "Nobody except a superadministrator will be able to open this case file, including you. Only a superadministrator can reactivate it. This does not close the case: use “Close case file” for that.",
+        "confirmAction": "Deactivate record",
+        "success": "Workflow record deactivated"
+      },
+      "activate": {
+        "action": "Reactivate workflow record",
+        "confirmTitle": "Reactivate the workflow record?",
+        "confirmBody": "The case file will be visible to all users again, in the state it was left in.",
+        "confirmAction": "Reactivate record",
+        "success": "Workflow record reactivated"
+      }
     },
     "reopen": {
       "action": "Reopen",
@@ -796,14 +819,15 @@
     "error": {
       "caseNotFound": "This case does not exist",
       "backToList": "Back to the list",
-      "workflowMissing": "This case has no workflow record",
-      "workflowMissingDescription": "Case {{caseCode}} has no associated workflow record. Notify an administrator to review it.",
+      "workflowMissing": "This case file has no active workflow record",
+      "workflowMissingDescription": "Case {{caseCode}} has no active workflow record: it may not exist or it may be deactivated. Ask a superadministrator to review it.",
       "generic": "We couldn't load the case file"
     },
     "readOnly": {
       "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again.",
       "closedBannerAdmin": "This case file is closed.",
-      "pendingValidationBanner": "This case file is pending validation. You can keep working, but it can't be closed until the validation is resolved."
+      "pendingValidationBanner": "This case file is pending validation. You can keep working, but it can't be closed until the validation is resolved.",
+      "inactiveWorkflowBanner": "The workflow record for this case file is deactivated. Only superadministrators can see it."
     }
   },
   "patient": {

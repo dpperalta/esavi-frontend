@@ -90,6 +90,14 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   CASEFLOW_011_PREVIOUS_STATUS_MISSING: 'caseWorkflow.errors.CASEFLOW_011_PREVIOUS_STATUS_MISSING',
   CASEFLOW_011_STATUS_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_011_STATUS_NOT_FOUND',
   CASEFLOW_011_RESOLVE_FAILED: 'caseWorkflow.errors.CASEFLOW_011_RESOLVE_FAILED',
+  // SPEC FE24 §3.5 — deactivate (005A) and reactivate (005B) the workflow record. The two `409`s
+  // are races with another tab; the hooks re-read the inbox and `006` on them.
+  CASEFLOW_005A_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_005A_NOT_FOUND',
+  CASEFLOW_005A_ALREADY_INACTIVE: 'caseWorkflow.errors.CASEFLOW_005A_ALREADY_INACTIVE',
+  CASEFLOW_005A_DELETE_FAILED: 'caseWorkflow.errors.CASEFLOW_005A_DELETE_FAILED',
+  CASEFLOW_005B_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_005B_NOT_FOUND',
+  CASEFLOW_005B_ALREADY_ACTIVE: 'caseWorkflow.errors.CASEFLOW_005B_ALREADY_ACTIVE',
+  CASEFLOW_005B_ACTIVATE_FAILED: 'caseWorkflow.errors.CASEFLOW_005B_ACTIVATE_FAILED',
   // SPEC FE09 §4.14 — deactivate/reactivate from the list's row menu, same four-code shape as
   // every other entity's 005A/005B.
   CASE_005A_NOT_FOUND: 'esaviCase.errors.CASE_005A_NOT_FOUND',

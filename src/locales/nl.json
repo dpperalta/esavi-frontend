@@ -511,7 +511,13 @@
       "CASEFLOW_011_NOT_PENDING": "Dit dossier wacht niet meer op validatie.",
       "CASEFLOW_011_PREVIOUS_STATUS_MISSING": "Onbekend naar welke status het dossier moet terugkeren. Neem contact op met de beheerder.",
       "CASEFLOW_011_STATUS_NOT_FOUND": "De vorige status ontbreekt in de catalogus. Neem contact op met de beheerder.",
-      "CASEFLOW_011_RESOLVE_FAILED": "We konden de validatie niet afronden. Probeer het opnieuw."
+      "CASEFLOW_011_RESOLVE_FAILED": "We konden de validatie niet afronden. Probeer het opnieuw.",
+      "CASEFLOW_005A_NOT_FOUND": "Het workflowrecord bestaat niet.",
+      "CASEFLOW_005A_ALREADY_INACTIVE": "Dit workflowrecord was al gedeactiveerd.",
+      "CASEFLOW_005A_DELETE_FAILED": "We konden het workflowrecord niet deactiveren. Probeer het opnieuw.",
+      "CASEFLOW_005B_NOT_FOUND": "Het workflowrecord bestaat niet.",
+      "CASEFLOW_005B_ALREADY_ACTIVE": "Dit workflowrecord was al actief.",
+      "CASEFLOW_005B_ACTIVATE_FAILED": "We konden het workflowrecord niet heractiveren. Probeer het opnieuw."
     },
     "list": {
       "columns": {
@@ -528,7 +534,24 @@
         "openedTo": "Geopend voor"
       },
       "empty": "Er zijn geen dossiers om te tonen.",
-      "emptyFiltered": "Geen dossier komt overeen met de filters."
+      "emptyFiltered": "Geen dossier komt overeen met de filters.",
+      "rowActions": "Acties voor het record"
+    },
+    "lifecycle": {
+      "deactivate": {
+        "action": "Workflowrecord deactiveren",
+        "confirmTitle": "Het workflowrecord deactiveren?",
+        "confirmBody": "Niemand behalve een superbeheerder kan dit dossier nog openen, jijzelf ook niet. Alleen een superbeheerder kan het heractiveren. Dit sluit de casus niet: daarvoor is er “Dossier sluiten”.",
+        "confirmAction": "Record deactiveren",
+        "success": "Workflowrecord gedeactiveerd"
+      },
+      "activate": {
+        "action": "Workflowrecord heractiveren",
+        "confirmTitle": "Het workflowrecord heractiveren?",
+        "confirmBody": "Het dossier wordt weer zichtbaar voor alle gebruikers, in de staat waarin het is achtergelaten.",
+        "confirmAction": "Record heractiveren",
+        "success": "Workflowrecord geheractiveerd"
+      }
     },
     "reopen": {
       "action": "Heropenen",
@@ -796,14 +819,15 @@
     "error": {
       "caseNotFound": "Dit geval bestaat niet",
       "backToList": "Terug naar de lijst",
-      "workflowMissing": "Dit geval heeft geen workflowdossier",
-      "workflowMissingDescription": "Geval {{caseCode}} heeft geen bijbehorend workflowdossier. Waarschuw een beheerder om dit te controleren.",
+      "workflowMissing": "Dit dossier heeft geen actief workflowrecord",
+      "workflowMissingDescription": "Geval {{caseCode}} heeft geen actief workflowrecord: het bestaat mogelijk niet of is gedeactiveerd. Vraag een superbeheerder om het te controleren.",
       "generic": "We konden het dossier niet laden"
     },
     "readOnly": {
       "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken.",
       "closedBannerAdmin": "Dit dossier is gesloten.",
-      "pendingValidationBanner": "Dit dossier wacht op validatie. Je kunt verder werken, maar het kan pas worden gesloten als de validatie is afgerond."
+      "pendingValidationBanner": "Dit dossier wacht op validatie. Je kunt verder werken, maar het kan pas worden gesloten als de validatie is afgerond.",
+      "inactiveWorkflowBanner": "Het workflowrecord van dit dossier is gedeactiveerd. Alleen superbeheerders kunnen het zien."
     }
   },
   "patient": {

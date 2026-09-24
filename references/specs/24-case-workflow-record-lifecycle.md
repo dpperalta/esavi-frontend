@@ -1,6 +1,6 @@
 # SPEC FE24 — Desactivar y reactivar el registro de flujo del expediente
 
-> **Estado:** Borrador
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (asistente y `CaseWorkflowErrorScreen`), SPEC FE09 (`CaseWorkflowInbox`, el patrón del menú de fila de `EsaviCaseListPage`), SPEC FE23 (el workflow en `['caseWorkflow','byCase',caseId]` como fuente única del estado), SPEC F44 del backend (`ESAVI-CASEFLOW-005A`/`-005B`)
 > **Fecha:** 2026-09-24
 > **Objetivo:** Dar al ADMIN y al SUPERADMIN la desactivación y la reactivación del registro de flujo desde la bandeja por estado, con avisos que expliquen lo que esa desactivación provoca.

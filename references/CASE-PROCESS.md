@@ -2499,7 +2499,7 @@ Y lo que no es una primitiva:
 
 ## 10. Dependencias del otro repositorio
 
-Lo que este proceso necesita de `esavi-backend` y no puede resolverse aquí. Se acumula a medida que §5 avanza. Nueve entradas: cuatro abiertas (§10.1, §10.5, §10.6 y §10.9), una **abierta a medias** (§10.4), tres resueltas (§10.2, §10.3 y §10.8) y una pregunta contestada (§10.7). §10.4 a §10.6 y §10.8 salieron del paso 4, §10.7 del paso 5 y §10.9 del SPEC FE23.
+Lo que este proceso necesita de `esavi-backend` y no puede resolverse aquí. Se acumula a medida que §5 avanza. Diez entradas: cinco abiertas (§10.1, §10.5, §10.6, §10.9 y §10.10), una **abierta a medias** (§10.4), tres resueltas (§10.2, §10.3 y §10.8) y una pregunta contestada (§10.7). §10.4 a §10.6 y §10.8 salieron del paso 4, §10.7 del paso 5, §10.9 del SPEC FE23 y §10.10 del SPEC FE24.
 
 ### 10.1 Fila `systemConfig` con el código de país · **decidido, pendiente de crear**
 
@@ -2682,3 +2682,21 @@ Salió al escribir el SPEC FE23, que consume `010` (pedir validación) y `011` (
 Alcance a decidir por el backend, no por aquí: si además debe impedirse que resuelva la misma persona que pidió, aunque sea ADMIN. Eso necesita saber quién hizo el `010`, que hoy sólo está en `appDetails`.
 
 **Qué hace el cliente mientras tanto:** FE23 muestra «Resolver validación» a todo USER, porque es el rol real de la ruta. Ocultarlo sólo en la interfaz escondería la acción a quien sí puede usarla y no protegería nada, porque la API la seguiría aceptando (FE23 §6; `CONVENTIONS.md` §11). Cuando la ruta suba a ADMIN, el componente `CaseValidationActions` gana un `useCan(ROLE_LEVELS.ADMIN)` sólo para «Resolver», como `ReopenCaseButton`.
+
+### 10.10 Desactivar el registro de flujo deja al ADMIN sin acceso ni forma de deshacerlo · **pedido el 2026-09-24**
+
+Salió al escribir el SPEC FE24, que consume `ESAVI-CASEFLOW-005A` (desactivar el registro, `ADMIN`) y `ESAVI-CASEFLOW-005B` (reactivarlo, `SUPERADMIN`) desde la bandeja por estado.
+
+**Hoy los roles de las dos rutas no encajan con quién puede ver un registro inactivo.** `canViewInactive` es sólo `SUPERADMIN` (`esavi-backend/src/helpers/permissions.helper.ts`), y `006` filtra por `isActive` a cualquier otro rol (`caseWorkflow.service.ts`). Tras un `005A`:
+
+- ni USER ni ADMIN pueden abrir el asistente de ese caso: `006` responde `404 CASEFLOW_006_NOT_FOUND`, el mismo `code` que un caso sin flujo, así que el cliente no puede distinguir las dos causas;
+- el ADMIN que lo desactivó sigue viendo la fila en la bandeja (`002B` es `ADMIN` y no filtra), pero no puede entrar en ella ni deshacer la acción, porque `005B` es `SUPERADMIN`.
+
+**Petición**, una de las dos:
+
+- que `canViewInactive` incluya a `ADMIN` en `caseWorkflow`, de modo que quien puede desactivar siga viendo lo que desactivó; o
+- que `ESAVI-CASEFLOW-005A` suba a `SUPERADMIN` en `ROUTE_RULES`, de modo que sólo desactive quien puede deshacerlo.
+
+Al hacerlo, `API-ROUTES.md` se regenera (`references/README.md`).
+
+**Qué hace el cliente mientras tanto:** FE24 muestra «Desactivar registro de flujo» desde ADMIN y «Reactivar» sólo a SUPERADMIN, porque son los roles reales de las rutas (FE24 §6; `CONVENTIONS.md` §11). El diálogo de desactivar avisa antes de confirmar de que ni quien confirma podrá volver a abrir el expediente, y `caseWizard.error.workflowMissing` dice «no tiene un registro de flujo activo» en vez de afirmar que no existe. Si se elige la segunda opción, `CaseWorkflowRowActions` pasa a `useCan(ROLE_LEVELS.SUPERADMIN)` también para «Desactivar»; si se elige la primera, el diálogo pierde la frase «incluido tú».

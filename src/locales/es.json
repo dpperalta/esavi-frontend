@@ -511,7 +511,13 @@
       "CASEFLOW_011_NOT_PENDING": "Este expediente ya no está pendiente de validación.",
       "CASEFLOW_011_PREVIOUS_STATUS_MISSING": "No se sabe a qué estado debe volver el expediente. Avisa al administrador.",
       "CASEFLOW_011_STATUS_NOT_FOUND": "Falta el estado anterior en el catálogo. Avisa al administrador.",
-      "CASEFLOW_011_RESOLVE_FAILED": "No pudimos resolver la validación. Intenta de nuevo."
+      "CASEFLOW_011_RESOLVE_FAILED": "No pudimos resolver la validación. Intenta de nuevo.",
+      "CASEFLOW_005A_NOT_FOUND": "El registro de flujo no existe.",
+      "CASEFLOW_005A_ALREADY_INACTIVE": "Este registro de flujo ya estaba desactivado.",
+      "CASEFLOW_005A_DELETE_FAILED": "No pudimos desactivar el registro de flujo. Intenta de nuevo.",
+      "CASEFLOW_005B_NOT_FOUND": "El registro de flujo no existe.",
+      "CASEFLOW_005B_ALREADY_ACTIVE": "Este registro de flujo ya estaba activo.",
+      "CASEFLOW_005B_ACTIVATE_FAILED": "No pudimos reactivar el registro de flujo. Intenta de nuevo."
     },
     "list": {
       "columns": {
@@ -528,7 +534,24 @@
         "openedTo": "Abiertos antes de"
       },
       "empty": "No hay expedientes que mostrar.",
-      "emptyFiltered": "Ningún expediente coincide con los filtros."
+      "emptyFiltered": "Ningún expediente coincide con los filtros.",
+      "rowActions": "Acciones del registro"
+    },
+    "lifecycle": {
+      "deactivate": {
+        "action": "Desactivar registro de flujo",
+        "confirmTitle": "¿Desactivar el registro de flujo?",
+        "confirmBody": "Nadie, salvo un superadministrador, podrá abrir este expediente, incluido tú. Sólo un superadministrador puede reactivarlo. Esto no cierra el caso: para eso está “Cerrar expediente”.",
+        "confirmAction": "Desactivar registro",
+        "success": "Registro de flujo desactivado"
+      },
+      "activate": {
+        "action": "Reactivar registro de flujo",
+        "confirmTitle": "¿Reactivar el registro de flujo?",
+        "confirmBody": "El expediente volverá a estar visible para todos los usuarios, en el estado en que quedó.",
+        "confirmAction": "Reactivar registro",
+        "success": "Registro de flujo reactivado"
+      }
     },
     "reopen": {
       "action": "Reabrir",
@@ -796,14 +819,15 @@
     "error": {
       "caseNotFound": "Este caso no existe",
       "backToList": "Volver al listado",
-      "workflowMissing": "Este caso no tiene expediente de flujo",
-      "workflowMissingDescription": "El caso {{caseCode}} no tiene un expediente de flujo asociado. Avisa a un administrador para que revise el registro.",
+      "workflowMissing": "Este expediente no tiene un registro de flujo activo",
+      "workflowMissingDescription": "El caso {{caseCode}} no tiene un registro de flujo activo: puede no existir o estar desactivado. Pide a un superadministrador que lo revise.",
       "generic": "No pudimos cargar el expediente"
     },
     "readOnly": {
       "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo.",
       "closedBannerAdmin": "Este expediente está cerrado.",
-      "pendingValidationBanner": "Este expediente está pendiente de validación. Puedes seguir trabajando, pero no se podrá cerrar hasta resolverla."
+      "pendingValidationBanner": "Este expediente está pendiente de validación. Puedes seguir trabajando, pero no se podrá cerrar hasta resolverla.",
+      "inactiveWorkflowBanner": "El registro de flujo de este expediente está desactivado. Sólo los superadministradores pueden verlo."
     }
   },
   "patient": {
