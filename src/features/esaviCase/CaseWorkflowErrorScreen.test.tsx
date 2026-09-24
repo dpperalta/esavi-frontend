@@ -42,7 +42,7 @@ describe('CaseWorkflowErrorScreen', () => {
 
     expect(screen.getByText('Este caso no existe')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Volver al listado' })).toBeInTheDocument();
-    expect(screen.queryByText('Este caso no tiene expediente de flujo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Este expediente no tiene un registro de flujo activo')).not.toBeInTheDocument();
   });
 
   it('CASEFLOW_006_NOT_FOUND renderiza la pantalla dedicada de flujo faltante, distinta de la de caso inexistente', async () => {
@@ -84,7 +84,7 @@ describe('CaseWorkflowErrorScreen', () => {
 
     renderScreen(new EsaviApiError('not found', 404, 'CASEFLOW_006_NOT_FOUND'));
 
-    expect(screen.getByText('Este caso no tiene expediente de flujo')).toBeInTheDocument();
+    expect(screen.getByText('Este expediente no tiene un registro de flujo activo')).toBeInTheDocument();
     expect(screen.queryByText('Este caso no existe')).not.toBeInTheDocument();
 
     await waitFor(() => expect(screen.getByText(/ESAVI-2026-000001/)).toBeInTheDocument());
@@ -94,6 +94,6 @@ describe('CaseWorkflowErrorScreen', () => {
     renderScreen(new EsaviApiError('boom', 500, 'CASEFLOW_006_UNKNOWN'));
 
     expect(screen.queryByText('Este caso no existe')).not.toBeInTheDocument();
-    expect(screen.queryByText('Este caso no tiene expediente de flujo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Este expediente no tiene un registro de flujo activo')).not.toBeInTheDocument();
   });
 });

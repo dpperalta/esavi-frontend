@@ -1,6 +1,6 @@
 # SPEC FE23 — Pedir y resolver la validación del expediente
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE08 (armazón del asistente, `CaseWizardHeader`), SPEC FE09 (`EsaviCaseDetailPage` y la bandeja por estado), SPEC FE14b (`ClosureStep`, línea `notPendingValidation`, `invalidateWorkflowTransition`, patrón `ReopenCaseButton`), SPEC F44 del backend (`ESAVI-CASEFLOW-010`/`-011`)
 > **Fecha:** 2026-09-24
 > **Objetivo:** Añadir al expediente las acciones de pedir y resolver la validación, de modo que un caso en `PENDING_VALIDATION` tenga salida desde la interfaz.

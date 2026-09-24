@@ -2,21 +2,81 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 import type { CaseWorkflowListRow } from '@/contracts/declared/caseWorkflow';
-import { useCaseWorkflowList } from '@/features/caseWorkflow/api';
+import {
+  useActivateCaseWorkflow,
+  useCaseWorkflowList,
+  useDeactivateCaseWorkflow,
+} from '@/features/caseWorkflow/api';
 import { caseWorkflowFiltersSchema } from '@/features/esaviCase/schemas';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { CatalogSelect } from '@/shared/components/CatalogSelect';
 import { DateField } from '@/shared/components/DateField';
 import { ResourceTable, type ResourceTableColumn } from '@/shared/components/ResourceTable';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog';
+import { DropdownMenuItem } from '@/shared/components/ui/dropdown-menu';
 import { Label } from '@/shared/components/ui/label';
+import { ROLE_LEVELS } from '@/shared/config/roles';
+import { useCan } from '@/shared/hooks/useCan';
 
 const WORKFLOW_STATUS_TYPE_CODE = 'caseWorkflowStatus';
 const STAGE_ALIASES = ['classification', 'notification', 'investigation', 'finalClassification'] as const;
 
 function completedStageCount(row: CaseWorkflowListRow): number {
   return STAGE_ALIASES.filter((alias) => row.stages[alias].endedAt !== null).length;
+}
+
+type LifecycleAction = 'deactivate' | 'activate';
+
+interface LifecycleTarget {
+  caseWorkflowId: string;
+  caseId: string;
+  action: LifecycleAction;
+}
+
+interface CaseWorkflowRowActionsProps {
+  row: CaseWorkflowListRow;
+  onConfirm: (target: LifecycleTarget) => void;
+}
+
+// ESAVI-CASEFLOW-005A (ADMIN) deactivates, ESAVI-CASEFLOW-005B (SUPERADMIN) reactivates — each
+// action shown at the real role of its route, even though it leaves an ADMIN unable to undo a
+// deactivation (SPEC FE24 §3.1, §6).
+function CaseWorkflowRowActions({ row, onConfirm }: CaseWorkflowRowActionsProps) {
+  const { t } = useTranslation();
+  const canDeactivate = useCan(ROLE_LEVELS.ADMIN);
+  const canActivate = useCan(ROLE_LEVELS.SUPERADMIN);
+  const target = { caseWorkflowId: row.caseWorkflowId, caseId: row.caseId };
+
+  return (
+    <>
+      {canDeactivate && row.isActive && (
+        <DropdownMenuItem
+          variant="destructive"
+          className="min-h-11"
+          onClick={() => onConfirm({ ...target, action: 'deactivate' })}
+        >
+          {t('caseWorkflow.lifecycle.deactivate.action')}
+        </DropdownMenuItem>
+      )}
+      {canActivate && !row.isActive && (
+        <DropdownMenuItem className="min-h-11" onClick={() => onConfirm({ ...target, action: 'activate' })}>
+          {t('caseWorkflow.lifecycle.activate.action')}
+        </DropdownMenuItem>
+      )}
+    </>
+  );
 }
 
 // The «Bandeja por estado» tab — its own contract against ESAVI-CASEFLOW-002A/002B, deliberately
@@ -29,6 +89,12 @@ export function CaseWorkflowInbox() {
   // Cleared the moment the offending `statusCode` is dropped from the URL, but kept on screen
   // until then — the query itself succeeds again on the very next render (§3.5).
   const [statusNotFoundMessage, setStatusNotFoundMessage] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<LifecycleTarget | null>(null);
+  const canDeactivate = useCan(ROLE_LEVELS.ADMIN);
+  const canActivate = useCan(ROLE_LEVELS.SUPERADMIN);
+  const deactivate = useDeactivateCaseWorkflow();
+  const activate = useActivateCaseWorkflow();
+  const pendingLifecycle = deactivate.isPending || activate.isPending;
 
   const parsed = caseWorkflowFiltersSchema.safeParse(Object.fromEntries(searchParams));
   const page = parsed.success ? parsed.data.page : 1;
@@ -87,6 +153,16 @@ export function CaseWorkflowInbox() {
     });
   }
 
+  function handleIncludeInactiveChange(value: boolean) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) next.set('includeInactive', 'true');
+      else next.delete('includeInactive');
+      next.delete('page');
+      return next;
+    });
+  }
+
   function handlePageChange(nextPage: number) {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
@@ -96,7 +172,25 @@ export function CaseWorkflowInbox() {
     });
   }
 
+  function handleConfirm() {
+    if (!confirmTarget) return;
+    const { action, ...target } = confirmTarget;
+    const mutation = action === 'deactivate' ? deactivate : activate;
+    mutation.mutate(target, {
+      onSuccess: () => {
+        toast.success(t(`caseWorkflow.lifecycle.${action}.success`));
+        setConfirmTarget(null);
+      },
+      onError: (error) => {
+        if (error instanceof EsaviApiError) toast.error(getErrorMessage(error));
+        // Closes on error too (SPEC FE24 §3.5): a 409 already re-reads the row into its real state.
+        setConfirmTarget(null);
+      },
+    });
+  }
+
   const statusCode = searchParams.get('statusCode') ?? '';
+  const lifecycleKey = confirmTarget?.action ?? 'deactivate';
 
   const columns: ResourceTableColumn<CaseWorkflowListRow>[] = [
     {
@@ -197,11 +291,55 @@ export function CaseWorkflowInbox() {
           page={page}
           onPageChange={handlePageChange}
           inactiveMode="adminPath"
+          includeInactive={includeInactive}
+          onIncludeInactiveChange={handleIncludeInactiveChange}
+          isRowInactive={(row) => !row.isActive}
+          rowActions={
+            canDeactivate
+              ? (row) => <CaseWorkflowRowActions row={row} onConfirm={setConfirmTarget} />
+              : undefined
+          }
+          rowActionsLabel="caseWorkflow.list.rowActions"
+          hasRowActions={(row) => row.isActive || canActivate}
           emptyKey="caseWorkflow.list.empty"
           emptyFilteredKey="caseWorkflow.list.emptyFiltered"
           isFiltered={!!statusCode || !!searchParams.get('openedFrom') || !!searchParams.get('openedTo')}
         />
       </div>
+
+      <AlertDialog
+        open={confirmTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !pendingLifecycle) setConfirmTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t(`caseWorkflow.lifecycle.${lifecycleKey}.confirmTitle`)}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(`caseWorkflow.lifecycle.${lifecycleKey}.confirmBody`)}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel size="touch" disabled={pendingLifecycle}>
+              {t('common.actions.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              size="touch"
+              variant={lifecycleKey === 'deactivate' ? 'destructive' : 'default'}
+              disabled={pendingLifecycle}
+              onClick={(event) => {
+                // Radix closes the dialog on Action click; kept open so `isPending` is visible
+                // and a double click can't fire a second request (SPEC FE24 §3.4).
+                event.preventDefault();
+                handleConfirm();
+              }}
+            >
+              {t(`caseWorkflow.lifecycle.${lifecycleKey}.confirmAction`)}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

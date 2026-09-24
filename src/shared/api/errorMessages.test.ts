@@ -83,6 +83,26 @@ describe('getErrorMessage', () => {
     expect(getErrorMessage(error)).toBe(expected);
   });
 
+  // SPEC FE24 §3.5, plan step 1 — deactivate (005A) and reactivate (005B) the workflow record.
+  it.each([
+    ['CASEFLOW_005A_NOT_FOUND', 'El registro de flujo no existe.'],
+    ['CASEFLOW_005A_ALREADY_INACTIVE', 'Este registro de flujo ya estaba desactivado.'],
+    [
+      'CASEFLOW_005A_DELETE_FAILED',
+      'No pudimos desactivar el registro de flujo. Intenta de nuevo.',
+    ],
+    ['CASEFLOW_005B_NOT_FOUND', 'El registro de flujo no existe.'],
+    ['CASEFLOW_005B_ALREADY_ACTIVE', 'Este registro de flujo ya estaba activo.'],
+    [
+      'CASEFLOW_005B_ACTIVATE_FAILED',
+      'No pudimos reactivar el registro de flujo. Intenta de nuevo.',
+    ],
+  ])('mapea %s a su texto propio', (code, expected) => {
+    const error = new EsaviApiError('mensaje del backend', 409, code);
+
+    expect(getErrorMessage(error)).toBe(expected);
+  });
+
   // SPEC FE12a §3.5, plan step 15 — un texto genérico por entidad para los `_CREATION_FAILED`/
   // `_UPDATE_FAILED`/`_NOT_FOUND` de guardado, y uno solo compartido para los `006` de lectura.
   it.each([

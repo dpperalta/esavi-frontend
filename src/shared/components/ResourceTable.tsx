@@ -63,6 +63,12 @@ export interface ResourceTableProps<T> {
   includeInactive?: boolean;
   onIncludeInactiveChange?: (value: boolean) => void;
   rowActions?: (row: T) => ReactNode;
+  // i18n key for the row menu trigger's aria-label — defaults to the generic one. SPEC FE24 §3.8
+  // names the workflow inbox's menu after the record it acts on, not the table row.
+  rowActionsLabel?: string;
+  // A row where the caller has nothing to offer keeps the column but drops its trigger, instead
+  // of opening an empty menu (SPEC FE24 §3.1: ADMIN on an inactive workflow record).
+  hasRowActions?: (row: T) => boolean;
   onCreate?: () => void;
   canCreate?: boolean;
   // i18n key for the create button's label — defaults to the generic "Crear". SPEC FE09 §3.6
@@ -105,6 +111,8 @@ export function ResourceTable<T>({
   includeInactive = false,
   onIncludeInactiveChange,
   rowActions,
+  rowActionsLabel = 'common.table.rowActions',
+  hasRowActions,
   onCreate,
   canCreate = false,
   createLabel = 'common.actions.create',
@@ -197,7 +205,7 @@ export function ResourceTable<T>({
                     ))}
                     {rowActions && (
                       <TableHead className="w-10">
-                        <span className="sr-only">{t('common.table.rowActions')}</span>
+                        <span className="sr-only">{t(rowActionsLabel)}</span>
                       </TableHead>
                     )}
                   </TableRow>
@@ -215,19 +223,21 @@ export function ResourceTable<T>({
                       ))}
                       {rowActions && (
                         <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                aria-label={t('common.table.rowActions')}
-                              >
-                                <MoreVerticalIcon aria-hidden="true" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">{rowActions(row)}</DropdownMenuContent>
-                          </DropdownMenu>
+                          {(hasRowActions?.(row) ?? true) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label={t(rowActionsLabel)}
+                                >
+                                  <MoreVerticalIcon aria-hidden="true" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">{rowActions(row)}</DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </TableCell>
                       )}
                     </TableRow>
@@ -242,7 +252,8 @@ export function ResourceTable<T>({
                   key={String(row[idField])}
                   row={row}
                   columns={columns}
-                  rowActions={rowActions}
+                  rowActions={(hasRowActions?.(row) ?? true) ? rowActions : undefined}
+                  rowActionsLabel={rowActionsLabel}
                   isInactive={isRowInactive?.(row)}
                 />
               ))}
@@ -415,10 +426,17 @@ interface ResourceTableCardProps<T> {
   row: T;
   columns: ResourceTableColumn<T>[];
   rowActions?: (row: T) => ReactNode;
+  rowActionsLabel: string;
   isInactive?: boolean;
 }
 
-function ResourceTableCard<T>({ row, columns, rowActions, isInactive }: ResourceTableCardProps<T>) {
+function ResourceTableCard<T>({
+  row,
+  columns,
+  rowActions,
+  rowActionsLabel,
+  isInactive,
+}: ResourceTableCardProps<T>) {
   const { t } = useTranslation();
   const primary = columns.filter((column) => column.card === 'primary');
   const secondary = columns.filter((column) => column.card === 'secondary');
@@ -453,7 +471,7 @@ function ResourceTableCard<T>({ row, columns, rowActions, isInactive }: Resource
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                aria-label={t('common.table.rowActions')}
+                aria-label={t(rowActionsLabel)}
               >
                 <MoreVerticalIcon aria-hidden="true" />
               </Button>

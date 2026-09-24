@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { setupUser } from '@/test/user';
 import { CaseWizardPage } from './CaseWizardPage';
 
 const server = setupServer();
@@ -154,6 +155,7 @@ function mockWorkflowError(code: string) {
 function mockWorkflow(
   statusCode: string,
   stages: Record<string, { exists: boolean; endedAt: string | null }>,
+  isActive: boolean | (() => boolean) = true,
 ) {
   server.use(
     http.get('http://localhost:4500/api/case-workflows/case/case-1', () =>
@@ -163,6 +165,7 @@ function mockWorkflow(
         data: {
           caseWorkflowId: 'workflow-1',
           caseId: 'case-1',
+          isActive: typeof isActive === 'function' ? isActive() : isActive,
           status: { catalogItemId: 'status-1', code: statusCode, name: statusCode },
           previousStatus: null,
           openedAt: '2026-09-01T00:00:00.000Z',
@@ -363,7 +366,7 @@ describe('CaseWizardPage — las dos pantallas de error de 006', () => {
     renderPage('/esavi-cases/case-1/wizard/classification');
 
     await waitFor(() => expect(screen.getByText('Este caso no existe')).toBeInTheDocument());
-    expect(screen.queryByText('Este caso no tiene expediente de flujo')).not.toBeInTheDocument();
+    expect(screen.queryByText('Este expediente no tiene un registro de flujo activo')).not.toBeInTheDocument();
     expect(screen.queryByText('No pudimos cargar el expediente')).not.toBeInTheDocument();
   });
 
@@ -374,7 +377,7 @@ describe('CaseWizardPage — las dos pantallas de error de 006', () => {
     renderPage('/esavi-cases/case-1/wizard/classification');
 
     await waitFor(() =>
-      expect(screen.getByText('Este caso no tiene expediente de flujo')).toBeInTheDocument(),
+      expect(screen.getByText('Este expediente no tiene un registro de flujo activo')).toBeInTheDocument(),
     );
     expect(screen.queryByText('Este caso no existe')).not.toBeInTheDocument();
     expect(screen.queryByText('No pudimos cargar el expediente')).not.toBeInTheDocument();
@@ -538,5 +541,108 @@ describe('CaseWizardPage — PENDING_VALIDATION', () => {
       await screen.findByRole('heading', { name: 'Cierre del expediente' }),
     ).toBeInTheDocument();
     expect(screen.queryByText(PENDING_BANNER)).not.toBeInTheDocument();
+  });
+});
+
+// SPEC FE24 §4 step 5
+describe('CaseWizardPage — registro de flujo desactivado', () => {
+  const INACTIVE_BANNER =
+    'El registro de flujo de este expediente está desactivado. Sólo los superadministradores pueden verlo.';
+  const OPEN_STAGES = {
+    classification: { exists: true, endedAt: '2026-09-01' },
+    notification: { exists: false, endedAt: null },
+    investigation: { exists: false, endedAt: null },
+    finalClassification: { exists: false, endedAt: null },
+  };
+
+  function mockNotificationStepReads() {
+    mockClassification();
+    server.use(
+      http.get('http://localhost:4500/api/catalog-types', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+  }
+
+  it('con isActive: false sale en notification, con «Reactivar registro» para SUPERADMIN', async () => {
+    mockCase();
+    mockNotificationStepReads();
+    mockCurrentUser('SUPERADMIN', 100);
+    mockWorkflow('OPEN', OPEN_STAGES, false);
+
+    renderPage('/esavi-cases/case-1/wizard/notification');
+
+    expect(await screen.findByText(INACTIVE_BANNER)).toHaveAttribute('role', 'status');
+    expect(await screen.findByRole('button', { name: 'Reactivar registro' })).toBeInTheDocument();
+  });
+
+  it('con isActive: false sale también en closure', async () => {
+    mockCase();
+    mockWorkflow('OPEN', OPEN_STAGES, false);
+
+    renderPage('/esavi-cases/case-1/wizard/closure');
+
+    expect(await screen.findByRole('heading', { name: 'Cierre del expediente' })).toBeInTheDocument();
+    expect(screen.getByText(INACTIVE_BANNER)).toBeInTheDocument();
+  });
+
+  it('con isActive: true no sale', async () => {
+    mockCase();
+    mockNotificationStepReads();
+    mockWorkflow('OPEN', OPEN_STAGES);
+
+    renderPage('/esavi-cases/case-1/wizard/notification');
+
+    expect(await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)')).toBeInTheDocument();
+    expect(screen.queryByText(INACTIVE_BANNER)).not.toBeInTheDocument();
+  });
+
+  it('con CLOSED, el aviso de registro desactivado va antes que el de cerrado', async () => {
+    mockCase();
+    mockPatient();
+    mockClassification();
+    mockCurrentUser('USER', 25);
+    mockWorkflow(
+      'CLOSED',
+      {
+        classification: { exists: true, endedAt: '2026-09-01' },
+        notification: { exists: true, endedAt: '2026-09-02' },
+        investigation: { exists: false, endedAt: null },
+        finalClassification: { exists: false, endedAt: null },
+      },
+      false,
+    );
+
+    renderPage('/esavi-cases/case-1/wizard/classification');
+
+    await waitFor(() => expect(screen.getAllByRole('status')).toHaveLength(2));
+    const [first, second] = screen.getAllByRole('status');
+    expect(first).toHaveTextContent(INACTIVE_BANNER);
+    expect(second).toHaveTextContent(
+      'Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo.',
+    );
+  });
+
+  it('tras reactivar, la relectura de 006 trae isActive: true y el aviso desaparece', async () => {
+    let active = false;
+    mockCase();
+    mockNotificationStepReads();
+    mockCurrentUser('SUPERADMIN', 100);
+    mockWorkflow('OPEN', OPEN_STAGES, () => active);
+    server.use(
+      http.patch('http://localhost:4500/api/case-workflows/activate/workflow-1', () => {
+        active = true;
+        return HttpResponse.json({ ok: true, message: 'ok' });
+      }),
+    );
+
+    renderPage('/esavi-cases/case-1/wizard/notification');
+
+    const user = setupUser();
+    await user.click(await screen.findByRole('button', { name: 'Reactivar registro' }));
+    const buttons = await screen.findAllByRole('button', { name: 'Reactivar registro' });
+    await user.click(buttons[buttons.length - 1]);
+
+    await waitFor(() => expect(screen.queryByText(INACTIVE_BANNER)).not.toBeInTheDocument());
   });
 });

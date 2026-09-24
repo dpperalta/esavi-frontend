@@ -5,6 +5,7 @@ import { EsaviApiError } from '@/shared/api/types';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useCaseWorkflow } from '@/features/caseWorkflow/api';
+import { ReactivateCaseWorkflowButton } from '@/features/caseWorkflow/ReactivateCaseWorkflowButton';
 import { ReopenCaseButton } from '@/features/caseWorkflow/ReopenCaseButton';
 import { PatientStep } from '@/features/patient/PatientStep';
 import { ROLE_LEVELS } from '@/shared/config/roles';
@@ -128,6 +129,18 @@ export function CaseWizardPage() {
 
         <div className="flex min-w-0 flex-1 flex-col gap-6">
           <CaseWizardHeader caseId={id} />
+
+          {/* SPEC FE24 §3.1 — first in the stack and on every step, «Cierre» included. In practice
+              only a SUPERADMIN gets here: `006` answers 404 to anyone else once the record is off. */}
+          {workflow.data.isActive === false && (
+            <div
+              role="status"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-foreground"
+            >
+              {t('caseWizard.readOnly.inactiveWorkflowBanner')}
+              <ReactivateCaseWorkflowButton caseWorkflowId={workflow.data.caseWorkflowId} caseId={id} />
+            </div>
+          )}
 
           {isClosed && step !== 'closure' && (
             <div

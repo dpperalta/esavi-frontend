@@ -195,6 +195,52 @@ export function useResolveValidation(caseId: string) {
   return useValidationTransition(caseId, resolveCaseValidation);
 }
 
+interface CaseWorkflowRecordTarget {
+  caseWorkflowId: string;
+  caseId: string;
+}
+
+// ESAVI-CASEFLOW-005A — soft-deletes the workflow RECORD by its caseWorkflowId, not by caseId.
+// Not a close (008). Answers { ok, message } with no data.
+async function deactivateCaseWorkflow({ caseWorkflowId }: CaseWorkflowRecordTarget): Promise<void> {
+  await client.delete(`/case-workflows/${caseWorkflowId}`);
+}
+
+// ESAVI-CASEFLOW-005B — SUPERADMIN only; no body, answers { ok, message } with no data.
+async function activateCaseWorkflow({ caseWorkflowId }: CaseWorkflowRecordTarget): Promise<void> {
+  await client.patch(`/case-workflows/activate/${caseWorkflowId}`);
+}
+
+// SPEC FE24 §3.4 — `['esaviCase']` is deliberately left alone: 005A/005B don't touch the case row.
+function invalidateWorkflowRecord(queryClient: QueryClient, caseId: string) {
+  void queryClient.invalidateQueries({ queryKey: ['caseWorkflow', 'list'] });
+  void queryClient.invalidateQueries({ queryKey: caseWorkflowByCaseKey(caseId) });
+}
+
+function useWorkflowRecordLifecycle(
+  mutationFn: (target: CaseWorkflowRecordTarget) => Promise<void>,
+  alreadyInStateCode: string,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn,
+    onSuccess: (_data, { caseId }) => invalidateWorkflowRecord(queryClient, caseId),
+    onError: (error, { caseId }) => {
+      // Someone else got there first; re-reading paints the row in its real state (SPEC FE24 §3.4).
+      if (isConflictOf(error, alreadyInStateCode)) invalidateWorkflowRecord(queryClient, caseId);
+    },
+  });
+}
+
+export function useDeactivateCaseWorkflow() {
+  return useWorkflowRecordLifecycle(deactivateCaseWorkflow, 'CASEFLOW_005A_ALREADY_INACTIVE');
+}
+
+export function useActivateCaseWorkflow() {
+  return useWorkflowRecordLifecycle(activateCaseWorkflow, 'CASEFLOW_005B_ALREADY_ACTIVE');
+}
+
 export function useCompleteStage(caseId: string) {
   const queryClient = useQueryClient();
 
