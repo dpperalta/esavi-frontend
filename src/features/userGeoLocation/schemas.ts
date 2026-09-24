@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import i18next from 'i18next';
 import { z } from 'zod';
 
 // `validFrom` and `validTo` are `timestamptz`, unlike every date of the case file, which is
@@ -47,9 +48,15 @@ function checkValidityRange(data: ValidityDays, ctx: z.RefinementCtx) {
   if (
     atDayBoundary(data.validTo, 'end').getTime() <= atDayBoundary(data.validFrom, 'start').getTime()
   ) {
-    // Bare marker, resolved by the consumer against its own i18n key — same pattern as
-    // `esaviCaseFiltersSchema`'s `'rangeInvalid'` (features/esaviCase/schemas.ts).
-    ctx.addIssue({ code: 'custom', message: 'invalidDateRange', path: ['validTo'] });
+    // Resolved here and not left as a bare marker: an explicit `message` on a custom issue wins
+    // over `zodErrorMap`, and <FormMessage> renders `error.message` verbatim — a marker would
+    // reach the user untranslated (CONVENTIONS.md §8). Same technique as that map and as
+    // `errorMessages.ts`: `i18next.t` at validation time, in the active language.
+    ctx.addIssue({
+      code: 'custom',
+      message: i18next.t('userGeoLocation.errors.invalidDateRange'),
+      path: ['validTo'],
+    });
   }
 }
 
@@ -62,7 +69,16 @@ export const bulkAssignGeoSchema = z
       .min(1)
       // The backend's validator rejects a repeated id with 400, and the picker already prevents
       // it — this is the guard for the case the picker misses, not its replacement.
-      .refine((ids) => new Set(ids).size === ids.length, { message: 'duplicateLocation' }),
+      // `superRefine` and not `refine({ message })`: an object literal resolves the text once, at
+      // module load, and would freeze it in whatever language was active then.
+      .superRefine((ids, ctx) => {
+        if (new Set(ids).size !== ids.length) {
+          ctx.addIssue({
+            code: 'custom',
+            message: i18next.t('userGeoLocation.errors.duplicateLocation'),
+          });
+        }
+      }),
     validFrom: validityDayField,
     validTo: validityDayField,
   })
