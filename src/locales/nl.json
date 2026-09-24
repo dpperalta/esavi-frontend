@@ -1907,6 +1907,66 @@
       "hasActiveAssignments": "Een rol die gebruikers nog hebben, kan niet worden ingetrokken."
     }
   },
+  "userGeoLocation": {
+    "title": "Geografische dekking",
+    "empty": "Deze gebruiker heeft geen dekking toegewezen.",
+    "emptyAll": "Deze gebruiker heeft geen enkele toewijzing, noch geldig noch gesloten.",
+    "error": "We konden de dekking van deze gebruiker niet laden.",
+    "showAll": "Gesloten en verlopen tonen",
+    "badges": {
+      "current": "Geldig",
+      "expired": "Verlopen",
+      "closed": "Gesloten"
+    },
+    "columns": {
+      "location": "Locatie",
+      "level": "Niveau",
+      "validity": "Geldigheid",
+      "assignedBy": "Toegewezen door"
+    },
+    "validity": {
+      "open": "Geen einddatum",
+      "title": "Geldigheid bewerken",
+      "from": "Vanaf",
+      "to": "Tot",
+      "submit": "Geldigheid opslaan"
+    },
+    "add": {
+      "title": "Locaties toevoegen",
+      "picker": "Kies een locatie",
+      "selected": "Gekozen locaties",
+      "remove": "{{name}} uit de lijst verwijderen",
+      "submit": "Locaties toevoegen",
+      "toList": "Aan de lijst toevoegen",
+      "alreadyAssigned": "Locaties die deze gebruiker al dekt, worden niet in de keuzelijst aangeboden."
+    },
+    "reassign": {
+      "title": "Naar een andere locatie verplaatsen",
+      "warning": "De huidige toewijzing wordt gesloten en de nieuwe wordt geldig. Beide schrijfacties gebeuren in één transactie.",
+      "submit": "Verplaatsen"
+    },
+    "close": {
+      "title": "De toewijzing sluiten",
+      "confirm": "Toewijzing sluiten",
+      "lastOneWarning": "Dit is de laatste geldige toewijzing van deze gebruiker. Door te sluiten blijft die zonder dekking en ziet die geen zorginstellingen meer bij het openen van een casus."
+    },
+    "coverage": {
+      "title": "Effectieve dekking",
+      "count_one": "Dekt {{count}} locatie.",
+      "count_other": "Dekt {{count}} locaties.",
+      "empty": "Dekt geen enkele locatie.",
+      "expand": "Bekijk de gedekte locaties"
+    },
+    "errors": {
+      "geoNotFound": "Een van de gekozen locaties is niet langer actief. Controleer de lijst.",
+      "assignmentExists": "Een van de locaties was al toegewezen. Probeer het opnieuw met de bijgewerkte lijst.",
+      "invalidDateRange": "De einddatum moet later zijn dan de begindatum.",
+      "duplicateLocation": "Er staat een dubbele locatie in de lijst.",
+      "sameGeoLocation": "Dit is dezelfde locatie als de huidige.",
+      "alreadyInactive": "Deze toewijzing is al gesloten.",
+      "alreadyActive": "Deze toewijzing is al geldig."
+    }
+  },
   "errors": {
     "network": "We konden geen verbinding maken met de server. Controleer uw internetverbinding.",
     "unexpected": "Er is iets misgegaan. Probeer het opnieuw.",

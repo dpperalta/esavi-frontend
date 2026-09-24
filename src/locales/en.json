@@ -1907,6 +1907,66 @@
       "hasActiveAssignments": "A role that users still hold can't be retired."
     }
   },
+  "userGeoLocation": {
+    "title": "Geographic coverage",
+    "empty": "This user has no coverage assigned.",
+    "emptyAll": "This user has no assignments at all, neither current nor closed.",
+    "error": "We couldn't load this user's coverage.",
+    "showAll": "Show closed and expired",
+    "badges": {
+      "current": "Current",
+      "expired": "Expired",
+      "closed": "Closed"
+    },
+    "columns": {
+      "location": "Location",
+      "level": "Level",
+      "validity": "Validity",
+      "assignedBy": "Assigned by"
+    },
+    "validity": {
+      "open": "No end date",
+      "title": "Edit validity",
+      "from": "From",
+      "to": "To",
+      "submit": "Save validity"
+    },
+    "add": {
+      "title": "Add locations",
+      "picker": "Choose a location",
+      "selected": "Chosen locations",
+      "remove": "Remove {{name}} from the list",
+      "submit": "Add locations",
+      "toList": "Add to the list",
+      "alreadyAssigned": "Locations this user already covers are not offered in the picker."
+    },
+    "reassign": {
+      "title": "Move to another location",
+      "warning": "The current assignment will be closed and the new one will become current. Both writes happen in a single transaction.",
+      "submit": "Move"
+    },
+    "close": {
+      "title": "Close the assignment",
+      "confirm": "Close assignment",
+      "lastOneWarning": "This is the user's last current assignment. Closing it leaves them with no coverage, and they will stop seeing health facilities when opening a case."
+    },
+    "coverage": {
+      "title": "Effective coverage",
+      "count_one": "Covers {{count}} location.",
+      "count_other": "Covers {{count}} locations.",
+      "empty": "Covers no location.",
+      "expand": "See the covered locations"
+    },
+    "errors": {
+      "geoNotFound": "One of the chosen locations is no longer active. Review the list.",
+      "assignmentExists": "One of the locations was already assigned. Try again with the refreshed list.",
+      "invalidDateRange": "The end date must be later than the start date.",
+      "duplicateLocation": "There is a repeated location in the list.",
+      "sameGeoLocation": "This is the same location as the current one.",
+      "alreadyInactive": "This assignment is already closed.",
+      "alreadyActive": "This assignment is already current."
+    }
+  },
   "errors": {
     "network": "We couldn't reach the server. Check your connection.",
     "unexpected": "Something went wrong. Please try again.",

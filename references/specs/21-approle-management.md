@@ -1,6 +1,6 @@
 # SPEC FE21 — Roles de la aplicación
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell, autenticación y `useCan`), SPEC FE02 (capa de recurso genérica), **SPEC FE20 (gestión de usuarios: el `Sheet` de portadores enlaza a `/users/:id`)**, SPEC F03 del backend (`appRole`: CRUD, guardas de escalada y de rol de sistema), SPEC F52 del backend (filtro canónico `name`/`code`), SPEC F02 del backend (`appUserRole`, del que aquí sólo se lee `ESAVI-USERROLE-006`)
 > **Fecha:** 2026-09-23
 > **Objetivo:** Dar a un ADMIN la pantalla para crear, editar y retirar los roles de la aplicación, y para ver quién porta cada uno.
