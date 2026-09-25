@@ -293,6 +293,14 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   USERGEO_005A_ALREADY_INACTIVE: 'userGeoLocation.errors.alreadyInactive',
   USERGEO_006_ALREADY_INACTIVE: 'userGeoLocation.errors.alreadyInactive',
   USERGEO_005B_ALREADY_ACTIVE: 'userGeoLocation.errors.alreadyActive',
+  // SPEC FE25a §3.5 — the diluent codes with no field to mark. The two `CODE_EXISTS` are absent:
+  // `diluentErrorFieldMap` routes them to `code`.
+  DILUENT_003_NOT_FOUND: 'diluent.errors.DILUENT_003_NOT_FOUND',
+  DILUENT_004_NOT_FOUND: 'diluent.errors.DILUENT_004_NOT_FOUND',
+  DILUENT_005A_NOT_FOUND: 'diluent.errors.DILUENT_005A_NOT_FOUND',
+  DILUENT_005B_NOT_FOUND: 'diluent.errors.DILUENT_005B_NOT_FOUND',
+  DILUENT_005A_ALREADY_INACTIVE: 'diluent.errors.DILUENT_005A_ALREADY_INACTIVE',
+  DILUENT_005B_ALREADY_ACTIVE: 'diluent.errors.DILUENT_005B_ALREADY_ACTIVE',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

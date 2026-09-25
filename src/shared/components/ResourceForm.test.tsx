@@ -104,4 +104,11 @@ describe('ResourceForm — acciones', () => {
     expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument();
   });
+
+  it('con submitDisabled deshabilita solo Guardar; Cancelar sigue activo (SPEC FE25a §3.5)', () => {
+    renderForm({ onCancel: () => {}, submitDisabled: true });
+
+    expect(screen.getByRole('button', { name: 'Guardar' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancelar' })).toBeEnabled();
+  });
 });

@@ -24,6 +24,9 @@ export interface ResourceFormProps<TFieldValues extends FieldValues> {
   // (`getErrorMessage`, CONVENTIONS.md §6.2). Never called for a mapped code.
   onUnmappedError?: (error: EsaviApiError) => void;
   isSubmitting?: boolean;
+  // Disables only the submit button, leaving Cancel usable — unlike `isSubmitting`, which locks
+  // both while a request is in flight. SPEC FE25a §3.5: a row the screen must never save.
+  submitDisabled?: boolean;
   // SPEC FE17 §4 paso 6 — a step shown read-only has nothing to save, so the whole action bar goes.
   hideActions?: boolean;
   onCancel?: () => void;
@@ -43,6 +46,7 @@ export function ResourceForm<TFieldValues extends FieldValues>({
   errorFieldMap,
   onUnmappedError,
   isSubmitting = false,
+  submitDisabled = false,
   hideActions = false,
   onCancel,
   submitLabel = 'common.actions.save',
@@ -98,7 +102,7 @@ export function ResourceForm<TFieldValues extends FieldValues>({
                 {t(cancelLabel)}
               </Button>
             )}
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || submitDisabled}>
               {t(submitLabel)}
             </Button>
           </div>

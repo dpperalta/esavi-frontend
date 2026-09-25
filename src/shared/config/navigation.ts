@@ -137,7 +137,6 @@ export const NAVIGATION: NavItem[] = [
         icon: Beaker,
         path: '/diluents',
         minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
     ],
   },

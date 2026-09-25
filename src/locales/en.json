@@ -950,6 +950,47 @@
   "diluent": {
     "select": {
       "empty": "The diluent master has no diluents registered in this deployment. Type the name to register it directly."
+    },
+    "list": {
+      "title": "Diluents",
+      "empty": "There are no diluents registered yet.",
+      "emptySearch": "No diluent matches the search.",
+      "clearSearch": "Clear search",
+      "create": "Create diluent"
+    },
+    "filters": {
+      "search": "Search by name or code",
+      "searchHint": "Name or code, at least 2 characters."
+    },
+    "form": {
+      "createTitle": "New diluent",
+      "editTitle": "Edit diluent",
+      "codeHint": "It will be saved in uppercase with underscores.",
+      "otherWarning": "The notification step uses this diluent to record, as free text, diluents that aren't in the master. If you change its code or deactivate it, that option stops being available."
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "description": "Description",
+      "composition": "Composition",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "actions": {
+      "menu": "Diluent actions"
+    },
+    "errors": {
+      "DILUENT_001_CODE_EXISTS": "A diluent with this code already exists. It may belong to a deactivated diluent.",
+      "DILUENT_004_CODE_EXISTS": "Another diluent with this code already exists. It may belong to a deactivated diluent.",
+      "DILUENT_003_NOT_FOUND": "The diluent doesn't exist.",
+      "DILUENT_004_NOT_FOUND": "The diluent doesn't exist.",
+      "DILUENT_005A_NOT_FOUND": "The diluent doesn't exist.",
+      "DILUENT_005B_NOT_FOUND": "The diluent doesn't exist.",
+      "DILUENT_005A_ALREADY_INACTIVE": "The diluent was already deactivated.",
+      "DILUENT_005B_ALREADY_ACTIVE": "The diluent was already active."
     }
   },
   "notification": {
