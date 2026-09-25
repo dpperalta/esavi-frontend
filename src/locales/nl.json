@@ -980,7 +980,7 @@
       "inactive": "Inactief"
     },
     "actions": {
-      "menu": "Acties voor verdunningsmiddel {{name}}"
+      "menu": "Acties voor verdunningsmiddel"
     },
     "errors": {
       "DILUENT_001_CODE_EXISTS": "Er bestaat al een verdunningsmiddel met deze code. Die kan bij een gedeactiveerd verdunningsmiddel horen.",

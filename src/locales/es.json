@@ -980,7 +980,7 @@
       "inactive": "Inactivo"
     },
     "actions": {
-      "menu": "Acciones del diluyente {{name}}"
+      "menu": "Acciones del diluyente"
     },
     "errors": {
       "DILUENT_001_CODE_EXISTS": "Ya existe un diluyente con este código. Puede pertenecer a un diluyente dado de baja.",

@@ -5,12 +5,7 @@ import { toast } from 'sonner';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { ResourceForm } from '@/shared/components/ResourceForm';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
 import {
   FormControl,
   FormDescription,
