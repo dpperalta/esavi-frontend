@@ -12,6 +12,11 @@ import { createResource } from '@/shared/api/createResource';
 // `diluentCatalog` is a catalog-shaped entity of its own, not a `catalogType` (SPEC FE12c §6):
 // the table is `diluentCatalog`, the resource is `diluent`. No 005C: the table is in
 // `preventPhysicalDelete`.
+// The free-text fallback of the notification step hangs on this row (DiluentFormRow.tsx). A
+// convention of this deployment, not of the contract: the screen never saves nor deactivates it,
+// but the backend still accepts both (SPEC FE25a §3.5, §7).
+export const FREE_TEXT_DILUENT_CODE = 'OTHER';
+
 export const diluentResource = createResource<Diluent, CreateDiluentInput, Partial<CreateDiluentInput>>({
   key: 'diluent',
   path: 'diluents',

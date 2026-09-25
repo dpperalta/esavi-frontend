@@ -16,18 +16,13 @@ import {
 } from '@/shared/components/ui/form';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { diluentResource } from './api';
+import { diluentResource, FREE_TEXT_DILUENT_CODE } from './api';
 import {
   createDiluentSchema,
   diluentErrorFieldMap,
   toDiluentPayload,
   type DiluentFormValues,
 } from './schemas';
-
-// The free-text fallback of the notification step hangs on this row (DiluentFormRow.tsx). It is a
-// convention of this deployment, not of the contract, so the dialog warns and never blocks
-// (SPEC FE25a §6).
-const FREE_TEXT_DILUENT_CODE = 'OTHER';
 
 interface DiluentFormDialogProps {
   open: boolean;
@@ -69,6 +64,10 @@ export function DiluentFormDialog({ open, onOpenChange, diluentId }: DiluentForm
   }, [loadError]);
 
   function handleSubmit(values: DiluentFormValues) {
+    // The disabled button already prevents this; the guard also covers an Enter-key submit.
+    if (isFreeTextRow) {
+      return;
+    }
     const payload = toDiluentPayload(values);
     if (isEditing && diluentId) {
       // The full object travels; the backend does the differential update (CONVENTIONS.md §6.5).
@@ -144,7 +143,10 @@ export function DiluentFormDialog({ open, onOpenChange, diluentId }: DiluentForm
           error={mutationError}
           errorFieldMap={diluentErrorFieldMap}
           onUnmappedError={handleUnmappedError}
-          isSubmitting={mutation.isPending || isLoadingDetail}
+          isSubmitting={mutation.isPending}
+          // The `OTHER` row is never saved from this screen, whatever is typed — only Cancel stays
+          // active (SPEC FE25a §3.5). Decided by the stored code, not the typed one.
+          submitDisabled={isLoadingDetail || isFreeTextRow}
           onCancel={() => handleOpenChange(false)}
         >
           {(form) => (

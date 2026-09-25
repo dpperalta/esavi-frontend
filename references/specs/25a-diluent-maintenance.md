@@ -27,7 +27,7 @@ Fija además el patrón de listado + diálogo + auditoría que después reutiliz
 
 - **La pantalla `/diluents`** con `DiluentListPage.tsx`. Lleva búsqueda por `name`/`code` en `searchParams.q`, paginación en `searchParams.page` y el toggle «mostrar inactivos» en `searchParams.includeInactive`, visible solo con ADMIN. El toggle elige entre `002A` y `002B` a través de `createResource`.
 - **`DiluentFormDialog.tsx`**: un solo diálogo para crear (`001`) y editar (`004`), con los cuatro campos de SPEC F23 y `code` en error ante un 409 de código ocupado.
-- **El aviso sobre la fila `OTHER`.** Al editar el diluyente con `code === 'OTHER'`, el diálogo explica que el paso de notificación depende de esa fila para el registro en texto libre. No bloquea nada.
+- **La fila `OTHER` protegida en la interfaz.** Al abrir el diluyente con `code === 'OTHER'`, el diálogo explica que el paso de notificación depende de esa fila para el registro en texto libre y **no deja guardar**: «Guardar» queda deshabilitado para todos los roles, aunque se modifiquen los campos, y solo queda «Cancelar». El menú de fila no ofrece «Dar de baja» sobre ella.
 - **`DiluentAuditSheet.tsx`**: lee `appDetails` con `useOne` (`003`) y la ve solo SUPERADMIN, como en `geoLevelType` y `healthFacility`.
 - **Acciones de fila por rol y estado:**
   - «Editar» para ADMIN en filas activas, y para SUPERADMIN en cualquiera.
@@ -45,7 +45,7 @@ Fija además el patrón de listado + diálogo + auditoría que después reutiliz
 - **Vacunas WHODrug**, en SPEC FE25c.
 - **Sincronización y listado de productos WHODrug**, en SPEC FE25d.
 - **Página de detalle de diluyente.** Cuatro columnas caben en la tabla y en la auditoría.
-- **Bloquear la edición o la desactivación de la fila `OTHER`.** Se descartó a favor del aviso (§6).
+- **Proteger la fila `OTHER` en el backend.** El bloqueo de este spec es de interfaz: el `004` y el `005A` siguen aceptándola (§7).
 - **`ESAVI-DILUENT-005C`.** No existe: la tabla está en `preventPhysicalDelete`.
 - **El hallazgo de `healthFacility`:** `HealthFacilityRowActions` ofrece «Editar» a ADMIN sobre filas inactivas, y el `003` le responde 404. Se corrige en su propio spec.
 - **Subir el `pageSize: 100` de `DiluentFormRow.tsx:80`.** Solo importa si el maestro pasa de cien filas, y no hay indicio de que vaya a pasar.
@@ -70,7 +70,7 @@ Fija además el patrón de listado + diálogo + auditoría que después reutiliz
 |---|---|---|
 | Editar | `useCan(ADMIN)` y fila activa, **o** `useCan(SUPERADMIN)` | `003` + `004` |
 | Ver auditoría | `useCan(SUPERADMIN)` | `003` |
-| Dar de baja | `useCan(ADMIN)` y fila activa | `005A` |
+| Dar de baja | `useCan(ADMIN)`, fila activa y `code !== 'OTHER'` | `005A` |
 | Reactivar | `useCan(SUPERADMIN)` y fila inactiva | `005B` |
 
 La condición de «Editar» resuelve el hallazgo C de §1. Un ADMIN ve filas inactivas por el `002B`, pero no puede leerlas por el `003`, así que no se le ofrece una acción que acabaría en 404. «Ver auditoría» no necesita esa condición porque solo la ve SUPERADMIN, que sí lee inactivas.
@@ -132,7 +132,7 @@ No se ejecuta `contracts:sync`. Es un contrato declarado a mano, reconciliado co
 - **`isActive` no está en el formulario.** El ciclo de vida va por `005A`/`005B`, no por `PUT`.
 - **Normalización visible.** Debajo de `code` va una ayuda fija: «Se guardará en mayúsculas con guiones bajos». Sirve para que `agua destilada` → `AGUA_DESTILADA` no sorprenda al volver del servidor. La ayuda es texto; el cliente no transforma el valor.
 - **En el `PUT` va el objeto completo.** El backend hace el update diferencial (`CONVENTIONS.md` §6.5). Guardar sin tocar nada no escribe.
-- **Aviso de la fila `OTHER`.** Si el `code` cargado por el `003` es `OTHER`, el diálogo muestra un `<Alert>` no bloqueante sobre los campos: el paso de notificación usa esta fila para el registro en texto libre, y cambiar su código o darla de baja lo desactiva. El aviso se decide por el valor **guardado**, no por lo que se está tecleando.
+- **Fila `OTHER`: aviso y guardado bloqueado.** Si el `code` cargado por el `003` es `OTHER`, el diálogo muestra el aviso sobre los campos (el paso de notificación usa esta fila para el registro en texto libre, y cambiar su código o darla de baja lo desactiva) y deshabilita «Guardar» para todos los roles. Los campos siguen editables, pero nada se envía; solo «Cancelar» está activo. El bloqueo se decide por el valor **guardado**, no por lo que se está tecleando: teclear `OTHER` en otra fila no bloquea nada.
 
 **Errores del servidor.**
 
@@ -213,10 +213,10 @@ Cada paso deja el proyecto compilando y se puede committear por separado. Antes 
 
 4. **`DiluentFormDialog.tsx`.**
    - Crea con `useCreate` y edita con `useOne` + `useUpdate`, resetea las mutaciones al cerrar (§10.7) y mapea los errores al campo.
-   - Muestra la ayuda de normalización y el aviso `OTHER`, este último según el `code` guardado.
+   - Muestra la ayuda de normalización y, según el `code` guardado, el aviso `OTHER` con «Guardar» deshabilitado.
    - Se prueba en `DiluentFormDialog.test.tsx` con MSW.
 
-   *Verificación:* un 409 `DILUENT_001_CODE_EXISTS` pinta el error bajo `code`. Una fila con `code: 'OTHER'` muestra el aviso y una fila distinta no. El `PUT` lleva los cuatro campos.
+   *Verificación:* un 409 `DILUENT_001_CODE_EXISTS` pinta el error bajo `code`. Una fila con `code: 'OTHER'` muestra el aviso y deja «Guardar» deshabilitado aunque se modifique un campo; una fila distinta no. El `PUT` lleva los cuatro campos.
 
 5. **`DiluentAuditSheet.tsx`.** Pasa `appDetails` desde `useOne` (`003`) a `<AuditTrail>`, con la misma forma que `HealthFacilityAuditSheet`.
    *Verificación:* abrir el panel sobre una fila con dos entradas en `appDetails` las lista en orden.
@@ -232,6 +232,7 @@ Cada paso deja el proyecto compilando y se puede committear por separado. Antes 
    - Con ADMIN, una fila inactiva no ofrece «Editar».
    - Con USER no aparecen el toggle, «Crear» ni el menú de acciones.
    - Con SUPERADMIN, una fila inactiva ofrece «Editar», «Auditoría» y «Reactivar».
+   - La fila `OTHER` activa no ofrece «Dar de baja».
 
 7. **Ruta y menú.** `/diluents` bajo `<RequireRole level={USER}>` en `app/router.tsx`, y se quita `disabled: true` de `nav.items.diluent`. Se añade `router.diluent.test.tsx`, que sigue el patrón de `router.catalogType.test.tsx`.
    *Verificación:* con USER, el ítem del sidebar ya no dice «Próximamente» y lleva a `/diluents`. Sin sesión, redirige al login.
@@ -247,7 +248,8 @@ Cada paso deja el proyecto compilando y se puede committear por separado. Antes 
 - [ ] Con `includeInactive=true` y rol ADMIN, la petición va a `/api/diluents/admin`. Sin el parámetro, va a `/api/diluents`.
 - [ ] Con ADMIN, una fila inactiva no ofrece «Editar». Con SUPERADMIN, sí.
 - [ ] Un 409 de código ocupado pinta el error bajo `code`, también cuando la fila que lo ocupa está dada de baja.
-- [ ] Editar la fila `OTHER` muestra el aviso y deja guardar.
+- [ ] Abrir la fila `OTHER` muestra el aviso y deja «Guardar» deshabilitado para todos los roles, aunque se modifiquen los campos. Solo «Cancelar» está activo.
+- [ ] El menú de fila de `OTHER` no ofrece «Dar de baja».
 - [ ] Tras crear un diluyente, el `<DiluentSelect>` del paso de notificación lo ofrece sin recargar.
 - [ ] `grep -rn "response.data.data" src/features/diluent/` no devuelve resultados.
 - [ ] `npm run check` sale en 0, y `npx tsc --noEmit -p tsconfig.app.json` no reporta errores nuevos en los archivos tocados.
@@ -271,8 +273,10 @@ Cada paso deja el proyecto compilando y se puede committear por separado. Antes 
 - **Sí:** ocultar «Editar» a ADMIN en filas inactivas. El `003` le responde 404 aunque el `002B` le muestre la fila.
 - **No:** rellenar el diálogo con la fila del listado para esquivar el 404. Crearía dos fuentes para el mismo dato y contradiría §3.4.
 - **Sí:** auditoría solo para SUPERADMIN, por simetría con `geoLevelType` y `healthFacility`.
-- **Sí:** un aviso no bloqueante al editar la fila `OTHER`.
-- **No:** bloquear la edición del `code` o la baja de esa fila. El usuario prefirió no restringir al ADMIN. `OTHER` es una convención de este despliegue (`DiluentFormRow.tsx:26`), no del contrato, y cerrarla en la UI la volvería a disfrazar de regla.
+- **Sí (revisado el 2026-09-25, durante la implementación):** bloquear el guardado de la fila `OTHER` y ocultar su «Dar de baja», para todos los roles, conservando el aviso. Sustituye a la decisión inicial de un aviso no bloqueante: el usuario prefirió que ningún rol pueda romper el registro en texto libre desde la interfaz.
+- **No:** poner los campos de `OTHER` en solo lectura. Siguen editables; lo que se impide es el envío.
+- **No:** reescribir el aviso. Conserva su texto aunque mencione cambiar el código.
+- **Sabido:** `OTHER` es una convención de este despliegue (`DiluentFormRow.tsx:26`), no del contrato. El bloqueo es de interfaz, no una regla del backend (§7).
 - **No:** página de detalle. Cuatro columnas caben en la tabla, y `description` se lee en el diálogo.
 - **No:** `isActive` en el formulario. El ciclo de vida va por `005A`/`005B`, cada uno con su rol y su entrada de auditoría.
 - **No:** normalizar `code` en el cliente. Lo hace el backend. El cliente solo avisa con una ayuda fija, para no mantener dos implementaciones de `toConstantCase`.
@@ -283,7 +287,7 @@ Cada paso deja el proyecto compilando y se puede committear por separado. Antes 
 
 | Riesgo | Mitigación |
 |---|---|
-| Un ADMIN renombra o da de baja la fila `OTHER`, y el paso de notificación pierde el registro en texto libre sin error visible | Aviso de §3.5 al editarla. La baja se puede revertir con `005B` (SUPERADMIN). Queda anotado para que FE25a no se lea como si protegiera la fila. |
+| La fila `OTHER` se renombra o se da de baja fuera de esta pantalla (API directa, otra pestaña con caché vieja), y el paso de notificación pierde el registro en texto libre | La interfaz bloquea el guardado y la baja (§3.5), pero el backend no: el `004` y el `005A` siguen aceptándola. La baja se revierte con `005B` (SUPERADMIN). Protegerla de verdad es un cambio del otro repositorio. |
 | El maestro pasa de 100 filas y `DiluentFormRow` (`pageSize: 100`) deja de ofrecer las últimas | Fuera de alcance (§2). Con una docena de diluyentes esperados no ocurre, y `002A` ordena por `name`. |
 | Un 409 de código ocupado confunde cuando la fila que lo ocupa está dada de baja y no aparece en el listado | El mensaje de `CODE_EXISTS` dice que el código puede pertenecer a un diluyente dado de baja. Con el toggle, ADMIN puede encontrarlo. |
 
@@ -303,7 +307,7 @@ Cada paso deja el proyecto compilando y se puede committear por separado. Antes 
 
 - Términos diagnósticos (SPEC FE25b), vacunas WHODrug (SPEC FE25c) y productos WHODrug (SPEC FE25d).
 - La página de detalle de diluyente.
-- Bloquear la edición o la baja de la fila `OTHER`.
+- Proteger la fila `OTHER` en el backend.
 - Subir el `pageSize` de `DiluentFormRow`.
 - El hallazgo de `HealthFacilityRowActions`, que ofrece «Editar» a ADMIN sobre filas inactivas que el `003` le responde con 404.
 

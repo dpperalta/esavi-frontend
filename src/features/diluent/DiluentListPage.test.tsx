@@ -216,6 +216,18 @@ describe('DiluentListPage — acciones por rol', () => {
     expect(screen.queryByRole('menuitem', { name: 'Dar de baja' })).not.toBeInTheDocument();
   });
 
+  it('la fila OTHER activa ofrece «Editar» pero no «Dar de baja», ni siquiera a SUPERADMIN', async () => {
+    signInAs('SUPERADMIN', 100);
+    const user = setupUser();
+    serveList([makeRow({ code: 'OTHER', name: 'Otro' })]);
+    renderPage();
+
+    await openRowMenu(user);
+
+    expect(await screen.findByRole('menuitem', { name: 'Editar' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Dar de baja' })).not.toBeInTheDocument();
+  });
+
   it('«Dar de baja» pide confirmación y envía el DELETE', async () => {
     signInAs('ADMIN', 50);
     const user = setupUser();

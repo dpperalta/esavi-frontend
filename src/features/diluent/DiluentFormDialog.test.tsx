@@ -189,24 +189,24 @@ describe('DiluentFormDialog — editar', () => {
     );
   });
 
-  it('una fila con code OTHER muestra el aviso y deja guardar', async () => {
+  it('una fila con code OTHER muestra el aviso y no deja guardar aunque se modifique', async () => {
     const user = setupUser();
-    let saved = false;
     serveDetail(diluent({ code: 'OTHER', name: 'Otro' }));
-    server.use(
-      http.put(`${API}/diluents/d-1`, () => {
-        saved = true;
-        return HttpResponse.json({ ok: true, message: 'ok', data: diluent() });
-      }),
-    );
+    // No PUT handler: with `onUnhandledRequest: 'error'`, any request would fail the test.
 
     renderDialog('d-1');
 
     expect(await screen.findByRole('note')).toHaveTextContent(
       'El paso de notificación usa este diluyente',
     );
-    await user.click(screen.getByRole('button', { name: 'Guardar' }));
-    await waitFor(() => expect(saved).toBe(true));
+    await waitFor(() => expect(screen.getByLabelText('Nombre')).toHaveValue('Otro'));
+    await user.type(screen.getByLabelText('Nombre'), ' modificado');
+    await user.type(screen.getByLabelText('Código'), '{Enter}');
+
+    expect(screen.getByRole('button', { name: 'Guardar' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancelar' })).toBeEnabled();
+    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByLabelText('Código')).not.toBeInTheDocument());
   });
 
   it('el aviso depende del code guardado, no del tecleado', async () => {
@@ -221,6 +221,7 @@ describe('DiluentFormDialog — editar', () => {
     await user.clear(screen.getByLabelText('Código'));
     await user.type(screen.getByLabelText('Código'), 'OTHER');
     expect(screen.queryByRole('note')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Guardar' })).toBeEnabled();
   });
 
   it('los campos están deshabilitados hasta que llega el 003', async () => {
