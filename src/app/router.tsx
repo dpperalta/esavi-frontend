@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppRoleListPage } from '@/features/appRole/AppRoleListPage';
 import { CatalogItemListPage } from '@/features/catalogItem/CatalogItemListPage';
 import { CatalogTypeListPage } from '@/features/catalogType/CatalogTypeListPage';
+import { DiluentListPage } from '@/features/diluent/DiluentListPage';
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { ResetPasswordPage } from '@/features/auth/ResetPasswordPage';
@@ -62,6 +63,9 @@ export function AppRouter() {
               <Route path="/geo-level-types" element={<GeoLevelTypeListPage />} />
               <Route path="/geo-locations" element={<GeoLocationListPage />} />
               <Route path="/health-facilities" element={<HealthFacilityListPage />} />
+              {/* SPEC FE25a §3.1: USER is the real minimum of ESAVI-DILUENT-002A; the ADMIN and
+                  SUPERADMIN operations are guarded by hiding their actions, not by the route. */}
+              <Route path="/diluents" element={<DiluentListPage />} />
               {/* SPEC FE08 §3.1: USER is the real minimum of ESAVI-CASE-001 and of the six
                   caseWorkflow operations the wizard touches (API-ROUTES.md). `:step?` is optional
                   so /esavi-cases/:id/wizard alone resolves to the same page — CaseWizardPage
