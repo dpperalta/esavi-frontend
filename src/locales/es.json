@@ -950,6 +950,47 @@
   "diluent": {
     "select": {
       "empty": "El maestro de diluyentes no tiene diluyentes registrados en este despliegue. Escribe el nombre para registrarlo directamente."
+    },
+    "list": {
+      "title": "Diluyentes",
+      "empty": "Todavía no hay diluyentes registrados.",
+      "emptySearch": "Ningún diluyente coincide con la búsqueda.",
+      "clearSearch": "Limpiar búsqueda",
+      "create": "Crear diluyente"
+    },
+    "filters": {
+      "search": "Buscar por nombre o código",
+      "searchHint": "Nombre o código, al menos 2 caracteres."
+    },
+    "form": {
+      "createTitle": "Nuevo diluyente",
+      "editTitle": "Editar diluyente",
+      "codeHint": "Se guardará en mayúsculas con guiones bajos.",
+      "otherWarning": "El paso de notificación usa este diluyente para registrar en texto libre los que no están en el maestro. Si cambias su código o lo das de baja, ese registro deja de estar disponible."
+    },
+    "fields": {
+      "code": "Código",
+      "name": "Nombre",
+      "description": "Descripción",
+      "composition": "Composición",
+      "isActive": "Estado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo"
+    },
+    "actions": {
+      "menu": "Acciones del diluyente {{name}}"
+    },
+    "errors": {
+      "DILUENT_001_CODE_EXISTS": "Ya existe un diluyente con este código. Puede pertenecer a un diluyente dado de baja.",
+      "DILUENT_004_CODE_EXISTS": "Ya existe otro diluyente con este código. Puede pertenecer a un diluyente dado de baja.",
+      "DILUENT_003_NOT_FOUND": "El diluyente no existe.",
+      "DILUENT_004_NOT_FOUND": "El diluyente no existe.",
+      "DILUENT_005A_NOT_FOUND": "El diluyente no existe.",
+      "DILUENT_005B_NOT_FOUND": "El diluyente no existe.",
+      "DILUENT_005A_ALREADY_INACTIVE": "El diluyente ya estaba dado de baja.",
+      "DILUENT_005B_ALREADY_ACTIVE": "El diluyente ya estaba activo."
     }
   },
   "notification": {

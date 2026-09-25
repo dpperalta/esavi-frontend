@@ -950,6 +950,47 @@
   "diluent": {
     "select": {
       "empty": "Het verdunningsmiddelenregister heeft geen verdunningsmiddelen in deze omgeving. Typ de naam om deze direct te registreren."
+    },
+    "list": {
+      "title": "Verdunningsmiddelen",
+      "empty": "Er zijn nog geen verdunningsmiddelen geregistreerd.",
+      "emptySearch": "Geen verdunningsmiddel komt overeen met de zoekopdracht.",
+      "clearSearch": "Zoekopdracht wissen",
+      "create": "Verdunningsmiddel aanmaken"
+    },
+    "filters": {
+      "search": "Zoeken op naam of code",
+      "searchHint": "Naam of code, minstens 2 tekens."
+    },
+    "form": {
+      "createTitle": "Nieuw verdunningsmiddel",
+      "editTitle": "Verdunningsmiddel bewerken",
+      "codeHint": "Wordt opgeslagen in hoofdletters met underscores.",
+      "otherWarning": "De meldingsstap gebruikt dit verdunningsmiddel om verdunningsmiddelen die niet in het register staan als vrije tekst te registreren. Als je de code wijzigt of het deactiveert, is die optie niet meer beschikbaar."
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Naam",
+      "description": "Omschrijving",
+      "composition": "Samenstelling",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Actief",
+      "inactive": "Inactief"
+    },
+    "actions": {
+      "menu": "Acties voor verdunningsmiddel {{name}}"
+    },
+    "errors": {
+      "DILUENT_001_CODE_EXISTS": "Er bestaat al een verdunningsmiddel met deze code. Die kan bij een gedeactiveerd verdunningsmiddel horen.",
+      "DILUENT_004_CODE_EXISTS": "Er bestaat al een ander verdunningsmiddel met deze code. Die kan bij een gedeactiveerd verdunningsmiddel horen.",
+      "DILUENT_003_NOT_FOUND": "Het verdunningsmiddel bestaat niet.",
+      "DILUENT_004_NOT_FOUND": "Het verdunningsmiddel bestaat niet.",
+      "DILUENT_005A_NOT_FOUND": "Het verdunningsmiddel bestaat niet.",
+      "DILUENT_005B_NOT_FOUND": "Het verdunningsmiddel bestaat niet.",
+      "DILUENT_005A_ALREADY_INACTIVE": "Het verdunningsmiddel was al gedeactiveerd.",
+      "DILUENT_005B_ALREADY_ACTIVE": "Het verdunningsmiddel was al actief."
     }
   },
   "notification": {
