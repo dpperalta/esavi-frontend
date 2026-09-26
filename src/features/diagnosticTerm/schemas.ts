@@ -24,7 +24,10 @@ export const updateDiagnosticTermSchema = createDiagnosticTermSchema.extend({
 
 export type CreateDiagnosticTermFormValues = z.infer<typeof createDiagnosticTermSchema>;
 export type UpdateDiagnosticTermFormValues = z.infer<typeof updateDiagnosticTermSchema>;
-export type DiagnosticTermFormValues = UpdateDiagnosticTermFormValues;
+// The one shape DiagnosticTermFormDialog's <ResourceForm> holds: create parses with
+// createDiagnosticTermSchema (no reviewStatus), edit with updateDiagnosticTermSchema.
+export type DiagnosticTermFormValues = CreateDiagnosticTermFormValues &
+  Partial<Pick<UpdateDiagnosticTermFormValues, 'reviewStatus'>>;
 
 // SPEC FE25b §3.5. On create, an empty termGroup is omitted; on update it travels as `null`,
 // which is how the backend empties the column (omitting it would keep the old value). `source`
@@ -35,11 +38,11 @@ export function toDiagnosticTermPayload(
   mode: 'create',
 ): CreateDiagnosticTermInput;
 export function toDiagnosticTermPayload(
-  values: UpdateDiagnosticTermFormValues,
+  values: DiagnosticTermFormValues,
   mode: 'update',
 ): Partial<CreateDiagnosticTermInput>;
 export function toDiagnosticTermPayload(
-  values: CreateDiagnosticTermFormValues | UpdateDiagnosticTermFormValues,
+  values: DiagnosticTermFormValues,
   mode: 'create' | 'update',
 ): Partial<CreateDiagnosticTermInput> {
   if (mode === 'create') {
@@ -50,12 +53,11 @@ export function toDiagnosticTermPayload(
       ...(values.termGroup === '' ? {} : { termGroup: values.termGroup }),
     };
   }
-  const reviewStatus = 'reviewStatus' in values ? values.reviewStatus : '';
   return {
     code: values.code,
     name: values.name,
     termGroup: values.termGroup === '' ? null : values.termGroup,
-    ...(reviewStatus === '' ? {} : { reviewStatus }),
+    ...(values.reviewStatus ? { reviewStatus: values.reviewStatus } : {}),
   };
 }
 
