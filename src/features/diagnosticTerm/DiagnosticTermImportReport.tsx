@@ -1,6 +1,6 @@
 import type { Ref } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
+import { Link } from 'react-router-dom';
 import type { DiagnosticTermImportReport as DiagnosticTermImportReportData } from '@/contracts/diagnosticTerm';
 import { Button } from '@/shared/components/ui/button';
 import {
