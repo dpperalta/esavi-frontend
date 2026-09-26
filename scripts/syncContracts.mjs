@@ -97,6 +97,7 @@ const SYNC_MAP = [
   { source: 'finalClassification/finalClassification.types.ts', dest: 'finalClassification.ts' },
   { source: 'systemConfig/systemConfig.types.ts', dest: 'systemConfig.ts' },
   { source: 'diagnosticTerm/diagnosticTerm.types.ts', dest: 'diagnosticTerm.ts' },
+  { source: 'whodrugProduct/whodrugProduct.types.ts', dest: 'whodrugProduct.ts' },
 ];
 
 // notification.types.ts and severeNotification.types.ts are the first mirrored files that import
@@ -220,7 +221,9 @@ for (const { source, typeName, dest, note } of EXTRA_ENUM_APPENDS) {
   }
   const existing = contents.get(dest);
   if (existing === undefined) {
-    console.error(`contracts:sync — EXTRA_ENUM_APPENDS apunta a "${dest}", que no está en SYNC_MAP.`);
+    console.error(
+      `contracts:sync — EXTRA_ENUM_APPENDS apunta a "${dest}", que no está en SYNC_MAP.`,
+    );
     process.exit(1);
   }
   const constantsContent = readFileSync(sourcePath, 'utf-8');
