@@ -993,6 +993,118 @@
       "DILUENT_005B_ALREADY_ACTIVE": "Het verdunningsmiddel was al actief."
     }
   },
+  "diagnosticTerm": {
+    "list": {
+      "title": "Diagnostische termen",
+      "empty": "Er zijn nog geen diagnostische termen geregistreerd.",
+      "emptyFiltered": "Geen term komt overeen met de filters.",
+      "clearFilters": "Filters wissen",
+      "create": "Term aanmaken",
+      "import": "Woordenboek importeren"
+    },
+    "filters": {
+      "search": "Zoeken op naam of code",
+      "searchHint": "Naam of code, minstens 2 tekens.",
+      "source": "Bron",
+      "sourceAll": "Alle bronnen",
+      "termGroup": "Termgroep",
+      "termGroupHint": "Exacte waarde, bijvoorbeeld LLT.",
+      "reviewStatus": "Beoordelingsstatus",
+      "reviewStatusAll": "Elke status",
+      "reviewStatusForcesInactive": "Filteren op beoordeling toont ook inactieve termen.",
+      "open": "Filters"
+    },
+    "form": {
+      "createTitle": "Nieuwe diagnostische term",
+      "editTitle": "Diagnostische term bewerken",
+      "codeHint": "Wordt opgeslagen in hoofdletters met underscores.",
+      "sourceReadOnly": "De bron kan niet worden gewijzigd nadat de term is aangemaakt.",
+      "autoCreatedNotice": "Automatisch aangemaakt vanuit een melding.",
+      "reviewStatusUnset": "Niet gemarkeerd"
+    },
+    "fields": {
+      "source": "Bron",
+      "code": "Code",
+      "name": "Naam",
+      "termGroup": "Termgroep",
+      "reviewStatus": "Beoordeling",
+      "isActive": "Status"
+    },
+    "sources": {
+      "MEDDRA": "MedDRA",
+      "WHODRUG": "WHODrug",
+      "LOCAL": "Lokaal",
+      "OTHER": "Overig"
+    },
+    "reviewStatuses": {
+      "PENDING": "In afwachting",
+      "APPROVED": "Goedgekeurd"
+    },
+    "status": {
+      "active": "Actief",
+      "inactive": "Inactief",
+      "pending": "In afwachting"
+    },
+    "actions": {
+      "menu": "Acties voor de diagnostische term"
+    },
+    "import": {
+      "title": "MedDRA-woordenboek importeren",
+      "back": "Terug naar diagnostische termen",
+      "file": ".asc-bestand",
+      "fileHint": "Het bestand llt.asc van de MedDRA-distributie, maximaal 20 MB.",
+      "dictionaryVersion": "Woordenboekversie",
+      "dictionaryVersionHint": "Voorbeeld: 27.1",
+      "encoding": "Codering",
+      "encodingHint": "Als accenten er in de simulatie verkeerd uitzien, probeer latin1.",
+      "advanced": "Geavanceerde opties",
+      "simulate": "Simuleren",
+      "run": "Importeren",
+      "confirmTitle": "Dit woordenboek importeren?",
+      "confirmBody": "Hiermee worden de termen in de database geschreven. Wil je alleen het bestand controleren, gebruik dan „Simuleren”.",
+      "confirmAction": "Ja, importeren",
+      "running": "Sluit dit tabblad niet; een volledig woordenboek kan enkele minuten duren.",
+      "report": {
+        "title": "Importrapport",
+        "dryRunNotice": "Simulatie: er is niets geschreven.",
+        "viewTerms": "Termen bekijken",
+        "read": "Gelezen",
+        "inserted": "Toegevoegd",
+        "updated": "Bijgewerkt",
+        "unchanged": "Ongewijzigd",
+        "invalid": "Afgewezen",
+        "duplicated": "Dubbel",
+        "truncatedNotice": "De eerste 20 afwijzingen worden getoond.",
+        "columns": {
+          "line": "Regel",
+          "reason": "Reden",
+          "raw": "Inhoud"
+        }
+      },
+      "reasons": {
+        "EMPTY_CODE": "De code ontbreekt.",
+        "EMPTY_NAME": "De naam ontbreekt.",
+        "CODE_TOO_LONG": "De code is langer dan 100 tekens.",
+        "NAME_TOO_LONG": "De naam is langer dan 500 tekens.",
+        "MISSING_FIELDS": "De regel bevat niet alle velden.",
+        "DUPLICATE_IN_FILE": "De code kwam eerder in het bestand al voor."
+      }
+    },
+    "errors": {
+      "DIAGTERM_001_CODE_EXISTS": "Er bestaat al een term met deze bron en code. Die kan bij een gedeactiveerde term horen.",
+      "DIAGTERM_004_CODE_EXISTS": "Er bestaat al een andere term met deze bron en code. Die kan bij een gedeactiveerde term horen.",
+      "DIAGTERM_003_NOT_FOUND": "De diagnostische term bestaat niet.",
+      "DIAGTERM_004_NOT_FOUND": "De diagnostische term bestaat niet.",
+      "DIAGTERM_005A_NOT_FOUND": "De diagnostische term bestaat niet.",
+      "DIAGTERM_005B_NOT_FOUND": "De diagnostische term bestaat niet.",
+      "DIAGTERM_005A_ALREADY_INACTIVE": "De diagnostische term was al gedeactiveerd.",
+      "DIAGTERM_005B_ALREADY_ACTIVE": "De diagnostische term was al actief.",
+      "DIAGTERM_007_FILE_REQUIRED": "Kies een .asc-bestand.",
+      "DIAGTERM_007_FILE_TOO_LARGE": "Het bestand mag niet groter zijn dan 20 MB.",
+      "DIAGTERM_007_FILE_INVALID": "Er is geen geldige regel gevonden; controleer of het een MedDRA-.asc-bestand is.",
+      "DIAGTERM_007_IMPORT_FAILED": "De import is mislukt en de lopende batch is teruggedraaid; mogelijk loopt er een andere import."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "Beschrijving van het AEFI (klachten en symptomen)",

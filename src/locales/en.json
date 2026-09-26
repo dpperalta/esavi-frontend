@@ -993,6 +993,118 @@
       "DILUENT_005B_ALREADY_ACTIVE": "The diluent was already active."
     }
   },
+  "diagnosticTerm": {
+    "list": {
+      "title": "Diagnostic terms",
+      "empty": "There are no diagnostic terms registered yet.",
+      "emptyFiltered": "No term matches the filters.",
+      "clearFilters": "Clear filters",
+      "create": "Create term",
+      "import": "Import dictionary"
+    },
+    "filters": {
+      "search": "Search by name or code",
+      "searchHint": "Name or code, at least 2 characters.",
+      "source": "Source",
+      "sourceAll": "All sources",
+      "termGroup": "Term group",
+      "termGroupHint": "Exact value, for example LLT.",
+      "reviewStatus": "Review status",
+      "reviewStatusAll": "Any status",
+      "reviewStatusForcesInactive": "Filtering by review also includes inactive terms.",
+      "open": "Filters"
+    },
+    "form": {
+      "createTitle": "New diagnostic term",
+      "editTitle": "Edit diagnostic term",
+      "codeHint": "It will be stored in uppercase with underscores.",
+      "sourceReadOnly": "The source cannot be changed once the term is created.",
+      "autoCreatedNotice": "Created automatically from a notification.",
+      "reviewStatusUnset": "Not marked"
+    },
+    "fields": {
+      "source": "Source",
+      "code": "Code",
+      "name": "Name",
+      "termGroup": "Term group",
+      "reviewStatus": "Review",
+      "isActive": "Status"
+    },
+    "sources": {
+      "MEDDRA": "MedDRA",
+      "WHODRUG": "WHODrug",
+      "LOCAL": "Local",
+      "OTHER": "Other"
+    },
+    "reviewStatuses": {
+      "PENDING": "Pending",
+      "APPROVED": "Approved"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending": "Pending"
+    },
+    "actions": {
+      "menu": "Diagnostic term actions"
+    },
+    "import": {
+      "title": "Import MedDRA dictionary",
+      "back": "Back to diagnostic terms",
+      "file": ".asc file",
+      "fileHint": "The llt.asc file of the MedDRA distribution, 20 MB at most.",
+      "dictionaryVersion": "Dictionary version",
+      "dictionaryVersionHint": "Example: 27.1",
+      "encoding": "Encoding",
+      "encodingHint": "If accents look wrong in the simulation, try latin1.",
+      "advanced": "Advanced options",
+      "simulate": "Simulate",
+      "run": "Import",
+      "confirmTitle": "Import this dictionary?",
+      "confirmBody": "This will write the terms to the database. If you only want to check the file, use “Simulate”.",
+      "confirmAction": "Yes, import",
+      "running": "Do not close this tab; a full dictionary can take several minutes.",
+      "report": {
+        "title": "Import report",
+        "dryRunNotice": "Simulation: nothing was written.",
+        "viewTerms": "View terms",
+        "read": "Read",
+        "inserted": "Inserted",
+        "updated": "Updated",
+        "unchanged": "Unchanged",
+        "invalid": "Rejected",
+        "duplicated": "Duplicated",
+        "truncatedNotice": "Showing the first 20 rejections.",
+        "columns": {
+          "line": "Line",
+          "reason": "Reason",
+          "raw": "Content"
+        }
+      },
+      "reasons": {
+        "EMPTY_CODE": "The code is missing.",
+        "EMPTY_NAME": "The name is missing.",
+        "CODE_TOO_LONG": "The code exceeds 100 characters.",
+        "NAME_TOO_LONG": "The name exceeds 500 characters.",
+        "MISSING_FIELDS": "The line does not have every field.",
+        "DUPLICATE_IN_FILE": "The code already appeared earlier in the file."
+      }
+    },
+    "errors": {
+      "DIAGTERM_001_CODE_EXISTS": "A term with this source and code already exists. It may belong to a deactivated term.",
+      "DIAGTERM_004_CODE_EXISTS": "Another term with this source and code already exists. It may belong to a deactivated term.",
+      "DIAGTERM_003_NOT_FOUND": "The diagnostic term does not exist.",
+      "DIAGTERM_004_NOT_FOUND": "The diagnostic term does not exist.",
+      "DIAGTERM_005A_NOT_FOUND": "The diagnostic term does not exist.",
+      "DIAGTERM_005B_NOT_FOUND": "The diagnostic term does not exist.",
+      "DIAGTERM_005A_ALREADY_INACTIVE": "The diagnostic term was already deactivated.",
+      "DIAGTERM_005B_ALREADY_ACTIVE": "The diagnostic term was already active.",
+      "DIAGTERM_007_FILE_REQUIRED": "Choose an .asc file.",
+      "DIAGTERM_007_FILE_TOO_LARGE": "The file cannot exceed 20 MB.",
+      "DIAGTERM_007_FILE_INVALID": "No valid line was found; check that it is a MedDRA .asc file.",
+      "DIAGTERM_007_IMPORT_FAILED": "The import failed and the current batch was rolled back; another import may be running."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "AEFI description (signs and symptoms)",

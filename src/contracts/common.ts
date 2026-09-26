@@ -24,6 +24,10 @@ export interface AppDetails {
     detail: string;
 }
 
+// The stored `user` is a userId; the response carries the author's email, or null when the
+// reader may not see it or the author does not resolve
+export type AppDetailsResponse = Omit<AppDetails, 'user'> & { user: string | null };
+
 // Mirrors esavi-backend/src/constants/enums.constants.ts (shared by seven tables of the schema — SPEC FE12a §3.3).
 export const ANSWER_OPTIONS = ['YES', 'NO', 'UNKNOWN', 'NOT_APPLICABLE', 'NO_ANSWER'] as const;
 

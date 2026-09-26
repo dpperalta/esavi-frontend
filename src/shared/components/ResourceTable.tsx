@@ -85,6 +85,10 @@ export interface ResourceTableProps<T> {
   // needs its own wording ("Limpiar búsqueda") for the search-mode empty state, distinct from a
   // filter-clearing action — a prop on the primitive rather than a copy (CONVENTIONS.md §10.4).
   clearFiltersLabel?: string;
+  // An extra action for the unfiltered empty state, next to the create button — rendered by the
+  // caller, who decides its role gate. SPEC FE25b §3.6: "Importar diccionario" for SUPERADMIN on an
+  // empty diagnostic term master (CONVENTIONS.md §10.4: a prop on the primitive, never a copy).
+  emptyExtraAction?: ReactNode;
   // Hallazgo E (SPEC FE02 §1): declared for the API contract every entity will share, but
   // inert until a backend listing supports it (CONVENTIONS.md §6.5 forbids sorting/filtering
   // in memory). FE03 is the first to pass `true`.
@@ -121,6 +125,7 @@ export function ResourceTable<T>({
   isFiltered = false,
   onClearFilters,
   clearFiltersLabel,
+  emptyExtraAction,
   isRowInactive,
 }: ResourceTableProps<T>) {
   const { t } = useTranslation();
@@ -189,6 +194,7 @@ export function ResourceTable<T>({
             createLabel={createLabel}
             onClearFilters={isFiltered ? onClearFilters : undefined}
             clearFiltersLabel={clearFiltersLabel}
+            extraAction={isFiltered ? undefined : emptyExtraAction}
           />
         )}
 
@@ -235,7 +241,9 @@ export function ResourceTable<T>({
                                   <MoreVerticalIcon aria-hidden="true" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">{rowActions(row)}</DropdownMenuContent>
+                              <DropdownMenuContent align="end">
+                                {rowActions(row)}
+                              </DropdownMenuContent>
                             </DropdownMenu>
                           )}
                         </TableCell>
@@ -392,6 +400,7 @@ interface ResourceTableEmptyProps {
   createLabel?: string;
   onClearFilters?: () => void;
   clearFiltersLabel?: string;
+  extraAction?: ReactNode;
 }
 
 function ResourceTableEmpty({
@@ -400,6 +409,7 @@ function ResourceTableEmpty({
   createLabel = 'common.actions.create',
   onClearFilters,
   clearFiltersLabel = 'common.table.clearFilters',
+  extraAction,
 }: ResourceTableEmptyProps) {
   const { t } = useTranslation();
 
@@ -412,11 +422,16 @@ function ResourceTableEmpty({
           {t(clearFiltersLabel)}
         </Button>
       )}
-      {onCreate && (
-        <Button type="button" size="sm" onClick={onCreate}>
-          <PlusIcon aria-hidden="true" />
-          {t(createLabel)}
-        </Button>
+      {(onCreate || extraAction) && (
+        <div className="flex flex-wrap justify-center gap-2">
+          {extraAction}
+          {onCreate && (
+            <Button type="button" size="sm" onClick={onCreate}>
+              <PlusIcon aria-hidden="true" />
+              {t(createLabel)}
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );
@@ -467,12 +482,7 @@ function ResourceTableCard<T>({
         {rowActions && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={t(rowActionsLabel)}
-              >
+              <Button type="button" variant="ghost" size="icon-sm" aria-label={t(rowActionsLabel)}>
                 <MoreVerticalIcon aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>

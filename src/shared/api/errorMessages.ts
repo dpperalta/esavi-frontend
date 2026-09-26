@@ -301,6 +301,15 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   DILUENT_005B_NOT_FOUND: 'diluent.errors.DILUENT_005B_NOT_FOUND',
   DILUENT_005A_ALREADY_INACTIVE: 'diluent.errors.DILUENT_005A_ALREADY_INACTIVE',
   DILUENT_005B_ALREADY_ACTIVE: 'diluent.errors.DILUENT_005B_ALREADY_ACTIVE',
+  // SPEC FE25b §3.5 — the diagnostic term codes with no field to mark. The two `CODE_EXISTS` and
+  // the three file codes of 007 are absent: their error field maps route them to a field, and
+  // `IMPORT_FAILED` is a page alert of DiagnosticTermImportPage.
+  DIAGTERM_003_NOT_FOUND: 'diagnosticTerm.errors.DIAGTERM_003_NOT_FOUND',
+  DIAGTERM_004_NOT_FOUND: 'diagnosticTerm.errors.DIAGTERM_004_NOT_FOUND',
+  DIAGTERM_005A_NOT_FOUND: 'diagnosticTerm.errors.DIAGTERM_005A_NOT_FOUND',
+  DIAGTERM_005B_NOT_FOUND: 'diagnosticTerm.errors.DIAGTERM_005B_NOT_FOUND',
+  DIAGTERM_005A_ALREADY_INACTIVE: 'diagnosticTerm.errors.DIAGTERM_005A_ALREADY_INACTIVE',
+  DIAGTERM_005B_ALREADY_ACTIVE: 'diagnosticTerm.errors.DIAGTERM_005B_ALREADY_ACTIVE',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {
