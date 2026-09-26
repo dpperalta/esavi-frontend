@@ -993,6 +993,118 @@
       "DILUENT_005B_ALREADY_ACTIVE": "El diluyente ya estaba activo."
     }
   },
+  "diagnosticTerm": {
+    "list": {
+      "title": "Términos diagnósticos",
+      "empty": "Todavía no hay términos diagnósticos registrados.",
+      "emptyFiltered": "Ningún término coincide con los filtros.",
+      "clearFilters": "Limpiar filtros",
+      "create": "Crear término",
+      "import": "Importar diccionario"
+    },
+    "filters": {
+      "search": "Buscar por nombre o código",
+      "searchHint": "Nombre o código, al menos 2 caracteres.",
+      "source": "Fuente",
+      "sourceAll": "Todas las fuentes",
+      "termGroup": "Grupo de término",
+      "termGroupHint": "Valor exacto, por ejemplo LLT.",
+      "reviewStatus": "Estado de revisión",
+      "reviewStatusAll": "Cualquier estado",
+      "reviewStatusForcesInactive": "Filtrar por revisión incluye también los términos inactivos.",
+      "open": "Filtros"
+    },
+    "form": {
+      "createTitle": "Nuevo término diagnóstico",
+      "editTitle": "Editar término diagnóstico",
+      "codeHint": "Se guardará en mayúsculas con guiones bajos.",
+      "sourceReadOnly": "La fuente no se puede cambiar una vez creado el término.",
+      "autoCreatedNotice": "Creado automáticamente desde una notificación.",
+      "reviewStatusUnset": "Sin marcar"
+    },
+    "fields": {
+      "source": "Fuente",
+      "code": "Código",
+      "name": "Nombre",
+      "termGroup": "Grupo de término",
+      "reviewStatus": "Revisión",
+      "isActive": "Estado"
+    },
+    "sources": {
+      "MEDDRA": "MedDRA",
+      "WHODRUG": "WHODrug",
+      "LOCAL": "Local",
+      "OTHER": "Otra"
+    },
+    "reviewStatuses": {
+      "PENDING": "Pendiente",
+      "APPROVED": "Aprobado"
+    },
+    "status": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "pending": "Pendiente"
+    },
+    "actions": {
+      "menu": "Acciones del término diagnóstico"
+    },
+    "import": {
+      "title": "Importar diccionario MedDRA",
+      "back": "Volver a términos diagnósticos",
+      "file": "Archivo .asc",
+      "fileHint": "El archivo llt.asc de la distribución de MedDRA, de 20 MB como máximo.",
+      "dictionaryVersion": "Versión del diccionario",
+      "dictionaryVersionHint": "Ejemplo: 27.1",
+      "encoding": "Codificación",
+      "encodingHint": "Si los acentos salen mal en la simulación, prueba latin1.",
+      "advanced": "Opciones avanzadas",
+      "simulate": "Simular",
+      "run": "Importar",
+      "confirmTitle": "¿Importar este diccionario?",
+      "confirmBody": "Esto escribirá los términos en la base de datos. Si solo quieres comprobar el archivo, usa «Simular».",
+      "confirmAction": "Sí, importar",
+      "running": "No cierres esta pestaña; un diccionario completo puede tardar varios minutos.",
+      "report": {
+        "title": "Informe de la importación",
+        "dryRunNotice": "Simulación: no se escribió nada.",
+        "viewTerms": "Ver términos",
+        "read": "Leídas",
+        "inserted": "Insertadas",
+        "updated": "Actualizadas",
+        "unchanged": "Sin cambios",
+        "invalid": "Rechazadas",
+        "duplicated": "Duplicadas",
+        "truncatedNotice": "Se muestran los primeros 20 rechazos.",
+        "columns": {
+          "line": "Línea",
+          "reason": "Motivo",
+          "raw": "Contenido"
+        }
+      },
+      "reasons": {
+        "EMPTY_CODE": "Falta el código.",
+        "EMPTY_NAME": "Falta el nombre.",
+        "CODE_TOO_LONG": "El código supera los 100 caracteres.",
+        "NAME_TOO_LONG": "El nombre supera los 500 caracteres.",
+        "MISSING_FIELDS": "La línea no tiene todos los campos.",
+        "DUPLICATE_IN_FILE": "El código ya apareció antes en el archivo."
+      }
+    },
+    "errors": {
+      "DIAGTERM_001_CODE_EXISTS": "Ya existe un término con esta fuente y este código. Puede pertenecer a un término dado de baja.",
+      "DIAGTERM_004_CODE_EXISTS": "Ya existe otro término con esta fuente y este código. Puede pertenecer a un término dado de baja.",
+      "DIAGTERM_003_NOT_FOUND": "El término diagnóstico no existe.",
+      "DIAGTERM_004_NOT_FOUND": "El término diagnóstico no existe.",
+      "DIAGTERM_005A_NOT_FOUND": "El término diagnóstico no existe.",
+      "DIAGTERM_005B_NOT_FOUND": "El término diagnóstico no existe.",
+      "DIAGTERM_005A_ALREADY_INACTIVE": "El término diagnóstico ya estaba dado de baja.",
+      "DIAGTERM_005B_ALREADY_ACTIVE": "El término diagnóstico ya estaba activo.",
+      "DIAGTERM_007_FILE_REQUIRED": "Elige un archivo .asc.",
+      "DIAGTERM_007_FILE_TOO_LARGE": "El archivo no puede superar los 20 MB.",
+      "DIAGTERM_007_FILE_INVALID": "No se encontró ninguna línea válida; comprueba que es un .asc de MedDRA.",
+      "DIAGTERM_007_IMPORT_FAILED": "La importación falló y se revirtió el lote en curso; puede que otra importación esté corriendo."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "Descripción del ESAVI (signos y síntomas)",
