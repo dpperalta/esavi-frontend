@@ -1,6 +1,6 @@
 # SPEC FE25b — Mantenimiento e importación de términos diagnósticos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE25a (patrón de listado + diálogo + auditoría de catálogos clínicos), SPEC FE07 (flujo simular → importar), SPEC FE02 (fábrica de recursos), SPEC F15 del backend (CRUD de `diagnosticTerm` y resolución implícita `006`), SPEC F17 del backend (importación `.asc`)
 > **Fecha:** 2026-09-25
 > **Objetivo:** Dar al maestro de términos diagnósticos una pantalla en `/diagnostic-terms` para buscar, filtrar, mantener y revisar los términos, y otra en `/diagnostic-terms/import` para cargar el diccionario MedDRA desde un `.asc`.

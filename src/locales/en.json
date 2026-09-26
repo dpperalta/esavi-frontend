@@ -102,6 +102,19 @@
       "unknown": "Unknown",
       "notApplicable": "Not applicable",
       "noAnswer": "No answer"
+    },
+    "importReport": {
+      "title": "Import report",
+      "dryRunNotice": "Simulation: nothing was written.",
+      "truncatedNotice": "Showing the first 20 rejections.",
+      "read": "Read",
+      "inserted": "Inserted",
+      "updated": "Updated",
+      "unchanged": "Unchanged",
+      "invalid": "Rejected",
+      "duplicated": "Duplicated",
+      "rejectedTitle": "Rejected rows",
+      "noRejected": "No rows were rejected."
     }
   },
   "auth": {

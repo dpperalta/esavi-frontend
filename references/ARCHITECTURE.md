@@ -178,6 +178,10 @@ Dos selectores que **no** son casos de `<EntitySearchSelect>` y llevan su propio
 
 > **La lista es cerrada porque el recorrido lo fue.** Salió de contrastar unas 320 columnas contra su validador y su servicio, no de imaginar qué haría falta. Las que faltan las traerá el paso 6, y son pocas.
 
+**Las que salieron de los catálogos clínicos** (SPEC FE25c):
+
+- **`<ImportReport>`** — el informe de una importación masiva ya terminada: los seis contadores (`read`, `inserted`, `updated`, `unchanged`, `invalid`, `duplicated`), la marca de simulación, la nota de truncado cuando el backend corta los rechazos a 20, y una tabla de rechazos con columnas que declara cada importación. Lo propio de cada una (la hoja leída y las cabeceras en WHODrug) entra por `children`. Es puro: no llama a nada y **no traduce los motivos de rechazo**, que traduce cada consumidor en su `render`. La usan MedDRA (SPEC FE25b) y WHODrug (SPEC FE25c). `GeoImportReport` (SPEC FE07) **no** es un caso suyo: informa dos hojas con contadores separados.
+
 ### 4.4 Autorización espejo
 
 `ROLE_LEVELS` se replica en el cliente (SUPERADMIN 100 > ADMIN 50 > USER 25 > ANALYTICS 10), con un hook `useCan()` y un componente `<RequireRole level={...}>`.

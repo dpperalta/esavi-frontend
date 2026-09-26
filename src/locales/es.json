@@ -102,6 +102,19 @@
       "unknown": "No se sabe",
       "notApplicable": "No aplica",
       "noAnswer": "Sin respuesta"
+    },
+    "importReport": {
+      "title": "Informe de la importación",
+      "dryRunNotice": "Simulación: no se escribió nada.",
+      "truncatedNotice": "Se muestran los primeros 20 rechazos.",
+      "read": "Leídas",
+      "inserted": "Insertadas",
+      "updated": "Actualizadas",
+      "unchanged": "Sin cambios",
+      "invalid": "Rechazadas",
+      "duplicated": "Duplicadas",
+      "rejectedTitle": "Filas rechazadas",
+      "noRejected": "No se rechazó ninguna fila."
     }
   },
   "auth": {

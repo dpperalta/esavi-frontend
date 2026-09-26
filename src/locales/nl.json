@@ -102,6 +102,19 @@
       "unknown": "Onbekend",
       "notApplicable": "Niet van toepassing",
       "noAnswer": "Geen antwoord"
+    },
+    "importReport": {
+      "title": "Importrapport",
+      "dryRunNotice": "Simulatie: er is niets geschreven.",
+      "truncatedNotice": "De eerste 20 afwijzingen worden getoond.",
+      "read": "Gelezen",
+      "inserted": "Toegevoegd",
+      "updated": "Bijgewerkt",
+      "unchanged": "Ongewijzigd",
+      "invalid": "Afgewezen",
+      "duplicated": "Dubbel",
+      "rejectedTitle": "Afgewezen rijen",
+      "noRejected": "Er zijn geen rijen afgewezen."
     }
   },
   "auth": {
