@@ -183,6 +183,7 @@
       "investigation": "Investigations",
       "diagnosticTerm": "Diagnostic terms",
       "whodrugVaccine": "WHODrug vaccines",
+      "whodrugProduct": "WHODrug medicines",
       "diluent": "Diluents",
       "geoLevelType": "Geographic levels",
       "geoLocation": "Locations",
@@ -1247,6 +1248,99 @@
     }
   },
   "whodrugProduct": {
+    "list": {
+      "title": "WHODrug medicines",
+      "empty": "The WHODrug mirror is empty; it has not been synchronized yet.",
+      "emptyFiltered": "No medicine matches the filters.",
+      "clearFilters": "Clear filters",
+      "sync": "Synchronize with WHODrug"
+    },
+    "filters": {
+      "name": "Trade name",
+      "nameHint": "Searches the medicine name.",
+      "ingredient": "Active ingredient",
+      "ingredientHint": "Searches the active ingredient, original or translated.",
+      "minChars": "Type at least 3 characters."
+    },
+    "sheet": {
+      "title": "WHODrug medicine",
+      "close": "Close",
+      "audit": "Audit",
+      "emptyValue": "No value"
+    },
+    "sections": {
+      "product": "Medicine",
+      "classification": "Classification",
+      "composition": "Composition",
+      "countryRegistration": "Country and registration",
+      "presentation": "Presentation",
+      "provenance": "Provenance"
+    },
+    "fields": {
+      "drugCode": "Drug code",
+      "drugName": "Drug name",
+      "drugAtcs": "Medicine ATCs",
+      "medicinalProductId": "Medicinal product id",
+      "atcs": "ATC code",
+      "ingredient": "Active ingredient",
+      "ingredientTranslations": "Active ingredient (translation)",
+      "languageCode": "Language code",
+      "iso3Code": "Country (ISO3)",
+      "countryMedicinalProductId": "Country product id",
+      "maHolders": "Marketing authorization holder",
+      "maHoldersMedicinalProductId": "Holder product id",
+      "form": "Pharmaceutical form",
+      "formMedicinalProductId": "Form product id",
+      "strength": "Strength",
+      "strengthMedicinalProductId": "Strength product id",
+      "isGeneric": "Generic",
+      "isPreferred": "Preferred",
+      "optionName": "Option name",
+      "rowHash": "Row fingerprint",
+      "metadata": "Sync metadata",
+      "createdAt": "Created",
+      "updatedAt": "Updated",
+      "deletedAt": "Retired",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Current",
+      "retired": "Retired from the standard",
+      "generic": "Generic",
+      "preferred": "Preferred"
+    },
+    "sync": {
+      "title": "Synchronize with WHODrug",
+      "back": "Back to medicines",
+      "dictionaryVersion": "Dictionary version",
+      "dictionaryVersionHint": "Example: WHODrug Global 2025 Sep 1",
+      "simulate": "Simulate",
+      "run": "Synchronize",
+      "confirmTitle": "Synchronize with WHODrug?",
+      "confirmBody": "The full standard will be downloaded; this may take several minutes. Rows no longer in the standard will be marked as retired.",
+      "confirmFirstRun": "This is the first synchronization: simulating first is recommended.",
+      "confirmAction": "Synchronize",
+      "running": "Do not close this tab; downloading and processing the full standard may take several minutes.",
+      "viewProducts": "View medicines",
+      "configLink": "Review the WHODrug configuration",
+      "counters": {
+        "downloaded": "Downloaded",
+        "flattened": "Rows generated",
+        "deactivated": "Retired"
+      },
+      "columns": {
+        "drugCode": "Drug code",
+        "reason": "Reason",
+        "column": "Column"
+      },
+      "reasons": {
+        "EMPTY_DRUG_CODE": "Missing drug code",
+        "EMPTY_DRUG_NAME": "Missing drug name",
+        "EMPTY_OPTION_NAME": "Missing option name",
+        "VALUE_TOO_LONG": "Value too long",
+        "DUPLICATE_IN_DOWNLOAD": "Repeated in the download"
+      }
+    },
     "errors": {
       "WHODPROD_007_DISABLED": "WHODrug synchronization is disabled in this deployment.",
       "WHODPROD_007_NOT_CONFIGURED": "The WHODrug credentials or URL are missing.",

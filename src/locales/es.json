@@ -183,6 +183,7 @@
       "investigation": "Investigaciones",
       "diagnosticTerm": "Términos diagnósticos",
       "whodrugVaccine": "Vacunas WHODrug",
+      "whodrugProduct": "Medicamentos WHODrug",
       "diluent": "Diluyentes",
       "geoLevelType": "Niveles geográficos",
       "geoLocation": "Ubicaciones",
@@ -1247,6 +1248,99 @@
     }
   },
   "whodrugProduct": {
+    "list": {
+      "title": "Medicamentos WHODrug",
+      "empty": "El espejo de WHODrug está vacío; aún no se ha sincronizado.",
+      "emptyFiltered": "Ningún medicamento coincide con los filtros.",
+      "clearFilters": "Limpiar filtros",
+      "sync": "Sincronizar con WHODrug"
+    },
+    "filters": {
+      "name": "Nombre comercial",
+      "nameHint": "Busca en el nombre del medicamento.",
+      "ingredient": "Principio activo",
+      "ingredientHint": "Busca en el principio activo, original o traducido.",
+      "minChars": "Escribe al menos 3 caracteres."
+    },
+    "sheet": {
+      "title": "Medicamento WHODrug",
+      "close": "Cerrar",
+      "audit": "Auditoría",
+      "emptyValue": "Sin valor"
+    },
+    "sections": {
+      "product": "Medicamento",
+      "classification": "Clasificación",
+      "composition": "Composición",
+      "countryRegistration": "País y registro",
+      "presentation": "Presentación",
+      "provenance": "Procedencia"
+    },
+    "fields": {
+      "drugCode": "Código del fármaco",
+      "drugName": "Nombre del fármaco",
+      "drugAtcs": "ATC del medicamento",
+      "medicinalProductId": "Id del producto medicinal",
+      "atcs": "Código ATC",
+      "ingredient": "Principio activo",
+      "ingredientTranslations": "Principio activo (traducción)",
+      "languageCode": "Código de idioma",
+      "iso3Code": "País (ISO3)",
+      "countryMedicinalProductId": "Id del producto en el país",
+      "maHolders": "Titular de la autorización",
+      "maHoldersMedicinalProductId": "Id del producto del titular",
+      "form": "Forma farmacéutica",
+      "formMedicinalProductId": "Id del producto por forma",
+      "strength": "Concentración",
+      "strengthMedicinalProductId": "Id del producto por concentración",
+      "isGeneric": "Genérico",
+      "isPreferred": "Preferido",
+      "optionName": "Nombre de la opción",
+      "rowHash": "Huella de la fila",
+      "metadata": "Metadatos de la sincronización",
+      "createdAt": "Creado",
+      "updatedAt": "Actualizado",
+      "deletedAt": "Retirado",
+      "isActive": "Estado"
+    },
+    "status": {
+      "active": "Vigente",
+      "retired": "Retirado del estándar",
+      "generic": "Genérico",
+      "preferred": "Preferido"
+    },
+    "sync": {
+      "title": "Sincronizar con WHODrug",
+      "back": "Volver a medicamentos",
+      "dictionaryVersion": "Versión del diccionario",
+      "dictionaryVersionHint": "Ejemplo: WHODrug Global 2025 Sep 1",
+      "simulate": "Simular",
+      "run": "Sincronizar",
+      "confirmTitle": "¿Sincronizar con WHODrug?",
+      "confirmBody": "Se descargará el estándar completo; puede tardar varios minutos. Las filas que ya no estén en el estándar se marcarán como retiradas.",
+      "confirmFirstRun": "Es la primera sincronización: se recomienda simular antes.",
+      "confirmAction": "Sincronizar",
+      "running": "No cierres esta pestaña; descargar y procesar el estándar completo puede tardar varios minutos.",
+      "viewProducts": "Ver medicamentos",
+      "configLink": "Revisar la configuración de WHODrug",
+      "counters": {
+        "downloaded": "Descargados",
+        "flattened": "Filas generadas",
+        "deactivated": "Retiradas"
+      },
+      "columns": {
+        "drugCode": "Código del fármaco",
+        "reason": "Motivo",
+        "column": "Columna"
+      },
+      "reasons": {
+        "EMPTY_DRUG_CODE": "Sin código de fármaco",
+        "EMPTY_DRUG_NAME": "Sin nombre de fármaco",
+        "EMPTY_OPTION_NAME": "Sin nombre de opción",
+        "VALUE_TOO_LONG": "Valor demasiado largo",
+        "DUPLICATE_IN_DOWNLOAD": "Repetido en la descarga"
+      }
+    },
     "errors": {
       "WHODPROD_007_DISABLED": "La sincronización con WHODrug está desactivada en este despliegue.",
       "WHODPROD_007_NOT_CONFIGURED": "Faltan las credenciales o la URL de WHODrug.",

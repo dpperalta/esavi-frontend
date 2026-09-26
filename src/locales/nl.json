@@ -183,6 +183,7 @@
       "investigation": "Onderzoeken",
       "diagnosticTerm": "Diagnostische termen",
       "whodrugVaccine": "WHODrug-vaccins",
+      "whodrugProduct": "WHODrug-geneesmiddelen",
       "diluent": "Verdunningsmiddelen",
       "geoLevelType": "Geografische niveaus",
       "geoLocation": "Locaties",
@@ -1247,6 +1248,99 @@
     }
   },
   "whodrugProduct": {
+    "list": {
+      "title": "WHODrug-geneesmiddelen",
+      "empty": "De WHODrug-spiegel is leeg; er is nog niet gesynchroniseerd.",
+      "emptyFiltered": "Geen enkel geneesmiddel komt overeen met de filters.",
+      "clearFilters": "Filters wissen",
+      "sync": "Synchroniseren met WHODrug"
+    },
+    "filters": {
+      "name": "Handelsnaam",
+      "nameHint": "Zoekt in de naam van het geneesmiddel.",
+      "ingredient": "Werkzame stof",
+      "ingredientHint": "Zoekt in de werkzame stof, origineel of vertaald.",
+      "minChars": "Typ minstens 3 tekens."
+    },
+    "sheet": {
+      "title": "WHODrug-geneesmiddel",
+      "close": "Sluiten",
+      "audit": "Audit",
+      "emptyValue": "Geen waarde"
+    },
+    "sections": {
+      "product": "Geneesmiddel",
+      "classification": "Classificatie",
+      "composition": "Samenstelling",
+      "countryRegistration": "Land en registratie",
+      "presentation": "Presentatie",
+      "provenance": "Herkomst"
+    },
+    "fields": {
+      "drugCode": "Geneesmiddelcode",
+      "drugName": "Naam van het geneesmiddel",
+      "drugAtcs": "ATC-codes van het geneesmiddel",
+      "medicinalProductId": "Id van het geneesmiddel",
+      "atcs": "ATC-code",
+      "ingredient": "Werkzame stof",
+      "ingredientTranslations": "Werkzame stof (vertaling)",
+      "languageCode": "Taalcode",
+      "iso3Code": "Land (ISO3)",
+      "countryMedicinalProductId": "Product-id in het land",
+      "maHolders": "Houder van de handelsvergunning",
+      "maHoldersMedicinalProductId": "Product-id van de houder",
+      "form": "Farmaceutische vorm",
+      "formMedicinalProductId": "Product-id per vorm",
+      "strength": "Sterkte",
+      "strengthMedicinalProductId": "Product-id per sterkte",
+      "isGeneric": "Generiek",
+      "isPreferred": "Voorkeur",
+      "optionName": "Optienaam",
+      "rowHash": "Vingerafdruk van de rij",
+      "metadata": "Metagegevens van de synchronisatie",
+      "createdAt": "Aangemaakt",
+      "updatedAt": "Bijgewerkt",
+      "deletedAt": "Ingetrokken",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Geldig",
+      "retired": "Ingetrokken uit de standaard",
+      "generic": "Generiek",
+      "preferred": "Voorkeur"
+    },
+    "sync": {
+      "title": "Synchroniseren met WHODrug",
+      "back": "Terug naar geneesmiddelen",
+      "dictionaryVersion": "Woordenboekversie",
+      "dictionaryVersionHint": "Voorbeeld: WHODrug Global 2025 Sep 1",
+      "simulate": "Simuleren",
+      "run": "Synchroniseren",
+      "confirmTitle": "Synchroniseren met WHODrug?",
+      "confirmBody": "De volledige standaard wordt gedownload; dit kan enkele minuten duren. Rijen die niet meer in de standaard staan, worden als ingetrokken gemarkeerd.",
+      "confirmFirstRun": "Dit is de eerste synchronisatie: eerst simuleren wordt aanbevolen.",
+      "confirmAction": "Synchroniseren",
+      "running": "Sluit dit tabblad niet; het downloaden en verwerken van de volledige standaard kan enkele minuten duren.",
+      "viewProducts": "Geneesmiddelen bekijken",
+      "configLink": "WHODrug-configuratie controleren",
+      "counters": {
+        "downloaded": "Gedownload",
+        "flattened": "Gegenereerde rijen",
+        "deactivated": "Ingetrokken"
+      },
+      "columns": {
+        "drugCode": "Geneesmiddelcode",
+        "reason": "Reden",
+        "column": "Kolom"
+      },
+      "reasons": {
+        "EMPTY_DRUG_CODE": "Geen geneesmiddelcode",
+        "EMPTY_DRUG_NAME": "Geen geneesmiddelnaam",
+        "EMPTY_OPTION_NAME": "Geen optienaam",
+        "VALUE_TOO_LONG": "Waarde te lang",
+        "DUPLICATE_IN_DOWNLOAD": "Herhaald in de download"
+      }
+    },
     "errors": {
       "WHODPROD_007_DISABLED": "Synchronisatie met WHODrug is uitgeschakeld in deze omgeving.",
       "WHODPROD_007_NOT_CONFIGURED": "De inloggegevens of de URL van WHODrug ontbreken.",
