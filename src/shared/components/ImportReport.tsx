@@ -9,13 +9,10 @@ import {
   TableRow,
 } from '@/shared/components/ui/table';
 
-export interface ImportReportCounters {
-  read: number;
-  inserted: number;
-  updated: number;
-  unchanged: number;
-  invalid: number;
-  duplicated: number;
+export interface ImportReportCounter {
+  key: string;
+  label: string;
+  value: number;
 }
 
 export interface ImportReportColumn<T> {
@@ -25,20 +22,20 @@ export interface ImportReportColumn<T> {
 }
 
 export interface ImportReportProps<T> {
-  counters: ImportReportCounters;
+  counters: ImportReportCounter[];
+  rejectedTotal: number;
   dryRun: boolean;
   rejected: T[];
   rejectedColumns: ImportReportColumn<T>[];
   children?: ReactNode;
 }
 
-const COUNTER_KEYS = ['read', 'inserted', 'updated', 'unchanged', 'invalid', 'duplicated'] as const;
-
-// Pure by design (SPEC FE25c §3.9): paints a finished import report and calls nothing. Each
-// consumer translates its own rejection reasons inside `render`, so the primitive never learns
-// the reason codes of any particular import.
+// Pure by design (SPEC FE25c §3.9, generalized by SPEC FE25d §3.9): paints a finished report and
+// calls nothing. Each consumer labels its own counters and translates its own rejection reasons,
+// so the primitive never learns which import or sync it is painting.
 export function ImportReport<T>({
   counters,
+  rejectedTotal,
   dryRun,
   rejected,
   rejectedColumns,
@@ -48,8 +45,8 @@ export function ImportReport<T>({
   const titleId = useId();
   const rejectedTitleId = useId();
   const titleRef = useRef<HTMLHeadingElement>(null);
-  // The backend truncates the rejections to 20; the counters keep the real totals.
-  const isTruncated = counters.invalid + counters.duplicated > rejected.length;
+  // The backend truncates the rejections to 20; `rejectedTotal` keeps the real total.
+  const isTruncated = rejectedTotal > rejected.length;
 
   useEffect(() => {
     titleRef.current?.focus();
@@ -73,15 +70,11 @@ export function ImportReport<T>({
         </p>
       )}
 
-      <dl className="grid grid-cols-2 gap-3 rounded-xl border bg-card p-4 sm:grid-cols-3 lg:grid-cols-6">
-        {COUNTER_KEYS.map((counterKey) => (
-          <div key={counterKey} className="flex flex-col gap-0.5">
-            <dt className="text-xs text-muted-foreground">
-              {t(`common.importReport.${counterKey}`)}
-            </dt>
-            <dd className="font-heading text-lg font-medium tabular-nums">
-              {counters[counterKey]}
-            </dd>
+      <dl className="grid grid-cols-[repeat(auto-fit,minmax(7rem,1fr))] gap-3 rounded-xl border bg-card p-4">
+        {counters.map((counter) => (
+          <div key={counter.key} className="flex flex-col gap-0.5">
+            <dt className="text-xs text-muted-foreground">{counter.label}</dt>
+            <dd className="font-heading text-lg font-medium tabular-nums">{counter.value}</dd>
           </div>
         ))}
       </dl>

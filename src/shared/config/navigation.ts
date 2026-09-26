@@ -12,6 +12,7 @@ import {
   ListChecks,
   ListTree,
   MapPin,
+  Pill,
   Search,
   Settings,
   ShieldCheck,
@@ -130,6 +131,13 @@ export const NAVIGATION: NavItem[] = [
         path: '/whodrug-vaccines',
         // ESAVI-WHODRUG-002A (SPEC FE25c §3.1). Neither the import nor the alta has a NavItem.
         minLevel: ROLE_LEVELS.USER,
+      },
+      {
+        key: 'nav.items.whodrugProduct',
+        icon: Pill,
+        path: '/whodrug-products',
+        // ESAVI-WHODPROD-002B, the only listing (SPEC FE25d §3.1). The sync has no NavItem.
+        minLevel: ROLE_LEVELS.ADMIN,
       },
       {
         key: 'nav.items.diluent',

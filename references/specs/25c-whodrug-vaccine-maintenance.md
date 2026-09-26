@@ -1,9 +1,23 @@
 # SPEC FE25c — Mantenimiento e importación de vacunas WHODrug
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE25a (patrón de catálogos clínicos), SPEC FE25b (flujo de importación; queda enmendado por este spec, §8), SPEC FE12c (`<WhodrugTreePicker>` y `useVaccineWhodrugTree`), SPEC FE02 (fábrica de recursos), SPEC F18 del backend (CRUD de `vaccineWhodrug`), SPEC F19 del backend (importación `.xlsx`)
 > **Fecha:** 2026-09-25
 > **Objetivo:** Dar al diccionario de vacunas WHODrug un listado, un detalle de solo lectura, un formulario en página y una importación `.xlsx`, y extraer `<ImportReport>` como primitiva compartida con SPEC FE25b.
+
+> **Enmendado por SPEC FE25d (2026-09-25).** La sincronización de WHODrug informa `downloaded`, `flattened` y `deactivated` y no tiene `read`, así que el contrato de §3.9 se generaliza:
+>
+> | Prop | Antes (FE25c) | Después |
+> |---|---|---|
+> | `counters` | `{ read, inserted, updated, unchanged, invalid, duplicated }` | `{ key: string; label: string; value: number }[]`, pintados en el orden recibido |
+> | Regla de truncado | `invalid + duplicated > rejected.length` | Nueva prop `rejectedTotal: number`; la nota aparece si `rejectedTotal > rejected.length` |
+> | `dryRun`, `rejected`, `rejectedColumns`, `children` | — | Sin cambios |
+>
+> - Cada consumidor construye su lista con sus etiquetas: las comunes de `common.importReport.*`, las propias de su bloque.
+> - `VaccineWhodrugImportPage` pasa sus seis contadores y `rejectedTotal = invalid + duplicated`; su comportamiento no cambia.
+> - La enmienda se extiende al uso de FE25b: `DiagnosticTermImportPage` pasa igual sus seis contadores y `rejectedTotal`.
+>
+> El cuerpo del spec no se reescribe.
 
 ---
 

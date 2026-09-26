@@ -1,21 +1,19 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import '@/shared/config/i18n';
-import { ImportReport, type ImportReportCounters, type ImportReportProps } from './ImportReport';
+import { ImportReport, type ImportReportCounter, type ImportReportProps } from './ImportReport';
 
 interface Rejection {
   row: number;
   reason: string;
 }
 
-const COUNTERS: ImportReportCounters = {
-  read: 100,
-  inserted: 60,
-  updated: 10,
-  unchanged: 30,
-  invalid: 0,
-  duplicated: 0,
-};
+const COUNTERS: ImportReportCounter[] = [
+  { key: 'read', label: 'Leídas', value: 100 },
+  { key: 'inserted', label: 'Insertadas', value: 60 },
+  { key: 'updated', label: 'Actualizadas', value: 10 },
+  { key: 'unchanged', label: 'Sin cambios', value: 30 },
+];
 
 const COLUMNS: ImportReportProps<Rejection>['rejectedColumns'] = [
   { key: 'row', header: 'Fila', render: (rejection) => rejection.row },
@@ -30,6 +28,7 @@ function renderReport(props: Partial<ImportReportProps<Rejection>> = {}) {
   return render(
     <ImportReport
       counters={COUNTERS}
+      rejectedTotal={0}
       dryRun={false}
       rejected={[]}
       rejectedColumns={COLUMNS}
@@ -38,33 +37,38 @@ function renderReport(props: Partial<ImportReportProps<Rejection>> = {}) {
   );
 }
 
-describe('ImportReport (SPEC FE25c §3.9)', () => {
-  it('pinta los seis contadores en orden', () => {
+describe('ImportReport (SPEC FE25c §3.9, generalizado por SPEC FE25d §3.9)', () => {
+  it('pinta los contadores recibidos, con su etiqueta y valor', () => {
     renderReport();
 
     const terms = screen.getAllByRole('term').map((term) => term.textContent);
-    expect(terms).toEqual([
-      'Leídas',
-      'Insertadas',
-      'Actualizadas',
-      'Sin cambios',
-      'Rechazadas',
-      'Duplicadas',
-    ]);
+    expect(terms).toEqual(['Leídas', 'Insertadas', 'Actualizadas', 'Sin cambios']);
     expect(screen.getByText('60')).toBeInTheDocument();
   });
 
-  it('con invalid: 30, duplicated: 0 y 20 rechazos muestra la nota de truncado', () => {
-    renderReport({ counters: { ...COUNTERS, invalid: 30 }, rejected: rejections(20) });
+  it('pinta los contadores en el orden recibido, no en uno propio', () => {
+    renderReport({
+      counters: [
+        { key: 'deactivated', label: 'Retiradas', value: 4 },
+        { key: 'downloaded', label: 'Descargadas', value: 900 },
+        { key: 'inserted', label: 'Insertadas', value: 7 },
+      ],
+    });
+
+    const terms = screen.getAllByRole('term').map((term) => term.textContent);
+    expect(terms).toEqual(['Retiradas', 'Descargadas', 'Insertadas']);
+    const values = screen.getAllByRole('definition').map((value) => value.textContent);
+    expect(values).toEqual(['4', '900', '7']);
+  });
+
+  it('con rejectedTotal: 30 y 20 rechazos muestra la nota de truncado', () => {
+    renderReport({ rejectedTotal: 30, rejected: rejections(20) });
 
     expect(screen.getByText('Se muestran los primeros 20 rechazos.')).toBeInTheDocument();
   });
 
-  it('con tantos rechazos como inválidos y duplicados no muestra la nota de truncado', () => {
-    renderReport({
-      counters: { ...COUNTERS, invalid: 1, duplicated: 1 },
-      rejected: rejections(2),
-    });
+  it('con tantos rechazos como rejectedTotal no muestra la nota de truncado', () => {
+    renderReport({ rejectedTotal: 2, rejected: rejections(2) });
 
     expect(screen.queryByText('Se muestran los primeros 20 rechazos.')).not.toBeInTheDocument();
   });
@@ -77,10 +81,7 @@ describe('ImportReport (SPEC FE25c §3.9)', () => {
   });
 
   it('pinta las columnas configuradas y cada fila con su render', () => {
-    renderReport({
-      counters: { ...COUNTERS, invalid: 1 },
-      rejected: [{ row: 42, reason: 'Motivo traducido' }],
-    });
+    renderReport({ rejectedTotal: 1, rejected: [{ row: 42, reason: 'Motivo traducido' }] });
 
     const table = screen.getByRole('table', { name: 'Filas rechazadas' });
     expect(within(table).getByRole('columnheader', { name: 'Fila' })).toBeInTheDocument();
@@ -94,14 +95,20 @@ describe('ImportReport (SPEC FE25c §3.9)', () => {
     expect(screen.getByText('Simulación: no se escribió nada.')).toBeInTheDocument();
 
     rerender(
-      <ImportReport counters={COUNTERS} dryRun={false} rejected={[]} rejectedColumns={COLUMNS} />,
+      <ImportReport
+        counters={COUNTERS}
+        rejectedTotal={0}
+        dryRun={false}
+        rejected={[]}
+        rejectedColumns={COLUMNS}
+      />,
     );
     expect(screen.queryByText('Simulación: no se escribió nada.')).not.toBeInTheDocument();
   });
 
   it('pinta children entre los contadores y la tabla de rechazos', () => {
     renderReport({
-      counters: { ...COUNTERS, invalid: 1 },
+      rejectedTotal: 1,
       rejected: rejections(1),
       children: <p>Hoja leída: WHODrug</p>,
     });
