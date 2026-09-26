@@ -111,7 +111,9 @@ export function toVaccineWhodrugFormValues(detail: VaccineWhodrugDetail): Vaccin
 // SPEC FE25c §3.5. Every optional field travels, emptied as `null` — omitting a key would keep
 // the stored value, `null` is how the backend empties the column. `isActive` never travels: it is
 // not in the form, and 005A/005B own it.
-export function toVaccineWhodrugPayload(values: VaccineWhodrugFormValues): CreateVaccineWhodrugInput {
+export function toVaccineWhodrugPayload(
+  values: VaccineWhodrugFormValues,
+): CreateVaccineWhodrugInput {
   const optionalText = Object.fromEntries(
     VACCINE_WHODRUG_OPTIONAL_TEXT_FIELDS.map((field) => [
       field,

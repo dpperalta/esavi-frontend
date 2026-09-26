@@ -190,8 +190,9 @@ describe('vaccineWhodrugImportFileSchema', () => {
 
   it('acepta exactamente 20 MB', () => {
     expect(
-      vaccineWhodrugImportFileSchema.safeParse(fileOfSize(MAX_VACCINE_WHODRUG_IMPORT_FILE_SIZE_BYTES))
-        .success,
+      vaccineWhodrugImportFileSchema.safeParse(
+        fileOfSize(MAX_VACCINE_WHODRUG_IMPORT_FILE_SIZE_BYTES),
+      ).success,
     ).toBe(true);
   });
 

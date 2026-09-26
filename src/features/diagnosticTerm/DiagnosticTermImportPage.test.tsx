@@ -126,7 +126,9 @@ describe('DiagnosticTermImportPage (SPEC FE25b §4 paso 6)', () => {
     await user.upload(fileInput(), ascFile());
     await user.click(screen.getByRole('button', { name: 'Simular' }));
 
-    expect(await screen.findByText('El código ya apareció antes en el archivo.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('El código ya apareció antes en el archivo.'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: '42' })).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: '10016558$Fiebre' })).toBeInTheDocument();
   });
