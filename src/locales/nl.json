@@ -1109,6 +1109,143 @@
       "DIAGTERM_007_IMPORT_FAILED": "De import is mislukt en de lopende batch is teruggedraaid; mogelijk loopt er een andere import."
     }
   },
+  "vaccineWhodrug": {
+    "list": {
+      "title": "WHODrug-vaccins",
+      "empty": "Er staan nog geen vaccins in het WHODrug-woordenboek.",
+      "emptyFiltered": "Geen enkel vaccin komt overeen met de filters.",
+      "clearFilters": "Filters wissen",
+      "create": "Vaccin aanmaken",
+      "import": "Woordenboek importeren"
+    },
+    "filters": {
+      "search": "Zoeken op naam of code",
+      "searchHint": "Naam of code van het geneesmiddel, minstens 2 tekens.",
+      "iso3Code": "Land (ISO3)",
+      "iso3CodeHint": "Exacte code, bijvoorbeeld ECU.",
+      "isPreferred": "Voorkeur",
+      "isGeneric": "Generiek",
+      "all": "Alle",
+      "yes": "Ja",
+      "no": "Nee",
+      "open": "Filters"
+    },
+    "detail": {
+      "title": "Vaccindetails",
+      "notFound": "Het vaccin bestaat niet of is gedeactiveerd.",
+      "back": "Terug naar de lijst",
+      "edit": "Bewerken",
+      "audit": "Audit bekijken",
+      "empty": "Geen gegevens"
+    },
+    "form": {
+      "createTitle": "Nieuw WHODrug-vaccin",
+      "editTitle": "WHODrug-vaccin bewerken",
+      "save": "Opslaan",
+      "cancel": "Annuleren",
+      "importedWarning": "Dit vaccin komt uit het WHODrug-woordenboek. De volgende import overschrijft je wijzigingen, behalve de notities.",
+      "unsavedTitle": "Wijzigingen verwerpen?",
+      "unsavedBody": "Dit vaccin heeft niet-opgeslagen wijzigingen. Als je nu vertrekt, gaan ze verloren.",
+      "unsavedDiscard": "Wijzigingen verwerpen",
+      "unsavedStay": "Verder bewerken",
+      "genericUnknown": "Geen gegevens",
+      "diluentHint": "Oplosmiddel zoals het in het woordenboek staat. Vrije tekst, niet de catalogus van oplosmiddelen."
+    },
+    "sections": {
+      "identification": "Identificatie",
+      "classification": "Classificatie",
+      "composition": "Samenstelling",
+      "countryRegistration": "Land en registratie",
+      "presentation": "Presentatie",
+      "notes": "Notities"
+    },
+    "fields": {
+      "drugCode": "Geneesmiddelcode",
+      "drugName": "Naam van het geneesmiddel",
+      "externalId": "Extern id (WHODrug)",
+      "drugRecNo": "Drug Record Number",
+      "drugRecNoSeq": "Volgnummer van het Drug Record Number",
+      "medicinalProductId": "Id van het geneesmiddel",
+      "atcs": "ATC-codes",
+      "icd11": "ICD-11",
+      "icd11Term": "ICD-11-term",
+      "abbreviation": "Afkorting",
+      "isGeneric": "Generiek",
+      "isPreferred": "Voorkeur",
+      "ingredient": "Werkzame stof",
+      "ingredientTranslation": "Werkzame stof (vertaling)",
+      "noDose": "Dosis",
+      "diluent": "Oplosmiddel",
+      "language": "Taal",
+      "languageCode": "Taalcode",
+      "iso3Code": "Land (ISO3)",
+      "countryMedicinalProductId": "Product-id in het land",
+      "maHolders": "Houder van de handelsvergunning",
+      "maHoldersMedicinalProductId": "Product-id van de houder",
+      "form": "Farmaceutische vorm",
+      "formTranslations": "Farmaceutische vorm (vertaling)",
+      "formMedicinalProductId": "Product-id per vorm",
+      "strength": "Sterkte",
+      "strengthMedicinalProductId": "Product-id per sterkte",
+      "notes": "Notities",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Actief",
+      "inactive": "Inactief",
+      "preferred": "Voorkeur"
+    },
+    "actions": {
+      "menu": "Acties voor het vaccin",
+      "view": "Bekijken"
+    },
+    "import": {
+      "title": "WHODrug-woordenboek importeren",
+      "back": "Terug naar WHODrug-vaccins",
+      "file": ".xlsx-bestand",
+      "fileHint": "De WHODrug-vaccinwerkmap, maximaal 20 MB. Het eerste werkblad wordt gelezen.",
+      "dictionaryVersion": "Versie van het woordenboek",
+      "dictionaryVersionHint": "Voorbeeld: WHODrug Global 2025 Sep 1",
+      "simulate": "Simuleren",
+      "run": "Importeren",
+      "confirmTitle": "Dit woordenboek importeren?",
+      "confirmBody": "Hiermee worden de vaccins in de database geschreven en al geïmporteerde rijen overschreven, behalve hun notities. Wil je alleen het bestand controleren, gebruik dan \"Simuleren\".",
+      "confirmAction": "Ja, importeren",
+      "running": "Bezig met importeren… sluit dit tabblad niet.",
+      "viewVaccines": "Vaccins bekijken",
+      "report": {
+        "sheet": "Gelezen werkblad",
+        "missingOptionalHeaders": "Ontbrekende optionele kolomkoppen",
+        "unknownHeaders": "Onbekende kolomkoppen (genegeerd)",
+        "columns": {
+          "row": "Rij",
+          "reason": "Reden",
+          "column": "Kolom"
+        }
+      },
+      "reasons": {
+        "INVALID_EXTERNAL_ID": "Het id is geen geldig geheel getal.",
+        "EMPTY_DRUG_CODE": "De geneesmiddelcode ontbreekt.",
+        "EMPTY_DRUG_NAME": "De naam van het geneesmiddel ontbreekt.",
+        "VALUE_TOO_LONG": "Een waarde is langer dan de kolom toestaat.",
+        "DUPLICATE_IN_FILE": "Het id kwam al eerder in het bestand voor."
+      }
+    },
+    "errors": {
+      "WHODRUG_001_EXTERNAL_ID_EXISTS": "Er bestaat al een vaccin met dit externe id. Het kan bij een gedeactiveerd vaccin horen.",
+      "WHODRUG_004_EXTERNAL_ID_EXISTS": "Er bestaat al een ander vaccin met dit externe id. Het kan bij een gedeactiveerd vaccin horen.",
+      "WHODRUG_003_NOT_FOUND": "Het vaccin bestaat niet of is gedeactiveerd.",
+      "WHODRUG_004_NOT_FOUND": "Het vaccin bestaat niet.",
+      "WHODRUG_005A_NOT_FOUND": "Het vaccin bestaat niet.",
+      "WHODRUG_005B_NOT_FOUND": "Het vaccin bestaat niet.",
+      "WHODRUG_005A_ALREADY_INACTIVE": "Het vaccin was al gedeactiveerd.",
+      "WHODRUG_005B_ALREADY_ACTIVE": "Het vaccin was al actief.",
+      "WHODRUG_007_FILE_REQUIRED": "Kies een .xlsx-bestand.",
+      "WHODRUG_007_FILE_TOO_LARGE": "Het bestand mag niet groter zijn dan 20 MB.",
+      "WHODRUG_007_FILE_INVALID": "Het bestand is geen geldig .xlsx, mist de verplichte kolomkoppen (id, drugCode, drugName, ingredientTranslations) of bevat geen geldige rijen.",
+      "WHODRUG_007_IMPORT_FAILED": "De import is mislukt en de lopende batch is teruggedraaid; mogelijk loopt er al een andere import."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "Beschrijving van het AEFI (klachten en symptomen)",
