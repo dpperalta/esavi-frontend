@@ -9,9 +9,9 @@ import type {
 import { client } from '@/shared/api/client';
 
 // Declared exception to CONVENTIONS.md §5 (no hand-written CRUD hooks), SPEC FE25d §3.4:
-// `whodrugProduct` is a read-only mirror with no `001`, `002A`, `003`, `004` or `005`, so
-// `createResource` would expose `useCreate`/`useUpdate`/`useRemove`/`useOne` over routes that do not
-// exist. The `006` search is not here either: `useWhodrugProductSearch` in notification/api.ts
+// `whodrugProduct` is a read-only mirror with no `001`, `002A`, `003`, `004` or `005`, so the
+// resource factory (shared/api) would expose `useCreate`/`useUpdate`/`useRemove`/`useOne` over
+// routes that do not exist. The `006` search is not here either: `useWhodrugProductSearch` in notification/api.ts
 // consumes it for `<WhodrugProductSearchField>`.
 
 // The validator's floor for both `name` and `ingredient` on the 002B — below it the backend answers
