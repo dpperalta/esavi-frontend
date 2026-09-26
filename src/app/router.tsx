@@ -21,6 +21,10 @@ import { PatientStep } from '@/features/patient/PatientStep';
 import { SystemConfigListPage } from '@/features/systemConfig/SystemConfigListPage';
 import { UserDetailPage } from '@/features/user/UserDetailPage';
 import { UserListPage } from '@/features/user/UserListPage';
+import { VaccineWhodrugDetailPage } from '@/features/vaccineWhodrug/VaccineWhodrugDetailPage';
+import { VaccineWhodrugFormPage } from '@/features/vaccineWhodrug/VaccineWhodrugFormPage';
+import { VaccineWhodrugImportPage } from '@/features/vaccineWhodrug/VaccineWhodrugImportPage';
+import { VaccineWhodrugListPage } from '@/features/vaccineWhodrug/VaccineWhodrugListPage';
 import { RequireAuth } from '@/shared/components/RequireAuth';
 import { RequireRole } from '@/shared/components/RequireRole';
 import { ROLE_LEVELS } from '@/shared/config/roles';
@@ -52,6 +56,10 @@ export function AppRouter() {
                   ADMIN o más. La única de SUPERADMIN (ESAVI-APPROLE-005B) se guarda ocultando su
                   botón, no con la ruta. */}
               <Route path="/roles" element={<AppRoleListPage />} />
+              {/* SPEC FE25c §3.1: ADMIN is the real minimum of ESAVI-WHODRUG-001 and -004. Both
+                  declared before /whodrug-vaccines/:id, so "new" is never read as an id. */}
+              <Route path="/whodrug-vaccines/new" element={<VaccineWhodrugFormPage />} />
+              <Route path="/whodrug-vaccines/:id/edit" element={<VaccineWhodrugFormPage />} />
             </Route>
             {/* SPEC FE19 §2, §6: desviación declarada del rol mínimo real de ESAVI-SYSCONF-002A
                 (USER) — las nueve operaciones útiles de esta pantalla son SUPERADMIN, así que se
@@ -61,6 +69,9 @@ export function AppRouter() {
               {/* SPEC FE25b §3.1: SUPERADMIN is the real minimum of ESAVI-DIAGTERM-007. Declared
                   before /diagnostic-terms, same criterion as /geo-locations/import (SPEC FE07). */}
               <Route path="/diagnostic-terms/import" element={<DiagnosticTermImportPage />} />
+              {/* SPEC FE25c §3.1: SUPERADMIN is the real minimum of ESAVI-WHODRUG-007. Declared
+                  before /whodrug-vaccines/:id, so "import" is never read as an id. */}
+              <Route path="/whodrug-vaccines/import" element={<VaccineWhodrugImportPage />} />
             </Route>
             <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
               <Route path="/catalog-types" element={<CatalogTypeListPage />} />
@@ -74,6 +85,10 @@ export function AppRouter() {
               {/* SPEC FE25b §3.1: USER is the real minimum of ESAVI-DIAGTERM-002A; the ADMIN and
                   SUPERADMIN operations are guarded by hiding their actions, not by the route. */}
               <Route path="/diagnostic-terms" element={<DiagnosticTermListPage />} />
+              {/* SPEC FE25c §3.1: USER is the real minimum of ESAVI-WHODRUG-002A and -003; the
+                  ADMIN and SUPERADMIN operations are guarded by hiding their actions. */}
+              <Route path="/whodrug-vaccines" element={<VaccineWhodrugListPage />} />
+              <Route path="/whodrug-vaccines/:id" element={<VaccineWhodrugDetailPage />} />
               {/* SPEC FE08 §3.1: USER is the real minimum of ESAVI-CASE-001 and of the six
                   caseWorkflow operations the wizard touches (API-ROUTES.md). `:step?` is optional
                   so /esavi-cases/:id/wizard alone resolves to the same page — CaseWizardPage

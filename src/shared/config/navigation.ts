@@ -128,8 +128,8 @@ export const NAVIGATION: NavItem[] = [
         key: 'nav.items.whodrugVaccine',
         icon: Syringe,
         path: '/whodrug-vaccines',
+        // ESAVI-WHODRUG-002A (SPEC FE25c §3.1). Neither the import nor the alta has a NavItem.
         minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
       {
         key: 'nav.items.diluent',
