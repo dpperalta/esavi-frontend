@@ -123,7 +123,6 @@ export const NAVIGATION: NavItem[] = [
         icon: Stethoscope,
         path: '/diagnostic-terms',
         minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
       {
         key: 'nav.items.whodrugVaccine',

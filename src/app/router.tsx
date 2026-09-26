@@ -2,6 +2,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppRoleListPage } from '@/features/appRole/AppRoleListPage';
 import { CatalogItemListPage } from '@/features/catalogItem/CatalogItemListPage';
 import { CatalogTypeListPage } from '@/features/catalogType/CatalogTypeListPage';
+import { DiagnosticTermImportPage } from '@/features/diagnosticTerm/DiagnosticTermImportPage';
+import { DiagnosticTermListPage } from '@/features/diagnosticTerm/DiagnosticTermListPage';
 import { DiluentListPage } from '@/features/diluent/DiluentListPage';
 import { ForgotPasswordPage } from '@/features/auth/ForgotPasswordPage';
 import { LoginPage } from '@/features/auth/LoginPage';
@@ -56,6 +58,9 @@ export function AppRouter() {
                 exige el nivel de la pantalla completa, no el de la lectura más baja. */}
             <Route element={<RequireRole level={ROLE_LEVELS.SUPERADMIN} />}>
               <Route path="/system-configs" element={<SystemConfigListPage />} />
+              {/* SPEC FE25b §3.1: SUPERADMIN is the real minimum of ESAVI-DIAGTERM-007. Declared
+                  before /diagnostic-terms, same criterion as /geo-locations/import (SPEC FE07). */}
+              <Route path="/diagnostic-terms/import" element={<DiagnosticTermImportPage />} />
             </Route>
             <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
               <Route path="/catalog-types" element={<CatalogTypeListPage />} />
@@ -66,6 +71,9 @@ export function AppRouter() {
               {/* SPEC FE25a §3.1: USER is the real minimum of ESAVI-DILUENT-002A; the ADMIN and
                   SUPERADMIN operations are guarded by hiding their actions, not by the route. */}
               <Route path="/diluents" element={<DiluentListPage />} />
+              {/* SPEC FE25b §3.1: USER is the real minimum of ESAVI-DIAGTERM-002A; the ADMIN and
+                  SUPERADMIN operations are guarded by hiding their actions, not by the route. */}
+              <Route path="/diagnostic-terms" element={<DiagnosticTermListPage />} />
               {/* SPEC FE08 §3.1: USER is the real minimum of ESAVI-CASE-001 and of the six
                   caseWorkflow operations the wizard touches (API-ROUTES.md). `:step?` is optional
                   so /esavi-cases/:id/wizard alone resolves to the same page — CaseWizardPage
