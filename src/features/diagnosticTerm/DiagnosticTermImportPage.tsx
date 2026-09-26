@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, ChevronDown, FileText, Loader2 } from 'lucide-react';
-import { type ChangeEvent, useEffect, useId, useRef, useState } from 'react';
+import { type ChangeEvent, useEffect, useId, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { TERM_SOURCES } from '@/contracts/common';
+import type { RejectedDiagnosticTermRow } from '@/contracts/diagnosticTerm';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
+import { ImportReport, type ImportReportColumn } from '@/shared/components/ImportReport';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +40,6 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select';
 import { cn } from '@/shared/lib/utils';
-import { DiagnosticTermImportReport } from './DiagnosticTermImportReport';
 import { useImportDiagnosticTerms } from './importApi';
 import {
   diagnosticTermImportErrorFieldMap,
@@ -56,7 +57,6 @@ export function DiagnosticTermImportPage() {
   const fileHintId = useId();
   const fileErrorId = useId();
   const advancedId = useId();
-  const reportRef = useRef<HTMLElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [fileErrorCode, setFileErrorCode] = useState<string | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -69,7 +69,29 @@ export function DiagnosticTermImportPage() {
 
   // ESAVI-DIAGTERM-007
   const importTerms = useImportDiagnosticTerms();
-  const { reset: resetImport, data: report, isPending: busy } = importTerms;
+  const { reset: resetImport, data: report, isPending: busy, submittedAt } = importTerms;
+
+  const rejectedColumns: ImportReportColumn<RejectedDiagnosticTermRow>[] = [
+    {
+      key: 'line',
+      header: t('diagnosticTerm.import.report.columns.line'),
+      render: (row) => <span className="tabular-nums">{row.line}</span>,
+    },
+    {
+      key: 'reason',
+      header: t('diagnosticTerm.import.report.columns.reason'),
+      render: (row) => t(`diagnosticTerm.import.reasons.${row.reason}`),
+    },
+    {
+      key: 'raw',
+      header: t('diagnosticTerm.import.report.columns.raw'),
+      render: (row) => (
+        <span className="block max-w-[28rem] truncate font-mono text-xs" title={row.raw}>
+          {row.raw}
+        </span>
+      ),
+    },
+  ];
 
   // SPEC FE25b §3.5: a report must never describe a file or options other than the ones about to
   // be imported, so any field change drops it.
@@ -77,12 +99,6 @@ export function DiagnosticTermImportPage() {
     const subscription = form.watch(() => resetImport());
     return () => subscription.unsubscribe();
   }, [form, resetImport]);
-
-  useEffect(() => {
-    if (report) {
-      reportRef.current?.focus();
-    }
-  }, [report]);
 
   const apiError = importTerms.error instanceof EsaviApiError ? importTerms.error : null;
   const serverFileErrorCode =
@@ -371,7 +387,24 @@ export function DiagnosticTermImportPage() {
       </Card>
 
       {/* §3.4: the report is `useMutation().data`, never copied to a useState. */}
-      {report && <DiagnosticTermImportReport ref={reportRef} report={report} />}
+      {report && (
+        <div className="flex min-w-0 flex-col gap-4">
+          {/* `<ImportReport>` focuses its title on mount; keying by submission remounts it for
+              every new response, so a second simulation moves focus again. */}
+          <ImportReport
+            key={submittedAt}
+            counters={report}
+            dryRun={report.dryRun}
+            rejected={report.errors}
+            rejectedColumns={rejectedColumns}
+          />
+          {!report.dryRun && (
+            <Button asChild variant="outline" size="touch" className="w-fit">
+              <Link to="/diagnostic-terms">{t('diagnosticTerm.import.report.viewTerms')}</Link>
+            </Button>
+          )}
+        </div>
+      )}
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>

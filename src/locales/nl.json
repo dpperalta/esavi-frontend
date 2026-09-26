@@ -1078,16 +1078,7 @@
       "confirmAction": "Ja, importeren",
       "running": "Sluit dit tabblad niet; een volledig woordenboek kan enkele minuten duren.",
       "report": {
-        "title": "Importrapport",
-        "dryRunNotice": "Simulatie: er is niets geschreven.",
         "viewTerms": "Termen bekijken",
-        "read": "Gelezen",
-        "inserted": "Toegevoegd",
-        "updated": "Bijgewerkt",
-        "unchanged": "Ongewijzigd",
-        "invalid": "Afgewezen",
-        "duplicated": "Dubbel",
-        "truncatedNotice": "De eerste 20 afwijzingen worden getoond.",
         "columns": {
           "line": "Regel",
           "reason": "Reden",

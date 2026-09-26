@@ -25,7 +25,7 @@ Es el consumo de `ESAVI-WHODRUG-001`…`005B` (SPEC F18 del backend) y de `ESAVI
 
 **E — La caché del detalle ya existe con otra clave.** `useVaccineWhodrugTree.ts:75` guarda el `003` en `['whodrugVaccine', 'detail', id]`. Un recurso nuevo con otra clave crearía una segunda copia del mismo detalle. Además, sus mutaciones no refrescarían los niveles del árbol que usa la notificación.
 
-**F — El informe de importación ya tiene dos usos.** SPEC FE25b dejó `DiagnosticTermImportReport` local a su feature, a la espera del segundo uso. Es éste: los dos informes comparten contadores, marca de simulación, nota de truncado y tabla de rechazos. FE25b todavía no está implementado, así que se extrae ahora, antes de que nazca un duplicado.
+**F — El informe de importación ya tiene dos usos.** SPEC FE25b dejó `DiagnosticTermImportReport` local a su feature, a la espera del segundo uso. Es éste: los dos informes comparten contadores, marca de simulación, nota de truncado y tabla de rechazos. FE25b ya estaba implementado cuando este spec se aprobó (corrección del 2026-09-26), así que la extracción migra su informe a la primitiva y borra el componente local.
 
 ---
 
@@ -63,7 +63,7 @@ Es el consumo de `ESAVI-WHODRUG-001`…`005B` (SPEC F18 del backend) y de `ESAVI
   - un hueco (`children`) para lo propio de cada importación.
 
   Es un componente puro, sin llamadas.
-- **La enmienda a SPEC FE25b:** una nota de implementación tras su header, que sustituye `DiagnosticTermImportReport` por `<ImportReport>`.
+- **La enmienda a SPEC FE25b y la migración de su código:** una nota tras su header, y `DiagnosticTermImportPage` pasa a usar `<ImportReport>`; `DiagnosticTermImportReport.tsx` y sus claves duplicadas se eliminan.
 - **Las actualizaciones de la lista canónica:** en `ARCHITECTURE.md` §4.3 y en `CLAUDE.md`, la cifra «trece» pasa a «catorce» y se añade `<ImportReport>`.
 - **`api.ts`** con `vaccineWhodrugResource` y `key: 'whodrugVaccine'`, e **`importApi.ts`** con la mutación del `007`.
 - **`schemas.ts`**, con los schemas del formulario y de la importación.
@@ -340,7 +340,7 @@ Simular, confirmar e importar, y el descarte del informe al cambiar un campo, ig
 
 **Bloque `common.importReport`**, nuevo, de la primitiva: `title`, `dryRunNotice`, `truncatedNotice`, `read`, `inserted`, `updated`, `unchanged`, `invalid`, `duplicated`, `rejectedTitle`, `noRejected`.
 
-**Efecto en FE25b.** Las claves de `diagnosticTerm.import.report.*` que duplican las de `common.importReport` (`title`, `dryRunNotice`, los seis contadores y `truncatedNotice`) **dejan de crearse**. Quedan solo `viewTerms` y las tres columnas propias.
+**Efecto en FE25b.** Las claves de `diagnosticTerm.import.report.*` que duplican las de `common.importReport` (`title`, `dryRunNotice`, los seis contadores y `truncatedNotice`) **se eliminan**. Quedan solo `viewTerms` y las tres columnas propias.
 
 ### 3.9 Primitiva `<ImportReport>`
 
@@ -381,13 +381,13 @@ Cada paso deja el proyecto compilando y se puede committear por separado. **Ante
    - `children` se pinta entre los contadores y la tabla.
    - `grep -n "trece" CLAUDE.md` ya no devuelve la frase de las primitivas.
 
-2. **Enmienda a SPEC FE25b.** Tras su header se inserta una nota: «**Enmendado por SPEC FE25c (2026-09-25).**». Dice tres cosas:
-   - `DiagnosticTermImportReport.tsx` no se crea: `DiagnosticTermImportPage` usa `<ImportReport>` con columnas `line`, `reason` y `raw`;
-   - las claves duplicadas de `diagnosticTerm.import.report.*` no se crean (§3.8);
-   - su paso 5 queda sin efecto.
+2. **Migración de FE25b y enmienda de su spec.** FE25b ya está implementado (corrección del 2026-09-26), así que este paso migra su código:
+   - `DiagnosticTermImportPage` usa `<ImportReport>` con columnas `line`, `reason` y `raw`. El enlace «Ver términos» pasa a la página, debajo del informe. El informe lleva `key={submittedAt}` para que cada respuesta lo vuelva a montar y el foco vaya a su título;
+   - se eliminan `DiagnosticTermImportReport.tsx` y su test; lo que probaban lo cubren el test de la primitiva y el de la página;
+   - se eliminan las claves duplicadas de `diagnosticTerm.import.report.*` (§3.8).
 
-   El cuerpo del spec no se reescribe.
-   *Verificación:* la nota está justo después del bloque de metadatos de `25b-diagnostic-term-maintenance.md`, y su estado no cambia.
+   Tras el header de `25b-diagnostic-term-maintenance.md` se inserta una nota «**Enmendado por SPEC FE25c (2026-09-25).**» que lo recoge y deja su paso 5 sustituido. El cuerpo del spec no se reescribe.
+   *Verificación:* los tests de `features/diagnosticTerm/` pasan; ningún archivo de `src/` define el componente `DiagnosticTermImportReport` (el tipo homónimo de `contracts/diagnosticTerm.ts` es del contrato y se queda); `npm run i18n:check` sale en 0; la nota está justo después del bloque de metadatos de FE25b.
 
 3. **Contratos.**
    - `contracts/declared/vaccineWhodrug.ts` gana `appDetails: AppDetails[] | null`.
@@ -494,7 +494,7 @@ Cada paso deja el proyecto compilando y se puede committear por separado. **Ante
 
   Además existen `VaccineWhodrugFormPage.tsx`, `VaccineWhodrugImportPage.tsx` e `importApi.ts`.
 - [ ] `<ImportReport>` existe en `shared/components/` y está registrado en `ARCHITECTURE.md` §4.3. `CLAUDE.md` cita catorce primitivas.
-- [ ] SPEC FE25b lleva la nota de enmienda, y ningún archivo de `src/` define `DiagnosticTermImportReport`.
+- [ ] SPEC FE25b lleva la nota de enmienda, `DiagnosticTermImportPage` usa `<ImportReport>`, y ningún archivo de `src/` define el componente `DiagnosticTermImportReport` (el tipo del contrato con ese nombre se queda).
 - [ ] `useOne(id)` del recurso y `useVaccineWhodrugTree` leen la misma entrada `['whodrugVaccine', 'detail', id]`.
 - [ ] Editar una vacuna refresca los niveles del `<WhodrugTreePicker>` sin recargar.
 - [ ] Aplicar la búsqueda, `iso3Code`, `isPreferred` e `isGeneric` y recargar conserva la vista. El enlace la reproduce en otra sesión.
@@ -533,7 +533,7 @@ Cada paso deja el proyecto compilando y se puede committear por separado. **Ante
 - **No:** bloquear la edición de filas importadas. Corregir una errata urgente antes de la próxima carga es legítimo, y el aviso deja la decisión informada.
 - **Sí:** la confirmación al salir cubre `beforeunload` y los botones propios de la página.
 - **No:** bloquear la navegación interna (sidebar, botón atrás). `useBlocker` exige un *data router*, y `app/router.tsx` usa `<BrowserRouter>`. Migrar afecta a todas las rutas y a sus tests; es su propio spec.
-- **Sí:** extraer `<ImportReport>` ahora, con el segundo uso, y enmendar SPEC FE25b antes de que se implemente. Extraer después obligaría a borrar código ya escrito.
+- **Sí:** extraer `<ImportReport>` ahora, con el segundo uso, y migrar a ella el informe de FE25b, que ya estaba implementado. Dejar el duplicado habría contradicho `CONVENTIONS.md` §3: un componente sube a `shared/` con su segundo consumidor y se mueve, no se copia.
 - **No:** migrar `GeoImportReport` a la primitiva. Informa dos hojas con contadores separados: no es la misma forma.
 - **Sí:** la primitiva no traduce `reason`: cada consumidor lo hace en su `render`. Los motivos son propios de cada importación, y una primitiva que conozca los de todas deja de ser genérica.
 - **No:** el filtro `language`. El diccionario real es de un solo idioma.
@@ -549,7 +549,7 @@ Cada paso deja el proyecto compilando y se puede committear por separado. **Ante
 | Un ADMIN corrige una fila importada y la próxima importación deshace el cambio | Aviso de §3.5. `notes` sobrevive y sirve para dejar constancia de la corrección. |
 | Dos `queryFn` distintas escriben la misma entrada de caché y acaban devolviendo formas distintas | Ambas devuelven `VaccineWhodrugDetail` ya desenvuelto. El test del paso 4 lo fija. Si una cambia, el test falla. |
 | Un usuario pierde cambios al pulsar el sidebar con el formulario a medias | Límite aceptado (§6). `beforeunload` y los botones propios cubren los casos más comunes. |
-| Enmendar FE25b después de que alguien haya empezado a implementarlo | FE25b está en `Borrador` y sin código. La nota va en su cabecera, visible para `/spec-impl`. |
+| La migración de FE25b cambia su comportamiento visible | Ocurrió: FE25b ya estaba implementado. La migración conserva contadores, marcas, columnas y el enlace «Ver términos»; solo cambia dónde cae el foco (el título, no la región). Lo fijan los tests de la página. |
 | Invalidar `['whodrugVaccine']` entera tras cada mutación dispara muchas recargas de niveles del árbol | Solo se recargan las consultas **montadas**. En esta pantalla el árbol no está montado, así que se marcan como obsoletas sin coste inmediato. |
 
 ---
@@ -564,6 +564,8 @@ Cada paso deja el proyecto compilando y se puede committear por separado. **Ante
 | `references/ARCHITECTURE.md` §4.3 | Trece primitivas | Catorce, con `<ImportReport>` |
 | `CLAUDE.md` | «hoy son trece» | «hoy son catorce», con `<ImportReport>` en la enumeración |
 | `references/specs/25b-diagnostic-term-maintenance.md` | `DiagnosticTermImportReport` local | Nota de enmienda: usa `<ImportReport>` |
+| `features/diagnosticTerm/DiagnosticTermImportPage.tsx` | Pinta `DiagnosticTermImportReport` y mueve el foco con un `ref` | Pinta `<ImportReport>` con `key={submittedAt}` y «Ver términos» debajo |
+| `features/diagnosticTerm/DiagnosticTermImportReport.tsx` y su test | Existen | Eliminados |
 | `app/router.tsx` | — | Cinco rutas nuevas |
 
 ---

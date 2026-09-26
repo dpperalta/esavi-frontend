@@ -1078,16 +1078,7 @@
       "confirmAction": "Yes, import",
       "running": "Do not close this tab; a full dictionary can take several minutes.",
       "report": {
-        "title": "Import report",
-        "dryRunNotice": "Simulation: nothing was written.",
         "viewTerms": "View terms",
-        "read": "Read",
-        "inserted": "Inserted",
-        "updated": "Updated",
-        "unchanged": "Unchanged",
-        "invalid": "Rejected",
-        "duplicated": "Duplicated",
-        "truncatedNotice": "Showing the first 20 rejections.",
         "columns": {
           "line": "Line",
           "reason": "Reason",

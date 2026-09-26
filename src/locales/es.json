@@ -1078,16 +1078,7 @@
       "confirmAction": "Sí, importar",
       "running": "No cierres esta pestaña; un diccionario completo puede tardar varios minutos.",
       "report": {
-        "title": "Informe de la importación",
-        "dryRunNotice": "Simulación: no se escribió nada.",
         "viewTerms": "Ver términos",
-        "read": "Leídas",
-        "inserted": "Insertadas",
-        "updated": "Actualizadas",
-        "unchanged": "Sin cambios",
-        "invalid": "Rechazadas",
-        "duplicated": "Duplicadas",
-        "truncatedNotice": "Se muestran los primeros 20 rechazos.",
         "columns": {
           "line": "Línea",
           "reason": "Motivo",

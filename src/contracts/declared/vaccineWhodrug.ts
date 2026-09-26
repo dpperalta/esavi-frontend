@@ -1,3 +1,5 @@
+import type { AppDetails } from '@/contracts/common';
+
 // NOT a mirror: the backend returns the flattened Sequelize instance directly (no response
 // literal `contracts:sync` could copy), with `sysDetails` excluded before it leaves the service
 // (`stripSysDetails`, esavi-backend/src/services/vaccineWhodrug.service.ts). Reconciled by hand
@@ -6,7 +8,8 @@
 // GET /api/whodrug-vaccines/:id (ESAVI-WHODRUG-003) — the full row `<WhodrugTreePicker>` resolves
 // once a level's option carries a `vaccineWhodrugId` (`matchCount === 1`). `whoCode`/`vaccineCode`/
 // `vaccineName` (SPEC FE12c §3.5) copy from `drugCode`/`drugCode`/`drugName` respectively — never
-// this interface's own field names, which stay the dictionary's.
+// this interface's own field names, which stay the dictionary's. `002A`/`002B` return the same
+// full row, so it is also the list row of the maintenance screens (SPEC FE25c §3.3).
 export interface VaccineWhodrugDetail {
   vaccineWhodrugId: string;
   externalId: number | null;
@@ -42,4 +45,7 @@ export interface VaccineWhodrugDetail {
   createdAt: string;
   updatedAt: string | null;
   deletedAt: string | null;
+  // The column is NOT NULL, but seed rows can carry `{}`; `<AuditTrail>` guards with
+  // `Array.isArray` (CONVENTIONS.md §10.4).
+  appDetails: AppDetails[] | null;
 }
