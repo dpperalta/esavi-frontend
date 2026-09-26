@@ -25,6 +25,8 @@ import { VaccineWhodrugDetailPage } from '@/features/vaccineWhodrug/VaccineWhodr
 import { VaccineWhodrugFormPage } from '@/features/vaccineWhodrug/VaccineWhodrugFormPage';
 import { VaccineWhodrugImportPage } from '@/features/vaccineWhodrug/VaccineWhodrugImportPage';
 import { VaccineWhodrugListPage } from '@/features/vaccineWhodrug/VaccineWhodrugListPage';
+import { WhodrugProductListPage } from '@/features/whodrugProduct/WhodrugProductListPage';
+import { WhodrugProductSyncPage } from '@/features/whodrugProduct/WhodrugProductSyncPage';
 import { RequireAuth } from '@/shared/components/RequireAuth';
 import { RequireRole } from '@/shared/components/RequireRole';
 import { ROLE_LEVELS } from '@/shared/config/roles';
@@ -72,6 +74,15 @@ export function AppRouter() {
               {/* SPEC FE25c §3.1: SUPERADMIN is the real minimum of ESAVI-WHODRUG-007. Declared
                   before /whodrug-vaccines/:id, so "import" is never read as an id. */}
               <Route path="/whodrug-vaccines/import" element={<VaccineWhodrugImportPage />} />
+              {/* SPEC FE25d §3.1: SUPERADMIN is the real minimum of ESAVI-WHODPROD-007. Declared
+                  before /whodrug-products, same criterion as /diagnostic-terms/import. */}
+              <Route path="/whodrug-products/sync" element={<WhodrugProductSyncPage />} />
+            </Route>
+            {/* SPEC FE25d §3.1: ADMIN is the real minimum of ESAVI-WHODPROD-002B, the only listing.
+                A second ADMIN group, after the SUPERADMIN one, so /whodrug-products/sync is
+                declared first. */}
+            <Route element={<RequireRole level={ROLE_LEVELS.ADMIN} />}>
+              <Route path="/whodrug-products" element={<WhodrugProductListPage />} />
             </Route>
             <Route element={<RequireRole level={ROLE_LEVELS.USER} />}>
               <Route path="/catalog-types" element={<CatalogTypeListPage />} />

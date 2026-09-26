@@ -16,7 +16,7 @@ describe('filterNavigationByLevel', () => {
     expect(visible.some((item) => item.key === 'nav.home')).toBe(true);
   });
 
-  it('con USER aparecen todos los hijos menos «Usuarios», «Roles» y «Configuraciones»', () => {
+  it('con USER aparecen todos los hijos menos «Usuarios», «Roles», «Configuraciones» y «Medicamentos WHODrug»', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.USER);
 
     expect(countChildren(visible)).toBe(15);
@@ -28,24 +28,27 @@ describe('filterNavigationByLevel', () => {
     // SPEC FE21 §3.1, §6 — desviación declarada: appRole exige ADMIN aunque el rol mínimo real
     // de ESAVI-APPROLE-002A sea USER. Hasta este spec el ítem estaba `disabled`.
     expect(allKeys).not.toContain('nav.items.appRole');
+    // SPEC FE25d §3.1 — ADMIN, the real minimum of ESAVI-WHODPROD-002B, its only listing.
+    expect(allKeys).not.toContain('nav.items.whodrugProduct');
   });
 
-  it('con ADMIN aparecen dieciocho hijos, sin «Configuraciones»', () => {
+  it('con ADMIN aparecen diecinueve hijos, sin «Configuraciones»', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.ADMIN);
 
-    expect(countChildren(visible)).toBe(18);
+    expect(countChildren(visible)).toBe(19);
     const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
     expect(allKeys).toContain('nav.items.user');
     expect(allKeys).toContain('nav.items.appRole');
     // SPEC FE07 §3.1 — geoBulkImport's minLevel is ADMIN, the real minimum of ESAVI-GEOLOC-007.
     expect(allKeys).toContain('nav.items.geoBulkImport');
+    expect(allKeys).toContain('nav.items.whodrugProduct');
     expect(allKeys).not.toContain('nav.items.systemConfig');
   });
 
-  it('con SUPERADMIN aparecen los diecinueve, incluida «Configuraciones»', () => {
+  it('con SUPERADMIN aparecen los veinte, incluida «Configuraciones»', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.SUPERADMIN);
 
-    expect(countChildren(visible)).toBe(19);
+    expect(countChildren(visible)).toBe(20);
     const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
     expect(allKeys).toContain('nav.items.systemConfig');
   });
