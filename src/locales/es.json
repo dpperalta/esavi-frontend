@@ -1246,6 +1246,16 @@
       "WHODRUG_007_IMPORT_FAILED": "La importación falló y se revirtió el lote en curso; puede que otra importación esté corriendo."
     }
   },
+  "whodrugProduct": {
+    "errors": {
+      "WHODPROD_007_DISABLED": "La sincronización con WHODrug está desactivada en este despliegue.",
+      "WHODPROD_007_NOT_CONFIGURED": "Faltan las credenciales o la URL de WHODrug.",
+      "WHODPROD_007_DOWNLOAD_FAILED": "No se pudo descargar el estándar desde la UMC (error, formato inesperado o tiempo agotado). No se escribió nada.",
+      "WHODPROD_007_ALREADY_RUNNING": "Ya hay una sincronización en curso; espera a que termine.",
+      "WHODPROD_007_SYNC_FAILED": "La sincronización falló; los lotes ya escritos se conservan y puedes volver a lanzarla.",
+      "WHODPROD_002B_FETCH_FAILED": "No se pudo cargar el listado de medicamentos WHODrug."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "Descripción del ESAVI (signos y síntomas)",

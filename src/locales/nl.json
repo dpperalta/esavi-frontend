@@ -1246,6 +1246,16 @@
       "WHODRUG_007_IMPORT_FAILED": "De import is mislukt en de lopende batch is teruggedraaid; mogelijk loopt er al een andere import."
     }
   },
+  "whodrugProduct": {
+    "errors": {
+      "WHODPROD_007_DISABLED": "Synchronisatie met WHODrug is uitgeschakeld in deze omgeving.",
+      "WHODPROD_007_NOT_CONFIGURED": "De inloggegevens of de URL van WHODrug ontbreken.",
+      "WHODPROD_007_DOWNLOAD_FAILED": "De standaard kon niet worden gedownload van het UMC (fout, onverwacht formaat of time-out). Er is niets weggeschreven.",
+      "WHODPROD_007_ALREADY_RUNNING": "Er loopt al een synchronisatie; wacht tot deze klaar is.",
+      "WHODPROD_007_SYNC_FAILED": "De synchronisatie is mislukt; de al weggeschreven batches blijven bewaard en u kunt haar opnieuw starten.",
+      "WHODPROD_002B_FETCH_FAILED": "De lijst met WHODrug-geneesmiddelen kon niet worden geladen."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "Beschrijving van het AEFI (klachten en symptomen)",

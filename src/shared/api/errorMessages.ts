@@ -201,6 +201,14 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   MEDDRA_006_AUTH_FAILED: 'notification.events.meddraUnavailable',
   WHODPROD_006_NOT_CONFIGURED: 'notification.medications.catalogUnavailable',
   WHODPROD_006_FETCH_FAILED: 'notification.medications.catalogUnavailable',
+  // SPEC FE25d §3.5 — the sync page renders these as alerts (DISABLED/NOT_CONFIGURED with the link
+  // to the WHODrug config); the map is the stable fallback for any other caller.
+  WHODPROD_007_DISABLED: 'whodrugProduct.errors.WHODPROD_007_DISABLED',
+  WHODPROD_007_NOT_CONFIGURED: 'whodrugProduct.errors.WHODPROD_007_NOT_CONFIGURED',
+  WHODPROD_007_DOWNLOAD_FAILED: 'whodrugProduct.errors.WHODPROD_007_DOWNLOAD_FAILED',
+  WHODPROD_007_ALREADY_RUNNING: 'whodrugProduct.errors.WHODPROD_007_ALREADY_RUNNING',
+  WHODPROD_007_SYNC_FAILED: 'whodrugProduct.errors.WHODPROD_007_SYNC_FAILED',
+  WHODPROD_002B_FETCH_FAILED: 'whodrugProduct.errors.WHODPROD_002B_FETCH_FAILED',
   // SPEC FE13c §3.5, §7.D — the three write-path codes per entity that ought to be unreachable in
   // normal use (the same criterion FE11/FE12a applied to `CLASSIF_*`/`NOTIFCN_*`): the `caseId`/
   // `investigationId` the dialogs send always comes from state this screen already confirmed

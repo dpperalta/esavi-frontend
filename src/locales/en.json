@@ -1246,6 +1246,16 @@
       "WHODRUG_007_IMPORT_FAILED": "The import failed and the current batch was rolled back; another import may be running."
     }
   },
+  "whodrugProduct": {
+    "errors": {
+      "WHODPROD_007_DISABLED": "WHODrug synchronization is disabled in this deployment.",
+      "WHODPROD_007_NOT_CONFIGURED": "The WHODrug credentials or URL are missing.",
+      "WHODPROD_007_DOWNLOAD_FAILED": "The standard could not be downloaded from the UMC (error, unexpected format or timeout). Nothing was written.",
+      "WHODPROD_007_ALREADY_RUNNING": "A synchronization is already running; wait for it to finish.",
+      "WHODPROD_007_SYNC_FAILED": "The synchronization failed; the batches already written are kept and you can run it again.",
+      "WHODPROD_002B_FETCH_FAILED": "The WHODrug medicines list could not be loaded."
+    }
+  },
   "notification": {
     "fields": {
       "esaviDescription": "AEFI description (signs and symptoms)",
