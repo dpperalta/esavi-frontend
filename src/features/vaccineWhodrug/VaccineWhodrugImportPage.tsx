@@ -43,6 +43,14 @@ import {
 
 const IMPORT_FAILED_CODE = 'WHODRUG_007_IMPORT_FAILED';
 const LIST_PATH = '/whodrug-vaccines';
+const REPORT_COUNTER_KEYS = [
+  'read',
+  'inserted',
+  'updated',
+  'unchanged',
+  'invalid',
+  'duplicated',
+] as const;
 
 function HeaderList({ title, headers }: { title: string; headers: string[] }) {
   if (headers.length === 0) return null;
@@ -305,7 +313,12 @@ export function VaccineWhodrugImportPage() {
               every new response, so a second simulation moves focus again. */}
           <ImportReport
             key={submittedAt}
-            counters={report}
+            counters={REPORT_COUNTER_KEYS.map((key) => ({
+              key,
+              label: t(`common.importReport.${key}`),
+              value: report[key],
+            }))}
+            rejectedTotal={report.invalid + report.duplicated}
             dryRun={report.dryRun}
             rejected={report.errors}
             rejectedColumns={rejectedColumns}
