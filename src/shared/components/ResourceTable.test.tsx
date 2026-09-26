@@ -78,6 +78,18 @@ describe('ResourceTable — estado vacío', () => {
 
     expect(screen.getByText('Ningún registro coincide con los filtros.')).toBeInTheDocument();
   });
+
+  it('pinta emptyExtraAction en el estado vacío sin filtros, y no en el filtrado', () => {
+    const extra = <button type="button">Acción extra</button>;
+    const { unmount } = renderTable({ data: { count: 0, rows: [] }, emptyExtraAction: extra });
+
+    expect(screen.getByRole('button', { name: 'Acción extra' })).toBeInTheDocument();
+    unmount();
+
+    renderTable({ data: { count: 0, rows: [] }, emptyExtraAction: extra, isFiltered: true });
+
+    expect(screen.queryByRole('button', { name: 'Acción extra' })).not.toBeInTheDocument();
+  });
 });
 
 describe('ResourceTable — carga', () => {
