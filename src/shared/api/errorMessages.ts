@@ -310,6 +310,15 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   DIAGTERM_005B_NOT_FOUND: 'diagnosticTerm.errors.DIAGTERM_005B_NOT_FOUND',
   DIAGTERM_005A_ALREADY_INACTIVE: 'diagnosticTerm.errors.DIAGTERM_005A_ALREADY_INACTIVE',
   DIAGTERM_005B_ALREADY_ACTIVE: 'diagnosticTerm.errors.DIAGTERM_005B_ALREADY_ACTIVE',
+  // SPEC FE25c §3.5 — the WHODrug vaccine codes with no field to mark. The two
+  // `EXTERNAL_ID_EXISTS` and the three file codes of 007 are absent: their error field maps route
+  // them to a field, and `IMPORT_FAILED` is a page alert of VaccineWhodrugImportPage.
+  WHODRUG_003_NOT_FOUND: 'vaccineWhodrug.errors.WHODRUG_003_NOT_FOUND',
+  WHODRUG_004_NOT_FOUND: 'vaccineWhodrug.errors.WHODRUG_004_NOT_FOUND',
+  WHODRUG_005A_NOT_FOUND: 'vaccineWhodrug.errors.WHODRUG_005A_NOT_FOUND',
+  WHODRUG_005B_NOT_FOUND: 'vaccineWhodrug.errors.WHODRUG_005B_NOT_FOUND',
+  WHODRUG_005A_ALREADY_INACTIVE: 'vaccineWhodrug.errors.WHODRUG_005A_ALREADY_INACTIVE',
+  WHODRUG_005B_ALREADY_ACTIVE: 'vaccineWhodrug.errors.WHODRUG_005B_ALREADY_ACTIVE',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {

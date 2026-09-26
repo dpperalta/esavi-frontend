@@ -102,6 +102,19 @@
       "unknown": "Unknown",
       "notApplicable": "Not applicable",
       "noAnswer": "No answer"
+    },
+    "importReport": {
+      "title": "Import report",
+      "dryRunNotice": "Simulation: nothing was written.",
+      "truncatedNotice": "Showing the first 20 rejections.",
+      "read": "Read",
+      "inserted": "Inserted",
+      "updated": "Updated",
+      "unchanged": "Unchanged",
+      "invalid": "Rejected",
+      "duplicated": "Duplicated",
+      "rejectedTitle": "Rejected rows",
+      "noRejected": "No rows were rejected."
     }
   },
   "auth": {
@@ -1065,16 +1078,7 @@
       "confirmAction": "Yes, import",
       "running": "Do not close this tab; a full dictionary can take several minutes.",
       "report": {
-        "title": "Import report",
-        "dryRunNotice": "Simulation: nothing was written.",
         "viewTerms": "View terms",
-        "read": "Read",
-        "inserted": "Inserted",
-        "updated": "Updated",
-        "unchanged": "Unchanged",
-        "invalid": "Rejected",
-        "duplicated": "Duplicated",
-        "truncatedNotice": "Showing the first 20 rejections.",
         "columns": {
           "line": "Line",
           "reason": "Reason",
@@ -1103,6 +1107,143 @@
       "DIAGTERM_007_FILE_TOO_LARGE": "The file cannot exceed 20 MB.",
       "DIAGTERM_007_FILE_INVALID": "No valid line was found; check that it is a MedDRA .asc file.",
       "DIAGTERM_007_IMPORT_FAILED": "The import failed and the current batch was rolled back; another import may be running."
+    }
+  },
+  "vaccineWhodrug": {
+    "list": {
+      "title": "WHODrug vaccines",
+      "empty": "There are no vaccines in the WHODrug dictionary yet.",
+      "emptyFiltered": "No vaccine matches the filters.",
+      "clearFilters": "Clear filters",
+      "create": "Create vaccine",
+      "import": "Import dictionary"
+    },
+    "filters": {
+      "search": "Search by name or code",
+      "searchHint": "Drug name or code, at least 2 characters.",
+      "iso3Code": "Country (ISO3)",
+      "iso3CodeHint": "Exact code, for example ECU.",
+      "isPreferred": "Preferred",
+      "isGeneric": "Generic",
+      "all": "All",
+      "yes": "Yes",
+      "no": "No",
+      "open": "Filters"
+    },
+    "detail": {
+      "title": "Vaccine details",
+      "notFound": "The vaccine does not exist or has been deactivated.",
+      "back": "Back to list",
+      "edit": "Edit",
+      "audit": "View audit",
+      "empty": "No data"
+    },
+    "form": {
+      "createTitle": "New WHODrug vaccine",
+      "editTitle": "Edit WHODrug vaccine",
+      "save": "Save",
+      "cancel": "Cancel",
+      "importedWarning": "This vaccine comes from the WHODrug dictionary. The next import will overwrite your changes, except the notes.",
+      "unsavedTitle": "Discard changes?",
+      "unsavedBody": "This vaccine has unsaved changes. If you leave now, they will be lost.",
+      "unsavedDiscard": "Discard changes",
+      "unsavedStay": "Keep editing",
+      "genericUnknown": "No data",
+      "diluentHint": "Diluent as it appears in the dictionary. Free text, not the diluent catalog."
+    },
+    "sections": {
+      "identification": "Identification",
+      "classification": "Classification",
+      "composition": "Composition",
+      "countryRegistration": "Country and registration",
+      "presentation": "Presentation",
+      "notes": "Notes"
+    },
+    "fields": {
+      "drugCode": "Drug code",
+      "drugName": "Drug name",
+      "externalId": "External id (WHODrug)",
+      "drugRecNo": "Drug Record Number",
+      "drugRecNoSeq": "Drug Record Number sequence",
+      "medicinalProductId": "Medicinal product id",
+      "atcs": "ATC codes",
+      "icd11": "ICD-11",
+      "icd11Term": "ICD-11 term",
+      "abbreviation": "Abbreviation",
+      "isGeneric": "Generic",
+      "isPreferred": "Preferred",
+      "ingredient": "Active ingredient",
+      "ingredientTranslation": "Active ingredient (translation)",
+      "noDose": "Dose",
+      "diluent": "Diluent",
+      "language": "Language",
+      "languageCode": "Language code",
+      "iso3Code": "Country (ISO3)",
+      "countryMedicinalProductId": "Country product id",
+      "maHolders": "Marketing authorization holder",
+      "maHoldersMedicinalProductId": "Holder product id",
+      "form": "Pharmaceutical form",
+      "formTranslations": "Pharmaceutical form (translation)",
+      "formMedicinalProductId": "Form product id",
+      "strength": "Strength",
+      "strengthMedicinalProductId": "Strength product id",
+      "notes": "Notes",
+      "isActive": "Status"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "preferred": "Preferred"
+    },
+    "actions": {
+      "menu": "Vaccine actions",
+      "view": "View"
+    },
+    "import": {
+      "title": "Import WHODrug dictionary",
+      "back": "Back to WHODrug vaccines",
+      "file": ".xlsx file",
+      "fileHint": "The WHODrug vaccine workbook, 20 MB at most. The first sheet is read.",
+      "dictionaryVersion": "Dictionary version",
+      "dictionaryVersionHint": "Example: WHODrug Global 2025 Sep 1",
+      "simulate": "Simulate",
+      "run": "Import",
+      "confirmTitle": "Import this dictionary?",
+      "confirmBody": "This will write the vaccines to the database and overwrite already imported rows, except their notes. If you only want to check the file, use \"Simulate\".",
+      "confirmAction": "Yes, import",
+      "running": "Importing… do not close this tab.",
+      "viewVaccines": "View vaccines",
+      "report": {
+        "sheet": "Sheet read",
+        "missingOptionalHeaders": "Missing optional headers",
+        "unknownHeaders": "Unknown headers (ignored)",
+        "columns": {
+          "row": "Row",
+          "reason": "Reason",
+          "column": "Column"
+        }
+      },
+      "reasons": {
+        "INVALID_EXTERNAL_ID": "The id is not a valid integer.",
+        "EMPTY_DRUG_CODE": "The drug code is missing.",
+        "EMPTY_DRUG_NAME": "The drug name is missing.",
+        "VALUE_TOO_LONG": "A value exceeds the length of its column.",
+        "DUPLICATE_IN_FILE": "The id already appeared earlier in the file."
+      }
+    },
+    "errors": {
+      "WHODRUG_001_EXTERNAL_ID_EXISTS": "A vaccine with this external id already exists. It may belong to a deactivated vaccine.",
+      "WHODRUG_004_EXTERNAL_ID_EXISTS": "Another vaccine with this external id already exists. It may belong to a deactivated vaccine.",
+      "WHODRUG_003_NOT_FOUND": "The vaccine does not exist or has been deactivated.",
+      "WHODRUG_004_NOT_FOUND": "The vaccine does not exist.",
+      "WHODRUG_005A_NOT_FOUND": "The vaccine does not exist.",
+      "WHODRUG_005B_NOT_FOUND": "The vaccine does not exist.",
+      "WHODRUG_005A_ALREADY_INACTIVE": "The vaccine was already deactivated.",
+      "WHODRUG_005B_ALREADY_ACTIVE": "The vaccine was already active.",
+      "WHODRUG_007_FILE_REQUIRED": "Choose an .xlsx file.",
+      "WHODRUG_007_FILE_TOO_LARGE": "The file cannot exceed 20 MB.",
+      "WHODRUG_007_FILE_INVALID": "The file is not a valid .xlsx, is missing the required headers (id, drugCode, drugName, ingredientTranslations) or has no valid rows.",
+      "WHODRUG_007_IMPORT_FAILED": "The import failed and the current batch was rolled back; another import may be running."
     }
   },
   "notification": {

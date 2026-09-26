@@ -101,8 +101,36 @@ describe('DiagnosticTermImportPage (SPEC FE25b §4 paso 6)', () => {
     expect(body).toContain('name="termGroup"\r\n\r\nLLT');
     expect(body).toContain('name="encoding"\r\n\r\nutf8');
     await waitFor(() =>
-      expect(screen.getByRole('region', { name: 'Informe de la importación' })).toHaveFocus(),
+      expect(screen.getByRole('heading', { name: 'Informe de la importación' })).toHaveFocus(),
     );
+    expect(screen.queryByRole('link', { name: 'Ver términos' })).not.toBeInTheDocument();
+  });
+
+  it('pinta los rechazos con la línea, el motivo traducido y el contenido', async () => {
+    const user = setupUser();
+    server.use(
+      http.post(IMPORT_URL, () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            ...buildReport(true),
+            invalid: 1,
+            errors: [{ line: 42, reason: 'DUPLICATE_IN_FILE', raw: '10016558$Fiebre' }],
+          },
+        }),
+      ),
+    );
+
+    renderPage();
+    await user.upload(fileInput(), ascFile());
+    await user.click(screen.getByRole('button', { name: 'Simular' }));
+
+    expect(
+      await screen.findByText('El código ya apareció antes en el archivo.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: '42' })).toBeInTheDocument();
+    expect(screen.getByRole('cell', { name: '10016558$Fiebre' })).toBeInTheDocument();
   });
 
   it('cambiar el archivo después de simular borra el informe', async () => {

@@ -1,9 +1,16 @@
 # SPEC FE25b — Mantenimiento e importación de términos diagnósticos
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE25a (patrón de listado + diálogo + auditoría de catálogos clínicos), SPEC FE07 (flujo simular → importar), SPEC FE02 (fábrica de recursos), SPEC F15 del backend (CRUD de `diagnosticTerm` y resolución implícita `006`), SPEC F17 del backend (importación `.asc`)
 > **Fecha:** 2026-09-25
 > **Objetivo:** Dar al maestro de términos diagnósticos una pantalla en `/diagnostic-terms` para buscar, filtrar, mantener y revisar los términos, y otra en `/diagnostic-terms/import` para cargar el diccionario MedDRA desde un `.asc`.
+
+> **Enmendado por SPEC FE25c (2026-09-25).** Este spec ya estaba implementado cuando FE25c extrajo la primitiva, así que la enmienda migra código existente en lugar de evitarlo:
+> - `DiagnosticTermImportReport.tsx` y su test **se eliminan**. `DiagnosticTermImportPage` usa `<ImportReport>` (`shared/components/`) con las columnas `line`, `reason` y `raw`, y el enlace «Ver términos» pasa a la página, debajo del informe.
+> - Las claves de `diagnosticTerm.import.report.*` duplicadas en `common.importReport` (`title`, `dryRunNotice`, los seis contadores y `truncatedNotice`) **se eliminan**. Quedan `viewTerms` y las tres columnas (FE25c §3.8).
+> - El paso 5 de §4 queda sustituido por lo anterior. El foco va al título del informe, no a su región (FE25c §3.9).
+>
+> El cuerpo del spec no se reescribe.
 
 ---
 
