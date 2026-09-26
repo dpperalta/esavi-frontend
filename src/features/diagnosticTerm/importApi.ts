@@ -1,5 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { DiagnosticTermImportReport, ImportDiagnosticTermsInput } from '@/contracts/diagnosticTerm';
+import type {
+  DiagnosticTermImportReport,
+  ImportDiagnosticTermsInput,
+} from '@/contracts/diagnosticTerm';
 import { client } from '@/shared/api/client';
 
 export interface ImportDiagnosticTermsVariables extends Omit<ImportDiagnosticTermsInput, 'dryRun'> {
