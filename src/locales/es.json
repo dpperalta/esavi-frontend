@@ -159,7 +159,12 @@
       "logout": "Cerrar sesión",
       "logoutConfirm": "¿Seguro que quieres cerrar sesión?",
       "logoutAll": "Cerrar todas las sesiones",
-      "logoutAllConfirm": "Esto cerrará tu sesión en todos los dispositivos donde hayas iniciado sesión. ¿Continuar?"
+      "logoutAllConfirm": "Esto cerrará tu sesión en todos los dispositivos donde hayas iniciado sesión. ¿Continuar?",
+      "logoutAllDone_one": "Se cerró {{count}} sesión",
+      "logoutAllDone_other": "Se cerraron {{count}} sesiones"
+    },
+    "errors": {
+      "logoutAllFailed": "No se pudieron cerrar las sesiones. Tu sesión sigue abierta; inténtalo de nuevo."
     }
   },
   "nav": {
@@ -2135,6 +2140,9 @@
   "shell": {
     "userMenu": {
       "trigger": "Menú de usuario"
+    },
+    "sessionMenu": {
+      "trigger": "Sesión"
     }
   },
   "settings": {

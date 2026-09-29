@@ -159,7 +159,12 @@
       "logout": "Uitloggen",
       "logoutConfirm": "Weet u zeker dat u wilt uitloggen?",
       "logoutAll": "Overal uitloggen",
-      "logoutAllConfirm": "Hiermee wordt u uitgelogd op alle apparaten waarop u bent ingelogd. Doorgaan?"
+      "logoutAllConfirm": "Hiermee wordt u uitgelogd op alle apparaten waarop u bent ingelogd. Doorgaan?",
+      "logoutAllDone_one": "{{count}} sessie is gesloten",
+      "logoutAllDone_other": "{{count}} sessies zijn gesloten"
+    },
+    "errors": {
+      "logoutAllFailed": "De sessies konden niet worden gesloten. U bent nog steeds ingelogd; probeer het opnieuw."
     }
   },
   "nav": {
@@ -2135,6 +2140,9 @@
   "shell": {
     "userMenu": {
       "trigger": "Gebruikersmenu"
+    },
+    "sessionMenu": {
+      "trigger": "Sessie"
     }
   },
   "settings": {

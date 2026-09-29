@@ -327,6 +327,8 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   WHODRUG_005B_NOT_FOUND: 'vaccineWhodrug.errors.WHODRUG_005B_NOT_FOUND',
   WHODRUG_005A_ALREADY_INACTIVE: 'vaccineWhodrug.errors.WHODRUG_005A_ALREADY_INACTIVE',
   WHODRUG_005B_ALREADY_ACTIVE: 'vaccineWhodrug.errors.WHODRUG_005B_ALREADY_ACTIVE',
+  // SPEC FE27 §3.5 — the only own code of ESAVI-AUTH-004.
+  AUTH_004_LOGOUT_ALL_FAILED: 'auth.errors.logoutAllFailed',
 };
 
 export function getErrorMessage(error: EsaviApiError): string {
