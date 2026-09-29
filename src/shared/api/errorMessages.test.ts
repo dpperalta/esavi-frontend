@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getErrorMessage } from './errorMessages';
+import { getErrorMessage, isAlreadyActiveError } from './errorMessages';
 import { EsaviApiError } from './types';
 
 describe('getErrorMessage', () => {
@@ -181,5 +181,37 @@ describe('getErrorMessage', () => {
     );
 
     expect(getErrorMessage(error)).toBe('Ya existe un rol con el código SUPERVISOR.');
+  });
+});
+
+describe('isAlreadyActiveError — SPEC FE29 §3.5', () => {
+  it('reconoce cualquier `<PREFIX>_005B_ALREADY_ACTIVE`', () => {
+    expect(
+      isAlreadyActiveError(new EsaviApiError('ya activo', 409, 'NOTIFEVT_005B_ALREADY_ACTIVE')),
+    ).toBe(true);
+    expect(
+      isAlreadyActiveError(new EsaviApiError('ya activo', 409, 'INVDIAG_005B_ALREADY_ACTIVE')),
+    ).toBe(true);
+  });
+
+  it('no reconoce otros códigos', () => {
+    expect(
+      isAlreadyActiveError(new EsaviApiError('cerrado', 409, 'NOTIFEVT_005B_CASE_CLOSED')),
+    ).toBe(false);
+    expect(
+      isAlreadyActiveError(new EsaviApiError('inactivo', 409, 'NOTIFEVT_005A_ALREADY_INACTIVE')),
+    ).toBe(false);
+  });
+
+  it('con `code` ausente no lanza y devuelve false', () => {
+    const error = new EsaviApiError('sin código', 409, undefined as unknown as string);
+
+    expect(() => isAlreadyActiveError(error)).not.toThrow();
+    expect(isAlreadyActiveError(error)).toBe(false);
+  });
+
+  it('con algo que no es un EsaviApiError devuelve false', () => {
+    expect(isAlreadyActiveError(new Error('boom'))).toBe(false);
+    expect(isAlreadyActiveError(undefined)).toBe(false);
   });
 });
