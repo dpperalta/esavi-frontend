@@ -2300,6 +2300,23 @@
       "partial": "Algunos roles no se pudieron retirar: {{roles}}.",
       "empty": "Este usuario no tiene ningún rol asignado y no podrá hacer nada hasta que se le asigne uno."
     },
+    "roleHistory": {
+      "open": "Historial",
+      "title": "Historial de roles",
+      "description": "Todas las asignaciones de rol de este usuario, vigentes y revocadas.",
+      "status": {
+        "active": "Vigente",
+        "revoked": "Revocado"
+      },
+      "assignedAt": "Asignado el",
+      "revokedAt": "Revocado el",
+      "empty": "Este usuario nunca ha tenido un rol asignado.",
+      "roleRetired": "El rol está retirado. Reactívalo primero en la pantalla de roles.",
+      "errors": {
+        "alreadyActive": "Esta asignación ya estaba vigente. Se actualizó el historial.",
+        "assignmentExists": "Este usuario ya tiene ese rol vigente. Se actualizó el historial."
+      }
+    },
     "errors": {
       "emailExists": "Ya hay un usuario con ese correo.",
       "usernameExists": "Ya hay un usuario con ese nombre de usuario.",

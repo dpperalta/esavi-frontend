@@ -2300,6 +2300,23 @@
       "partial": "Sommige rollen konden niet worden ingetrokken: {{roles}}.",
       "empty": "Deze gebruiker heeft geen rol en kan niets doen totdat er een wordt toegewezen."
     },
+    "roleHistory": {
+      "open": "Geschiedenis",
+      "title": "Rolgeschiedenis",
+      "description": "Alle roltoewijzingen van deze gebruiker, actief en ingetrokken.",
+      "status": {
+        "active": "Actief",
+        "revoked": "Ingetrokken"
+      },
+      "assignedAt": "Toegewezen op",
+      "revokedAt": "Ingetrokken op",
+      "empty": "Aan deze gebruiker is nooit een rol toegewezen.",
+      "roleRetired": "De rol is ingetrokken uit de catalogus. Activeer hem eerst opnieuw op het rollenscherm.",
+      "errors": {
+        "alreadyActive": "Deze toewijzing was al actief. De geschiedenis is bijgewerkt.",
+        "assignmentExists": "Deze gebruiker heeft die rol al. De geschiedenis is bijgewerkt."
+      }
+    },
     "errors": {
       "emailExists": "Er bestaat al een gebruiker met dat e-mailadres.",
       "usernameExists": "Er bestaat al een gebruiker met die gebruikersnaam.",

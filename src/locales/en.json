@@ -2300,6 +2300,23 @@
       "partial": "Some roles could not be revoked: {{roles}}.",
       "empty": "This user holds no role and cannot do anything until one is assigned."
     },
+    "roleHistory": {
+      "open": "History",
+      "title": "Role history",
+      "description": "Every role assignment this user has had, active and revoked.",
+      "status": {
+        "active": "Active",
+        "revoked": "Revoked"
+      },
+      "assignedAt": "Assigned on",
+      "revokedAt": "Revoked on",
+      "empty": "This user has never been assigned a role.",
+      "roleRetired": "The role is retired. Reactivate it first on the roles screen.",
+      "errors": {
+        "alreadyActive": "This assignment was already active. The history has been refreshed.",
+        "assignmentExists": "This user already holds that role. The history has been refreshed."
+      }
+    },
     "errors": {
       "emailExists": "A user with that email already exists.",
       "usernameExists": "A user with that username already exists.",
