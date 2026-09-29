@@ -9,8 +9,10 @@ import { tokenStore } from '@/shared/api/tokenStore';
 import {
   useAppRoles,
   useBulkAssignRoles,
+  useReinstateUserRole,
   useRevokeUserRole,
   useUserRoleAssignments,
+  useUserRoleHistory,
   useUserSearch,
   userResource,
 } from './api';
@@ -217,6 +219,93 @@ describe('las dos mutaciones de roles invalidan las dos queries de §3.4', () =>
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(deletedPath).toBe('assignment-9');
+    expect(invalidated).toEqual([
+      ['appUserRole', 'byUser', USER_ID],
+      ['user', 'detail', USER_ID],
+    ]);
+  });
+});
+
+describe('historial de roles — ESAVI-USERROLE-002B y 005B (SPEC FE28)', () => {
+  function mockHistory() {
+    let calls = 0;
+    server.use(
+      http.get(`http://localhost:4500/api/user-roles/admin/user/${USER_ID}`, () => {
+        calls += 1;
+        return HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { count: 0, user: { userId: USER_ID }, rows: [] },
+        });
+      }),
+    );
+    return () => calls;
+  }
+
+  it('cerrado no pide nada; abierto lee la lista entera bajo la clave de 002A extendida', async () => {
+    const calls = mockHistory();
+    const { Wrapper, queryClient } = createWrapper();
+
+    const { result, rerender } = renderHook(
+      ({ open }: { open: boolean }) => useUserRoleHistory(USER_ID, open),
+      { wrapper: Wrapper, initialProps: { open: false } },
+    );
+    await waitFor(() => expect(result.current.fetchStatus).toBe('idle'));
+    expect(calls()).toBe(0);
+
+    rerender({ open: true });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(calls()).toBe(1);
+    expect(
+      queryClient.getQueryData(['appUserRole', 'byUser', USER_ID, { includeInactive: true }]),
+    ).toBeDefined();
+  });
+
+  it('useRevokeUserRole marca como obsoleto el historial por prefijo', async () => {
+    mockHistory();
+    server.use(
+      http.delete('http://localhost:4500/api/user-roles/:id', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: null }),
+      ),
+    );
+    const { Wrapper, queryClient } = createWrapper();
+
+    const history = renderHook(() => useUserRoleHistory(USER_ID, true), { wrapper: Wrapper });
+    await waitFor(() => expect(history.result.current.isSuccess).toBe(true));
+    // Unmounted so the invalidation is not followed by a refetch that clears the flag.
+    history.unmount();
+
+    const historyKey = ['appUserRole', 'byUser', USER_ID, { includeInactive: true }];
+    expect(queryClient.getQueryState(historyKey)!.isInvalidated).toBe(false);
+
+    const revoke = renderHook(() => useRevokeUserRole(), { wrapper: Wrapper });
+    revoke.result.current.mutate({ userRoleId: 'assignment-9', userId: USER_ID });
+
+    await waitFor(() => expect(revoke.result.current.isSuccess).toBe(true));
+    expect(queryClient.getQueryState(historyKey)!.isInvalidated).toBe(true);
+  });
+
+  it('useReinstateUserRole hace PATCH por userRoleId e invalida por userId', async () => {
+    let patchedId = '';
+    server.use(
+      http.patch('http://localhost:4500/api/user-roles/activate/:id', ({ params }) => {
+        patchedId = String(params.id);
+        return HttpResponse.json({ ok: true, message: 'ok' });
+      }),
+    );
+    const { Wrapper, queryClient } = createWrapper();
+    const invalidated: unknown[] = [];
+    const original = queryClient.invalidateQueries.bind(queryClient);
+    queryClient.invalidateQueries = (filters) => {
+      invalidated.push(filters?.queryKey);
+      return original(filters);
+    };
+
+    const { result } = renderHook(() => useReinstateUserRole(), { wrapper: Wrapper });
+    result.current.mutate({ userRoleId: 'assignment-9', userId: USER_ID });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(patchedId).toBe('assignment-9');
     expect(invalidated).toEqual([
       ['appUserRole', 'byUser', USER_ID],
       ['user', 'detail', USER_ID],

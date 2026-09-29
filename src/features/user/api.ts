@@ -87,9 +87,10 @@ export function useUserRoleAssignments(userId: string) {
 }
 
 // ESAVI-USERROLE-007 — POST /api/user-roles/bulk, all-or-nothing in one transaction, and it
-// reactivates the pairs that existed revoked (appUserRole.service.ts:243-254) — which is why
-// `005B` never needs to be consumed. Only the additions travel: a single pair already active
-// answers 409 USERROLE_007_ASSIGNMENT_EXISTS and aborts the whole batch (:229-231).
+// reactivates the pairs that existed revoked (appUserRole.service.ts:243-254) — the main path to
+// give a role back; `005B` is only the history's shortcut (SPEC FE28). Only the additions travel:
+// a single pair already active answers 409 USERROLE_007_ASSIGNMENT_EXISTS and aborts the whole
+// batch (:229-231).
 export function useBulkAssignRoles() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -111,6 +112,38 @@ export function useRevokeUserRole() {
   return useMutation({
     mutationFn: async ({ userRoleId }: { userRoleId: string; userId: string }) => {
       await client.delete(`user-roles/${userRoleId}`);
+    },
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: userRoleAssignmentsKey(variables.userId) });
+      void queryClient.invalidateQueries({ queryKey: ['user', 'detail', variables.userId] });
+    },
+  });
+}
+
+// ESAVI-USERROLE-002B — GET /api/user-roles/admin/user/:id, every assignment the user ever had,
+// active and revoked. The key extends that of 002A on purpose (SPEC FE28 §3.4): the invalidations
+// of `007`, `005A` and `005B` reach the history by prefix, so none of them needs a line of its own.
+export function useUserRoleHistory(userId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...userRoleAssignmentsKey(userId), { includeInactive: true }],
+    queryFn: async () => {
+      const response = await client.get<UserRoleAssignmentsResponse>(
+        `user-roles/admin/user/${userId}`,
+        { params: { limit: WHOLE_LIST_LIMIT, offset: 0 } },
+      );
+      return response.data;
+    },
+    enabled: enabled && !!userId,
+  });
+}
+
+// ESAVI-USERROLE-005B — PATCH /api/user-roles/activate/:id, SUPERADMIN. It checks neither the role
+// nor the user is active (appUserRole.service.ts:337-370); the history's UI enforces both (§3.5).
+export function useReinstateUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userRoleId }: { userRoleId: string; userId: string }) => {
+      await client.patch(`user-roles/activate/${userRoleId}`);
     },
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: userRoleAssignmentsKey(variables.userId) });
