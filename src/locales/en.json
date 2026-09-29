@@ -798,6 +798,10 @@
     }
   },
   "caseWizard": {
+    "showInactive": {
+      "label": "Show deleted records",
+      "description": "Includes deleted rows in the lists, to review or restore them."
+    },
     "groups": {
       "notification": "Notification",
       "investigation": "Investigation",

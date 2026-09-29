@@ -78,6 +78,7 @@ import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStor
 import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
 import { PregnancySection } from './PregnancySection';
+import { ShowInactiveSwitch } from './ShowInactiveSwitch';
 import { VaccinationBackgroundSection } from './VaccinationBackgroundSection';
 import { VerificationSourceSection } from './VerificationSourceSection';
 
@@ -910,6 +911,7 @@ function NotificationFormBody({
 
   return (
     <div ref={sectionsRef} className="flex flex-col gap-6">
+      <ShowInactiveSwitch />
       {/* The advance announcement (SPEC FE12f §3.7): the heading of the revealed section, with the
           key FE12e already defines. Visually hidden — the heading itself, which also takes focus,
           is the visible cue. */}

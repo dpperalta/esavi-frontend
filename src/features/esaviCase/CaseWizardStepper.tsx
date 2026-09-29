@@ -1,6 +1,6 @@
 import { CheckCircle2, Circle, CircleDot, Lock, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Accordion,
   AccordionContent,
@@ -129,6 +129,8 @@ function StepRow({
   isClosed: boolean;
 }) {
   const { t } = useTranslation();
+  // Keeps the case-file toggle across steps (SPEC FE29 §2).
+  const { search } = useLocation();
   const status = stepStatus(step, stages, isClosed);
   const StatusIcon = STATUS_ICON[status];
   const label = t(STEP_LABEL_KEY[step.slug]);
@@ -173,7 +175,7 @@ function StepRow({
 
   return (
     <Link
-      to={`/esavi-cases/${caseId}/wizard/${step.slug}`}
+      to={{ pathname: `/esavi-cases/${caseId}/wizard/${step.slug}`, search }}
       aria-current={isActive ? 'step' : undefined}
       className={cn(
         'flex min-h-11 items-center gap-2 rounded-md px-3 py-2 transition-colors hover:bg-muted',

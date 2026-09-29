@@ -798,6 +798,10 @@
     }
   },
   "caseWizard": {
+    "showInactive": {
+      "label": "Verwijderde records tonen",
+      "description": "Neemt verwijderde rijen op in de lijsten, om ze te bekijken of te herstellen."
+    },
     "groups": {
       "notification": "Melding",
       "investigation": "Onderzoek",

@@ -2588,3 +2588,37 @@ describe('InvestigationStep — campos pendientes en la barra (SPEC FE16 §4 pas
     );
   });
 });
+
+describe('InvestigationStep — «Mostrar registros eliminados» (SPEC FE29 §2)', () => {
+  function signInAs(roleName: string, level: number) {
+    server.use(
+      http.get('http://localhost:4500/api/users/me', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { userId: 'user-1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+        }),
+      ),
+    );
+  }
+
+  it('con ADMIN pinta el switch arriba del contenido', async () => {
+    signInAs('ADMIN', 50);
+    mockWorkflow(true);
+    mockInvestigationDetail();
+
+    renderInvestigationStep();
+
+    expect(await screen.findByRole('switch', { name: 'Mostrar registros eliminados' })).toBeInTheDocument();
+  });
+
+  it('con USER no lo pinta', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail();
+
+    renderInvestigationStep();
+
+    expect(await screen.findByText('Fuentes de información')).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Mostrar registros eliminados' })).not.toBeInTheDocument();
+  });
+});

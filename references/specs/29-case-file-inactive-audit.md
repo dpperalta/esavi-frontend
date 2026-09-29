@@ -89,6 +89,8 @@ No hay rutas ni entradas de navegación nuevas.
 | Fábrica | `shared/api/createResource.ts` | `assertConfig` acepta `'adminPath'` con `parent.adminSegment` y sin `adminPath`; `useList` lanza un error explícito si se pide con inactivos y no hay `adminPath` | — |
 | Primitiva | `shared/components/SatelliteList.tsx` | Cuatro props opcionales (§2), `Badge` y tinte, acciones «Historial» y «Restaurar», y un `Sheet` interno con `<AuditTrail>` | Los decide quien la usa |
 | Toggle | `features/esaviCase/ShowInactiveSwitch.tsx` (nuevo, en la feature que posee el asistente) | Un `Switch` conectado a `searchParams.includeInactive`, pintado arriba del contenido de `NotificationStep` e `InvestigationStep` | Visible desde ADMIN (`useCan(ROLE_LEVELS.ADMIN)`), el rol real de los diez `002B` |
+| Lectura del toggle | `shared/hooks/useShowInactive.ts` (nuevo) | `useShowInactive()`, que leen el switch y las diez listas. Vive en `shared/` porque lo consumen tres features, y una feature no importa de otra (`CONVENTIONS.md` §3) — decisión del 2026-09-29 | — |
+| Navegación entre pasos | `features/esaviCase/CaseWizardActionBar.tsx`, `CaseWizardStepper.tsx` | Arrastran `location.search` al cambiar de paso, para que `includeInactive` sobreviva (§2) — decisión del 2026-09-29 | — |
 | Listas de la notificación | `notification/EventList`, `VaccineList`, `MedicationList`, `MedicalHistoryList`, `PregnancyComplicationList` | Leen el toggle; con él encendido, la tabla lee el `002B`; pasan las cuatro props | «Historial»: SUPERADMIN. «Restaurar»: ADMIN y no `readOnly` |
 | Listas de la investigación | `investigation/TeamMemberList`, `NewbornConditionList`, `EvaluationInstitutionList`, `VaccineAdministeredList`, `DiagnosticList` | Lo mismo; en estas, el equivalente de `readOnly` es su prop `disabled` | Lo mismo |
 | Recursos | `features/notification/api.ts`, `features/investigation/api.ts` | Diez declaraciones pasan a `'adminPath'` con `parent.segment` y `parent.adminSegment` | — |
@@ -250,7 +252,8 @@ No se reutiliza `common.table.showInactive` («Mostrar inactivos»): en el exped
 
 - Componente nuevo en `features/esaviCase/`: lee y escribe `searchParams.includeInactive`; al apagarse borra el parámetro; no se pinta por debajo de ADMIN.
 - Se monta en `NotificationStep` e `InvestigationStep`, arriba del contenido.
-- Se exporta `useShowInactive()`, que devuelve `includeInactive === 'true' && useCan(ADMIN)` y es lo que leen las listas.
+- `useShowInactive()` vive en `shared/hooks/useShowInactive.ts` (§3.1): devuelve `includeInactive === 'true' && useCan(ADMIN)` y es lo que leen las listas.
+- `CaseWizardActionBar` y `CaseWizardStepper` conservan `location.search` al navegar entre pasos.
 
 *Verificación:*
 
@@ -370,6 +373,7 @@ No se reutiliza `common.table.showInactive` («Mostrar inactivos»): en el exped
 | `features/notification/api.ts` e `investigation/api.ts` | Diez recursos `serverDecides`, seis sin `parent` | `'adminPath'` con `parent` completo |
 | Las diez listas | Solo activas | Activas o `002B` según el toggle; historial en todas las filas con SUPERADMIN |
 | `NotificationStep` e `InvestigationStep` | — | Montan `ShowInactiveSwitch` |
+| `CaseWizardActionBar` y `CaseWizardStepper` | Navegan sin query string | Conservan `location.search` |
 | Resto de consumidores de `<SatelliteList>` (la lista de `NotificationStep`) | — | Sin cambios |
 
 ---

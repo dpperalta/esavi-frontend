@@ -119,11 +119,14 @@ function mockNotification(requestInvestigation: boolean, delayMs = 0) {
   );
 }
 
-function renderStepper(activeSlug: Parameters<typeof CaseWizardStepper>[0]['activeSlug']) {
+function renderStepper(
+  activeSlug: Parameters<typeof CaseWizardStepper>[0]['activeSlug'],
+  initialPath = '/',
+) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialPath]}>
         <CaseWizardStepper caseId="case-1" activeSlug={activeSlug} />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -131,6 +134,30 @@ function renderStepper(activeSlug: Parameters<typeof CaseWizardStepper>[0]['acti
 }
 
 describe('CaseWizardStepper', () => {
+  it('los enlaces a otros pasos conservan includeInactive (SPEC FE29 §2)', async () => {
+    mockWorkflow({
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: true, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: true, endedAt: null },
+    });
+    mockClassification(true);
+    mockNotification(true);
+
+    const { container } = renderStepper(
+      'notification',
+      '/esavi-cases/case-1/wizard/notification?includeInactive=true',
+    );
+
+    await waitFor(() =>
+      expect(
+        container.querySelector(
+          'a[href="/esavi-cases/case-1/wizard/investigation?includeInactive=true"]',
+        ),
+      ).toBeInTheDocument(),
+    );
+  });
+
   it('el paso notification queda con candado mientras classification.exists es false', async () => {
     mockWorkflow({
       classification: { exists: false, endedAt: null },

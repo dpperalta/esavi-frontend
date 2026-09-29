@@ -798,6 +798,10 @@
     }
   },
   "caseWizard": {
+    "showInactive": {
+      "label": "Mostrar registros eliminados",
+      "description": "Incluye en las listas las filas eliminadas, para consultarlas o restaurarlas."
+    },
     "groups": {
       "notification": "Notificación",
       "investigation": "Investigación",

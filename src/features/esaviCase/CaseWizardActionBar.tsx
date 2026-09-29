@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -37,6 +37,7 @@ interface CaseWizardActionBarProps {
 export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const workflow = useCaseWorkflow(caseId);
   const completeStage = useCompleteStage(caseId);
   const flags = useCaseWizardStepFlags(caseId, workflow.data?.stages);
@@ -65,7 +66,8 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
   const isGoingBack = pendingNavigation !== null && pendingIndex < currentIndex;
 
   function goToStep(slug: CaseWizardStepSlug) {
-    navigate(`/esavi-cases/${caseId}/wizard/${slug}`);
+    // `location.search` travels along so the case-file toggle survives the step change (SPEC FE29 §2).
+    navigate({ pathname: `/esavi-cases/${caseId}/wizard/${slug}`, search: location.search });
   }
 
   async function handleSave() {
