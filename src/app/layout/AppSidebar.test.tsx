@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter } from 'react-router-dom';
@@ -54,7 +54,7 @@ function renderSidebar(roles: Array<{ name: string; level: number }>) {
 }
 
 describe('AppSidebar — filtro por rol', () => {
-  it('con ANALYTICS no muestra ningún elemento de los grupos deshabilitados', async () => {
+  it('con ANALYTICS no muestra ningún hijo ni ningún grupo', async () => {
     renderSidebar([{ name: 'ANALYTICS', level: 10 }]);
 
     await waitFor(() => expect(screen.getByText('nav.home')).toBeInTheDocument());
@@ -62,7 +62,7 @@ describe('AppSidebar — filtro por rol', () => {
     expect(screen.queryByText('nav.groups.cases')).not.toBeInTheDocument();
   });
 
-  it('con USER muestra los diecisiete hijos, sin «Usuarios»', async () => {
+  it('con USER muestra los diez hijos, sin «Usuarios»', async () => {
     renderSidebar([{ name: 'USER', level: 25 }]);
 
     await waitFor(() => expect(screen.getByText('nav.items.caseRegister')).toBeInTheDocument());
@@ -74,7 +74,7 @@ describe('AppSidebar — filtro por rol', () => {
     expect(screen.queryByText('nav.items.appRole')).not.toBeInTheDocument();
   });
 
-  it('con ADMIN muestra los diecinueve hijos, incluidos «Usuarios» y «Roles»', async () => {
+  it('con ADMIN muestra los catorce hijos, incluidos «Usuarios» y «Roles»', async () => {
     renderSidebar([{ name: 'ADMIN', level: 50 }]);
 
     await waitFor(() => expect(screen.getByText('nav.items.user')).toBeInTheDocument());
@@ -82,27 +82,7 @@ describe('AppSidebar — filtro por rol', () => {
   });
 });
 
-describe('AppSidebar — hijos deshabilitados', () => {
-  // `nav.items.patient` is the current example (SPEC FE09 §2): the patients screen stays
-  // `disabled: true` — `caseBrowse` used to be this spec's example until SPEC FE09 built the
-  // listing behind it and lifted the flag (see the two tests below).
-  it('no navega al hacer click y se anuncia como aria-disabled', async () => {
-    renderSidebar([{ name: 'ADMIN', level: 50 }]);
-
-    await waitFor(() => expect(screen.getByText('nav.items.patient')).toBeInTheDocument());
-
-    const disabledItem = screen.getByText('nav.items.patient').closest('button');
-    expect(disabledItem).toHaveAttribute('aria-disabled', 'true');
-    expect(disabledItem).not.toHaveAttribute('disabled');
-    expect(disabledItem?.tabIndex).toBe(0);
-    // A plain <button> with no onClick and no href — a click dispatches, nothing navigates.
-    expect(disabledItem?.tagName).toBe('BUTTON');
-    expect(disabledItem).not.toHaveAttribute('href');
-
-    fireEvent.click(disabledItem!);
-    expect(screen.getByText('nav.items.patient')).toBeInTheDocument();
-  });
-
+describe('AppSidebar — hijos navegables', () => {
   it('«Registrar» ya no está deshabilitado (SPEC FE08 §3.1)', async () => {
     renderSidebar([{ name: 'ADMIN', level: 50 }]);
 

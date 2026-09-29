@@ -134,14 +134,13 @@ function renderApp(initialPath = '/') {
 }
 
 describe('Ruta /whodrug-vaccines — navegación desde el sidebar', () => {
-  it('con USER, el ítem ya no dice «Próximamente» y lleva al listado', async () => {
+  it('con USER, el ítem es un enlace y lleva al listado', async () => {
     const user = setupUser();
     signInAs('USER', 25);
 
     renderApp('/');
 
     const link = await screen.findByRole('link', { name: 'Vacunas WHODrug' });
-    expect(link).not.toHaveTextContent('Próximamente');
     await user.click(link);
 
     expect(await screen.findByRole('heading', { name: 'Vacunas WHODrug' })).toBeInTheDocument();

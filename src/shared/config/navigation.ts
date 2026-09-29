@@ -1,7 +1,5 @@
 import {
   Beaker,
-  Bell,
-  BellRing,
   Building2,
   ClipboardList,
   FilePlus2,
@@ -13,16 +11,12 @@ import {
   ListTree,
   MapPin,
   Pill,
-  Search,
   Settings,
   ShieldCheck,
   Sliders,
   Stethoscope,
   Syringe,
-  Tags,
-  UserCheck,
   UserCog,
-  Users,
   type LucideIcon,
 } from 'lucide-react';
 import { ROLE_LEVELS } from './roles';
@@ -35,21 +29,20 @@ export interface NavItem {
   icon: LucideIcon;
   path?: string;
   minLevel?: number;
-  // Rendered visible but non-navigable, with a "coming soon" mark (SPEC FE01 §3.1) — the 17
-  // entities that don't have a screen yet. Never affects role filtering.
-  disabled?: boolean;
   children?: NavItem[];
 }
 
 // The tree of SPEC FE01 §3.1, copied field for field: each minLevel is the real minimum role
-// of that entity's listing route in API-ROUTES.md, not a guess (CONVENTIONS.md §5).
+// of that entity's listing route in API-ROUTES.md, not a guess (CONVENTIONS.md §5). SPEC FE26
+// removed patients, final classification, notifications, notifiers and investigations: they
+// are reached from the case, and a cross-case listing would bypass the geo scope of SPEC F49.
 export const NAVIGATION: NavItem[] = [
   { key: 'nav.home', icon: Home, path: '/', minLevel: ROLE_LEVELS.ANALYTICS },
   {
     key: 'nav.groups.cases',
     icon: ClipboardList,
     children: [
-      // SPEC FE08 §3.1: replaces the single disabled `nav.items.esaviCase` with two live
+      // SPEC FE08 §3.1: replaces the single placeholder `nav.items.esaviCase` with two live
       // entries. `caseRegister` and `caseBrowse` are both USER's real minimum, on
       // ESAVI-CASE-001 and ESAVI-CASE-002A respectively (API-ROUTES.md). `caseBrowse` went
       // live with SPEC FE09 — the tab doesn't travel in the link (§3.1): it always points at
@@ -65,53 +58,6 @@ export const NAVIGATION: NavItem[] = [
         icon: FileText,
         path: '/esavi-cases',
         minLevel: ROLE_LEVELS.USER,
-      },
-      {
-        key: 'nav.items.patient',
-        icon: Users,
-        path: '/patients',
-        minLevel: ROLE_LEVELS.USER,
-        disabled: true,
-      },
-      {
-        key: 'nav.items.finalClassification',
-        icon: Tags,
-        path: '/final-classifications',
-        minLevel: ROLE_LEVELS.USER,
-        disabled: true,
-      },
-    ],
-  },
-  {
-    key: 'nav.groups.notification',
-    icon: Bell,
-    children: [
-      {
-        key: 'nav.items.notification',
-        icon: BellRing,
-        path: '/notifications',
-        minLevel: ROLE_LEVELS.USER,
-        disabled: true,
-      },
-      {
-        key: 'nav.items.notifier',
-        icon: UserCheck,
-        path: '/notifiers',
-        minLevel: ROLE_LEVELS.USER,
-        disabled: true,
-      },
-    ],
-  },
-  {
-    key: 'nav.groups.investigation',
-    icon: Search,
-    children: [
-      {
-        key: 'nav.items.investigation',
-        icon: Search,
-        path: '/investigations',
-        minLevel: ROLE_LEVELS.USER,
-        disabled: true,
       },
     ],
   },
@@ -222,7 +168,7 @@ export const NAVIGATION: NavItem[] = [
 
 // Filters by role level (ARCHITECTURE.md §4.4 — UX, not security). A group with zero visible
 // children after filtering is dropped entirely; a leaf is kept when the user's level meets
-// its minLevel, independent of `disabled`.
+// its minLevel.
 export function filterNavigationByLevel(items: NavItem[], level: number): NavItem[] {
   return items.reduce<NavItem[]>((visible, item) => {
     if (item.children) {
