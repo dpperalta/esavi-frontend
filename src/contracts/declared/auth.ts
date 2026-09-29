@@ -1,4 +1,4 @@
-// NOT a mirror: the backend builds these two responses as literals, with no `interface` that
+// NOT a mirror: the backend builds these responses as literals, with no `interface` that
 // `contracts:sync` could copy (SPEC FE01 §3.3). Reconciled by hand if the backend changes;
 // `contracts:sync` never writes into this folder.
 import type { AppDetails } from '@/contracts/common';
@@ -16,6 +16,11 @@ export interface LoginResponse {
     // ['user', 'me'] / CurrentUser below is the only source of the effective level.
     roles: Array<{ roleId: string; name: string; code: string }>;
   };
+}
+
+// POST /api/auth/logout-all (ESAVI-AUTH-004) — origin: esavi-backend/src/services/auth.service.ts:312-316
+export interface LogoutAllResponse {
+  revokedCount: number;
 }
 
 // GET /api/users/me (ESAVI-USER-007) — origin: user.service.ts:54-59 (toUserResponse, over
