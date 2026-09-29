@@ -1,6 +1,6 @@
 # SPEC FE27 — Cerrar todas las sesiones
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell, sesión y `useCan`), SPEC FE15 (touch targets del topbar), SPEC F42 del backend (rotación de refresh y `ESAVI-AUTH-004`)
 > **Fecha:** 2026-09-28
 > **Objetivo:** Que cualquier usuario con rol USER o superior pueda cerrar desde el topbar todas sus sesiones abiertas, incluida la actual.
