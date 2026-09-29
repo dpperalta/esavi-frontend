@@ -85,7 +85,17 @@
       "edit": "Editar {{name}}",
       "delete": "Eliminar {{name}}",
       "cancel": "Cancelar",
-      "save": "Guardar"
+      "save": "Guardar",
+      "inactiveBadge": "Eliminado",
+      "history": "Ver historial de {{name}}",
+      "historyTitle": "Historial de {{name}}",
+      "restore": "Restaurar {{name}}",
+      "toast": {
+        "restored": "Registro restaurado"
+      },
+      "errors": {
+        "alreadyActive": "Este registro ya estaba restaurado."
+      }
     },
     "termSearch": {
       "minChars": "Escribe al menos {{count}} caracteres.",

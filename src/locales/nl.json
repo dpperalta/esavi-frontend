@@ -85,7 +85,17 @@
       "edit": "{{name}} bewerken",
       "delete": "{{name}} verwijderen",
       "cancel": "Annuleren",
-      "save": "Opslaan"
+      "save": "Opslaan",
+      "inactiveBadge": "Verwijderd",
+      "history": "Geschiedenis van {{name}} bekijken",
+      "historyTitle": "Geschiedenis van {{name}}",
+      "restore": "{{name}} herstellen",
+      "toast": {
+        "restored": "Record hersteld"
+      },
+      "errors": {
+        "alreadyActive": "Dit record was al hersteld."
+      }
     },
     "termSearch": {
       "minChars": "Typ minstens {{count}} tekens.",

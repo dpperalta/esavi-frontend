@@ -85,7 +85,17 @@
       "edit": "Edit {{name}}",
       "delete": "Delete {{name}}",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "inactiveBadge": "Deleted",
+      "history": "View history of {{name}}",
+      "historyTitle": "History of {{name}}",
+      "restore": "Restore {{name}}",
+      "toast": {
+        "restored": "Record restored"
+      },
+      "errors": {
+        "alreadyActive": "This record had already been restored."
+      }
     },
     "termSearch": {
       "minChars": "Type at least {{count}} characters.",
