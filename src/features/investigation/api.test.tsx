@@ -1499,3 +1499,82 @@ describe('investigationCommunityResource — 1:1 con PK = FK (ESAVI-INVCOMM-001/
     await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });
+
+function mockCurrentUserLevel(roleName: string, level: number) {
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { userId: '1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+      }),
+    ),
+  );
+}
+
+// SPEC FE29 §3.2: the `002B` by parent and the `005B` of the five multi-row satellites of step 5.
+const investigationRestorableResources = [
+  {
+    name: 'investigationTeamMemberResource — ESAVI-INVTEAM-002B/005B',
+    resource: investigationTeamMemberResource,
+    path: 'investigation-team-members',
+  },
+  {
+    name: 'investigationPregnancyConditionResource — ESAVI-INVPREG-002B/005B',
+    resource: investigationPregnancyConditionResource,
+    path: 'investigation-pregnancy-conditions',
+  },
+  {
+    name: 'evaluationInstitutionResource — ESAVI-EVALINST-002B/005B',
+    resource: evaluationInstitutionResource,
+    path: 'evaluation-institutions',
+  },
+  {
+    name: 'investigationVaccineAdministeredResource — ESAVI-INVVACAD-002B/005B',
+    resource: investigationVaccineAdministeredResource,
+    path: 'investigation-vaccines-administered',
+  },
+  {
+    name: 'investigationDiagnosticResource — ESAVI-INVDIAG-002B/005B',
+    resource: investigationDiagnosticResource,
+    path: 'investigation-diagnostics',
+  },
+];
+
+describe.each(investigationRestorableResources)('$name', ({ resource, path }) => {
+  it('con ADMIN e includeInactive:true, useListByParent pide el 002B exacto', async () => {
+    mockCurrentUserLevel('ADMIN', 50);
+    let requestedUrl: URL | null = null;
+    server.use(
+      http.get(`http://localhost:4500/api/${path}/admin/investigation/parent-1`, ({ request }) => {
+        requestedUrl = new URL(request.url);
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderHook(
+      () => resource.useListByParent!('parent-1', { pageSize: 100, includeInactive: true }),
+      { wrapper: createWrapper().Wrapper },
+    );
+
+    await waitFor(() => expect(requestedUrl).not.toBeNull());
+    expect(requestedUrl!.searchParams.get('limit')).toBe('100');
+    expect(requestedUrl!.searchParams.get('offset')).toBe('0');
+  });
+
+  it('useActivate hace PATCH …/activate/:id', async () => {
+    let patched = false;
+    server.use(
+      http.patch(`http://localhost:4500/api/${path}/activate/row-1`, () => {
+        patched = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: null });
+      }),
+    );
+
+    const { result } = renderHook(() => resource.useActivate!(), { wrapper: createWrapper().Wrapper });
+    result.current.mutate('row-1');
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(patched).toBe(true);
+  });
+});
