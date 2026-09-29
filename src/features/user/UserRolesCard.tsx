@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
 import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
@@ -16,6 +16,7 @@ import {
   userRoleAssignmentsKey,
 } from './api';
 import { UserRoleCheckboxGroup } from './UserRoleCheckboxGroup';
+import { UserRoleHistorySheet } from './UserRoleHistorySheet';
 
 interface UserRolesCardProps {
   userId: string;
@@ -37,6 +38,7 @@ export function UserRolesCard({ userId, readOnly = false }: UserRolesCardProps) 
   // lives while the block is unsaved, is reseeded when the query changes, and is dropped on save.
   const [selected, setSelected] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const assigned = assignments.data?.rows ?? [];
   // The identity of what the server holds, so an external change — another administrator, the
@@ -107,6 +109,19 @@ export function UserRolesCard({ userId, readOnly = false }: UserRolesCardProps) 
     <Card>
       <CardHeader>
         <CardTitle>{t('user.roles.title')}</CardTitle>
+        {/* Shown with `readOnly` too: reading an inactive user's history is what the ficha is
+            for (SPEC FE28 §4 paso 5). */}
+        <CardAction>
+          <Button
+            type="button"
+            variant="outline"
+            size="touch"
+            className="md:h-8"
+            onClick={() => setHistoryOpen(true)}
+          >
+            {t('user.roleHistory.open')}
+          </Button>
+        </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {assignments.isLoading && <Skeleton className="h-24 w-full" />}
@@ -138,6 +153,12 @@ export function UserRolesCard({ userId, readOnly = false }: UserRolesCardProps) 
           </>
         )}
       </CardContent>
+      <UserRoleHistorySheet
+        userId={userId}
+        readOnly={readOnly}
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+      />
     </Card>
   );
 }
