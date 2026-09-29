@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CurrentUser, LoginResponse } from '@/contracts/declared/auth';
+import type { CurrentUser, LoginResponse, LogoutAllResponse } from '@/contracts/declared/auth';
 import { client, setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { useDraftsStore } from '@/shared/stores/draftsStore';
@@ -127,6 +127,26 @@ export function useLogout() {
     mutationFn: logout,
     onSuccess: () => {
       // Nothing about the previous session can survive in memory (SPEC FE01 §3.4).
+      queryClient.clear();
+    },
+  });
+}
+
+// ESAVI-AUTH-004. Authenticated (USER), so it goes through `client` and its refresh queue, not
+// PUBLIC_AUTH_PATHS. Unlike 003, a failure leaves the local session untouched: the user wants to
+// evict another device, and landing on /login would falsely signal that it worked (SPEC FE27 §6).
+async function logoutAll(): Promise<number> {
+  const response = await client.post<LogoutAllResponse>('/auth/logout-all');
+  clearLocalSession();
+  return response.data.revokedCount;
+}
+
+export function useLogoutAll() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: logoutAll,
+    onSuccess: () => {
       queryClient.clear();
     },
   });
