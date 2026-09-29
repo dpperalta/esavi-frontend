@@ -210,12 +210,12 @@ Renderizarlo desde un array tipado permite filtrar por rol, buscar dentro del me
 
 Con 44 grupos de rutas, un menú plano es inservible. Los grupos siguen el dominio, no la tabla:
 
-- **Casos** — casos ESAVI, pacientes, flujo del caso, clasificación final
-- **Notificación** — cabecera, graves y no graves, eventos, vacunas, medicación, embarazo
-- **Investigación** — investigación y sus catorce satélites
+- **Casos** — casos ESAVI (registrar y ver/editar)
 - **Catálogos clínicos** — términos diagnósticos, vacunas WHODrug, diluyentes
 - **Geografía y unidades** — niveles geográficos, ubicaciones, unidades de salud
 - **Administración** — usuarios, roles, coberturas geográficas, tipos y elementos de catálogo, configuración del sistema
+
+Notificación, investigación, clasificación final, notificadores y pacientes no tienen entrada propia: se recorren desde el caso, en el wizard y en la página de resumen. Un listado transversal de cualquiera de ellos devolvería filas de todo el país, porque el alcance geográfico del SPEC F49 del backend sólo cubre `esaviCase` (SPEC FE26 §1).
 
 ### 5.3 Comportamiento
 

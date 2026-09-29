@@ -5,6 +5,8 @@
 > **Fecha:** 2026-08-31
 > **Objetivo:** Levantar el cliente y cerrar el ciclo completo de la sesión —entrar, mantenerse, salir— sobre un layout con sidebar, temas y preferencias.
 
+> **Nota de implementación (2026-09-28) — menú retirado en SPEC FE26.** Las entradas Pacientes, Clasificación final, Notificaciones, Notificadores e Investigaciones de la tabla de §3.1, los grupos Notificación e Investigación y el mecanismo `disabled`/`common.comingSoon` se retiraron en SPEC FE26: esas entidades se recorren desde el caso, y un listado transversal eludiría el alcance geográfico del SPEC F49 del backend. El menú vigente tiene cuatro grupos (`ARCHITECTURE.md` §5.2). La regla de accesibilidad de §3.7 para ítems no navegables sigue escrita aquí por si vuelve a hacer falta.
+
 ---
 
 ## 1. Por qué existe este spec

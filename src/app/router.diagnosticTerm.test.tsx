@@ -79,14 +79,13 @@ function renderApp(initialPath = '/') {
 }
 
 describe('Ruta /diagnostic-terms — navegación desde el sidebar', () => {
-  it('con USER, el ítem ya no dice «Próximamente» y lleva al listado', async () => {
+  it('con USER, el ítem es un enlace y lleva al listado', async () => {
     const user = setupUser();
     signInAs('USER', 25);
 
     renderApp('/');
 
     const link = await screen.findByRole('link', { name: 'Términos diagnósticos' });
-    expect(link).not.toHaveTextContent('Próximamente');
     await user.click(link);
 
     expect(

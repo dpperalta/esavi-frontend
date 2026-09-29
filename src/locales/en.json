@@ -5,7 +5,6 @@
     "retry": "Retry",
     "loading": "Loading…",
     "close": "Close",
-    "comingSoon": "Coming soon",
     "errors": {
       "unexpected": "Something went wrong. Please try again."
     },
@@ -167,8 +166,6 @@
     "home": "Home",
     "groups": {
       "cases": "Cases",
-      "notification": "Notification",
-      "investigation": "Investigation",
       "clinicalCatalogs": "Clinical catalogs",
       "geography": "Geography and facilities",
       "administration": "Administration"
@@ -176,11 +173,6 @@
     "items": {
       "caseRegister": "Register",
       "caseBrowse": "View/edit",
-      "patient": "Patients",
-      "finalClassification": "Final classification",
-      "notification": "Notifications",
-      "notifier": "Notifiers",
-      "investigation": "Investigations",
       "diagnosticTerm": "Diagnostic terms",
       "whodrugVaccine": "WHODrug vaccines",
       "whodrugProduct": "WHODrug medicines",

@@ -74,14 +74,13 @@ function renderApp(initialPath = '/') {
 }
 
 describe('Ruta /diluents — navegación desde el sidebar', () => {
-  it('con USER, el ítem ya no dice «Próximamente» y lleva a la pantalla de diluyentes', async () => {
+  it('con USER, el ítem es un enlace y lleva a la pantalla de diluyentes', async () => {
     const user = setupUser();
     signInAs('USER', 25);
 
     renderApp('/');
 
     const link = await screen.findByRole('link', { name: 'Diluyentes' });
-    expect(link).not.toHaveTextContent('Próximamente');
     await user.click(link);
 
     expect(await screen.findByRole('heading', { name: 'Diluyentes' })).toBeInTheDocument();

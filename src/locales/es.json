@@ -5,7 +5,6 @@
     "retry": "Reintentar",
     "loading": "Cargando…",
     "close": "Cerrar",
-    "comingSoon": "Próximamente",
     "errors": {
       "unexpected": "Ocurrió un error inesperado. Inténtalo de nuevo."
     },
@@ -167,8 +166,6 @@
     "home": "Inicio",
     "groups": {
       "cases": "Casos",
-      "notification": "Notificación",
-      "investigation": "Investigación",
       "clinicalCatalogs": "Catálogos clínicos",
       "geography": "Geografía y unidades",
       "administration": "Administración"
@@ -176,11 +173,6 @@
     "items": {
       "caseRegister": "Registrar",
       "caseBrowse": "Ver/editar",
-      "patient": "Pacientes",
-      "finalClassification": "Clasificación final",
-      "notification": "Notificaciones",
-      "notifier": "Notificadores",
-      "investigation": "Investigaciones",
       "diagnosticTerm": "Términos diagnósticos",
       "whodrugVaccine": "Vacunas WHODrug",
       "whodrugProduct": "Medicamentos WHODrug",

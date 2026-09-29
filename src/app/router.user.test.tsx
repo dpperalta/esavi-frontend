@@ -99,16 +99,13 @@ function renderApp(initialPath = '/') {
 }
 
 describe('Ruta /users — navegación desde el sidebar (SPEC FE20 §4 paso 11)', () => {
-  it('la entrada del menú ya no está marcada como no disponible y navega', async () => {
+  it('la entrada del menú es un enlace y navega', async () => {
     const user = setupUser();
     signInAs('ADMIN', 50);
 
     renderApp('/');
 
     const link = await screen.findByRole('link', { name: 'Usuarios' });
-    // `disabled: true` pintaba el ítem como «Próximamente» y sin enlace navegable. Otros ítems del
-    // menú siguen marcados así, de ahí que se compruebe sobre este ítem y no sobre el menú entero.
-    expect(link.textContent).not.toContain('Próximamente');
     await user.click(link);
 
     expect(await screen.findByRole('heading', { name: 'Usuarios' })).toBeInTheDocument();

@@ -23,23 +23,6 @@ function NavLeaf({ item, active }: NavLeafProps) {
   const { t } = useTranslation();
   const Icon = item.icon;
 
-  if (item.disabled) {
-    // aria-disabled, not the native `disabled` attribute — a disabled item stays focusable
-    // and announced by a screen reader as existing, just unavailable (SPEC FE01 §3.7).
-    return (
-      <SidebarMenuButton
-        aria-disabled="true"
-        tabIndex={0}
-        tooltip={t(item.key)}
-        className="cursor-not-allowed opacity-60"
-      >
-        <Icon />
-        <span>{t(item.key)}</span>
-        <span className="ml-auto text-xs text-muted-foreground">{t('common.comingSoon')}</span>
-      </SidebarMenuButton>
-    );
-  }
-
   return (
     <SidebarMenuButton asChild isActive={active} tooltip={t(item.key)}>
       <Link to={item.path!}>

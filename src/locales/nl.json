@@ -5,7 +5,6 @@
     "retry": "Opnieuw proberen",
     "loading": "Laden…",
     "close": "Sluiten",
-    "comingSoon": "Binnenkort beschikbaar",
     "errors": {
       "unexpected": "Er is een onverwachte fout opgetreden. Probeer het opnieuw."
     },
@@ -167,8 +166,6 @@
     "home": "Start",
     "groups": {
       "cases": "Gevallen",
-      "notification": "Melding",
-      "investigation": "Onderzoek",
       "clinicalCatalogs": "Klinische catalogi",
       "geography": "Geografie en voorzieningen",
       "administration": "Beheer"
@@ -176,11 +173,6 @@
     "items": {
       "caseRegister": "Registreren",
       "caseBrowse": "Bekijken/bewerken",
-      "patient": "Patiënten",
-      "finalClassification": "Eindclassificatie",
-      "notification": "Meldingen",
-      "notifier": "Melders",
-      "investigation": "Onderzoeken",
       "diagnosticTerm": "Diagnostische termen",
       "whodrugVaccine": "WHODrug-vaccins",
       "whodrugProduct": "WHODrug-geneesmiddelen",
