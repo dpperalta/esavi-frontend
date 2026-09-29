@@ -38,9 +38,13 @@ function toOffsetLimit({ page, pageSize }: ListParams): { limit: number; offset:
   return { limit: pageSize, offset: ((page ?? 1) - 1) * pageSize };
 }
 
+// SPEC FE29: the case-file satellites have a `002B` per parent only, no global admin listing —
+// `parent.adminSegment` alone is enough to satisfy 'adminPath'.
 function assertConfig<T>(config: ResourceConfig<T>): void {
-  if (config.inactiveMode === 'adminPath' && !config.adminPath) {
-    throw new Error(`createResource(${config.key}): inactiveMode 'adminPath' requires adminPath`);
+  if (config.inactiveMode === 'adminPath' && !config.adminPath && !config.parent?.adminSegment) {
+    throw new Error(
+      `createResource(${config.key}): inactiveMode 'adminPath' requires adminPath or parent.adminSegment`,
+    );
   }
   if (config.inactiveMode === 'serverDecides' && config.adminPath) {
     throw new Error(`createResource(${config.key}): inactiveMode 'serverDecides' forbids adminPath`);
@@ -71,6 +75,9 @@ export function createResource<T, TCreateInput = Partial<T>, TUpdateInput = Part
   }
 
   function useList(params: ListParams) {
+    if (config.inactiveMode === 'adminPath' && params.includeInactive && !config.adminPath) {
+      throw new Error(`createResource(${config.key}): useList with includeInactive requires adminPath`);
+    }
     const canViewAdminPath = useCanViewAdminPath();
     const { limit, offset } = toOffsetLimit(params);
     const includeInactive =

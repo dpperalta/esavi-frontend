@@ -272,3 +272,93 @@ describe('createResource — listado con padre (hallazgo D)', () => {
     expect(requestedUrl!.searchParams.get('parentId')).toBeNull();
   });
 });
+
+interface TeamMember {
+  investigationTeamMemberId: string;
+  investigationId: string;
+}
+
+describe('createResource — adminPath solo por padre (SPEC FE29)', () => {
+  const config = {
+    key: 'teamMember',
+    path: '/team-members',
+    idField: 'investigationTeamMemberId' as const,
+    inactiveMode: 'adminPath' as const,
+    parent: {
+      operation: 'byInvestigation',
+      segment: 'investigation/:parentId',
+      adminSegment: 'admin/investigation/:parentId',
+    },
+  };
+
+  it('se construye con solo parent.adminSegment, sin adminPath', () => {
+    expect(() => createResource<TeamMember>(config)).not.toThrow();
+  });
+
+  it('sin adminPath ni parent.adminSegment, sigue lanzando', () => {
+    expect(() =>
+      createResource<TeamMember>({
+        ...config,
+        parent: { operation: 'byInvestigation', segment: 'investigation/:parentId' },
+      }),
+    ).toThrow(/requires adminPath or parent.adminSegment/);
+  });
+
+  it('con ADMIN e includeInactive:true, useListByParent pega a …/admin/investigation/:id', async () => {
+    signIn();
+    mockCurrentUser('ADMIN', 50);
+    const resource = createResource<TeamMember>(config);
+    let hitAdmin = false;
+    server.use(
+      http.get('http://localhost:4500/api/team-members/investigation/inv-1', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+      http.get('http://localhost:4500/api/team-members/admin/investigation/inv-1', () => {
+        hitAdmin = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderHook(
+      () => resource.useListByParent?.('inv-1', { pageSize: 100, includeInactive: true }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => expect(hitAdmin).toBe(true));
+  });
+
+  it('con USER e includeInactive:true, useListByParent pega a …/investigation/:id', async () => {
+    signIn();
+    mockCurrentUser('USER', 25);
+    const resource = createResource<TeamMember>(config);
+    let hitPlain = false;
+    let hitAdmin = false;
+    server.use(
+      http.get('http://localhost:4500/api/team-members/investigation/inv-1', () => {
+        hitPlain = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+      http.get('http://localhost:4500/api/team-members/admin/investigation/inv-1', () => {
+        hitAdmin = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderHook(
+      () => resource.useListByParent?.('inv-1', { pageSize: 100, includeInactive: true }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => expect(hitPlain).toBe(true));
+    expect(hitAdmin).toBe(false);
+  });
+
+  it('useList con includeInactive y sin adminPath lanza un error explícito', () => {
+    const resource = createResource<TeamMember>(config);
+    expect(() =>
+      renderHook(() => resource.useList({ pageSize: 10, includeInactive: true }), {
+        wrapper: createWrapper(),
+      }),
+    ).toThrow(/useList with includeInactive requires adminPath/);
+  });
+});

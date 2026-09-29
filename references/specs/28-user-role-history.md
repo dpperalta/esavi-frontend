@@ -1,6 +1,6 @@
 # SPEC FE28 — Historial y reactivación de roles de usuario
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE20 (ficha de usuario y bloque de roles), SPEC FE21 (catálogo de roles y retirada), SPEC F02 del backend (`appUserRole`: `002B` y `005B`)
 > **Fecha:** 2026-09-28
 > **Objetivo:** Que un ADMIN vea en la ficha de usuario todas las asignaciones de rol que ha tenido, vigentes y revocadas, y que un SUPERADMIN pueda reactivar una revocada.
