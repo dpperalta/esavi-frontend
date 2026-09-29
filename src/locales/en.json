@@ -1521,6 +1521,9 @@
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."
     },
     "events": {
+      "toast": {
+        "restored": "Event restored. If its position was taken, it moves to the end of the list."
+      },
       "sectionTitle": "Events",
       "fields": {
         "esaviName": "Adverse event",

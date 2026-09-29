@@ -1521,6 +1521,9 @@
       "discarded": "Se descartaron cambios sin guardar: el caso se editó en otro sitio."
     },
     "events": {
+      "toast": {
+        "restored": "Evento restaurado. Si su posición estaba ocupada, pasa al final de la lista."
+      },
       "sectionTitle": "Eventos",
       "fields": {
         "esaviName": "Evento adverso",

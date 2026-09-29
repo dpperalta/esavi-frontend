@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 import { notificationMedicalHistoryResource, useNotificationMedicalHistoriesByCase } from './api';
 import { MedicalHistoryFormDialog } from './MedicalHistoryFormDialog';
 
@@ -49,6 +50,12 @@ export function MedicalHistoryList({
 }: MedicalHistoryListProps) {
   const { t } = useTranslation();
   const histories = useNotificationMedicalHistoriesByCase(caseId, notificationId !== null);
+  // ESAVI-MEDHIST-002B / ESAVI-MEDHIST-005B (SPEC FE29).
+  const auditView = useSatelliteAudit(notificationMedicalHistoryResource, {
+    activeQuery: histories,
+    parentId: notificationId,
+    readOnly,
+  });
   const deactivate = notificationMedicalHistoryResource.useDeactivate();
 
   const [dialog, setDialog] = useState<{ open: boolean; medicalHistoryId: string | null }>({
@@ -110,13 +117,13 @@ export function MedicalHistoryList({
       <SatelliteList<NotificationMedicalHistoryDetail>
         titleKey="notification.section.medicalHistory"
         columns={columns}
-        rows={histories.data?.rows ?? []}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="medicalHistoryId"
         getRowLabel={effectiveName}
-        isLoading={histories.isLoading}
-        isError={histories.isError}
-        error={histories.error instanceof EsaviApiError ? histories.error : null}
-        onRetry={() => void histories.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={readOnly ? undefined : () => setDialog({ open: true, medicalHistoryId: null })}
         onEdit={
           readOnly
@@ -124,6 +131,7 @@ export function MedicalHistoryList({
             : (row) => setDialog({ open: true, medicalHistoryId: row.medicalHistoryId })
         }
         onDelete={readOnly ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       <MedicalHistoryFormDialog

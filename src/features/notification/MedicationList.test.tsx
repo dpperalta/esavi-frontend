@@ -3,10 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { itBehavesAsRestorableSatelliteList } from '@/test/satelliteAuditCases';
 import { MedicationList } from './MedicationList';
 
 const toastError = vi.fn();
@@ -66,7 +68,9 @@ function renderList(takesMedication: 'YES' | null = 'YES') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MedicationList caseId="case-1" notificationId={NOTIFICATION_ID} takesMedication={takesMedication} />
+      <MemoryRouter>
+        <MedicationList caseId="case-1" notificationId={NOTIFICATION_ID} takesMedication={takesMedication} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -76,7 +80,9 @@ describe('MedicationList — SPEC FE12b §4 paso 10', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { container } = render(
       <QueryClientProvider client={queryClient}>
-        <MedicationList caseId="case-1" notificationId={null} takesMedication={null} />
+        <MemoryRouter>
+          <MedicationList caseId="case-1" notificationId={null} takesMedication={null} />
+        </MemoryRouter>
       </QueryClientProvider>,
     );
 
@@ -173,5 +179,35 @@ describe('MedicationList — SPEC FE12b §4 paso 10', () => {
     expect(toastError).toHaveBeenCalledWith(
       'Retirar este contenido clínico exige un administrador en este despliegue.',
     );
+  });
+});
+
+describe('MedicationList — registros eliminados (SPEC FE29 §4 paso 6)', () => {
+  itBehavesAsRestorableSatelliteList({
+    server,
+    render: ({ initialPath, readOnly }) => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <MedicationList
+              caseId="case-1"
+              notificationId={NOTIFICATION_ID}
+              takesMedication="YES"
+              readOnly={readOnly}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+    },
+    apiPath: 'notification-medications',
+    adminListSegment: `admin/notification/${NOTIFICATION_ID}`,
+    activeListUrl: 'http://localhost:4500/api/notification-medications/case/case-1',
+    rowId: MEDICATION_1,
+    rowLabel: 'Paracetamol',
+    buildRow: medicationRow,
+    restoredToast: 'Registro restaurado',
+    toastSuccess,
+    toastError,
   });
 });

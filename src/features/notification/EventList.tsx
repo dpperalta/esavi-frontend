@@ -18,6 +18,7 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { Checkbox } from '@/shared/components/ui/checkbox';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 import { notificationEventResource, useNotificationEventsByCase } from './api';
 import { EventFormDialog } from './EventFormDialog';
 
@@ -40,6 +41,13 @@ function isRoleForbidden(error: unknown): boolean {
 export function EventList({ caseId, notificationId, readOnly = false }: EventListProps) {
   const { t } = useTranslation();
   const events = useNotificationEventsByCase(caseId, notificationId !== null);
+  // ESAVI-NOTIFEVT-002B / ESAVI-NOTIFEVT-005B (SPEC FE29).
+  const auditView = useSatelliteAudit(notificationEventResource, {
+    activeQuery: events,
+    parentId: notificationId,
+    readOnly,
+    restoredToastKey: 'notification.events.toast.restored',
+  });
   const update = notificationEventResource.useUpdate();
   const deactivate = notificationEventResource.useDeactivate();
 
@@ -110,7 +118,7 @@ export function EventList({ caseId, notificationId, readOnly = false }: EventLis
         <label className="flex min-h-11 w-fit items-center gap-2 text-sm text-foreground">
           <Checkbox
             checked={row.isMainEsavi}
-            disabled={readOnly}
+            disabled={readOnly || !row.isActive}
             onCheckedChange={(checked) => handleToggleMain(row, checked === true)}
             aria-label={t('notification.events.fields.isMainEsavi')}
           />
@@ -126,16 +134,17 @@ export function EventList({ caseId, notificationId, readOnly = false }: EventLis
       <SatelliteList<NotificationEventDetail>
         titleKey="notification.section.events"
         columns={columns}
-        rows={events.data?.rows ?? []}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="eventId"
         getRowLabel={(row) => row.esaviName}
-        isLoading={events.isLoading}
-        isError={events.isError}
-        error={events.error instanceof EsaviApiError ? events.error : null}
-        onRetry={() => void events.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={readOnly ? undefined : () => setDialog({ open: true, eventId: null })}
         onEdit={readOnly ? undefined : (row) => setDialog({ open: true, eventId: row.eventId })}
         onDelete={readOnly ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       <EventFormDialog

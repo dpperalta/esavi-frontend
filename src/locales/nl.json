@@ -1521,6 +1521,9 @@
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
     },
     "events": {
+      "toast": {
+        "restored": "Gebeurtenis hersteld. Als de positie bezet was, komt ze onderaan de lijst."
+      },
       "sectionTitle": "Gebeurtenissen",
       "fields": {
         "esaviName": "Bijwerking",

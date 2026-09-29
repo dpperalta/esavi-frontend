@@ -1,7 +1,7 @@
 import '@/shared/config/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { MemoryRouter, useLocation } from 'react-router-dom';
@@ -69,7 +69,7 @@ describe('ShowInactiveSwitch / useShowInactive — SPEC FE29', () => {
     const toggle = await screen.findByRole('switch', { name: 'Mostrar registros eliminados' });
     expect(toggle).not.toBeChecked();
 
-    await userEvent.click(toggle);
+    await setupUser().click(toggle);
 
     expect(screen.getByTestId('search')).toHaveTextContent('?includeInactive=true');
     expect(screen.getByTestId('show-inactive')).toHaveTextContent('true');
@@ -83,7 +83,7 @@ describe('ShowInactiveSwitch / useShowInactive — SPEC FE29', () => {
     const toggle = await screen.findByRole('switch', { name: 'Mostrar registros eliminados' });
     expect(toggle).toBeChecked();
 
-    await userEvent.click(toggle);
+    await setupUser().click(toggle);
 
     expect(screen.getByTestId('search')).toHaveTextContent(/^\?other=1$/);
     expect(screen.getByTestId('show-inactive')).toHaveTextContent('false');

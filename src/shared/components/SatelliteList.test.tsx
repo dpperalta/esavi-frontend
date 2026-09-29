@@ -1,5 +1,5 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { setupUser } from '@/test/user';
 import { describe, expect, it, vi } from 'vitest';
 import type { AppDetails } from '@/contracts/common';
 import '@/shared/config/i18n';
@@ -135,7 +135,7 @@ describe('SatelliteList — registros eliminados y auditoría (SPEC FE29)', () =
     const row = { id: '1', name: 'Fiebre alta', date: null, isActive: false, appDetails: null };
     renderAudited([row], { onRestore });
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Restaurar Fiebre alta' })[0]);
+    await setupUser().click(screen.getAllByRole('button', { name: 'Restaurar Fiebre alta' })[0]);
 
     await waitFor(() => expect(onRestore).toHaveBeenCalledWith(row));
   });
@@ -145,7 +145,7 @@ describe('SatelliteList — registros eliminados y auditoría (SPEC FE29)', () =
       { id: '1', name: 'Fiebre alta', date: null, isActive: false, appDetails: [OLDER_ENTRY, NEWER_ENTRY] },
     ]);
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Ver historial de Fiebre alta' })[0]);
+    await setupUser().click(screen.getAllByRole('button', { name: 'Ver historial de Fiebre alta' })[0]);
 
     const sheet = await screen.findByRole('dialog', { name: 'Historial de Fiebre alta' });
     const entries = within(sheet).getAllByRole('listitem');
@@ -157,7 +157,7 @@ describe('SatelliteList — registros eliminados y auditoría (SPEC FE29)', () =
   it('con appDetails null, el Sheet muestra el estado vacío', async () => {
     renderAudited([{ id: '1', name: 'Fiebre alta', date: null, isActive: true, appDetails: null }]);
 
-    await userEvent.click(screen.getAllByRole('button', { name: 'Ver historial de Fiebre alta' })[0]);
+    await setupUser().click(screen.getAllByRole('button', { name: 'Ver historial de Fiebre alta' })[0]);
 
     const sheet = await screen.findByRole('dialog', { name: 'Historial de Fiebre alta' });
     expect(within(sheet).getByText('Todavía no hay cambios registrados.')).toBeInTheDocument();

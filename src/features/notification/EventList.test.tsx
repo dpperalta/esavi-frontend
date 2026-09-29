@@ -3,10 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { itBehavesAsRestorableSatelliteList } from '@/test/satelliteAuditCases';
 import { EventList } from './EventList';
 
 const toastError = vi.fn();
@@ -43,7 +45,9 @@ function renderList() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <EventList caseId="case-1" notificationId={NOTIFICATION_ID} />
+      <MemoryRouter>
+        <EventList caseId="case-1" notificationId={NOTIFICATION_ID} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -78,7 +82,9 @@ describe('EventList — SPEC FE12b §4 paso 8', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const { container } = render(
       <QueryClientProvider client={queryClient}>
-        <EventList caseId="case-1" notificationId={null} />
+        <MemoryRouter>
+          <EventList caseId="case-1" notificationId={null} />
+        </MemoryRouter>
       </QueryClientProvider>,
     );
 
@@ -98,7 +104,9 @@ describe('EventList — SPEC FE12b §4 paso 8', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const tree = (readOnly: boolean) => (
       <QueryClientProvider client={queryClient}>
-        <EventList caseId="case-1" notificationId={NOTIFICATION_ID} readOnly={readOnly} />
+        <MemoryRouter>
+          <EventList caseId="case-1" notificationId={NOTIFICATION_ID} readOnly={readOnly} />
+        </MemoryRouter>
       </QueryClientProvider>
     );
     const view = render(tree(false));
@@ -248,5 +256,30 @@ describe('EventList — SPEC FE12b §4 paso 8', () => {
     expect(toastError).toHaveBeenCalledWith(
       'Retirar este contenido clínico exige un administrador en este despliegue.',
     );
+  });
+});
+
+describe('EventList — registros eliminados (SPEC FE29 §4 paso 6)', () => {
+  itBehavesAsRestorableSatelliteList({
+    server,
+    render: ({ initialPath, readOnly }) => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <EventList caseId="case-1" notificationId={NOTIFICATION_ID} readOnly={readOnly} />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+    },
+    apiPath: 'notification-events',
+    adminListSegment: `admin/notification/${NOTIFICATION_ID}`,
+    activeListUrl: 'http://localhost:4500/api/notification-events/case/case-1',
+    rowId: EVENT_1,
+    rowLabel: 'Fiebre alta',
+    buildRow: eventRow,
+    restoredToast: 'Evento restaurado. Si su posición estaba ocupada, pasa al final de la lista.',
+    toastSuccess,
+    toastError,
   });
 });

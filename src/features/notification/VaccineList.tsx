@@ -18,6 +18,7 @@ import {
 import { Badge } from '@/shared/components/ui/badge';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 import { notificationVaccineResource, notificationDiluentsByVaccineKey, useNotificationDiluentsByVaccine, useNotificationVaccinesByCase } from './api';
 import { VaccineFormDialog } from './VaccineFormDialog';
 
@@ -47,6 +48,12 @@ export function VaccineList({ caseId, notificationId, eventDate, readOnly = fals
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const vaccines = useNotificationVaccinesByCase(caseId, notificationId !== null);
+  // ESAVI-NOTIFVAC-002B / ESAVI-NOTIFVAC-005B (SPEC FE29).
+  const auditView = useSatelliteAudit(notificationVaccineResource, {
+    activeQuery: vaccines,
+    parentId: notificationId,
+    readOnly,
+  });
   const deactivate = notificationVaccineResource.useDeactivate();
 
   const [dialog, setDialog] = useState<{ open: boolean; vaccineId: string | null }>({
@@ -127,7 +134,7 @@ export function VaccineList({ caseId, notificationId, eventDate, readOnly = fals
       <SatelliteList<NotificationVaccineDetail>
         titleKey="notification.section.vaccines"
         columns={columns}
-        rows={vaccines.data?.rows ?? []}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="vaccineId"
         getRowLabel={(row) => row.vaccineName ?? ''}
         cardBadge={(row) =>
@@ -137,13 +144,14 @@ export function VaccineList({ caseId, notificationId, eventDate, readOnly = fals
             </Badge>
           ) : null
         }
-        isLoading={vaccines.isLoading}
-        isError={vaccines.isError}
-        error={vaccines.error instanceof EsaviApiError ? vaccines.error : null}
-        onRetry={() => void vaccines.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={readOnly ? undefined : () => setDialog({ open: true, vaccineId: null })}
         onEdit={readOnly ? undefined : (row) => setDialog({ open: true, vaccineId: row.vaccineId })}
         onDelete={readOnly ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       <VaccineFormDialog
