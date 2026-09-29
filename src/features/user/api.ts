@@ -123,9 +123,13 @@ export function useRevokeUserRole() {
 // ESAVI-USERROLE-002B — GET /api/user-roles/admin/user/:id, every assignment the user ever had,
 // active and revoked. The key extends that of 002A on purpose (SPEC FE28 §3.4): the invalidations
 // of `007`, `005A` and `005B` reach the history by prefix, so none of them needs a line of its own.
+export function userRoleHistoryKey(userId: string) {
+  return [...userRoleAssignmentsKey(userId), { includeInactive: true }] as const;
+}
+
 export function useUserRoleHistory(userId: string, enabled: boolean) {
   return useQuery({
-    queryKey: [...userRoleAssignmentsKey(userId), { includeInactive: true }],
+    queryKey: userRoleHistoryKey(userId),
     queryFn: async () => {
       const response = await client.get<UserRoleAssignmentsResponse>(
         `user-roles/admin/user/${userId}`,
