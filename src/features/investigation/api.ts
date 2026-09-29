@@ -163,11 +163,12 @@ export function useInvestigationAutopsyByCase(caseId: string | undefined, enable
 
 // POST /api/investigation-team-members                     ESAVI-INVTEAM-001   USER  add a member
 // GET  /api/investigation-team-members/investigation/:id   ESAVI-INVTEAM-002A  USER  active members, by parent — `useListByParent` below
+// GET  /api/investigation-team-members/admin/investigation/:id ESAVI-INVTEAM-002B ADMIN incl. deleted, by parent (SPEC FE29)
 // PUT  /api/investigation-team-members/:id                 ESAVI-INVTEAM-004   USER  edit a member
+// DELETE /api/investigation-team-members/:id               ESAVI-INVTEAM-005A  USER  soft delete
+// PATCH /api/investigation-team-members/activate/:id       ESAVI-INVTEAM-005B  ADMIN restore (SPEC FE29)
 // `investigationTeamMemberId` is its own PK, minted by the database (unlike its two 1:1 siblings
-// above) — a proper list of rows, not a satellite object. Out of scope (SPEC FE13a §2):
-// `-005A`/`-005B`/`-005C` — deleting a member is blocked on `CASE-PROCESS.md` §10 lowering
-// `-005A` from ADMIN to USER, so no delete hook exists here at all.
+// above) — a proper list of rows, not a satellite object. Out of scope: `-005C` (SUPERADMIN purge).
 export const investigationTeamMemberResource = createResource<
   InvestigationTeamMemberDetail,
   CreateInvestigationTeamMemberInput,
@@ -176,11 +177,11 @@ export const investigationTeamMemberResource = createResource<
   key: 'investigationTeamMember',
   path: 'investigation-team-members',
   idField: 'investigationTeamMemberId',
-  inactiveMode: 'serverDecides',
-  hasActivate: false,
+  inactiveMode: 'adminPath',
   parent: {
     operation: 'byInvestigation',
     segment: 'investigation/:parentId',
+    adminSegment: 'admin/investigation/:parentId',
   },
 });
 
@@ -234,12 +235,14 @@ export function useInvestigationMedicalHistoryByCase(
 
 // GET  /api/investigation-pregnancy-conditions/investigation/:id  ESAVI-INVPREG-002A  USER  active conditions, by the medical history's own id — `useListByParent` below
 // POST /api/investigation-pregnancy-conditions                    ESAVI-INVPREG-001   USER  add a condition
+// GET  /api/investigation-pregnancy-conditions/admin/investigation/:id ESAVI-INVPREG-002B ADMIN incl. deleted, by parent (SPEC FE29)
 // PUT  /api/investigation-pregnancy-conditions/:id                ESAVI-INVPREG-004   USER  edit a condition
+// DELETE /api/investigation-pregnancy-conditions/:id              ESAVI-INVPREG-005A  USER  soft delete
+// PATCH /api/investigation-pregnancy-conditions/activate/:id      ESAVI-INVPREG-005B  ADMIN restore (SPEC FE29)
 // `investigationId` names the medical history's own PK, not the investigation (SPEC FE13b §1 B) —
 // the cache operation reads `byMedicalHistory` on purpose, even though the URL segment is
 // `investigation/:parentId`, so the trap stays visible in the code (SPEC FE13b §3.4, §6). Out of
-// scope (SPEC FE13b §2): `-005A`/`-005B` (ADMIN, blocked on CASE-PROCESS.md §10), `-005C`
-// (SUPERADMIN purge).
+// scope: `-005C` (SUPERADMIN purge).
 export const investigationPregnancyConditionResource = createResource<
   InvestigationPregnancyConditionDetail,
   CreateInvestigationPregnancyConditionInput,
@@ -248,11 +251,11 @@ export const investigationPregnancyConditionResource = createResource<
   key: 'investigationPregnancyCondition',
   path: 'investigation-pregnancy-conditions',
   idField: 'pregnancyConditionId',
-  inactiveMode: 'serverDecides',
-  hasActivate: false,
+  inactiveMode: 'adminPath',
   parent: {
     operation: 'byMedicalHistory',
     segment: 'investigation/:parentId',
+    adminSegment: 'admin/investigation/:parentId',
   },
 });
 
@@ -346,10 +349,12 @@ export function useCreateInvestigationClinicalEvaluation() {
 
 // POST /api/evaluation-institutions                    ESAVI-EVALINST-001   USER  add an institution — carries `investigationId` (the clinical evaluation's own PK) in the body
 // GET  /api/evaluation-institutions/investigation/:id   ESAVI-EVALINST-002A  USER  active institutions, by the clinical evaluation's own id — `useListByParent` below
+// GET  /api/evaluation-institutions/admin/investigation/:id ESAVI-EVALINST-002B ADMIN incl. deleted, by parent (SPEC FE29)
 // PUT  /api/evaluation-institutions/:id                 ESAVI-EVALINST-004   USER  edit an institution
+// DELETE /api/evaluation-institutions/:id               ESAVI-EVALINST-005A  USER  soft delete
+// PATCH /api/evaluation-institutions/activate/:id       ESAVI-EVALINST-005B  ADMIN restore (SPEC FE29)
 // `evaluationInstitutionId` is its own PK, minted by the database — a proper list of rows, not a
-// 1:1 satellite (SPEC FE13c §3.1). Out of scope (SPEC FE13c §2): `-005A`/`-005B` (ADMIN, blocked
-// on `CASE-PROCESS.md` §10), `-005C` (SUPERADMIN purge).
+// 1:1 satellite (SPEC FE13c §3.1). Out of scope: `-005C` (SUPERADMIN purge).
 export const evaluationInstitutionResource = createResource<
   EvaluationInstitutionDetail,
   CreateEvaluationInstitutionInput,
@@ -358,11 +363,11 @@ export const evaluationInstitutionResource = createResource<
   key: 'evaluationInstitution',
   path: 'evaluation-institutions',
   idField: 'evaluationInstitutionId',
-  inactiveMode: 'serverDecides',
-  hasActivate: false,
+  inactiveMode: 'adminPath',
   parent: {
     operation: 'byInvestigation',
     segment: 'investigation/:parentId',
+    adminSegment: 'admin/investigation/:parentId',
   },
 });
 
@@ -386,12 +391,14 @@ export function useEvaluationInstitutionsByInvestigation(
 
 // POST /api/investigation-diagnostics             ESAVI-INVDIAG-001  USER  add a diagnostic
 // GET  /api/investigation-diagnostics/case/:id     ESAVI-INVDIAG-006  USER  by case, one page — hand-written below
+// GET  /api/investigation-diagnostics/admin/investigation/:id ESAVI-INVDIAG-002B ADMIN incl. deleted, by parent (SPEC FE29)
 // PUT  /api/investigation-diagnostics/:id          ESAVI-INVDIAG-004  USER  edit a diagnostic
+// DELETE /api/investigation-diagnostics/:id        ESAVI-INVDIAG-005A USER  soft delete
+// PATCH /api/investigation-diagnostics/activate/:id ESAVI-INVDIAG-005B ADMIN restore (SPEC FE29)
 // `diagnosticId` is its own PK, and the table hangs from `investigation` directly, not from the
-// clinical evaluation (SPEC FE13c §1.F) — no `parent` config: the list is read from the case's
-// `006`, never from a `byInvestigation` listing, so the screen never needs to know
-// `investigationId` before reading. Out of scope (SPEC FE13c §2): `-005A`/`-005B` (ADMIN, blocked
-// on `CASE-PROCESS.md` §10), `-005C` (SUPERADMIN purge).
+// clinical evaluation (SPEC FE13c §1.F). The active list is read from the case's `006`, so the
+// screen never needs `investigationId` before reading; `parent` exists only for the `002B` of the
+// SPEC FE29 toggle. Out of scope: `-002A` (the `006` covers it), `-005C` (SUPERADMIN purge).
 export const investigationDiagnosticResource = createResource<
   InvestigationDiagnosticDetail,
   CreateInvestigationDiagnosticInput,
@@ -400,8 +407,12 @@ export const investigationDiagnosticResource = createResource<
   key: 'investigationDiagnostic',
   path: 'investigation-diagnostics',
   idField: 'diagnosticId',
-  inactiveMode: 'serverDecides',
-  hasActivate: false,
+  inactiveMode: 'adminPath',
+  parent: {
+    operation: 'byInvestigation',
+    segment: 'investigation/:parentId',
+    adminSegment: 'admin/investigation/:parentId',
+  },
 });
 
 export function investigationDiagnosticsByCaseKey(caseId: string) {
@@ -494,11 +505,12 @@ export function useInvestigationVaccinationContextByCase(
 
 // POST /api/investigation-vaccines-administered                   ESAVI-INVVACAD-001   USER  add a vaccine
 // GET  /api/investigation-vaccines-administered/investigation/:id ESAVI-INVVACAD-002A  USER  active vaccines, by investigation — `useListByParent` below
+// GET  /api/investigation-vaccines-administered/admin/investigation/:id ESAVI-INVVACAD-002B ADMIN incl. deleted, by parent (SPEC FE29)
 // PUT  /api/investigation-vaccines-administered/:id                ESAVI-INVVACAD-004  USER  edit a vaccine
+// DELETE /api/investigation-vaccines-administered/:id              ESAVI-INVVACAD-005A USER  soft delete
+// PATCH /api/investigation-vaccines-administered/activate/:id      ESAVI-INVVACAD-005B ADMIN restore (SPEC FE29)
 // `vaccineAdministeredId` is its own PK, minted by the database — a proper list of rows, not a
-// 1:1 satellite (SPEC FE13d §3.1). Out of scope (SPEC FE13d §2): `-005A`/`-005B` (ADMIN, blocked
-// on `CASE-PROCESS.md` §10) — no delete hook exists here at all, same reason as
-// `investigationTeamMemberResource` above.
+// 1:1 satellite (SPEC FE13d §3.1). Out of scope: `-005C` (SUPERADMIN purge).
 export const investigationVaccineAdministeredResource = createResource<
   InvestigationVaccineAdministeredDetail,
   CreateInvestigationVaccineAdministeredInput,
@@ -507,11 +519,11 @@ export const investigationVaccineAdministeredResource = createResource<
   key: 'investigationVaccineAdministered',
   path: 'investigation-vaccines-administered',
   idField: 'vaccineAdministeredId',
-  inactiveMode: 'serverDecides',
-  hasActivate: false,
+  inactiveMode: 'adminPath',
   parent: {
     operation: 'byInvestigation',
     segment: 'investigation/:parentId',
+    adminSegment: 'admin/investigation/:parentId',
   },
 });
 

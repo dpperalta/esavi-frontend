@@ -85,7 +85,17 @@
       "edit": "Edit {{name}}",
       "delete": "Delete {{name}}",
       "cancel": "Cancel",
-      "save": "Save"
+      "save": "Save",
+      "inactiveBadge": "Deleted",
+      "history": "View history of {{name}}",
+      "historyTitle": "History of {{name}}",
+      "restore": "Restore {{name}}",
+      "toast": {
+        "restored": "Record restored"
+      },
+      "errors": {
+        "alreadyActive": "This record had already been restored."
+      }
     },
     "termSearch": {
       "minChars": "Type at least {{count}} characters.",
@@ -788,6 +798,10 @@
     }
   },
   "caseWizard": {
+    "showInactive": {
+      "label": "Show deleted records",
+      "description": "Includes deleted rows in the lists, to review or restore them."
+    },
     "groups": {
       "notification": "Notification",
       "investigation": "Investigation",
@@ -1507,6 +1521,9 @@
       "discarded": "Discarded unsaved changes: the case was edited somewhere else."
     },
     "events": {
+      "toast": {
+        "restored": "Event restored. If its position was taken, it moves to the end of the list."
+      },
       "sectionTitle": "Events",
       "fields": {
         "esaviName": "Adverse event",
@@ -2299,6 +2316,23 @@
       "saved": "The roles were updated.",
       "partial": "Some roles could not be revoked: {{roles}}.",
       "empty": "This user holds no role and cannot do anything until one is assigned."
+    },
+    "roleHistory": {
+      "open": "History",
+      "title": "Role history",
+      "description": "Every role assignment this user has had, active and revoked.",
+      "status": {
+        "active": "Active",
+        "revoked": "Revoked"
+      },
+      "assignedAt": "Assigned on",
+      "revokedAt": "Revoked on",
+      "empty": "This user has never been assigned a role.",
+      "roleRetired": "The role is retired. Reactivate it first on the roles screen.",
+      "errors": {
+        "alreadyActive": "This assignment was already active. The history has been refreshed.",
+        "assignmentExists": "This user already holds that role. The history has been refreshed."
+      }
     },
     "errors": {
       "emailExists": "A user with that email already exists.",

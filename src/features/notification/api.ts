@@ -174,10 +174,12 @@ export function useNonSevereNotificationByCase(
 
 // POST   /api/notification-events            ESAVI-NOTIFEVT-001   USER   create
 // GET    /api/notification-events/case/:id   ESAVI-NOTIFEVT-006   USER   events of the case, in reentry — hand-written below
+// GET    /api/notification-events/admin/notification/:id ESAVI-NOTIFEVT-002B ADMIN incl. deleted, by parent — `useListByParent` with `includeInactive` (SPEC FE29)
 // PUT    /api/notification-events/:id        ESAVI-NOTIFEVT-004   ADMIN  update (§10.4 half-applied — SPEC FE12b §3.2)
-// DELETE /api/notification-events/:id        ESAVI-NOTIFEVT-005A  ADMIN  soft delete
-// Out of scope (SPEC FE12b §2): the two 002A/002B listings (the `006` above covers both, entered
-// by caseId), 003 by own PK, 005B/005C (SUPERADMIN, reactivate/purge).
+// DELETE /api/notification-events/:id        ESAVI-NOTIFEVT-005A  USER   soft delete
+// PATCH  /api/notification-events/activate/:id ESAVI-NOTIFEVT-005B ADMIN  restore (SPEC FE29)
+// Out of scope: the 002A listing (the `006` below covers it, entered by caseId), 003 by own PK,
+// 005C (SUPERADMIN purge).
 export const notificationEventResource = createResource<
   NotificationEventDetail,
   CreateNotificationEventInput,
@@ -186,10 +188,13 @@ export const notificationEventResource = createResource<
   key: 'notificationEvent',
   path: 'notification-events',
   idField: 'eventId',
-  // No screen ever toggles inactive rows for a satellite (SPEC FE12b §2: "sin toggle de mostrar
-  // inactivos"), so `useList`/`useListByParent` are never called here either — same case as
-  // `severeNotificationResource` above.
-  inactiveMode: 'serverDecides',
+  // No global admin listing exists: the case-file toggle of SPEC FE29 reads the `002B` by parent.
+  inactiveMode: 'adminPath',
+  parent: {
+    operation: 'byNotification',
+    segment: 'notification/:parentId',
+    adminSegment: 'admin/notification/:parentId',
+  },
 });
 
 export function notificationEventsByCaseKey(caseId: string) {
@@ -241,8 +246,10 @@ export function useMeddraSearch(term: string) {
 
 // POST   /api/notification-medications            ESAVI-NOTIFMED-001   USER   create
 // GET    /api/notification-medications/case/:id   ESAVI-NOTIFMED-006   USER   medications of the case, in reentry — hand-written below
+// GET    /api/notification-medications/admin/notification/:id ESAVI-NOTIFMED-002B ADMIN incl. deleted, by parent (SPEC FE29)
 // PUT    /api/notification-medications/:id        ESAVI-NOTIFMED-004   ADMIN  update (§10.4 half-applied)
-// DELETE /api/notification-medications/:id        ESAVI-NOTIFMED-005A  ADMIN  soft delete
+// DELETE /api/notification-medications/:id        ESAVI-NOTIFMED-005A  USER   soft delete
+// PATCH  /api/notification-medications/activate/:id ESAVI-NOTIFMED-005B ADMIN restore (SPEC FE29)
 // Same out-of-scope routes as its event sibling above.
 export const notificationMedicationResource = createResource<
   NotificationMedicationDetail,
@@ -252,7 +259,12 @@ export const notificationMedicationResource = createResource<
   key: 'notificationMedication',
   path: 'notification-medications',
   idField: 'medicationId',
-  inactiveMode: 'serverDecides',
+  inactiveMode: 'adminPath',
+  parent: {
+    operation: 'byNotification',
+    segment: 'notification/:parentId',
+    adminSegment: 'admin/notification/:parentId',
+  },
 });
 
 export function notificationMedicationsByCaseKey(caseId: string) {
@@ -275,9 +287,11 @@ export function useNotificationMedicationsByCase(caseId: string | undefined, ena
 
 // POST   /api/notification-vaccines          ESAVI-NOTIFVAC-001   USER   create
 // GET    /api/notification-vaccines/case/:id ESAVI-NOTIFVAC-006   USER   vaccines of the case, in reentry — hand-written below
+// GET    /api/notification-vaccines/admin/notification/:id ESAVI-NOTIFVAC-002B ADMIN incl. deleted, by parent (SPEC FE29)
 // PUT    /api/notification-vaccines/:id      ESAVI-NOTIFVAC-004   ADMIN  update (§10.4 half-applied, SPEC FE12c §3.2)
-// DELETE /api/notification-vaccines/:id      ESAVI-NOTIFVAC-005A  ADMIN  soft delete
-// Same out-of-scope routes as its event and medication siblings above (002A/002B, 003, 005B/005C).
+// DELETE /api/notification-vaccines/:id      ESAVI-NOTIFVAC-005A  USER   soft delete
+// PATCH  /api/notification-vaccines/activate/:id ESAVI-NOTIFVAC-005B ADMIN restore (SPEC FE29)
+// Same out-of-scope routes as its event and medication siblings above (002A, 003, 005C).
 export const notificationVaccineResource = createResource<
   NotificationVaccineDetail,
   CreateNotificationVaccineInput,
@@ -286,7 +300,12 @@ export const notificationVaccineResource = createResource<
   key: 'notificationVaccine',
   path: 'notification-vaccines',
   idField: 'vaccineId',
-  inactiveMode: 'serverDecides',
+  inactiveMode: 'adminPath',
+  parent: {
+    operation: 'byNotification',
+    segment: 'notification/:parentId',
+    adminSegment: 'admin/notification/:parentId',
+  },
 });
 
 export function notificationVaccinesByCaseKey(caseId: string) {
@@ -397,9 +416,10 @@ export function useNotificationPregnancyByNotification(
 // POST   /api/notification-pregnancy-complications                ESAVI-PREGCOMP-001   USER   create
 // GET    /api/notification-pregnancy-complications/pregnancy/:id  ESAVI-PREGCOMP-002A  USER   complications of the pregnancy, in reentry — hand-written below
 // PUT    /api/notification-pregnancy-complications/:id            ESAVI-PREGCOMP-004   USER   update
-// DELETE /api/notification-pregnancy-complications/:id            ESAVI-PREGCOMP-005A  ADMIN  soft delete — §10.4, the one write this spec re-requests
-// Out of scope (SPEC FE12d §3.2): `002B` (ADMIN, includes inactive — the wizard shows none), `003`
-// (the `002A` above covers reentry), `005B`/`005C` (SUPERADMIN).
+// GET    /api/notification-pregnancy-complications/admin/pregnancy/:id ESAVI-PREGCOMP-002B ADMIN incl. deleted, by parent — `useListByParent` with `includeInactive` (SPEC FE29)
+// DELETE /api/notification-pregnancy-complications/:id            ESAVI-PREGCOMP-005A  USER   soft delete
+// PATCH  /api/notification-pregnancy-complications/activate/:id   ESAVI-PREGCOMP-005B  ADMIN  restore (SPEC FE29)
+// Out of scope (SPEC FE12d §3.2): `003` (the `002A` above covers reentry), `005C` (SUPERADMIN).
 export const notificationPregnancyComplicationResource = createResource<
   NotificationPregnancyComplicationDetail,
   CreateNotificationPregnancyComplicationInput,
@@ -408,7 +428,12 @@ export const notificationPregnancyComplicationResource = createResource<
   key: 'notificationPregnancyComplication',
   path: 'notification-pregnancy-complications',
   idField: 'complicationId',
-  inactiveMode: 'serverDecides',
+  inactiveMode: 'adminPath',
+  parent: {
+    operation: 'byPregnancy',
+    segment: 'pregnancy/:parentId',
+    adminSegment: 'admin/pregnancy/:parentId',
+  },
 });
 
 export function notificationPregnancyComplicationsByPregnancyKey(pregnancyId: string) {
@@ -437,11 +462,11 @@ export function useNotificationPregnancyComplicationsByPregnancy(
 // POST   /api/notification-medical-histories            ESAVI-MEDHIST-001   USER   create
 // GET    /api/notification-medical-histories/case/:id   ESAVI-MEDHIST-006   USER   antecedents of the case, in reentry — hand-written below
 // PUT    /api/notification-medical-histories/:id        ESAVI-MEDHIST-004   USER   update — USER, not the ADMIN of its event/medication siblings (§10.4)
-// DELETE /api/notification-medical-histories/:id        ESAVI-MEDHIST-005A  ADMIN  soft delete
-// Out of scope (SPEC FE12e §3.2): 002A (the `006` above covers it, entered by caseId), 002B
-// (ADMIN, includes retired rows the wizard never shows), 003 by own PK (the row is edited with
-// what the list already brought), and 005B/005C (SUPERADMIN, reactivate/purge — never offered,
-// never named as an available action).
+// DELETE /api/notification-medical-histories/:id        ESAVI-MEDHIST-005A  USER   soft delete
+// GET    /api/notification-medical-histories/admin/notification/:id ESAVI-MEDHIST-002B ADMIN incl. deleted, by parent (SPEC FE29)
+// PATCH  /api/notification-medical-histories/activate/:id ESAVI-MEDHIST-005B ADMIN restore (SPEC FE29)
+// Out of scope (SPEC FE12e §3.2): 002A (the `006` below covers it, entered by caseId), 003 by own
+// PK (the row is edited with what the list already brought), and 005C (SUPERADMIN purge).
 export const notificationMedicalHistoryResource = createResource<
   NotificationMedicalHistoryDetail,
   CreateNotificationMedicalHistoryInput,
@@ -450,13 +475,12 @@ export const notificationMedicalHistoryResource = createResource<
   key: 'notificationMedicalHistory',
   path: 'notification-medical-histories',
   idField: 'medicalHistoryId',
-  // `005B` (reactivate) is SUPERADMIN and out of scope (SPEC FE12e §3.2): the wizard neither
-  // offers it nor names it as an available action, so the hook does not exist rather than
-  // existing unused — the same reason `classificationResource` sets it false.
-  hasActivate: false,
-  // No screen ever toggles inactive rows for a satellite, so `useList`/`useListByParent` are never
-  // called here — same case as its four sibling lists of step 4.
-  inactiveMode: 'serverDecides',
+  inactiveMode: 'adminPath',
+  parent: {
+    operation: 'byNotification',
+    segment: 'notification/:parentId',
+    adminSegment: 'admin/notification/:parentId',
+  },
 });
 
 export function notificationMedicalHistoriesByCaseKey(caseId: string) {

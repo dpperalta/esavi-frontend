@@ -1,7 +1,7 @@
 // Resolves the toast text for an EsaviApiError. The `code` decides, never a parse of `message`
 // (CONVENTIONS.md §6.2). `errors` is debugging material and never reaches this module.
 import { i18next } from '@/shared/config/i18n';
-import type { EsaviApiError } from '@/shared/api/types';
+import { EsaviApiError } from '@/shared/api/types';
 
 // Grows as each entity declares its own codes (CONVENTIONS.md §6.4). A code routed to a form
 // field via `errorFieldMap` (SPEC FE02 §3.6) doesn't need an entry here — it never reaches a
@@ -284,6 +284,11 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   // text asks for another attempt after `UserRolesCard` invalidates the assignments.
   USERROLE_007_ROLE_LEVEL_EXCEEDED: 'user.errors.roleLevelExceeded',
   USERROLE_007_ASSIGNMENT_EXISTS: 'user.errors.assignmentExists',
+  // SPEC FE28 §3.5 — the two 409s of reactivating from the history; both mean the history the
+  // user is looking at is stale, and the sheet refetches it. `005B_NOT_FOUND` keeps the backend's
+  // own message.
+  USERROLE_005B_ALREADY_ACTIVE: 'user.roleHistory.errors.alreadyActive',
+  USERROLE_005B_ASSIGNMENT_EXISTS: 'user.roleHistory.errors.assignmentExists',
   // SPEC FE21 §3.5 — the appRole codes with no field to mark. The duplicate and escalation codes
   // of `001`/`004` are absent: `appRoleErrorFieldMap` routes those to `code`, `name` and `level`.
   // These three reach the listing's row menu, which hides the action the backend refuses — they
@@ -340,4 +345,17 @@ export function getErrorMessage(error: EsaviApiError): string {
     return error.message;
   }
   return i18next.t('common.errors.unexpected');
+}
+
+const ALREADY_ACTIVE_CODE = /_005B_ALREADY_ACTIVE$/;
+
+// SPEC FE29 §3.5 — the ten restorable satellites answer 409 `<PREFIX>_005B_ALREADY_ACTIVE` when
+// another session restored the row first. Matched by suffix, same technique as
+// `isCaseClosedError` (SPEC FE17), instead of listing ten codes with the same text.
+export function isAlreadyActiveError(error: unknown): boolean {
+  return (
+    error instanceof EsaviApiError &&
+    typeof error.code === 'string' &&
+    ALREADY_ACTIVE_CODE.test(error.code)
+  );
 }

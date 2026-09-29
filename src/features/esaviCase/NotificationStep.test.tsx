@@ -3193,3 +3193,24 @@ describe('NotificationStep — revelado progresivo (SPEC FE12f §4 paso 6)', () 
     expect(liveRegion).toHaveTextContent('Antecedentes de la persona vacunada');
   }, 60000);
 });
+
+describe('NotificationStep — «Mostrar registros eliminados» (SPEC FE29 §2)', () => {
+  it('con ADMIN pinta el switch arriba del contenido', async () => {
+    signInAs('ADMIN', 50);
+    mockReentryWithMedications([MEDICATION_ROW]);
+
+    renderNotificationStep();
+
+    expect(await screen.findByRole('switch', { name: 'Mostrar registros eliminados' })).toBeInTheDocument();
+  }, 30000);
+
+  it('con USER no lo pinta', async () => {
+    signInAs('USER', 25);
+    mockReentryWithMedications([MEDICATION_ROW]);
+
+    renderNotificationStep();
+
+    await screen.findByLabelText('Descripción del ESAVI (signos y síntomas)');
+    expect(screen.queryByRole('switch', { name: 'Mostrar registros eliminados' })).not.toBeInTheDocument();
+  }, 30000);
+});

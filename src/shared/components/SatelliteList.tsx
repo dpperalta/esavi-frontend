@@ -1,10 +1,14 @@
-import type { ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import { HistoryIcon, PencilIcon, PlusIcon, RotateCcwIcon, Trash2Icon } from 'lucide-react';
+import type { AppDetails } from '@/contracts/common';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import type { EsaviApiError } from '@/shared/api/types';
+import { AuditTrail } from '@/shared/components/AuditTrail';
+import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/components/ui/sheet';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import {
   Table,
@@ -57,6 +61,19 @@ export interface SatelliteListProps<T> {
   onAdd?: () => void;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  // SPEC FE29 §2. An inactive row gets the `bg-destructive/5` tint and the «Eliminado» badge
+  // (CONVENTIONS.md §10.1), and never offers edit or delete — only history and restore.
+  isRowInactive?: (row: T) => boolean;
+  // Rendered on inactive rows only. The returned promise is awaited to put focus back on the
+  // restored row once the action button disappears (SPEC FE29 §3.7).
+  onRestore?: (row: T) => Promise<void> | void;
+  // The id of the row whose restore is in flight: its button is disabled with `aria-busy`, the
+  // rest of the list stays operable (SPEC FE29 §3.6).
+  restoringId?: string | null;
+  // Passing it is what enables «Historial» on every row; the caller only does so for SUPERADMIN
+  // (CONVENTIONS.md §10.4). The Sheet reads the cached row, never a copy (SPEC FE29 §3.4).
+  getRowAppDetails?: (row: T) => AppDetails[] | null;
+  onShowHistory?: (row: T) => void;
 }
 
 const SKELETON_ROWS = 3;
@@ -80,14 +97,47 @@ export function SatelliteList<T>({
   onAdd,
   onEdit,
   onDelete,
+  isRowInactive,
+  onRestore,
+  restoringId,
+  getRowAppDetails,
+  onShowHistory,
 }: SatelliteListProps<T>) {
   const { t } = useTranslation();
-  const hasRowActions = !!onEdit || !!onDelete;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const [historyRow, setHistoryRow] = useState<T | null>(null);
+  const hasRowActions = !!onEdit || !!onDelete || !!onRestore || !!getRowAppDetails;
+
+  const showHistory = getRowAppDetails
+    ? (row: T) => {
+        setHistoryRow(row);
+        onShowHistory?.(row);
+      }
+    : undefined;
+
+  // Both the table row and the card are in the DOM; only the visible one accepts focus, so each
+  // is tried in turn before falling back to the list title (SPEC FE29 §3.7).
+  const restore = onRestore
+    ? async (row: T) => {
+        await onRestore(row);
+        const rowId = String(row[idField]);
+        const candidates = containerRef.current?.querySelectorAll<HTMLElement>('[data-row-id]') ?? [];
+        for (const candidate of candidates) {
+          if (candidate.dataset.rowId !== rowId) continue;
+          candidate.focus();
+          if (document.activeElement === candidate) return;
+        }
+        titleRef.current?.focus();
+      }
+    : undefined;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div ref={containerRef} className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h3 tabIndex={-1} className="text-sm font-medium text-foreground">{t(titleKey)}</h3>
+        <h3 ref={titleRef} tabIndex={-1} className="text-sm font-medium text-foreground">
+          {t(titleKey)}
+        </h3>
         {onAdd && (
           <Button type="button" onClick={onAdd} size="sm">
             <PlusIcon aria-hidden="true" />
@@ -141,17 +191,56 @@ export function SatelliteList<T>({
               <TableBody>
                 {rows.map((row) => {
                   const label = getRowLabel(row);
+                  const rowId = String(row[idField]);
+                  const inactive = !!isRowInactive?.(row);
+                  const isRestoring = restoringId === rowId;
                   return (
-                    <TableRow key={String(row[idField])}>
-                      {columns.map((column) => (
+                    <TableRow
+                      key={rowId}
+                      data-row-id={restore ? rowId : undefined}
+                      tabIndex={restore ? -1 : undefined}
+                      className={cn(inactive && 'bg-destructive/5')}
+                    >
+                      {columns.map((column, columnIndex) => (
                         <TableCell key={column.key} className={cn('whitespace-normal', column.className)}>
-                          <div className="max-w-64 break-words">{column.render(row)}</div>
+                          <div className="max-w-64 break-words">
+                            {column.render(row)}
+                            {inactive && columnIndex === 0 && (
+                              <Badge variant="destructive" className="ml-2 align-middle">
+                                {t('common.satelliteList.inactiveBadge')}
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                       ))}
                       {hasRowActions && (
                         <TableCell>
                           <div className="flex justify-end gap-1">
-                            {onEdit && (
+                            {showHistory && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                aria-label={t('common.satelliteList.history', { name: label })}
+                                onClick={() => showHistory(row)}
+                              >
+                                <HistoryIcon aria-hidden="true" />
+                              </Button>
+                            )}
+                            {inactive && restore && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                disabled={isRestoring}
+                                aria-busy={isRestoring}
+                                aria-label={t('common.satelliteList.restore', { name: label })}
+                                onClick={() => void restore(row)}
+                              >
+                                <RotateCcwIcon aria-hidden="true" />
+                              </Button>
+                            )}
+                            {!inactive && onEdit && (
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -162,7 +251,7 @@ export function SatelliteList<T>({
                                 <PencilIcon aria-hidden="true" />
                               </Button>
                             )}
-                            {onDelete && (
+                            {!inactive && onDelete && (
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -185,21 +274,70 @@ export function SatelliteList<T>({
           </div>
 
           <div className="grid gap-3 md:hidden">
-            {rows.map((row) => (
-              <SatelliteListCard
-                key={String(row[idField])}
-                row={row}
-                columns={columns}
-                label={getRowLabel(row)}
-                badge={cardBadge?.(row)}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
+            {rows.map((row) => {
+              const rowId = String(row[idField]);
+              const inactive = !!isRowInactive?.(row);
+              return (
+                <SatelliteListCard
+                  key={rowId}
+                  row={row}
+                  rowId={restore ? rowId : undefined}
+                  columns={columns}
+                  label={getRowLabel(row)}
+                  badge={cardBadge?.(row)}
+                  inactive={inactive}
+                  isRestoring={restoringId === rowId}
+                  onEdit={inactive ? undefined : onEdit}
+                  onDelete={inactive ? undefined : onDelete}
+                  onRestore={inactive ? restore : undefined}
+                  onShowHistory={showHistory}
+                />
+              );
+            })}
           </div>
         </>
       )}
+
+      {getRowAppDetails && (
+        <SatelliteHistorySheet
+          label={historyRow ? getRowLabel(historyRow) : ''}
+          appDetails={historyRow ? getRowAppDetails(historyRow) : null}
+          open={historyRow !== null}
+          onOpenChange={(open) => {
+            if (!open) setHistoryRow(null);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+interface SatelliteHistorySheetProps {
+  label: string;
+  appDetails: AppDetails[] | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+// Right side on desktop, the whole screen below `md` (SPEC FE29 §3.7). The width overrides use the
+// same `data-[side=right]` variants as the shadcn Sheet so `cn` replaces them instead of stacking.
+function SatelliteHistorySheet({ label, appDetails, open, onOpenChange }: SatelliteHistorySheetProps) {
+  const { t } = useTranslation();
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="right"
+        className="overflow-y-auto data-[side=right]:w-full data-[side=right]:sm:max-w-none data-[side=right]:md:w-3/4 data-[side=right]:md:max-w-sm"
+      >
+        <SheetHeader>
+          <SheetTitle>{t('common.satelliteList.historyTitle', { name: label })}</SheetTitle>
+        </SheetHeader>
+        <div className="px-4 pb-4">
+          <AuditTrail appDetails={appDetails} />
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -250,14 +388,32 @@ function SatelliteListSkeleton<T>({ columns }: SatelliteListSkeletonProps<T>) {
 
 interface SatelliteListCardProps<T> {
   row: T;
+  // Only set when restore is available: it is the focus target after restoring.
+  rowId?: string;
   columns: SatelliteListColumn<T>[];
   label: string;
   badge?: ReactNode;
+  inactive: boolean;
+  isRestoring: boolean;
   onEdit?: (row: T) => void;
   onDelete?: (row: T) => void;
+  onRestore?: (row: T) => Promise<void>;
+  onShowHistory?: (row: T) => void;
 }
 
-function SatelliteListCard<T>({ row, columns, label, badge, onEdit, onDelete }: SatelliteListCardProps<T>) {
+function SatelliteListCard<T>({
+  row,
+  rowId,
+  columns,
+  label,
+  badge,
+  inactive,
+  isRestoring,
+  onEdit,
+  onDelete,
+  onRestore,
+  onShowHistory,
+}: SatelliteListCardProps<T>) {
   const { t } = useTranslation();
   // A column with no value for this row paints no line at all — never a dash or blank filler
   // (SPEC FE12b §3.7 and its acceptance criterion in §5).
@@ -268,11 +424,24 @@ function SatelliteListCard<T>({ row, columns, label, badge, onEdit, onDelete }: 
   const secondary = cells.filter(({ column }) => column.card === 'secondary');
   const meta = cells.filter(({ column }) => column.card === 'meta');
 
+  const hasActions = !!onEdit || !!onDelete || !!onRestore || !!onShowHistory;
+
   return (
-    <Card>
+    <Card
+      data-row-id={rowId}
+      tabIndex={rowId ? -1 : undefined}
+      className={cn(inactive && 'bg-destructive/5')}
+    >
       <CardContent className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-1">
-          {badge && <div>{badge}</div>}
+          {(badge || inactive) && (
+            <div className="flex flex-wrap items-center gap-2">
+              {badge}
+              {inactive && (
+                <Badge variant="destructive">{t('common.satelliteList.inactiveBadge')}</Badge>
+              )}
+            </div>
+          )}
           {primary.map(({ column, value }) => (
             <div key={column.key} className="font-medium text-foreground">
               {value}
@@ -291,10 +460,36 @@ function SatelliteListCard<T>({ row, columns, label, badge, onEdit, onDelete }: 
             </div>
           )}
         </div>
-        {(onEdit || onDelete) && (
+        {hasActions && (
           // 44px touch targets (SPEC FE12b §3.7) — desktop row actions stay at `icon-sm` above,
           // this is the mobile-only size.
           <div className="flex shrink-0 gap-1">
+            {onShowHistory && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-11"
+                aria-label={t('common.satelliteList.history', { name: label })}
+                onClick={() => onShowHistory(row)}
+              >
+                <HistoryIcon aria-hidden="true" />
+              </Button>
+            )}
+            {onRestore && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-11"
+                disabled={isRestoring}
+                aria-busy={isRestoring}
+                aria-label={t('common.satelliteList.restore', { name: label })}
+                onClick={() => void onRestore(row)}
+              >
+                <RotateCcwIcon aria-hidden="true" />
+              </Button>
+            )}
             {onEdit && (
               <Button
                 type="button"

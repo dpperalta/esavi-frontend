@@ -22,6 +22,13 @@ export interface UserRoleAssignment {
   roleId: string;
   assignedByUserId: string | null;
   isActive: boolean;
+  // toAssignmentResponse returns the model's whole toJSON() (appUserRole.service.ts:41-47), so the
+  // lifecycle dates travel on every row; columns in appUserRole.model.ts:54-66. The history of
+  // ESAVI-USERROLE-002B reads them (SPEC FE28 §3.3). appDetails, validFrom, validTo and sysDetails
+  // travel too but stay undeclared: nothing reads them.
+  createdAt: string;
+  updatedAt: string | null;
+  deletedAt: string | null;
   role: UserRoleSummary;
 }
 

@@ -16,6 +16,7 @@ import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { useClassificationByCase } from '@/features/classification/api';
 import { esaviCaseResource } from '@/features/esaviCase/api';
 import { useCaseWizard } from '@/features/esaviCase/CaseWizardContext';
+import { ShowInactiveSwitch } from '@/features/esaviCase/ShowInactiveSwitch';
 import { AdministrationErrorSection } from '@/features/investigation/AdministrationErrorSection';
 import { BasicInfoSection } from '@/features/investigation/BasicInfoSection';
 import { ClinicalEvaluationSection } from '@/features/investigation/ClinicalEvaluationSection';
@@ -606,6 +607,7 @@ function InvestigationStepBody({
 
   return (
     <div className="flex flex-col gap-6">
+      <ShowInactiveSwitch />
       {isVisible('source') && (
         <SourceSection
           caseId={caseId}

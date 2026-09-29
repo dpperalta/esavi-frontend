@@ -85,7 +85,17 @@
       "edit": "{{name}} bewerken",
       "delete": "{{name}} verwijderen",
       "cancel": "Annuleren",
-      "save": "Opslaan"
+      "save": "Opslaan",
+      "inactiveBadge": "Verwijderd",
+      "history": "Geschiedenis van {{name}} bekijken",
+      "historyTitle": "Geschiedenis van {{name}}",
+      "restore": "{{name}} herstellen",
+      "toast": {
+        "restored": "Record hersteld"
+      },
+      "errors": {
+        "alreadyActive": "Dit record was al hersteld."
+      }
     },
     "termSearch": {
       "minChars": "Typ minstens {{count}} tekens.",
@@ -788,6 +798,10 @@
     }
   },
   "caseWizard": {
+    "showInactive": {
+      "label": "Verwijderde records tonen",
+      "description": "Neemt verwijderde rijen op in de lijsten, om ze te bekijken of te herstellen."
+    },
     "groups": {
       "notification": "Melding",
       "investigation": "Onderzoek",
@@ -1507,6 +1521,9 @@
       "discarded": "Niet-opgeslagen wijzigingen verworpen: het dossier is elders bewerkt."
     },
     "events": {
+      "toast": {
+        "restored": "Gebeurtenis hersteld. Als de positie bezet was, komt ze onderaan de lijst."
+      },
       "sectionTitle": "Gebeurtenissen",
       "fields": {
         "esaviName": "Bijwerking",
@@ -2299,6 +2316,23 @@
       "saved": "De rollen zijn bijgewerkt.",
       "partial": "Sommige rollen konden niet worden ingetrokken: {{roles}}.",
       "empty": "Deze gebruiker heeft geen rol en kan niets doen totdat er een wordt toegewezen."
+    },
+    "roleHistory": {
+      "open": "Geschiedenis",
+      "title": "Rolgeschiedenis",
+      "description": "Alle roltoewijzingen van deze gebruiker, actief en ingetrokken.",
+      "status": {
+        "active": "Actief",
+        "revoked": "Ingetrokken"
+      },
+      "assignedAt": "Toegewezen op",
+      "revokedAt": "Ingetrokken op",
+      "empty": "Aan deze gebruiker is nooit een rol toegewezen.",
+      "roleRetired": "De rol is ingetrokken uit de catalogus. Activeer hem eerst opnieuw op het rollenscherm.",
+      "errors": {
+        "alreadyActive": "Deze toewijzing was al actief. De geschiedenis is bijgewerkt.",
+        "assignmentExists": "Deze gebruiker heeft die rol al. De geschiedenis is bijgewerkt."
+      }
     },
     "errors": {
       "emailExists": "Er bestaat al een gebruiker met dat e-mailadres.",

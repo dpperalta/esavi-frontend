@@ -4,9 +4,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { itBehavesAsRestorableSatelliteList } from '@/test/satelliteAuditCases';
 import { DiagnosticList } from './DiagnosticList';
 
 const toastError = vi.fn();
@@ -108,12 +110,14 @@ function renderList(disabled = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <DiagnosticList
-        caseId={CASE_1}
-        investigationId={INVESTIGATION_1}
-        disabled={disabled}
-        onMissingInvestigation={() => {}}
-      />
+      <MemoryRouter>
+        <DiagnosticList
+          caseId={CASE_1}
+          investigationId={INVESTIGATION_1}
+          disabled={disabled}
+          onMissingInvestigation={() => {}}
+        />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -151,12 +155,14 @@ describe('DiagnosticList — C.17 (SPEC FE13c §4 paso 7)', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const tree = (disabled: boolean) => (
       <QueryClientProvider client={queryClient}>
-        <DiagnosticList
-          caseId={CASE_1}
-          investigationId={INVESTIGATION_1}
-          disabled={disabled}
-          onMissingInvestigation={() => {}}
-        />
+        <MemoryRouter>
+          <DiagnosticList
+            caseId={CASE_1}
+            investigationId={INVESTIGATION_1}
+            disabled={disabled}
+            onMissingInvestigation={() => {}}
+          />
+        </MemoryRouter>
       </QueryClientProvider>
     );
     const view = render(tree(false));
@@ -299,4 +305,34 @@ describe('DiagnosticList — C.17 (SPEC FE13c §4 paso 7)', () => {
     await waitFor(() => expect(toastSuccess).toHaveBeenCalled());
     expect(requestBody).toMatchObject({ diagnosticDate: '2000-01-01' });
   }, 30000);
+});
+
+describe('DiagnosticList — registros eliminados (SPEC FE29 §4 paso 7)', () => {
+  itBehavesAsRestorableSatelliteList({
+    server,
+    render: ({ initialPath, readOnly }) => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <DiagnosticList
+              caseId={CASE_1}
+              investigationId={INVESTIGATION_1}
+              disabled={readOnly}
+              onMissingInvestigation={() => {}}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+    },
+    apiPath: 'investigation-diagnostics',
+    adminListSegment: `admin/investigation/${INVESTIGATION_1}`,
+    activeListUrl: `http://localhost:4500/api/investigation-diagnostics/case/${CASE_1}`,
+    rowId: DIAGNOSTIC_1,
+    rowLabel: 'Fiebre alta',
+    buildRow: diagnosticRow,
+    restoredToast: 'Registro restaurado',
+    toastSuccess,
+    toastError,
+  });
 });

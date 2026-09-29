@@ -4,9 +4,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { itBehavesAsRestorableSatelliteList } from '@/test/satelliteAuditCases';
 import { VaccineAdministeredList } from './VaccineAdministeredList';
 
 const toastError = vi.fn();
@@ -94,7 +96,9 @@ function renderList(disabled = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <VaccineAdministeredList investigationId={INVESTIGATION_1} disabled={disabled} />
+      <MemoryRouter>
+        <VaccineAdministeredList investigationId={INVESTIGATION_1} disabled={disabled} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -193,5 +197,31 @@ describe('VaccineAdministeredList — SPEC FE13d §4 paso 7', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Editar/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Eliminar/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('VaccineAdministeredList — registros eliminados (SPEC FE29 §4 paso 7)', () => {
+  itBehavesAsRestorableSatelliteList({
+    server,
+    render: ({ initialPath, readOnly }) => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <VaccineAdministeredList investigationId={INVESTIGATION_1} disabled={readOnly} />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+    },
+    apiPath: 'investigation-vaccines-administered',
+    adminListSegment: `admin/investigation/${INVESTIGATION_1}`,
+    activeListUrl: `http://localhost:4500/api/investigation-vaccines-administered/investigation/${INVESTIGATION_1}`,
+    rowId: VACCINE_ADMINISTERED_1,
+    rowLabel: 'BCG vaccine',
+    buildRow: vaccineAdministeredRow,
+    restoredToast: 'Registro restaurado',
+    toastSuccess,
+    toastError,
+    mockDependencies: () => mockDictionary(1),
   });
 });

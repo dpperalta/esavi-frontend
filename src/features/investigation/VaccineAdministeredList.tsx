@@ -18,6 +18,7 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 
 export interface VaccineAdministeredListProps {
   investigationId: string;
@@ -41,6 +42,13 @@ export function VaccineAdministeredList({ investigationId, disabled = false }: V
   const { t } = useTranslation();
   const vaccines = investigationVaccineAdministeredResource.useListByParent!(investigationId, {
     pageSize: 100,
+  });
+  // ESAVI-INVVACAD-002B / ESAVI-INVVACAD-005B (SPEC FE29). `rows` below keeps reading the active
+  // query: the empty-section notice is step logic, not the table.
+  const auditView = useSatelliteAudit(investigationVaccineAdministeredResource, {
+    activeQuery: vaccines,
+    parentId: investigationId,
+    readOnly: disabled,
   });
   const deactivate = investigationVaccineAdministeredResource.useDeactivate();
   const dictionary = useWhodrugDictionaryAvailable();
@@ -109,16 +117,17 @@ export function VaccineAdministeredList({ investigationId, disabled = false }: V
         titleKey="investigation.vaccinesAdministered.title"
         addLabel="investigation.vaccinesAdministered.add"
         columns={columns}
-        rows={rows}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="vaccineAdministeredId"
         getRowLabel={vaccineLabel}
-        isLoading={vaccines.isLoading}
-        isError={vaccines.isError}
-        error={vaccines.error instanceof EsaviApiError ? vaccines.error : null}
-        onRetry={() => void vaccines.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={canAdd ? () => setDialog({ open: true, vaccineAdministered: null }) : undefined}
         onEdit={disabled ? undefined : (row) => setDialog({ open: true, vaccineAdministered: row })}
         onDelete={disabled ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       {/* Sección deshabilitada con su motivo, no una lista vacía (§3.5, §3.6) — el sondeo del

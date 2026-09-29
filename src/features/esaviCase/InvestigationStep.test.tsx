@@ -2588,3 +2588,123 @@ describe('InvestigationStep — campos pendientes en la barra (SPEC FE16 §4 pas
     );
   });
 });
+
+describe('InvestigationStep — «Mostrar registros eliminados» (SPEC FE29 §2)', () => {
+  function signInAs(roleName: string, level: number) {
+    server.use(
+      http.get('http://localhost:4500/api/users/me', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { userId: 'user-1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+        }),
+      ),
+    );
+  }
+
+  it('con ADMIN pinta el switch arriba del contenido', async () => {
+    signInAs('ADMIN', 50);
+    mockWorkflow(true);
+    mockInvestigationDetail();
+
+    renderInvestigationStep();
+
+    expect(await screen.findByRole('switch', { name: 'Mostrar registros eliminados' })).toBeInTheDocument();
+  });
+
+  it('con USER no lo pinta', async () => {
+    mockWorkflow(true);
+    mockInvestigationDetail();
+
+    renderInvestigationStep();
+
+    expect(await screen.findByText('Fuentes de información')).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Mostrar registros eliminados' })).not.toBeInTheDocument();
+  });
+});
+
+describe('InvestigationStep — la lógica del paso ignora el toggle (SPEC FE29 §4 paso 7)', () => {
+  const EXPECTED_PENDING = [
+    'Datos del equipo de investigación · Al menos un integrante',
+    'Instituciones que evaluaron al paciente · Al menos una institución',
+    'Diagnóstico final o presuntivo · Al menos un diagnóstico',
+    'Vacunas administradas · Al menos una vacuna',
+  ];
+
+  function mockDeletedTeamMemberOnly() {
+    const empty = () => HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+    server.use(
+      http.get('http://localhost:4500/api/users/me', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: { userId: 'user-1', roles: [{ roleId: 'r1', name: 'ADMIN', code: 'ADMIN', level: 50 }] },
+        }),
+      ),
+      http.get(
+        `http://localhost:4500/api/investigation-team-members/admin/investigation/${INVESTIGATION_1}`,
+        () =>
+          HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: {
+              count: 1,
+              rows: [
+                {
+                  investigationTeamMemberId: 'member-deleted',
+                  investigationId: INVESTIGATION_1,
+                  fullName: 'Ana Pérez',
+                  institutionName: null,
+                  position: null,
+                  phone: null,
+                  email: null,
+                  sortOrder: 1,
+                  isActive: false,
+                  createdAt: '2026-01-01T00:00:00.000Z',
+                  updatedAt: null,
+                  deletedAt: '2026-01-02T00:00:00.000Z',
+                  appDetails: [],
+                },
+              ],
+            },
+          }),
+      ),
+      http.get(`http://localhost:4500/api/evaluation-institutions/admin/investigation/${INVESTIGATION_1}`, empty),
+      http.get(`http://localhost:4500/api/investigation-diagnostics/admin/investigation/${INVESTIGATION_1}`, empty),
+      http.get(
+        `http://localhost:4500/api/investigation-vaccines-administered/admin/investigation/${INVESTIGATION_1}`,
+        empty,
+      ),
+    );
+  }
+
+  function renderAt(search: string) {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[`/esavi-cases/${CASE_1}/wizard/investigation${search}`]}>
+          <CaseWizardProvider>
+            <InvestigationStep caseId={CASE_1} />
+            <CaseWizardActionBar caseId={CASE_1} activeSlug="investigation" />
+          </CaseWizardProvider>
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+  }
+
+  it.each([
+    ['apagado', ''],
+    ['encendido', '?includeInactive=true'],
+  ])('con el toggle %s, una fila eliminada no cuenta: los pendientes son los mismos', async (_label, search) => {
+    mockWorkflow(true);
+    mockInvestigationDetail({ investigationStartDate: '2026-01-10' });
+    mockDeletedTeamMemberOnly();
+
+    renderAt(search);
+
+    await waitFor(() => expect(readPendingEntries()).toEqual(EXPECTED_PENDING));
+    if (search) {
+      expect((await screen.findAllByText('Eliminado')).length).toBeGreaterThan(0);
+    }
+  });
+});

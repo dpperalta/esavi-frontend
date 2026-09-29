@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 import { notificationPregnancyComplicationResource, useNotificationPregnancyComplicationsByPregnancy } from './api';
 import { PregnancyComplicationFormDialog } from './PregnancyComplicationFormDialog';
 
@@ -46,6 +47,12 @@ export function PregnancyComplicationList({ pregnancyId, readOnly = false }: Pre
     pregnancyId ?? undefined,
     pregnancyId !== null,
   );
+  // ESAVI-PREGCOMP-002B / ESAVI-PREGCOMP-005B (SPEC FE29).
+  const auditView = useSatelliteAudit(notificationPregnancyComplicationResource, {
+    activeQuery: complications,
+    parentId: pregnancyId,
+    readOnly,
+  });
   const deactivate = notificationPregnancyComplicationResource.useDeactivate();
 
   const [dialog, setDialog] = useState<{ open: boolean; complicationId: string | null }>({
@@ -108,16 +115,17 @@ export function PregnancyComplicationList({ pregnancyId, readOnly = false }: Pre
       <SatelliteList<NotificationPregnancyComplicationDetail>
         titleKey="notification.pregnancy.complications.sectionTitle"
         columns={columns}
-        rows={complications.data?.rows ?? []}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="complicationId"
         getRowLabel={complicationLabel}
-        isLoading={complications.isLoading}
-        isError={complications.isError}
-        error={complications.error instanceof EsaviApiError ? complications.error : null}
-        onRetry={() => void complications.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={readOnly ? undefined : () => setDialog({ open: true, complicationId: null })}
         onEdit={readOnly ? undefined : (row) => setDialog({ open: true, complicationId: row.complicationId })}
         onDelete={readOnly ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       <PregnancyComplicationFormDialog

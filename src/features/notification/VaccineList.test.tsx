@@ -2,13 +2,24 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { setupUser } from '@/test/user';
 import { notificationDiluentsByVaccineKey } from './api';
+import { itBehavesAsRestorableSatelliteList } from '@/test/satelliteAuditCases';
 import { VaccineList } from './VaccineList';
+
+const toastError = vi.fn();
+const toastSuccess = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    error: (...args: unknown[]) => toastError(...args),
+    success: (...args: unknown[]) => toastSuccess(...args),
+  },
+}));
 
 const server = setupServer();
 
@@ -25,6 +36,8 @@ beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
+  toastError.mockClear();
+  toastSuccess.mockClear();
 });
 
 function renderList(notificationId: string | null = NOTIFICATION_ID) {
@@ -33,7 +46,9 @@ function renderList(notificationId: string | null = NOTIFICATION_ID) {
     queryClient,
     ...render(
       <QueryClientProvider client={queryClient}>
-        <VaccineList caseId="case-1" notificationId={notificationId} eventDate={null} showsDiluents />
+        <MemoryRouter>
+          <VaccineList caseId="case-1" notificationId={notificationId} eventDate={null} showsDiluents />
+        </MemoryRouter>
       </QueryClientProvider>,
     ),
   };
@@ -175,4 +190,35 @@ describe('VaccineList — SPEC FE12c §4 paso 7', () => {
     },
     30000,
   );
+});
+
+describe('VaccineList — registros eliminados (SPEC FE29 §4 paso 6)', () => {
+  itBehavesAsRestorableSatelliteList({
+    server,
+    render: ({ initialPath, readOnly }) => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <VaccineList
+              caseId="case-1"
+              notificationId={NOTIFICATION_ID}
+              eventDate={null}
+              showsDiluents
+              readOnly={readOnly}
+            />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+    },
+    apiPath: 'notification-vaccines',
+    adminListSegment: `admin/notification/${NOTIFICATION_ID}`,
+    activeListUrl: 'http://localhost:4500/api/notification-vaccines/case/case-1',
+    rowId: 'v-1',
+    rowLabel: 'BCG',
+    buildRow: vaccineRow,
+    restoredToast: 'Registro restaurado',
+    toastSuccess,
+    toastError,
+  });
 });

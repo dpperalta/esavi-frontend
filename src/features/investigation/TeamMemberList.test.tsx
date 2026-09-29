@@ -3,10 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { itBehavesAsRestorableSatelliteList } from '@/test/satelliteAuditCases';
 import { TeamMemberList } from './TeamMemberList';
 
 const toastError = vi.fn();
@@ -83,7 +85,9 @@ function renderList(disabled = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <TeamMemberList investigationId={INVESTIGATION_1} disabled={disabled} />
+      <MemoryRouter>
+        <TeamMemberList investigationId={INVESTIGATION_1} disabled={disabled} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -201,5 +205,30 @@ describe('TeamMemberList — sección A2 del paso 5 (SPEC FE13a §4 paso 10)', (
     expect(mobileCard!.textContent).toContain('MINSAL');
     expect(mobileCard!.textContent).toContain('ana.perez@example.com');
     expect(mobileCard!.textContent).not.toContain('0999999999');
+  });
+});
+
+describe('TeamMemberList — registros eliminados (SPEC FE29 §4 paso 7)', () => {
+  itBehavesAsRestorableSatelliteList({
+    server,
+    render: ({ initialPath, readOnly }) => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <TeamMemberList investigationId={INVESTIGATION_1} disabled={readOnly} />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+    },
+    apiPath: 'investigation-team-members',
+    adminListSegment: `admin/investigation/${INVESTIGATION_1}`,
+    activeListUrl: `http://localhost:4500/api/investigation-team-members/investigation/${INVESTIGATION_1}`,
+    rowId: MEMBER_1,
+    rowLabel: 'Ana Pérez',
+    buildRow: memberRow,
+    restoredToast: 'Registro restaurado',
+    toastSuccess,
+    toastError,
   });
 });

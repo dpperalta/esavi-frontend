@@ -3,10 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { itBehavesAsRestorableSatelliteList } from '@/test/satelliteAuditCases';
 import { PregnancyComplicationList } from './PregnancyComplicationList';
 
 const toastError = vi.fn();
@@ -43,7 +45,9 @@ function renderList(pregnancyId: string | null) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <PregnancyComplicationList pregnancyId={pregnancyId} />
+      <MemoryRouter>
+        <PregnancyComplicationList pregnancyId={pregnancyId} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -138,7 +142,9 @@ describe('PregnancyComplicationList — SPEC FE12d §4 paso 9', () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={queryClient}>
-        <PregnancyComplicationList pregnancyId={null} />
+        <MemoryRouter>
+          <PregnancyComplicationList pregnancyId={null} />
+        </MemoryRouter>
       </QueryClientProvider>,
     );
 
@@ -276,5 +282,30 @@ describe('PregnancyComplicationList — SPEC FE12d §4 paso 9', () => {
 
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
     expect(toastError).toHaveBeenCalledWith('Retirar una complicación exige un administrador en este despliegue.');
+  });
+});
+
+describe('PregnancyComplicationList — registros eliminados (SPEC FE29 §4 paso 6)', () => {
+  itBehavesAsRestorableSatelliteList({
+    server,
+    render: ({ initialPath, readOnly }) => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <PregnancyComplicationList pregnancyId={PREGNANCY_ID} readOnly={readOnly} />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+    },
+    apiPath: 'notification-pregnancy-complications',
+    adminListSegment: `admin/pregnancy/${PREGNANCY_ID}`,
+    activeListUrl: `http://localhost:4500/api/notification-pregnancy-complications/pregnancy/${PREGNANCY_ID}`,
+    rowId: COMPLICATION_1,
+    rowLabel: 'Preeclampsia',
+    buildRow: complicationRow,
+    restoredToast: 'Registro restaurado',
+    toastSuccess,
+    toastError,
   });
 });

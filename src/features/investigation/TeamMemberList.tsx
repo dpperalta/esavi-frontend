@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 
 export interface TeamMemberListProps {
   investigationId: string;
@@ -38,6 +39,12 @@ export function TeamMemberList({ investigationId, disabled }: TeamMemberListProp
   const { t } = useTranslation();
   const members = investigationTeamMemberResource.useListByParent!(investigationId, {
     pageSize: 100,
+  });
+  // ESAVI-INVTEAM-002B / ESAVI-INVTEAM-005B (SPEC FE29).
+  const auditView = useSatelliteAudit(investigationTeamMemberResource, {
+    activeQuery: members,
+    parentId: investigationId,
+    readOnly: disabled ?? false,
   });
   const deactivate = investigationTeamMemberResource.useDeactivate();
   const [dialog, setDialog] = useState<{ open: boolean; memberId: string | null }>({
@@ -92,13 +99,13 @@ export function TeamMemberList({ investigationId, disabled }: TeamMemberListProp
       <SatelliteList<InvestigationTeamMemberDetail>
         titleKey="investigation.team.sectionTitle"
         columns={columns}
-        rows={members.data?.rows ?? []}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="investigationTeamMemberId"
         getRowLabel={teamMemberLabel}
-        isLoading={members.isLoading}
-        isError={members.isError}
-        error={members.error instanceof EsaviApiError ? members.error : null}
-        onRetry={() => void members.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={disabled ? undefined : () => setDialog({ open: true, memberId: null })}
         onEdit={
           disabled
@@ -106,6 +113,7 @@ export function TeamMemberList({ investigationId, disabled }: TeamMemberListProp
             : (row) => setDialog({ open: true, memberId: row.investigationTeamMemberId })
         }
         onDelete={disabled ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       <TeamMemberFormDialog

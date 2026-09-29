@@ -7,6 +7,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import {
+  notificationEventResource,
+  notificationMedicalHistoryResource,
+  notificationMedicationResource,
+  notificationPregnancyComplicationResource,
+  notificationVaccineResource,
   useNonSevereNotificationByCase,
   useNotificationByCase,
   useNotificationEventsByCase,
@@ -298,5 +303,89 @@ describe('useWhodrugProductSearch — ESAVI-WHODPROD-006', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(requested.url?.searchParams.get('term')).toBe('par');
     expect(requested.url?.searchParams.get('limit')).toBe('20');
+  });
+});
+
+function mockCurrentUserLevel(roleName: string, level: number) {
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { userId: '1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+      }),
+    ),
+  );
+}
+
+// SPEC FE29 §3.2: the `002B` by parent and the `005B` of the five multi-row satellites of step 4.
+const notificationRestorableResources = [
+  {
+    name: 'notificationEventResource — ESAVI-NOTIFEVT-002B/005B',
+    resource: notificationEventResource,
+    path: 'notification-events',
+    adminSegment: 'admin/notification',
+  },
+  {
+    name: 'notificationVaccineResource — ESAVI-NOTIFVAC-002B/005B',
+    resource: notificationVaccineResource,
+    path: 'notification-vaccines',
+    adminSegment: 'admin/notification',
+  },
+  {
+    name: 'notificationMedicationResource — ESAVI-NOTIFMED-002B/005B',
+    resource: notificationMedicationResource,
+    path: 'notification-medications',
+    adminSegment: 'admin/notification',
+  },
+  {
+    name: 'notificationMedicalHistoryResource — ESAVI-MEDHIST-002B/005B',
+    resource: notificationMedicalHistoryResource,
+    path: 'notification-medical-histories',
+    adminSegment: 'admin/notification',
+  },
+  {
+    name: 'notificationPregnancyComplicationResource — ESAVI-PREGCOMP-002B/005B',
+    resource: notificationPregnancyComplicationResource,
+    path: 'notification-pregnancy-complications',
+    adminSegment: 'admin/pregnancy',
+  },
+];
+
+describe.each(notificationRestorableResources)('$name', ({ resource, path, adminSegment }) => {
+  it('con ADMIN e includeInactive:true, useListByParent pide el 002B exacto', async () => {
+    mockCurrentUserLevel('ADMIN', 50);
+    let requestedUrl: URL | null = null;
+    server.use(
+      http.get(`http://localhost:4500/api/${path}/${adminSegment}/parent-1`, ({ request }) => {
+        requestedUrl = new URL(request.url);
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderHook(
+      () => resource.useListByParent!('parent-1', { pageSize: 100, includeInactive: true }),
+      { wrapper: createWrapper() },
+    );
+
+    await waitFor(() => expect(requestedUrl).not.toBeNull());
+    expect(requestedUrl!.searchParams.get('limit')).toBe('100');
+    expect(requestedUrl!.searchParams.get('offset')).toBe('0');
+  });
+
+  it('useActivate hace PATCH …/activate/:id', async () => {
+    let patched = false;
+    server.use(
+      http.patch(`http://localhost:4500/api/${path}/activate/row-1`, () => {
+        patched = true;
+        return HttpResponse.json({ ok: true, message: 'ok', data: null });
+      }),
+    );
+
+    const { result } = renderHook(() => resource.useActivate!(), { wrapper: createWrapper() });
+    result.current.mutate('row-1');
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(patched).toBe(true);
   });
 });

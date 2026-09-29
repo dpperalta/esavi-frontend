@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AnswerOption } from '@/contracts/common';
 import { setAccessToken } from '@/shared/api/client';
@@ -72,14 +73,16 @@ function renderPregnancySection(props: Partial<Parameters<typeof PregnancySectio
   const onSaved = vi.fn();
   const utils = render(
     <QueryClientProvider client={queryClient}>
-      <PregnancySection
-        investigationId={INVESTIGATION_1}
-        medicalHistory={emptyMedicalHistoryDetail()}
-        pregnancyGate="visible"
-        showSaveButton
-        onSaved={onSaved}
-        {...props}
-      />
+      <MemoryRouter>
+        <PregnancySection
+          investigationId={INVESTIGATION_1}
+          medicalHistory={emptyMedicalHistoryDetail()}
+          pregnancyGate="visible"
+          showSaveButton
+          onSaved={onSaved}
+          {...props}
+        />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
   return { ...utils, onSaved };

@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 
 export interface EvaluationInstitutionListProps {
   // Names the clinical evaluation ficha, whose PK equals `investigation.investigationId`
@@ -41,6 +42,12 @@ function institutionLabel(row: EvaluationInstitutionDetail): string {
 export function EvaluationInstitutionList({ investigationId, disabled = false }: EvaluationInstitutionListProps) {
   const { t } = useTranslation();
   const institutions = useEvaluationInstitutionsByInvestigation(investigationId, true);
+  // ESAVI-EVALINST-002B / ESAVI-EVALINST-005B (SPEC FE29).
+  const auditView = useSatelliteAudit(evaluationInstitutionResource, {
+    activeQuery: institutions,
+    parentId: investigationId,
+    readOnly: disabled,
+  });
   const deactivate = evaluationInstitutionResource.useDeactivate();
   const [dialog, setDialog] = useState<{ open: boolean; institution: EvaluationInstitutionDetail | null }>({
     open: false,
@@ -103,16 +110,17 @@ export function EvaluationInstitutionList({ investigationId, disabled = false }:
         titleKey="investigation.evaluationInstitution.title"
         addLabel="investigation.evaluationInstitution.add"
         columns={columns}
-        rows={institutions.data?.rows ?? []}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="evaluationInstitutionId"
         getRowLabel={institutionLabel}
-        isLoading={institutions.isLoading}
-        isError={institutions.isError}
-        error={institutions.error instanceof EsaviApiError ? institutions.error : null}
-        onRetry={() => void institutions.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={disabled ? undefined : () => setDialog({ open: true, institution: null })}
         onEdit={disabled ? undefined : (row) => setDialog({ open: true, institution: row })}
         onDelete={disabled ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       {isEmpty && (

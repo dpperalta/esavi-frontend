@@ -17,6 +17,7 @@ import {
 } from '@/shared/components/ui/alert-dialog';
 import { Button } from '@/shared/components/ui/button';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 import {
   investigationMedicalHistoryResource,
   investigationPregnancyConditionResource,
@@ -44,6 +45,13 @@ function conditionLabel(row: InvestigationPregnancyConditionDetail): string {
 export function NewbornConditionList({ investigationId, disabled = false }: NewbornConditionListProps) {
   const { t } = useTranslation();
   const conditions = useNewbornConditionsByMedicalHistory(investigationId, true);
+  // ESAVI-INVPREG-002B / ESAVI-INVPREG-005B (SPEC FE29). The parent is the medical history's own
+  // id, same trap as the active listing (SPEC FE13b §1 B).
+  const auditView = useSatelliteAudit(investigationPregnancyConditionResource, {
+    activeQuery: conditions,
+    parentId: investigationId,
+    readOnly: disabled,
+  });
   const openMedicalHistory = investigationMedicalHistoryResource.useCreate();
   const deactivate = investigationPregnancyConditionResource.useDeactivate();
 
@@ -121,16 +129,17 @@ export function NewbornConditionList({ investigationId, disabled = false }: Newb
         titleKey="investigation.newbornCondition.title"
         addLabel="investigation.newbornCondition.add"
         columns={columns}
-        rows={conditions.data?.rows ?? []}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="pregnancyConditionId"
         getRowLabel={conditionLabel}
-        isLoading={conditions.isLoading}
-        isError={conditions.isError}
-        error={conditions.error instanceof EsaviApiError ? conditions.error : null}
-        onRetry={() => void conditions.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={disabled ? undefined : () => setDialog({ open: true, conditionId: null })}
         onEdit={disabled ? undefined : (row) => setDialog({ open: true, conditionId: row.pregnancyConditionId })}
         onDelete={disabled ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       {/* Único texto de estado vacío entre las catorce listas satélite (§3.6): B2 es contenido

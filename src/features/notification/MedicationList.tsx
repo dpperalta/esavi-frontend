@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 import { notificationMedicationResource, useNotificationMedicationsByCase } from './api';
 import { MedicationFormDialog } from './MedicationFormDialog';
 
@@ -46,6 +47,13 @@ export function MedicationList({
 }: MedicationListProps) {
   const { t } = useTranslation();
   const medications = useNotificationMedicationsByCase(caseId, notificationId !== null);
+  // ESAVI-NOTIFMED-002B / ESAVI-NOTIFMED-005B (SPEC FE29). `rows` below keeps reading the active
+  // query: the section's own visibility and mismatch notice are step logic, not the table.
+  const auditView = useSatelliteAudit(notificationMedicationResource, {
+    activeQuery: medications,
+    parentId: notificationId,
+    readOnly,
+  });
   const deactivate = notificationMedicationResource.useDeactivate();
 
   const [dialog, setDialog] = useState<{ open: boolean; medicationId: string | null }>({
@@ -119,16 +127,17 @@ export function MedicationList({
       <SatelliteList<NotificationMedicationDetail>
         titleKey="notification.section.medication"
         columns={columns}
-        rows={rows}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="medicationId"
         getRowLabel={(row) => row.medicationName}
-        isLoading={medications.isLoading}
-        isError={medications.isError}
-        error={medications.error instanceof EsaviApiError ? medications.error : null}
-        onRetry={() => void medications.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={readOnly ? undefined : () => setDialog({ open: true, medicationId: null })}
         onEdit={readOnly ? undefined : (row) => setDialog({ open: true, medicationId: row.medicationId })}
         onDelete={readOnly ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       <MedicationFormDialog
