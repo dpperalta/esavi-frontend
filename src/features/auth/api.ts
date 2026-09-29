@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CurrentUser, LoginResponse } from '@/contracts/declared/auth';
+import type { CurrentUser, LoginResponse, LogoutAllResponse } from '@/contracts/declared/auth';
 import { client, setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { useDraftsStore } from '@/shared/stores/draftsStore';
@@ -93,6 +93,17 @@ export function useChangePassword() {
   });
 }
 
+// Shared by logout (003) and logout-all (004) so the cleanup can't diverge between them (SPEC
+// FE27 §3.4). The query cache is cleared by each hook's onSuccess, which owns the queryClient.
+// Not client.ts's clearSession(): that one is internal to the refresh queue.
+function clearLocalSession(): void {
+  setAccessToken(null);
+  tokenStore.clearRefreshToken();
+  // Clinical free text about an identified patient doesn't survive a logout on a shared
+  // workstation (SPEC FE12a §3.4).
+  useDraftsStore.getState().clearAll();
+}
+
 // ESAVI-AUTH-003. Public — no access token required (API-ROUTES.md's "sin fila" section).
 // Local cleanup happens regardless of the network outcome: a device that can't reach the
 // server still has to end its own session. Must be called before clearing the refresh token,
@@ -106,11 +117,7 @@ async function logout(): Promise<void> {
       // Network down, already revoked, whatever — local cleanup proceeds either way.
     }
   }
-  setAccessToken(null);
-  tokenStore.clearRefreshToken();
-  // Clinical free text about an identified patient doesn't survive a logout on a shared
-  // workstation (SPEC FE12a §3.4).
-  useDraftsStore.getState().clearAll();
+  clearLocalSession();
 }
 
 export function useLogout() {
@@ -120,6 +127,26 @@ export function useLogout() {
     mutationFn: logout,
     onSuccess: () => {
       // Nothing about the previous session can survive in memory (SPEC FE01 §3.4).
+      queryClient.clear();
+    },
+  });
+}
+
+// ESAVI-AUTH-004. Authenticated (USER), so it goes through `client` and its refresh queue, not
+// PUBLIC_AUTH_PATHS. Unlike 003, a failure leaves the local session untouched: the user wants to
+// evict another device, and landing on /login would falsely signal that it worked (SPEC FE27 §6).
+async function logoutAll(): Promise<number> {
+  const response = await client.post<LogoutAllResponse>('/auth/logout-all');
+  clearLocalSession();
+  return response.data.revokedCount;
+}
+
+export function useLogoutAll() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: logoutAll,
+    onSuccess: () => {
       queryClient.clear();
     },
   });

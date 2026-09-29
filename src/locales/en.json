@@ -159,7 +159,12 @@
       "logout": "Sign out",
       "logoutConfirm": "Are you sure you want to sign out?",
       "logoutAll": "Sign out of all sessions",
-      "logoutAllConfirm": "This will sign you out on every device where you're signed in. Continue?"
+      "logoutAllConfirm": "This will sign you out on every device where you're signed in. Continue?",
+      "logoutAllDone_one": "{{count}} session was closed",
+      "logoutAllDone_other": "{{count}} sessions were closed"
+    },
+    "errors": {
+      "logoutAllFailed": "Your sessions could not be closed. You are still signed in; please try again."
     }
   },
   "nav": {
@@ -2135,6 +2140,9 @@
   "shell": {
     "userMenu": {
       "trigger": "User menu"
+    },
+    "sessionMenu": {
+      "trigger": "Session"
     }
   },
   "settings": {
