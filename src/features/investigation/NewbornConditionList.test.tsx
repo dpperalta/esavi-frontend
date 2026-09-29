@@ -4,9 +4,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { itBehavesAsRestorableSatelliteList } from '@/test/satelliteAuditCases';
 import { NewbornConditionList } from './NewbornConditionList';
 
 const toastError = vi.fn();
@@ -59,7 +61,9 @@ function renderList(props: Partial<Parameters<typeof NewbornConditionList>[0]> =
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <NewbornConditionList investigationId={INVESTIGATION_1} {...props} />
+      <MemoryRouter>
+        <NewbornConditionList investigationId={INVESTIGATION_1} {...props} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -262,4 +266,29 @@ describe('NewbornConditionList — sección B2 (SPEC FE13b §4 paso 7)', () => {
     await waitFor(() => expect(openPostCount).toBe(1));
     expect(screen.queryByText('Falta la ficha de antecedentes.')).not.toBeInTheDocument();
   }, 60000);
+});
+
+describe('NewbornConditionList — registros eliminados (SPEC FE29 §4 paso 7)', () => {
+  itBehavesAsRestorableSatelliteList({
+    server,
+    render: ({ initialPath, readOnly }) => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <NewbornConditionList investigationId={INVESTIGATION_1} disabled={readOnly} />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+    },
+    apiPath: 'investigation-pregnancy-conditions',
+    adminListSegment: `admin/investigation/${INVESTIGATION_1}`,
+    activeListUrl: `http://localhost:4500/api/investigation-pregnancy-conditions/investigation/${INVESTIGATION_1}`,
+    rowId: CONDITION_1,
+    rowLabel: 'Ictericia neonatal',
+    buildRow: conditionRow,
+    restoredToast: 'Registro restaurado',
+    toastSuccess,
+    toastError,
+  });
 });

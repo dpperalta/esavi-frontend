@@ -4,9 +4,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
+import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
+import { itBehavesAsRestorableSatelliteList } from '@/test/satelliteAuditCases';
 import { EvaluationInstitutionList } from './EvaluationInstitutionList';
 
 const toastError = vi.fn();
@@ -123,7 +125,9 @@ function renderList(disabled = false) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <EvaluationInstitutionList investigationId={INVESTIGATION_1} disabled={disabled} />
+      <MemoryRouter>
+        <EvaluationInstitutionList investigationId={INVESTIGATION_1} disabled={disabled} />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -278,5 +282,30 @@ describe('EvaluationInstitutionList — C.7 (SPEC FE13c §4 paso 6)', () => {
     expect(mobileCard!.textContent).toContain('0999999999');
     expect(mobileCard!.textContent).not.toContain('Julio Bustos');
     expect(mobileCard!.textContent).not.toContain('Observación interna');
+  });
+});
+
+describe('EvaluationInstitutionList — registros eliminados (SPEC FE29 §4 paso 7)', () => {
+  itBehavesAsRestorableSatelliteList({
+    server,
+    render: ({ initialPath, readOnly }) => {
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[initialPath]}>
+            <EvaluationInstitutionList investigationId={INVESTIGATION_1} disabled={readOnly} />
+          </MemoryRouter>
+        </QueryClientProvider>,
+      );
+    },
+    apiPath: 'evaluation-institutions',
+    adminListSegment: `admin/investigation/${INVESTIGATION_1}`,
+    activeListUrl: `http://localhost:4500/api/evaluation-institutions/investigation/${INVESTIGATION_1}`,
+    rowId: INSTITUTION_1,
+    rowLabel: 'Clínica del Valle',
+    buildRow: institutionRow,
+    restoredToast: 'Registro restaurado',
+    toastSuccess,
+    toastError,
   });
 });

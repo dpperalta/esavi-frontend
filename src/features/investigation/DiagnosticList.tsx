@@ -19,6 +19,7 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { SatelliteList, type SatelliteListColumn } from '@/shared/components/SatelliteList';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
+import { useSatelliteAudit } from '@/shared/hooks/useSatelliteAudit';
 
 export interface DiagnosticListProps {
   caseId: string;
@@ -47,6 +48,13 @@ function diagnosticLabel(row: InvestigationDiagnosticDetail): string {
 export function DiagnosticList({ caseId, investigationId, disabled = false, onMissingInvestigation }: DiagnosticListProps) {
   const { t } = useTranslation();
   const diagnostics = useInvestigationDiagnosticsByCase(caseId, true);
+  // ESAVI-INVDIAG-002B / ESAVI-INVDIAG-005B (SPEC FE29). The active list stays on the case's
+  // `006`; the `002B` hangs from `investigationId` and is not fired without it.
+  const auditView = useSatelliteAudit(investigationDiagnosticResource, {
+    activeQuery: diagnostics,
+    parentId: investigationId,
+    readOnly: disabled,
+  });
   const deactivate = investigationDiagnosticResource.useDeactivate();
   const [dialog, setDialog] = useState<{ open: boolean; diagnostic: InvestigationDiagnosticDetail | null }>({
     open: false,
@@ -100,16 +108,17 @@ export function DiagnosticList({ caseId, investigationId, disabled = false, onMi
         titleKey="investigation.diagnostic.title"
         addLabel="investigation.diagnostic.add"
         columns={columns}
-        rows={diagnostics.data?.rows ?? []}
+        rows={auditView.tableQuery.data?.rows ?? []}
         idField="diagnosticId"
         getRowLabel={diagnosticLabel}
-        isLoading={diagnostics.isLoading}
-        isError={diagnostics.isError}
-        error={diagnostics.error instanceof EsaviApiError ? diagnostics.error : null}
-        onRetry={() => void diagnostics.refetch()}
+        isLoading={auditView.tableQuery.isLoading}
+        isError={auditView.tableQuery.isError}
+        error={auditView.tableQuery.error instanceof EsaviApiError ? auditView.tableQuery.error : null}
+        onRetry={() => void auditView.tableQuery.refetch()}
         onAdd={disabled ? undefined : () => setDialog({ open: true, diagnostic: null })}
         onEdit={disabled ? undefined : (row) => setDialog({ open: true, diagnostic: row })}
         onDelete={disabled ? undefined : (row) => setRemoveTarget(row)}
+        {...auditView.listProps}
       />
 
       {isEmpty && <p className="text-sm text-muted-foreground">{t('investigation.diagnostic.empty')}</p>}
