@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildUpdateCatalogItemSchema, createCatalogItemSchema } from './schemas';
+import {
+  buildUpdateCatalogItemSchema,
+  createCatalogItemSchema,
+  importCatalogItemsSchema,
+  MAX_CATALOG_ITEM_IMPORT_FILE_SIZE_BYTES,
+} from './schemas';
 
 describe('createCatalogItemSchema', () => {
   it('rechaza name vacío', () => {
@@ -110,5 +115,43 @@ describe('buildUpdateCatalogItemSchema — fila congelada (isValueLocked)', () =
       expect('value' in result.data).toBe(false);
       expect(JSON.stringify(result.data)).not.toContain('value');
     }
+  });
+});
+
+describe('importCatalogItemsSchema (SPEC FE30 §3.5)', () => {
+  function fileOf(name: string, bytes: number): File {
+    const file = new File(['PK'], name);
+    Object.defineProperty(file, 'size', { value: bytes });
+    return file;
+  }
+
+  function firstIssue(value: unknown) {
+    return importCatalogItemsSchema.safeParse(value).error?.issues[0]?.message;
+  }
+
+  it('rechaza la ausencia de fichero con el código del 400', () => {
+    expect(firstIssue(null)).toBe('CATITEM_006_FILE_REQUIRED');
+  });
+
+  it('rechaza un .xls con el código de fichero inválido', () => {
+    expect(firstIssue(fileOf('catalogo.xls', 1024))).toBe('CATITEM_006_FILE_INVALID');
+  });
+
+  it('acepta la extensión .XLSX en mayúsculas', () => {
+    expect(importCatalogItemsSchema.safeParse(fileOf('CATALOGO.XLSX', 1024)).success).toBe(true);
+  });
+
+  it('acepta exactamente 20 MB', () => {
+    expect(
+      importCatalogItemsSchema.safeParse(
+        fileOf('catalogo.xlsx', MAX_CATALOG_ITEM_IMPORT_FILE_SIZE_BYTES),
+      ).success,
+    ).toBe(true);
+  });
+
+  it('rechaza 20 MB y un byte con el código del 413', () => {
+    expect(firstIssue(fileOf('catalogo.xlsx', MAX_CATALOG_ITEM_IMPORT_FILE_SIZE_BYTES + 1))).toBe(
+      'CATITEM_006_FILE_TOO_LARGE',
+    );
   });
 });
