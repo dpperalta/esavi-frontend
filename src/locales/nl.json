@@ -244,7 +244,8 @@
       "title": "Catalogusitems",
       "noTypeSelected": "Kies een catalogustype om de items te zien.",
       "unknownType": "Het catalogustype uit de link bestaat niet. Kies er een uit de lijst.",
-      "empty": "Dit catalogustype heeft nog geen items."
+      "empty": "Dit catalogustype heeft nog geen items.",
+      "import": "Catalogus importeren"
     },
     "form": {
       "createTitle": "Nieuw catalogusitem",
@@ -274,12 +275,81 @@
       "CATITEM_004_NOT_FOUND": "Het catalogusitem bestaat niet.",
       "CATITEM_005A_VALUE_LOCKED": "Dit item is vergrendeld door het systeem en kan niet worden gedeactiveerd.",
       "CATITEM_005A_ALREADY_INACTIVE": "Het item was al inactief.",
-      "CATITEM_005B_ALREADY_ACTIVE": "Het item was al actief."
+      "CATITEM_005B_ALREADY_ACTIVE": "Het item was al actief.",
+      "CATITEM_006_FILE_REQUIRED": "Kies een .xlsx-bestand.",
+      "CATITEM_006_FILE_TOO_LARGE": "Het bestand is groter dan 20 MB.",
+      "CATITEM_006_FILE_INVALID": "Het bestand is geen geldig .xlsx, mist verplichte kopteksten (catalogTypeCode, catalogTypeName, name) of heeft geen geldige rijen.",
+      "CATITEM_006_IMPORT_FAILED": "De import is mislukt en de huidige batch is teruggedraaid; mogelijk loopt er een andere import. Eerdere batches zijn wel opgeslagen: het bestand opnieuw importeren is veilig."
     },
     "select": {
       "label": "Catalogusitem",
       "placeholder": "Kies een item",
       "unknownType": "Het vereiste catalogustype bestaat niet."
+    },
+    "import": {
+      "title": "Catalogusitems importeren",
+      "back": "Terug naar catalogusitems",
+      "file": ".xlsx-bestand",
+      "fileHint": "Een .xlsx-werkmap van maximaal 20 MB. Het eerste blad wordt gelezen.",
+      "simulate": "Simuleren",
+      "run": "Importeren",
+      "confirmTitle": "Deze catalogus importeren?",
+      "confirmBody": "Hiermee worden de items in de database geschreven en worden bestaande items bijgewerkt. Wil je het bestand alleen controleren, gebruik dan «Simuleren».",
+      "confirmTypesCreated_one": "De simulatie van dit bestand zou {{count}} nieuw catalogustype aanmaken.",
+      "confirmTypesCreated_other": "De simulatie van dit bestand zou {{count}} nieuwe catalogustypen aanmaken.",
+      "confirmNoTypesCreated": "De simulatie zou geen nieuwe typen aanmaken.",
+      "confirmAction": "Ja, importeren",
+      "running": "Bezig met importeren… sluit dit tabblad niet.",
+      "viewItems": "Catalogusitems bekijken",
+      "fixedNote": "Heeft een item een handmatig vastgelegde code, dan maakt opnieuw importeren een duplicaat in plaats van het bij te werken. En een catalogTypeCode die niet bestaat, maakt een nieuw type aan dat niet ongedaan kan worden: simuleer eerst.",
+      "help": {
+        "title": "Bestandsformaat",
+        "template": "Sjabloon downloaden (.xlsx)",
+        "firstSheet": "Het eerste blad wordt gelezen, met de koptekst in rij 1.",
+        "codeIgnored": "Een kolom code wordt genegeerd: de code wordt uit de naam gegenereerd.",
+        "defaults": "Een lege value neemt de naam over; een lege of ongeldige sortOrder wordt 0.",
+        "columns": {
+          "header": "Koptekst",
+          "required": "Verplicht",
+          "description": "Wat het doet"
+        },
+        "required": "Ja",
+        "optional": "Nee",
+        "headers": {
+          "catalogTypeCode": "Code van het catalogustype waartoe het item behoort. Wordt aangemaakt als het niet bestaat.",
+          "catalogTypeName": "Naam van het type. Alleen gebruikt om het aan te maken als het niet bestaat.",
+          "name": "Naam van het item. Identificeert het item binnen zijn type.",
+          "value": "Waarde van het item. Neemt de naam over als het leeg blijft.",
+          "description": "Beschrijving van het item. Leeg wist een bestaande beschrijving.",
+          "sortOrder": "Positie in keuzelijsten: een geheel getal tussen 0 en 32767."
+        }
+      },
+      "report": {
+        "catalogTypesCreated": "Nieuwe typen",
+        "sortOrderCoerced": "Volgorde op 0 gezet",
+        "sheet": "Gelezen blad",
+        "missingOptionalHeaders": "Ontbrekende optionele kopteksten",
+        "unknownHeaders": "Onbekende kopteksten (genegeerd)",
+        "codeColumnIgnored": "De kolom code wordt niet gebruikt: de code wordt uit de naam gegenereerd.",
+        "typesCreatedDryRun_one": "Deze lading zou {{count}} nieuw catalogustype aanmaken. Had je dat niet verwacht, controleer dan de kolom catalogTypeCode: er kan een tikfout in zitten.",
+        "typesCreatedDryRun_other": "Deze lading zou {{count}} nieuwe catalogustypen aanmaken. Had je dat niet verwacht, controleer dan de kolom catalogTypeCode: er kan een tikfout in zitten.",
+        "typesCreated_one": "Er is {{count}} nieuw catalogustype aangemaakt. Hoort het niet te bestaan, deactiveer het dan via Catalogustypen.",
+        "typesCreated_other": "Er zijn {{count}} nieuwe catalogustypen aangemaakt. Hoort er een niet te bestaan, deactiveer het dan via Catalogustypen.",
+        "viewTypes": "Catalogustypen bekijken",
+        "columns": {
+          "row": "Rij",
+          "reason": "Reden",
+          "column": "Kolom"
+        }
+      },
+      "reasons": {
+        "EMPTY_CATALOG_TYPE_CODE": "De typecode (catalogTypeCode) ontbreekt.",
+        "EMPTY_NAME": "De naam ontbreekt.",
+        "EMPTY_CODE": "De naam levert geen code op (alleen symbolen of scheidingstekens).",
+        "VALUE_TOO_LONG": "Een waarde overschrijdt de lengte van zijn kolom.",
+        "DUPLICATE_IN_FILE": "Dezelfde naam kwam al eerder in het bestand voor, onder hetzelfde type.",
+        "CATALOG_TYPE_NAME_REQUIRED": "Het type bestaat niet en catalogTypeName ontbreekt om het aan te maken."
+      }
     }
   },
   "geoLevelType": {

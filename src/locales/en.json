@@ -244,7 +244,8 @@
       "title": "Catalog items",
       "noTypeSelected": "Choose a catalog type to see its items.",
       "unknownType": "The catalog type in the link doesn't exist. Pick one from the list.",
-      "empty": "This catalog type doesn't have any items yet."
+      "empty": "This catalog type doesn't have any items yet.",
+      "import": "Import catalog"
     },
     "form": {
       "createTitle": "New catalog item",
@@ -274,12 +275,81 @@
       "CATITEM_004_NOT_FOUND": "The catalog item doesn't exist.",
       "CATITEM_005A_VALUE_LOCKED": "This item is locked by the system and can't be deactivated.",
       "CATITEM_005A_ALREADY_INACTIVE": "The item was already inactive.",
-      "CATITEM_005B_ALREADY_ACTIVE": "The item was already active."
+      "CATITEM_005B_ALREADY_ACTIVE": "The item was already active.",
+      "CATITEM_006_FILE_REQUIRED": "Choose an .xlsx file.",
+      "CATITEM_006_FILE_TOO_LARGE": "The file exceeds 20 MB.",
+      "CATITEM_006_FILE_INVALID": "The file is not a valid .xlsx, is missing required headers (catalogTypeCode, catalogTypeName, name) or has no valid rows.",
+      "CATITEM_006_IMPORT_FAILED": "The import failed and the current batch was rolled back; another import may be running. Earlier batches were saved: re-importing the file is safe."
     },
     "select": {
       "label": "Catalog item",
       "placeholder": "Choose an item",
       "unknownType": "The required catalog type doesn't exist."
+    },
+    "import": {
+      "title": "Import catalog items",
+      "back": "Back to catalog items",
+      "file": ".xlsx file",
+      "fileHint": "An .xlsx workbook of 20 MB at most. The first sheet is read.",
+      "simulate": "Simulate",
+      "run": "Import",
+      "confirmTitle": "Import this catalog?",
+      "confirmBody": "This will write the items to the database and update the ones that already exist. If you only want to check the file, use \"Simulate\".",
+      "confirmTypesCreated_one": "The simulation of this file would create {{count}} new catalog type.",
+      "confirmTypesCreated_other": "The simulation of this file would create {{count}} new catalog types.",
+      "confirmNoTypesCreated": "The simulation would not create any new types.",
+      "confirmAction": "Yes, import",
+      "running": "Importing… do not close this tab.",
+      "viewItems": "View catalog items",
+      "fixedNote": "If an item has a hand-set code, re-importing it creates a duplicate instead of updating it. And a catalogTypeCode that does not exist creates a new type that cannot be undone: simulate first.",
+      "help": {
+        "title": "File format",
+        "template": "Download template (.xlsx)",
+        "firstSheet": "The first sheet is read, with the header in row 1.",
+        "codeIgnored": "A code column is ignored: the code is generated from the name.",
+        "defaults": "An empty value takes the name; an empty or invalid sortOrder becomes 0.",
+        "columns": {
+          "header": "Header",
+          "required": "Required",
+          "description": "What it does"
+        },
+        "required": "Yes",
+        "optional": "No",
+        "headers": {
+          "catalogTypeCode": "Code of the catalog type the item belongs to. Created if it does not exist.",
+          "catalogTypeName": "Name of the type. Only used to create it when it does not exist.",
+          "name": "Name of the item. Identifies the item within its type.",
+          "value": "Value of the item. Takes the name when left empty.",
+          "description": "Description of the item. Left empty, it clears an existing one.",
+          "sortOrder": "Position in dropdowns: an integer between 0 and 32767."
+        }
+      },
+      "report": {
+        "catalogTypesCreated": "New types",
+        "sortOrderCoerced": "Order reset to 0",
+        "sheet": "Sheet read",
+        "missingOptionalHeaders": "Missing optional headers",
+        "unknownHeaders": "Unknown headers (ignored)",
+        "codeColumnIgnored": "The code column is not used: the code is generated from the name.",
+        "typesCreatedDryRun_one": "This load would create {{count}} new catalog type. If you did not expect it, check the catalogTypeCode column: there may be a typo.",
+        "typesCreatedDryRun_other": "This load would create {{count}} new catalog types. If you did not expect them, check the catalogTypeCode column: there may be a typo.",
+        "typesCreated_one": "{{count}} new catalog type was created. If it should not exist, deactivate it from Catalog types.",
+        "typesCreated_other": "{{count}} new catalog types were created. If any should not exist, deactivate it from Catalog types.",
+        "viewTypes": "View catalog types",
+        "columns": {
+          "row": "Row",
+          "reason": "Reason",
+          "column": "Column"
+        }
+      },
+      "reasons": {
+        "EMPTY_CATALOG_TYPE_CODE": "The type code (catalogTypeCode) is missing.",
+        "EMPTY_NAME": "The name is missing.",
+        "EMPTY_CODE": "The name does not produce any code (it only has symbols or separators).",
+        "VALUE_TOO_LONG": "A value exceeds the length of its column.",
+        "DUPLICATE_IN_FILE": "The same name already appeared earlier in the file, under the same type.",
+        "CATALOG_TYPE_NAME_REQUIRED": "The type does not exist and catalogTypeName is missing to create it."
+      }
     }
   },
   "geoLevelType": {

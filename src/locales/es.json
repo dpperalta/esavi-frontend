@@ -244,7 +244,8 @@
       "title": "Elementos de catálogo",
       "noTypeSelected": "Elige un tipo de catálogo para ver sus elementos.",
       "unknownType": "El tipo de catálogo del enlace no existe. Elige uno de la lista.",
-      "empty": "Este tipo de catálogo todavía no tiene elementos."
+      "empty": "Este tipo de catálogo todavía no tiene elementos.",
+      "import": "Importar catálogo"
     },
     "form": {
       "createTitle": "Nuevo elemento de catálogo",
@@ -274,12 +275,81 @@
       "CATITEM_004_NOT_FOUND": "El elemento de catálogo no existe.",
       "CATITEM_005A_VALUE_LOCKED": "Este elemento está bloqueado por el sistema y no se puede dar de baja.",
       "CATITEM_005A_ALREADY_INACTIVE": "El elemento ya estaba inactivo.",
-      "CATITEM_005B_ALREADY_ACTIVE": "El elemento ya estaba activo."
+      "CATITEM_005B_ALREADY_ACTIVE": "El elemento ya estaba activo.",
+      "CATITEM_006_FILE_REQUIRED": "Elige un archivo .xlsx.",
+      "CATITEM_006_FILE_TOO_LARGE": "El archivo supera los 20 MB.",
+      "CATITEM_006_FILE_INVALID": "El archivo no es un .xlsx válido, le faltan cabeceras obligatorias (catalogTypeCode, catalogTypeName, name) o no tiene filas válidas.",
+      "CATITEM_006_IMPORT_FAILED": "La importación falló y se revirtió el lote en curso; puede que otra importación esté corriendo. Los lotes anteriores sí se guardaron: reimportar el archivo es seguro."
     },
     "select": {
       "label": "Elemento de catálogo",
       "placeholder": "Elige un elemento",
       "unknownType": "El tipo de catálogo requerido no existe."
+    },
+    "import": {
+      "title": "Importar ítems de catálogo",
+      "back": "Volver a ítems de catálogo",
+      "file": "Archivo .xlsx",
+      "fileHint": "Un libro .xlsx de 20 MB como máximo. Se lee la primera hoja.",
+      "simulate": "Simular",
+      "run": "Importar",
+      "confirmTitle": "¿Importar este catálogo?",
+      "confirmBody": "Esto escribirá los ítems en la base de datos y actualizará los que ya existen. Si solo quieres comprobar el archivo, usa «Simular».",
+      "confirmTypesCreated_one": "La simulación de este archivo crearía {{count}} tipo de catálogo nuevo.",
+      "confirmTypesCreated_other": "La simulación de este archivo crearía {{count}} tipos de catálogo nuevos.",
+      "confirmNoTypesCreated": "La simulación no crearía tipos nuevos.",
+      "confirmAction": "Sí, importar",
+      "running": "Importando… no cierres esta pestaña.",
+      "viewItems": "Ver ítems de catálogo",
+      "fixedNote": "Si un ítem tiene un código fijado a mano, reimportarlo crea un duplicado en lugar de actualizarlo. Y un catalogTypeCode que no existe crea un tipo nuevo que no se puede deshacer: simula antes.",
+      "help": {
+        "title": "Formato del archivo",
+        "template": "Descargar plantilla (.xlsx)",
+        "firstSheet": "Se lee la primera hoja, con la cabecera en la fila 1.",
+        "codeIgnored": "Una columna code se ignora: el código se genera a partir del nombre.",
+        "defaults": "Un value vacío toma el nombre; un sortOrder vacío o inválido entra como 0.",
+        "columns": {
+          "header": "Cabecera",
+          "required": "Obligatoria",
+          "description": "Qué hace"
+        },
+        "required": "Sí",
+        "optional": "No",
+        "headers": {
+          "catalogTypeCode": "Código del tipo de catálogo al que pertenece el ítem. Si no existe, se crea.",
+          "catalogTypeName": "Nombre del tipo. Solo se usa para crearlo si no existe.",
+          "name": "Nombre del ítem. Identifica al ítem dentro de su tipo.",
+          "value": "Valor del ítem. Si queda vacío, toma el nombre.",
+          "description": "Descripción del ítem. Vacía, borra la que hubiera.",
+          "sortOrder": "Posición en los desplegables: un entero entre 0 y 32767."
+        }
+      },
+      "report": {
+        "catalogTypesCreated": "Tipos nuevos",
+        "sortOrderCoerced": "Orden corregido a 0",
+        "sheet": "Hoja leída",
+        "missingOptionalHeaders": "Cabeceras opcionales ausentes",
+        "unknownHeaders": "Cabeceras desconocidas (se ignoraron)",
+        "codeColumnIgnored": "La columna code no se usa: el código se genera a partir del nombre.",
+        "typesCreatedDryRun_one": "Esta carga crearía {{count}} tipo de catálogo nuevo. Si no lo esperabas, revisa la columna catalogTypeCode: puede haber una errata.",
+        "typesCreatedDryRun_other": "Esta carga crearía {{count}} tipos de catálogo nuevos. Si no lo esperabas, revisa la columna catalogTypeCode: puede haber una errata.",
+        "typesCreated_one": "Se creó {{count}} tipo de catálogo nuevo. Si no debía existir, desactívalo desde Tipos de catálogo.",
+        "typesCreated_other": "Se crearon {{count}} tipos de catálogo nuevos. Si alguno no debía existir, desactívalo desde Tipos de catálogo.",
+        "viewTypes": "Ver tipos de catálogo",
+        "columns": {
+          "row": "Fila",
+          "reason": "Motivo",
+          "column": "Columna"
+        }
+      },
+      "reasons": {
+        "EMPTY_CATALOG_TYPE_CODE": "Falta el código del tipo (catalogTypeCode).",
+        "EMPTY_NAME": "Falta el nombre.",
+        "EMPTY_CODE": "El nombre no genera ningún código (solo tiene símbolos o separadores).",
+        "VALUE_TOO_LONG": "Un valor supera la longitud de su columna.",
+        "DUPLICATE_IN_FILE": "El mismo nombre ya apareció antes en el archivo, bajo el mismo tipo.",
+        "CATALOG_TYPE_NAME_REQUIRED": "El tipo no existe y falta catalogTypeName para crearlo."
+      }
     }
   },
   "geoLevelType": {
