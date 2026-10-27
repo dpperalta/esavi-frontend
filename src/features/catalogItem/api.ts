@@ -9,7 +9,7 @@ import { createResource } from '@/shared/api/createResource';
 // PUT    /api/catalog-items/:id             ESAVI-CATITEM-004   ADMIN       update
 // DELETE /api/catalog-items/:id             ESAVI-CATITEM-005A  ADMIN       deactivate
 // PATCH  /api/catalog-items/activate/:id    ESAVI-CATITEM-005B  SUPERADMIN  activate
-// POST   /api/catalog-items/import          ESAVI-CATITEM-006   SUPERADMIN  not consumed (own spec, SPEC FE03 §2)
+// POST   /api/catalog-items/import          ESAVI-CATITEM-006   SUPERADMIN  consumed by importApi.ts (SPEC FE30)
 //
 // First real consumer of `inactiveMode: 'adminPath'` and `parent` (SPEC FE03 §1 finding B):
 // there is no flat `GET /api/catalog-items` in the inventory, only the two by-type reads, so
