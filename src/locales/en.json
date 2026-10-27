@@ -331,6 +331,7 @@
         "missingOptionalHeaders": "Missing optional headers",
         "unknownHeaders": "Unknown headers (ignored)",
         "codeColumnIgnored": "The code column is not used: the code is generated from the name.",
+        "noColumn": "No column",
         "typesCreatedDryRun_one": "This load would create {{count}} new catalog type. If you did not expect it, check the catalogTypeCode column: there may be a typo.",
         "typesCreatedDryRun_other": "This load would create {{count}} new catalog types. If you did not expect them, check the catalogTypeCode column: there may be a typo.",
         "typesCreated_one": "{{count}} new catalog type was created. If it should not exist, deactivate it from Catalog types.",

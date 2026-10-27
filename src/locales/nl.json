@@ -331,6 +331,7 @@
         "missingOptionalHeaders": "Ontbrekende optionele kopteksten",
         "unknownHeaders": "Onbekende kopteksten (genegeerd)",
         "codeColumnIgnored": "De kolom code wordt niet gebruikt: de code wordt uit de naam gegenereerd.",
+        "noColumn": "Geen kolom",
         "typesCreatedDryRun_one": "Deze lading zou {{count}} nieuw catalogustype aanmaken. Had je dat niet verwacht, controleer dan de kolom catalogTypeCode: er kan een tikfout in zitten.",
         "typesCreatedDryRun_other": "Deze lading zou {{count}} nieuwe catalogustypen aanmaken. Had je dat niet verwacht, controleer dan de kolom catalogTypeCode: er kan een tikfout in zitten.",
         "typesCreated_one": "Er is {{count}} nieuw catalogustype aangemaakt. Hoort het niet te bestaan, deactiveer het dan via Catalogustypen.",
