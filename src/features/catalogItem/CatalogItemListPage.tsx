@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { LockIcon, SearchIcon } from 'lucide-react';
+import { LockIcon, SearchIcon, Upload } from 'lucide-react';
 import type { CatalogItem } from '@/contracts/declared/catalogItem';
 import { getErrorMessage } from '@/shared/api/errorMessages';
 import { EsaviApiError } from '@/shared/api/types';
@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
 import { Badge } from '@/shared/components/ui/badge';
+import { Button } from '@/shared/components/ui/button';
 import { DropdownMenuItem } from '@/shared/components/ui/dropdown-menu';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
@@ -28,6 +29,8 @@ import { CatalogItemAuditSheet } from './CatalogItemAuditSheet';
 import { CatalogItemFormDialog } from './CatalogItemFormDialog';
 
 type ConfirmAction = 'deactivate' | 'activate';
+
+const IMPORT_PATH = '/catalog-items/import';
 
 interface RowActionsProps {
   row: CatalogItem;
@@ -90,7 +93,11 @@ function InvitationPanel({ messageKey, tone = 'muted' }: InvitationPanelProps) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center">
       <SearchIcon aria-hidden="true" className="size-8 text-muted-foreground" />
-      <p className={tone === 'warning' ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'}>
+      <p
+        className={
+          tone === 'warning' ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'
+        }
+      >
         {t(messageKey)}
       </p>
     </div>
@@ -105,6 +112,8 @@ export function CatalogItemListPage() {
   const includeInactive = searchParams.get('includeInactive') === 'true';
   const pageSize = usePreferencesStore((state) => state.pageSize);
   const canCreate = useCan(ROLE_LEVELS.ADMIN);
+  // ESAVI-CATITEM-006 is SUPERADMIN (SPEC FE30 §3.1).
+  const canImport = useCan(ROLE_LEVELS.SUPERADMIN);
 
   // Same cache entry <CatalogTypeSelect> uses (`limit: 100`) — React Query dedupes the request,
   // this doesn't add a second network call. Used only to tell a real type from a stale `typeId`
@@ -194,7 +203,11 @@ export function CatalogItemListPage() {
     mutation.mutate(confirmTarget.id, {
       onSuccess: () => {
         toast.success(
-          t(confirmTarget.action === 'deactivate' ? 'common.toast.deactivated' : 'common.toast.activated'),
+          t(
+            confirmTarget.action === 'deactivate'
+              ? 'common.toast.deactivated'
+              : 'common.toast.activated',
+          ),
         );
         setConfirmTarget(null);
       },
@@ -214,9 +227,7 @@ export function CatalogItemListPage() {
       render: (row) => (
         <span className="flex flex-wrap items-center gap-2">
           {row.name}
-          {!row.isActive && (
-            <Badge variant="destructive">{t('catalogItem.status.inactive')}</Badge>
-          )}
+          {!row.isActive && <Badge variant="destructive">{t('catalogItem.status.inactive')}</Badge>}
         </span>
       ),
       card: 'primary',
@@ -255,9 +266,22 @@ export function CatalogItemListPage() {
     },
   ];
 
+  // The type travels as router state so the import page's «Volver» lands on the same listing.
+  const importButton = (
+    <Button asChild variant="outline" size="touch" className="md:h-8">
+      <Link to={IMPORT_PATH} state={typeId ? { typeId } : undefined}>
+        <Upload aria-hidden="true" />
+        {t('catalogItem.list.import')}
+      </Link>
+    </Button>
+  );
+
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
-      <h1 className="text-xl font-medium text-foreground">{t('catalogItem.list.title')}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-medium text-foreground">{t('catalogItem.list.title')}</h1>
+        {canImport && importButton}
+      </div>
 
       <div className="w-full sm:max-w-xs">
         <CatalogTypeSelect
@@ -290,6 +314,7 @@ export function CatalogItemListPage() {
           canCreate={canCreate}
           onCreate={handleCreate}
           emptyKey="catalogItem.list.empty"
+          emptyExtraAction={canImport ? importButton : undefined}
           isRowInactive={(row) => !row.isActive}
           rowActions={(row) => (
             <CatalogItemRowActions

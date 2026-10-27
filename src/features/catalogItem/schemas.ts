@@ -46,3 +46,26 @@ export const catalogItemErrorFieldMap: Partial<Record<string, keyof CatalogItemF
   CATITEM_001_CODE_EXISTS: 'code',
   CATITEM_004_CODE_EXISTS: 'code',
 };
+
+export const MAX_CATALOG_ITEM_IMPORT_FILE_SIZE_BYTES = 20 * 1024 * 1024;
+
+// Declared exception to CONVENTIONS.md §8, same as geoImportFileSchema and the two clinical
+// importers (SPEC FE30 §6, decision 10): the File lives in component state, not in React Hook
+// Form. Each issue message is a backend error code, so the component resolves it through the same
+// `catalogItem.errors.*` key the server-side rejection lands on. A non-.xlsx name maps to
+// FILE_INVALID: it is what the backend answers for a buffer exceljs cannot open.
+export const importCatalogItemsSchema = z
+  .instanceof(File, { message: 'CATITEM_006_FILE_REQUIRED' })
+  .refine((file) => file.name.toLowerCase().endsWith('.xlsx'), {
+    message: 'CATITEM_006_FILE_INVALID',
+  })
+  .refine((file) => file.size <= MAX_CATALOG_ITEM_IMPORT_FILE_SIZE_BYTES, {
+    message: 'CATITEM_006_FILE_TOO_LARGE',
+  });
+
+// SPEC FE30 §3.5. CATITEM_006_IMPORT_FAILED is not here: it goes to a page-level alert.
+export const catalogItemImportErrorFieldMap: Partial<Record<string, 'file'>> = {
+  CATITEM_006_FILE_REQUIRED: 'file',
+  CATITEM_006_FILE_TOO_LARGE: 'file',
+  CATITEM_006_FILE_INVALID: 'file',
+};

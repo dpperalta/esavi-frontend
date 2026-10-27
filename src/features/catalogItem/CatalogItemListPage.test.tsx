@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
@@ -164,7 +164,10 @@ describe('CatalogItemListPage — cambio de tipo resetea page', () => {
           message: 'ok',
           data: {
             count: 2,
-            rows: [makeTypeRow(), makeTypeRow({ catalogTypeId: 'ct-2', code: 'SEX', name: 'Sexo' })],
+            rows: [
+              makeTypeRow(),
+              makeTypeRow({ catalogTypeId: 'ct-2', code: 'SEX', name: 'Sexo' }),
+            ],
           },
         }),
       ),
@@ -232,5 +235,84 @@ describe('CatalogItemListPage — autorización', () => {
 
     expect(screen.queryByRole('button', { name: 'Crear' })).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Mostrar inactivos')).not.toBeInTheDocument();
+  });
+});
+
+function listHandlers(rows: CatalogItem[]) {
+  const list = () =>
+    HttpResponse.json({ ok: true, message: 'ok', data: { count: rows.length, rows } });
+  server.use(
+    http.get('http://localhost:4500/api/catalog-types', () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 1, rows: [makeTypeRow()] } }),
+    ),
+    http.get('http://localhost:4500/api/catalog-items/type/ct-1', list),
+    http.get('http://localhost:4500/api/catalog-items/admin/type/ct-1', list),
+  );
+}
+
+function ImportStateProbe() {
+  const location = useLocation();
+  return <p>import-page:{JSON.stringify(location.state)}</p>;
+}
+
+function renderWithImportRoute(initialPath: string) {
+  const router = createMemoryRouter(
+    [
+      { path: '/catalog-items', element: <CatalogItemListPage /> },
+      { path: '/catalog-items/import', element: <ImportStateProbe /> },
+    ],
+    { initialEntries: [initialPath] },
+  );
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>,
+  );
+}
+
+describe('CatalogItemListPage — «Importar catálogo» (SPEC FE30 §4 paso 6)', () => {
+  it('con SUPERADMIN aparece en la cabecera y lleva el typeId como estado', async () => {
+    const user = setupUser();
+    signInAs('SUPERADMIN', 100);
+    listHandlers([makeItemRow()]);
+
+    renderWithImportRoute('/catalog-items?typeId=ct-1');
+
+    await waitFor(() => expect(screen.getAllByText('Muerte').length).toBeGreaterThan(0));
+    const links = screen.getAllByRole('link', { name: 'Importar catálogo' });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', '/catalog-items/import');
+
+    await user.click(links[0]!);
+
+    expect(await screen.findByText('import-page:{"typeId":"ct-1"}')).toBeInTheDocument();
+  });
+
+  it('con SUPERADMIN aparece también en el estado vacío del tipo', async () => {
+    signInAs('SUPERADMIN', 100);
+    listHandlers([]);
+
+    renderWithImportRoute('/catalog-items?typeId=ct-1');
+
+    expect(
+      await screen.findByText('Este tipo de catálogo todavía no tiene elementos.'),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Importar catálogo' })).toHaveLength(2);
+  });
+
+  it.each([
+    ['ADMIN', 50],
+    ['USER', 25],
+  ] as const)('con %s no se renderiza, ni en la cabecera ni en el vacío', async (role, level) => {
+    signInAs(role, level);
+    listHandlers([]);
+
+    renderWithImportRoute('/catalog-items?typeId=ct-1');
+
+    expect(
+      await screen.findByText('Este tipo de catálogo todavía no tiene elementos.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Importar catálogo' })).not.toBeInTheDocument();
   });
 });

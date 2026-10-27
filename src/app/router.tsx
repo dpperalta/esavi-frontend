@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppRoleListPage } from '@/features/appRole/AppRoleListPage';
+import { CatalogItemImportPage } from '@/features/catalogItem/CatalogItemImportPage';
 import { CatalogItemListPage } from '@/features/catalogItem/CatalogItemListPage';
 import { CatalogTypeListPage } from '@/features/catalogType/CatalogTypeListPage';
 import { DiagnosticTermImportPage } from '@/features/diagnosticTerm/DiagnosticTermImportPage';
@@ -77,6 +78,9 @@ export function AppRouter() {
               {/* SPEC FE25d §3.1: SUPERADMIN is the real minimum of ESAVI-WHODPROD-007. Declared
                   before /whodrug-products, same criterion as /diagnostic-terms/import. */}
               <Route path="/whodrug-products/sync" element={<WhodrugProductSyncPage />} />
+              {/* SPEC FE30 §3.1: SUPERADMIN is the real minimum of ESAVI-CATITEM-006. Declared
+                  before /catalog-items, so no future /catalog-items/:id reads "import" as an id. */}
+              <Route path="/catalog-items/import" element={<CatalogItemImportPage />} />
             </Route>
             {/* SPEC FE25d §3.1: ADMIN is the real minimum of ESAVI-WHODPROD-002B, the only listing.
                 A second ADMIN group, after the SUPERADMIN one, so /whodrug-products/sync is
