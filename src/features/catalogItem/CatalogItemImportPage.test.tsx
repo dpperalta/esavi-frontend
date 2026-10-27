@@ -69,11 +69,11 @@ function respondWithError(code: string, status: number) {
   );
 }
 
-function renderPage() {
+function renderPage(state?: { typeId: string }) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[{ pathname: '/catalog-items/import', state }]}>
         <CatalogItemImportPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -108,6 +108,21 @@ describe('CatalogItemImportPage (SPEC FE30 §4 paso 5)', () => {
 
     expect(screen.getByRole('button', { name: 'Simular' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Importar' })).toBeDisabled();
+  });
+
+  it('«Volver» lleva al listado, con el typeId si se llegó con él', () => {
+    const { unmount } = renderPage();
+    expect(screen.getByRole('link', { name: 'Volver a elementos de catálogo' })).toHaveAttribute(
+      'href',
+      '/catalog-items',
+    );
+    unmount();
+
+    renderPage({ typeId: 'ct-1' });
+    expect(screen.getByRole('link', { name: 'Volver a elementos de catálogo' })).toHaveAttribute(
+      'href',
+      '/catalog-items?typeId=ct-1',
+    );
   });
 
   it('la ayuda lista las seis cabeceras y enlaza la plantilla con download', () => {
