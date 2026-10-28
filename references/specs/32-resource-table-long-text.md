@@ -1,6 +1,6 @@
 # SPEC FE32 — Texto largo en las celdas de `<ResourceTable>` y el ancho del shell
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell: `AppShell`), SPEC FE02 (`<ResourceTable>`)
 > **Fecha:** 2026-10-28
 > **Objetivo:** Que una celda de texto largo se parta en varias líneas dentro de su columna, sin pisar a las vecinas, y que una tabla ancha haga scroll dentro de su contenedor, nunca en el `body`.
