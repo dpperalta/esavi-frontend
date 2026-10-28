@@ -33,7 +33,9 @@ export function AppShell() {
       onOpenMobileChange={(open) => (open ? openSidebar() : closeSidebar())}
     >
       <AppSidebar />
-      <SidebarInset>
+      {/* A flex child can't shrink below its content's width: without `min-w-0`, a wide table
+          pushed the inset past the viewport and the body scrolled sideways (SPEC FE32 §1 B). */}
+      <SidebarInset className="min-w-0">
         <Topbar />
         {/* No page constrained its own width (checked: none does), so on a wide monitor every
             screen stretched edge to edge with nothing to center it — `max-w-screen-2xl` caps it
