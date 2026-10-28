@@ -268,7 +268,7 @@ export function CatalogItemListPage() {
 
   // The type travels as router state so the import page's «Volver» lands on the same listing.
   const importButton = (
-    <Button asChild variant="outline" size="touch" className="md:h-8">
+    <Button asChild variant="outline">
       <Link to={IMPORT_PATH} state={typeId ? { typeId } : undefined}>
         <Upload aria-hidden="true" />
         {t('catalogItem.list.import')}

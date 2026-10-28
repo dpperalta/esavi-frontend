@@ -1,6 +1,6 @@
 # SPEC FE30 — Importación masiva de ítems de catálogo
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE03 (listado de `catalogItem`; su §2 difería esta importación), SPEC FE25b (flujo de importación: simular, confirmar, descartar el informe), SPEC FE25c (primitiva `<ImportReport>`, generalizada por SPEC FE25d), SPEC F20 del backend (`ESAVI-CATITEM-006`, con sus dos enmiendas)
 > **Fecha:** 2026-10-27
 > **Objetivo:** Dar a SUPERADMIN una página para subir un `.xlsx` de ítems de catálogo, simularlo, importarlo y leer el informe. Incluye una plantilla vacía descargable y un aviso explícito cuando la carga crea tipos de catálogo nuevos.

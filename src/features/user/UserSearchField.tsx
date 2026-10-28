@@ -82,7 +82,7 @@ export function UserSearchField({
             // would sit next to the labelled 44px one below and do the same thing.
             type="text"
             name="q"
-            className="h-11 pl-8 md:h-8"
+            className="pl-8"
             value={text}
             placeholder={t('user.search.placeholder')}
             aria-describedby="user-search-hint"

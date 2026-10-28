@@ -124,7 +124,7 @@ function FilterFields({
         <Label>{t('diagnosticTerm.filters.source')}</Label>
         <Select value={source ?? ''} onValueChange={(value) => onSourceChange(parseSource(value))}>
           <SelectTrigger
-            className="min-h-11 w-full md:min-h-8"
+            className="w-full"
             aria-label={t('diagnosticTerm.filters.source')}
             onClear={source ? () => onSourceChange(null) : undefined}
           >
@@ -146,7 +146,6 @@ function FilterFields({
           id={termGroupId}
           autoComplete="off"
           spellCheck={false}
-          className="min-h-11 md:min-h-8"
           value={termGroupInput}
           onChange={(event) => onTermGroupInputChange(event.target.value)}
           aria-describedby={termGroupHintId}
@@ -164,7 +163,7 @@ function FilterFields({
             onValueChange={(value) => onReviewStatusChange(parseReviewStatus(value))}
           >
             <SelectTrigger
-              className="min-h-11 w-full md:min-h-8"
+              className="w-full"
               aria-label={t('diagnosticTerm.filters.reviewStatus')}
               aria-describedby={reviewHintId}
               onClear={reviewStatus ? () => onReviewStatusChange(null) : undefined}
@@ -405,7 +404,7 @@ export function DiagnosticTermListPage() {
   );
 
   const importButton = (
-    <Button asChild variant="outline" size="touch" className="md:h-8">
+    <Button asChild variant="outline">
       <Link to={IMPORT_PATH}>
         <Upload aria-hidden="true" />
         {t('diagnosticTerm.list.import')}
@@ -428,7 +427,6 @@ export function DiagnosticTermListPage() {
             type="search"
             autoComplete="off"
             spellCheck={false}
-            className="min-h-11 md:min-h-8"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             aria-describedby="diagnostic-term-search-hint"

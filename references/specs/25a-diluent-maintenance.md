@@ -1,6 +1,6 @@
 # SPEC FE25a — Mantenimiento de diluyentes
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE02 (fábrica de recursos), SPEC FE12c (`diluentResource` y `<DiluentSelect>`), SPEC F23 del backend (CRUD de `diluentCatalog`)
 > **Fecha:** 2026-09-25
 > **Objetivo:** Dar al maestro de diluyentes una pantalla en `/diluents` para listar, buscar, crear, editar, desactivar y reactivar, sobre las siete rutas de `DILUENT`.

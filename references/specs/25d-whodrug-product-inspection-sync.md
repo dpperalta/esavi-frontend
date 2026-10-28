@@ -1,6 +1,6 @@
 # SPEC FE25d — Inspección y sincronización de medicamentos WHODrug
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE25c (`<ImportReport>`; queda enmendado por este spec, §8), SPEC FE25b (flujo simular → ejecutar), SPEC FE19 (pantalla de `systemConfig`, destino del enlace de configuración), SPEC FE12b (`<WhodrugProductSearchField>`, consumidor del `006`), SPEC F56 del backend (`whodrugProduct`: espejo, buscador y sincronización)
 > **Fecha:** 2026-09-25
 > **Objetivo:** Dar al ADMIN un listado de inspección del espejo WHODrug en `/whodrug-products`, y al SUPERADMIN una página en `/whodrug-products/sync` para sincronizarlo con el API de la UMC.

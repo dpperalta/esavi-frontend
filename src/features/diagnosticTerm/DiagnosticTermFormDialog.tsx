@@ -188,7 +188,7 @@ export function DiagnosticTermFormDialog({
                       <FormLabel>{t('diagnosticTerm.fields.source')}</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger className="min-h-11 w-full md:min-h-8" clearable={false}>
+                          <SelectTrigger className="w-full" clearable={false}>
                             <SelectValue />
                           </SelectTrigger>
                         </FormControl>
@@ -256,7 +256,7 @@ export function DiagnosticTermFormDialog({
                           once a row is marked there is no way back (SPEC FE25b §3.5, §6). */}
                       <Select value={field.value ?? ''} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger className="min-h-11 w-full md:min-h-8" clearable={false}>
+                          <SelectTrigger className="w-full" clearable={false}>
                             <SelectValue placeholder={t('diagnosticTerm.form.reviewStatusUnset')} />
                           </SelectTrigger>
                         </FormControl>
