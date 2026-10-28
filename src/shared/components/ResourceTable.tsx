@@ -47,6 +47,9 @@ export interface ResourceTableColumn<T> {
   // card to the desktop column order.
   card?: 'primary' | 'secondary' | 'meta';
   className?: string;
+  // `TableCell` sets `whitespace-nowrap`, which defeats `break-words` in long-text cells; `wrap`
+  // lifts it for the body cell only — the header stays on one line (SPEC FE32 §3.1).
+  wrap?: boolean;
 }
 
 export interface ResourceTableProps<T> {
@@ -223,7 +226,10 @@ export function ResourceTable<T>({
                       className={cn(isRowInactive?.(row) && 'bg-destructive/5')}
                     >
                       {columns.map((column) => (
-                        <TableCell key={column.key} className={column.className}>
+                        <TableCell
+                          key={column.key}
+                          className={cn(column.wrap && 'whitespace-normal', column.className)}
+                        >
                           {column.render(row)}
                         </TableCell>
                       ))}
