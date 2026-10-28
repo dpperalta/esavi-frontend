@@ -15,6 +15,7 @@ function renderSelect(props: {
   clearable?: boolean;
   onClear?: () => void;
   disabled?: boolean;
+  size?: 'sm' | 'default';
 }) {
   const { value, ...triggerProps } = props;
   return render(
@@ -79,5 +80,26 @@ describe('SelectTrigger — clearable', () => {
     renderSelect({ value: 'a' });
 
     expect(screen.queryByRole('button', { name: 'Limpiar selección' })).not.toBeInTheDocument();
+  });
+});
+
+describe('SelectTrigger — touch target', () => {
+  // Declared exception to CONVENTIONS.md §12 (no Tailwind class assertions): jsdom does not
+  // evaluate `(pointer: coarse)`. The class lives in the static string for every size and only
+  // takes effect through `data-size="default"`, so the test pins that wiring (SPEC FE31 §3.1);
+  // the rendered height is measured in §4 step 6.
+  it('el trigger default lleva data-size="default" y la clase de 44px en táctil', () => {
+    renderSelect({ value: 'a' });
+
+    const trigger = screen.getByRole('combobox');
+    expect(trigger).toHaveAttribute('data-size', 'default');
+    expect(trigger).toHaveClass('data-[size=default]:h-8');
+    expect(trigger).toHaveClass('pointer-coarse:data-[size=default]:h-11');
+  });
+
+  it('el trigger sm lleva data-size="sm", que deja sin efecto la clase de 44px', () => {
+    renderSelect({ value: 'a', size: 'sm' });
+
+    expect(screen.getByRole('combobox')).toHaveAttribute('data-size', 'sm');
   });
 });

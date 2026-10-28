@@ -104,7 +104,7 @@ Ninguna.
 1. **`<Input>`.** Añadir `pointer-coarse:h-11` a la clase base de `input.tsx`. Nuevo test `ui/input.test.tsx` que fija la presencia de `h-8` y de `pointer-coarse:h-11`.
    *Verificación:* `npx vitest run src/shared/components/ui/input.test.tsx` pasa, y `npx tsc --noEmit -p tsconfig.app.json` sale en 0.
 
-2. **`SelectTrigger`.** Añadir `pointer-coarse:data-[size=default]:h-11` en `select.tsx`. Ampliar `ui/select.test.tsx`: el trigger `default` lleva la clase y el trigger `sm` no.
+2. **`SelectTrigger`.** Añadir `pointer-coarse:data-[size=default]:h-11` en `select.tsx`. La clase va en la cadena fija, común a todos los tamaños, y solo surte efecto con `data-size="default"`. Ampliar `ui/select.test.tsx`: el trigger `default` lleva `data-size="default"` y la clase, y el trigger `sm` lleva `data-size="sm"`, que la deja sin efecto.
    *Verificación:* `npx vitest run src/shared/components/ui/select.test.tsx` pasa.
 
 3. **`<Button>` `default` e `icon`.** Añadir `pointer-coarse:h-11` y `pointer-coarse:size-11` en `button.tsx`. No se tocan `touch`, `icon-touch` ni los tamaños de densidad. Nuevo test `ui/button.test.tsx`: `default` e `icon` llevan la clase; `sm`, `xs` y `touch` no la llevan.
@@ -124,7 +124,7 @@ Ninguna.
 ## 5. Criterios de aceptación
 
 - [ ] `input.tsx`, `select.tsx`, `button.tsx` y `command.tsx` llevan su clase `pointer-coarse:` de §3.1, y cada una la fija un test.
-- [ ] `<Button size="sm">`, `xs` y `touch`, y `SelectTrigger size="sm"`, no llevan `pointer-coarse:` (lo comprueba un test).
+- [ ] `<Button size="sm">`, `xs` y `touch` no llevan `pointer-coarse:`, y `SelectTrigger size="sm"` lleva `data-size="sm"`, que deja sin efecto la clase de 44px (lo comprueba un test).
 - [ ] `grep -rnE 'className="md:h-8"|min-h-11 w-full md:min-h-8' src/` no devuelve resultados.
 - [ ] En táctil emulado a 375px, `<Input>`, `SelectTrigger`, el disparador de `<SearchableSelect>`, el botón `icon` y el buscador del desplegable miden 44px, en `/esavi-cases`, en el diálogo de evento y en `/catalog-items`.
 - [ ] En escritorio con ratón, esos mismos controles siguen midiendo 32px.
