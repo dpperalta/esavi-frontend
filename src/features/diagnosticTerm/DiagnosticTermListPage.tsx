@@ -347,6 +347,7 @@ export function DiagnosticTermListPage() {
       header: 'diagnosticTerm.fields.name',
       render: (row) => <span className="block max-w-full break-words md:max-w-md">{row.name}</span>,
       card: 'primary',
+      wrap: true,
     },
     {
       key: 'code',

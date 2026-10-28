@@ -299,6 +299,7 @@ export function VaccineWhodrugListPage() {
           <span className="block max-w-full break-words md:max-w-sm">{row.drugName}</span>
         ),
       card: 'primary',
+      wrap: true,
     },
     {
       key: 'drugCode',
@@ -313,6 +314,7 @@ export function VaccineWhodrugListPage() {
         <span className="block max-w-full break-words md:max-w-xs">{row.maHolders ?? '—'}</span>
       ),
       card: 'meta',
+      wrap: true,
     },
     {
       key: 'strength',
