@@ -80,7 +80,6 @@ function FilterField({ label, hint, value, onChange }: FilterFieldProps) {
         type="search"
         autoComplete="off"
         spellCheck={false}
-        className="min-h-11 md:min-h-8"
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-describedby={hintId}
@@ -228,7 +227,7 @@ export function WhodrugProductListPage() {
   ];
 
   const syncButton = (
-    <Button asChild variant="outline" size="touch" className="md:h-8">
+    <Button asChild variant="outline">
       <Link to={SYNC_PATH}>
         <RefreshCw aria-hidden="true" />
         {t('whodrugProduct.list.sync')}

@@ -103,7 +103,7 @@ function BooleanFilterSelect({ label, value, onChange }: BooleanFilterSelectProp
       <Label>{label}</Label>
       <Select value={value ?? ''} onValueChange={(next) => onChange(parseBooleanFilter(next))}>
         <SelectTrigger
-          className="min-h-11 w-full md:min-h-8"
+          className="w-full"
           aria-label={label}
           onClear={value ? () => onChange(null) : undefined}
         >
@@ -148,7 +148,6 @@ function FilterFields({
           id={iso3CodeId}
           autoComplete="off"
           spellCheck={false}
-          className="min-h-11 md:min-h-8"
           value={iso3CodeInput}
           onChange={(event) => onIso3CodeInputChange(event.target.value)}
           aria-describedby={iso3CodeHintId}
@@ -357,7 +356,7 @@ export function VaccineWhodrugListPage() {
   );
 
   const importButton = (
-    <Button asChild variant="outline" size="touch" className="md:h-8">
+    <Button asChild variant="outline">
       <Link to={IMPORT_PATH}>
         <Upload aria-hidden="true" />
         {t('vaccineWhodrug.list.import')}
@@ -380,7 +379,6 @@ export function VaccineWhodrugListPage() {
             type="search"
             autoComplete="off"
             spellCheck={false}
-            className="min-h-11 md:min-h-8"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             aria-describedby="vaccine-whodrug-search-hint"

@@ -114,8 +114,6 @@ export function UserRoleHistorySheet({
         <Button
           type="button"
           variant="outline"
-          size="touch"
-          className="md:h-8"
           disabled={catalogLoading || roleRetired}
           aria-describedby={roleRetired ? warningId : undefined}
           onClick={() => setPendingUserRoleId(row.userRoleId)}

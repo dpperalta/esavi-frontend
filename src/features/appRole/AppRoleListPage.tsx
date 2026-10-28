@@ -91,7 +91,7 @@ function AppRoleSearchField({ value, onCommit }: SearchFieldProps) {
         <Input
           type="text"
           name="q"
-          className="h-11 pl-8 md:h-8"
+          className="pl-8"
           value={text}
           aria-label={label}
           placeholder={label}

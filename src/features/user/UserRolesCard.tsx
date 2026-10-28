@@ -115,8 +115,6 @@ export function UserRolesCard({ userId, readOnly = false }: UserRolesCardProps) 
           <Button
             type="button"
             variant="outline"
-            size="touch"
-            className="md:h-8"
             onClick={() => setHistoryOpen(true)}
           >
             {t('user.roleHistory.open')}

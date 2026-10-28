@@ -19,7 +19,12 @@
 
 **D — El buscador de `command.tsx:72` fuerza `h-8!`** sobre `<InputGroup>`: es el campo de búsqueda dentro de los desplegables de los selectores.
 
-**E — Hay seis parches locales que corrigen por ancho.** `size="touch" className="md:h-8"` en los botones de importar de cuatro listados (`CatalogItemListPage.tsx:271`, `DiagnosticTermListPage.tsx:408`, `VaccineWhodrugListPage.tsx:360`, `WhodrugProductListPage.tsx:231`). `min-h-11 md:min-h-8` en dos `SelectTrigger` de `DiagnosticTermFormDialog.tsx:191` y `:259`. Fallan en una tableta táctil a partir de `md`, y son justo la deriva que este spec corta.
+**E — Hay dieciocho parches locales que corrigen por ancho.** Fallan en una tableta táctil a partir de `md`, y son justo la deriva que este spec corta:
+
+- `size="touch" className="md:h-8"` en seis `<Button>`: los botones de importar o sincronizar de cuatro listados (`CatalogItemListPage.tsx:271`, `DiagnosticTermListPage.tsx:408`, `VaccineWhodrugListPage.tsx:360`, `WhodrugProductListPage.tsx:231`) y los dos botones de historial de roles (`UserRoleHistorySheet.tsx:118`, `UserRolesCard.tsx:119`).
+- `min-h-11 w-full md:min-h-8` en cinco `SelectTrigger`: `DiagnosticTermFormDialog.tsx:191` y `:259`, `DiagnosticTermListPage.tsx:127` y `:167`, `VaccineWhodrugListPage.tsx:106`.
+- `min-h-11 md:min-h-8` en cinco `<Input>` de filtros: `DiagnosticTermListPage.tsx:149` y `:431`, `VaccineWhodrugListPage.tsx:151` y `:383`, `WhodrugProductListPage.tsx:83`.
+- `h-11 pl-8 md:h-8` en dos buscadores con icono: `AppRoleListPage.tsx:94`, `UserSearchField.tsx:85`.
 
 ---
 
@@ -31,7 +36,7 @@
 - `SelectTrigger` tamaño `default` (`ui/select.tsx`): pasa a 44px con `pointer-coarse:`.
 - `<Button>` tamaño `default` → `pointer-coarse:h-11`. Tamaño `icon` → `pointer-coarse:size-11`.
 - El buscador de `command.tsx:72`: su `h-8!` gana el equivalente `pointer-coarse:h-11!`.
-- La retirada de los seis parches locales de §1 E, sustituidos por el tamaño por defecto.
+- La retirada de los dieciocho parches locales de §1 E, sustituidos por el tamaño por defecto.
 - Tests unitarios que fijan la clase `pointer-coarse:` en cada primitiva tocada.
 
 **Fuera de alcance (otros specs):**
@@ -113,8 +118,8 @@ Ninguna.
 4. **Buscador de `<Command>`.** Añadir `pointer-coarse:h-11!` junto al `h-8!` de `command.tsx:72`.
    *Verificación:* `grep -n "pointer-coarse:h-11!" src/shared/components/ui/command.tsx` devuelve la línea, y `SearchableSelect.test.tsx` pasa.
 
-5. **Retirar los seis parches de §1 E.** En los cuatro botones de importar, `size="touch" className="md:h-8"` pasa al tamaño por defecto. En `DiagnosticTermFormDialog.tsx:191` y `:259`, `min-h-11 md:min-h-8` sale de `className` y queda `w-full`.
-   *Verificación:* `grep -rnE 'className="md:h-8"|min-h-11 w-full md:min-h-8' src/` no devuelve nada, y los tests de las cuatro listas y del diálogo pasan.
+5. **Retirar los dieciocho parches de §1 E.** En los seis `<Button>`, `size="touch" className="md:h-8"` desaparece y quedan en el tamaño por defecto. En los cinco `SelectTrigger`, `min-h-11 w-full md:min-h-8` queda en `w-full`. En los cinco `<Input>` de filtros, `className="min-h-11 md:min-h-8"` desaparece. En los dos buscadores con icono, `h-11 pl-8 md:h-8` queda en `pl-8`.
+   *Verificación:* `grep -rnE 'md:h-8|md:min-h-8' src/` no devuelve nada, y los tests de `catalogItem`, `diagnosticTerm`, `vaccineWhodrug`, `whodrugProduct`, `user` y `appRole` pasan.
 
 6. **Medición en táctil emulado.** Con Playwright, contexto `hasTouch: true` e `isMobile: true` a 375×812. Primero se confirma que `matchMedia('(pointer: coarse)').matches` da `true`; si no, se mide con el modo dispositivo de Chrome DevTools. Después se mide `getBoundingClientRect().height` en un `<Input>`, un `SelectTrigger`, un disparador de `<SearchableSelect>`, un botón `icon` y el buscador del desplegable. Se mide en `/esavi-cases`, en el diálogo de evento del asistente y en `/catalog-items`. La misma medición se repite en escritorio sin táctil.
    *Verificación:* todos miden 44 en táctil y 32 en escritorio, y `document.documentElement.scrollWidth` es ≤ 375 en las tres pantallas.
@@ -125,7 +130,7 @@ Ninguna.
 
 - [ ] `input.tsx`, `select.tsx`, `button.tsx` y `command.tsx` llevan su clase `pointer-coarse:` de §3.1, y cada una la fija un test.
 - [ ] `<Button size="sm">`, `xs` y `touch` no llevan `pointer-coarse:`, y `SelectTrigger size="sm"` lleva `data-size="sm"`, que deja sin efecto la clase de 44px (lo comprueba un test).
-- [ ] `grep -rnE 'className="md:h-8"|min-h-11 w-full md:min-h-8' src/` no devuelve resultados.
+- [ ] `grep -rnE 'md:h-8|md:min-h-8' src/` no devuelve resultados.
 - [ ] En táctil emulado a 375px, `<Input>`, `SelectTrigger`, el disparador de `<SearchableSelect>`, el botón `icon` y el buscador del desplegable miden 44px, en `/esavi-cases`, en el diálogo de evento y en `/catalog-items`.
 - [ ] En escritorio con ratón, esos mismos controles siguen midiendo 32px.
 - [ ] `npx tsc --noEmit -p tsconfig.app.json` sale en 0.
@@ -144,7 +149,7 @@ Ninguna.
 ## 6. Decisiones tomadas y descartadas
 
 - **Sí: `pointer-coarse:` en la primitiva.** El requisito de §10.2 es táctil, no de ancho. Con esta variante se llega a 44px solo donde hay dedo, y el escritorio con ratón queda como está. Así desaparece la objeción de FE15 («subir el default reflota 45 entidades sin pase visual»).
-- **No: `h-11 md:h-8`.** Falla en tabletas táctiles a partir de `md`. Es el criterio de los seis parches de §1 E, y por eso se retiran.
+- **No: `h-11 md:h-8`.** Falla en tabletas táctiles a partir de `md`. Es el criterio de los dieciocho parches de §1 E, y por eso se retiran.
 - **No: `h-11` para todos.** Hincha barras de filtros y filas de tabla en escritorio sin ninguna ganancia de accesibilidad con ratón.
 - **No: un `size="touch"` opcional en cada uso.** Serían más de 54 archivos tocados, y cada formulario nuevo lo olvidaría. Es la deriva que este spec corta.
 - **Sí: la familia entera (`<Input>`, `SelectTrigger`, `<Button>` `default`/`icon`, buscador de `<Command>`).** Con solo `<Input>`, un campo de 44px quedaría junto a un selector de 32px en el mismo formulario: es la advertencia C del hallazgo de FE14b.
@@ -167,8 +172,10 @@ Ninguna.
 ## 8. Impacto en pantallas existentes
 
 - **Todas las pantallas con formularios o botones, solo en dispositivos táctiles:** los controles pasan de 32 a 44px. El escritorio con ratón no cambia.
-- **`CatalogItemListPage`, `DiagnosticTermListPage`, `VaccineWhodrugListPage` y `WhodrugProductListPage`:** el botón de importar pierde `size="touch" className="md:h-8"`. En una tableta táctil a partir de `md` mide ahora 44px, no 32.
+- **`CatalogItemListPage`, `DiagnosticTermListPage`, `VaccineWhodrugListPage` y `WhodrugProductListPage`:** el botón de importar o sincronizar pierde `size="touch" className="md:h-8"`. En una tableta táctil a partir de `md` mide ahora 44px, no 32. Los `SelectTrigger` y los `<Input>` de sus barras de filtros pierden `min-h-11 md:min-h-8` y heredan el comportamiento de la primitiva.
 - **`DiagnosticTermFormDialog`:** sus dos `SelectTrigger` pierden `min-h-11 md:min-h-8` y heredan el comportamiento de la primitiva.
+- **`UserRoleHistorySheet` y `UserRolesCard`:** el botón de historial de roles pierde `size="touch" className="md:h-8"`, igual que los de importar.
+- **`AppRoleListPage` y `UserSearchField`:** el buscador con icono pierde `h-11 md:h-8` y conserva `pl-8`.
 
 ---
 
