@@ -1,6 +1,6 @@
 # SPEC FE29 — Registros eliminados y auditoría en las listas del expediente
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:**
 > - SPEC FE02 (`createResource`, `useListByParent`, `useActivate`)
 > - SPEC FE12b–FE12e y FE13a–FE13c (las diez listas satélite)
