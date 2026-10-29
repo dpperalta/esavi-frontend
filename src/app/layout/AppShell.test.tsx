@@ -90,3 +90,16 @@ describe('AppShell — drawer móvil', () => {
     await waitFor(() => expect(useUIStore.getState().sidebarOpen).toBe(false));
   });
 });
+
+describe('AppShell — ancho del contenido', () => {
+  // Declared exception to CONVENTIONS.md §12 (no Tailwind class assertions): jsdom does not
+  // compute layout, so the document's scroll width cannot be measured here. The test pins the
+  // wiring; the rendered width is measured in SPEC FE32 §4 step 4.
+  it('SidebarInset lleva min-w-0 para que una tabla ancha no ensanche el body', async () => {
+    const { container } = renderShell();
+
+    await waitFor(() => expect(screen.getByText('Home content')).toBeInTheDocument());
+
+    expect(container.querySelector('[data-slot="sidebar-inset"]')).toHaveClass('min-w-0');
+  });
+});

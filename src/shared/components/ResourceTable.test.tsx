@@ -155,3 +155,26 @@ describe('ResourceTable — toggle de inactivos (modo adminPath)', () => {
     expect(screen.queryByText('Mostrar inactivos')).not.toBeInTheDocument();
   });
 });
+
+describe('ResourceTable — texto largo (wrap)', () => {
+  // Declared exception to CONVENTIONS.md §12 (no Tailwind class assertions): jsdom does not
+  // compute layout, so overflowing text cannot be measured here. The test pins the wiring; the
+  // rendered result is measured in SPEC FE32 §4 step 4.
+  it('la celda de una columna con wrap lleva whitespace-normal y la de una sin wrap no', () => {
+    const wrapColumns: ResourceTableColumn<Widget>[] = [
+      { key: 'id', header: 'nav.items.catalogType', render: (row) => row.widgetId },
+      { key: 'name', header: 'nav.items.catalogType', render: (row) => row.name, wrap: true },
+    ];
+
+    renderTable({
+      columns: wrapColumns,
+      data: { count: 1, rows: [{ widgetId: 'w-1', name: 'Un nombre largo' }] },
+    });
+
+    const idCell = screen.getByRole('cell', { name: 'w-1' });
+    const nameCell = screen.getByRole('cell', { name: 'Un nombre largo' });
+    expect(nameCell).toHaveClass('whitespace-normal');
+    expect(idCell).not.toHaveClass('whitespace-normal');
+    expect(idCell).toHaveClass('whitespace-nowrap');
+  });
+});

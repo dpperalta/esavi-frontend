@@ -225,7 +225,7 @@ export function WhodrugProductSyncPage() {
                   {alert.withConfigLink && isSuperAdmin && (
                     <Link
                       to={CONFIG_PATH}
-                      className="inline-flex min-h-11 w-fit items-center font-medium underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none md:min-h-0"
+                      className="inline-flex w-fit items-center font-medium underline underline-offset-4 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none pointer-coarse:min-h-11"
                     >
                       {t('whodrugProduct.sync.configLink')}
                     </Link>

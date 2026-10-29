@@ -97,8 +97,8 @@ export function UserSearchField({
           <Button
             type="button"
             variant="ghost"
-            size="icon-touch"
-            className="touch-manipulation md:size-8"
+            size="icon"
+            className="touch-manipulation"
             aria-label={t('user.search.clear')}
             onClick={handleClear}
           >
