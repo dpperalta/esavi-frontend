@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog';
+import { Badge } from '@/shared/components/ui/badge';
 import { DropdownMenuItem } from '@/shared/components/ui/dropdown-menu';
 import { Label } from '@/shared/components/ui/label';
 import { ROLE_LEVELS } from '@/shared/config/roles';
@@ -196,24 +197,30 @@ export function CaseWorkflowInbox() {
     {
       key: 'caseCode',
       header: 'caseWorkflow.list.columns.caseCode',
-      render: (row) =>
-        row.caseCode ? (
-          <button
-            type="button"
-            className="text-primary underline-offset-4 hover:underline"
-            onClick={() => navigate(`/esavi-cases/${row.caseId}`)}
-          >
-            {row.caseCode}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="text-muted-foreground underline-offset-4 hover:underline"
-            onClick={() => navigate(`/esavi-cases/${row.caseId}`)}
-          >
-            {t('caseWorkflow.list.caseCodeMissing')}
-          </button>
-        ),
+      // The badge sits beside the link, not inside it, so the button's accessible name stays the
+      // case code (CONVENTIONS.md §10.1: badge plus row tint).
+      render: (row) => (
+        <span className="flex flex-wrap items-center gap-2">
+          {row.caseCode ? (
+            <button
+              type="button"
+              className="text-primary underline-offset-4 hover:underline"
+              onClick={() => navigate(`/esavi-cases/${row.caseId}`)}
+            >
+              {row.caseCode}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="text-muted-foreground underline-offset-4 hover:underline"
+              onClick={() => navigate(`/esavi-cases/${row.caseId}`)}
+            >
+              {t('caseWorkflow.list.caseCodeMissing')}
+            </button>
+          )}
+          {!row.isActive && <Badge variant="destructive">{t('caseWorkflow.list.status.inactive')}</Badge>}
+        </span>
+      ),
       card: 'primary',
     },
     {

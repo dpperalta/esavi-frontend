@@ -1,5 +1,5 @@
 import { FilterIcon, Upload } from 'lucide-react';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -36,6 +36,7 @@ import {
 } from '@/shared/components/ui/sheet';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
+import { useDebouncedSearchParam } from '@/shared/hooks/useDebouncedSearchParam';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { vaccineWhodrugResource } from './api';
 import { VaccineWhodrugAuditSheet } from './VaccineWhodrugAuditSheet';
@@ -44,7 +45,6 @@ import {
   type VaccineWhodrugConfirmAction,
 } from './VaccineWhodrugRowActions';
 
-const DEBOUNCE_MS = 400;
 // Below this the backend answers 400 (vaccineWhodrug.validator.ts), so the term never travels.
 const SEARCH_MIN_LENGTH = 2;
 const LIST_PATH = '/whodrug-vaccines';
@@ -55,39 +55,6 @@ type BooleanFilter = 'true' | 'false';
 
 function parseBooleanFilter(value: string | null): BooleanFilter | null {
   return value === 'true' || value === 'false' ? value : null;
-}
-
-// A typing buffer for a text filter that lives in `searchParams` (SPEC FE25c §3.4): the input is
-// local, and the URL is written once the user stops typing. Writing a value clears `page`.
-function useDebouncedParam(key: string) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [buffer, setBuffer] = useState(searchParams.get(key) ?? '');
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      // The functional form reads the URL at write time, so another filter changed while this
-      // one was being typed is not overwritten.
-      setSearchParams((current) => {
-        if (buffer === (current.get(key) ?? '')) {
-          return current;
-        }
-        const next = new URLSearchParams(current);
-        if (buffer) {
-          next.set(key, buffer);
-        } else {
-          next.delete(key);
-        }
-        next.delete('page');
-        return next;
-      });
-    }, DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-    // Re-runs only when the typed value changes — `searchParams` would refire it on every
-    // navigation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buffer]);
-
-  return [buffer, setBuffer] as const;
 }
 
 interface BooleanFilterSelectProps {
@@ -185,8 +152,8 @@ export function VaccineWhodrugListPage() {
   const includeInactive = searchParams.get('includeInactive') === 'true';
   const page = Number(searchParams.get('page') ?? '1') || 1;
 
-  const [searchInput, setSearchInput] = useDebouncedParam('q');
-  const [iso3CodeInput, setIso3CodeInput] = useDebouncedParam('iso3Code');
+  const [searchInput, setSearchInput] = useDebouncedSearchParam('q');
+  const [iso3CodeInput, setIso3CodeInput] = useDebouncedSearchParam('iso3Code');
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
   const [auditId, setAuditId] = useState<string | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<{

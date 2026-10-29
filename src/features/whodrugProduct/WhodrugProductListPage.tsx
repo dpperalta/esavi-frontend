@@ -11,52 +11,21 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
+import { useDebouncedSearchParam } from '@/shared/hooks/useDebouncedSearchParam';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { useWhodrugProductList, WHODRUG_PRODUCT_FILTER_MIN_LENGTH } from './api';
 import { WhodrugProductSheet } from './WhodrugProductSheet';
 
-const DEBOUNCE_MS = 400;
 const SYNC_PATH = '/whodrug-products/sync';
-
-type FilterKey = 'name' | 'ingredient';
 
 function meetsMinLength(value: string): boolean {
   return value.trim().length >= WHODRUG_PRODUCT_FILTER_MIN_LENGTH;
 }
 
-// A typing buffer for a text filter that lives in `searchParams` (SPEC FE25d §3.4). The URL is
-// written once the user stops typing, and only with 3+ characters: below the 002B's minimum the
-// parameter is removed rather than kept, so the URL never holds a filter the list is not applying.
-function useDebouncedParam(key: FilterKey) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [buffer, setBuffer] = useState(searchParams.get(key) ?? '');
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      // The functional form reads the URL at write time, so the other filter, changed while this
-      // one was being typed, is not overwritten.
-      setSearchParams((current) => {
-        const value = meetsMinLength(buffer) ? buffer.trim() : '';
-        if (value === (current.get(key) ?? '')) {
-          return current;
-        }
-        const next = new URLSearchParams(current);
-        if (value) {
-          next.set(key, value);
-        } else {
-          next.delete(key);
-        }
-        next.delete('page');
-        return next;
-      });
-    }, DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-    // Re-runs only when the typed value changes — `searchParams` would refire it on every
-    // navigation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buffer]);
-
-  return [buffer, setBuffer] as const;
+// SPEC FE25d §3.4: below the 002B's minimum the parameter is removed rather than kept, so the URL
+// never holds a filter the list is not applying.
+function toUrlFilter(value: string): string {
+  return meetsMinLength(value) ? value.trim() : '';
 }
 
 interface FilterFieldProps {
@@ -114,8 +83,8 @@ export function WhodrugProductListPage() {
   const ingredient = searchParams.get('ingredient') ?? '';
   const page = Number(searchParams.get('page') ?? '1') || 1;
 
-  const [nameInput, setNameInput] = useDebouncedParam('name');
-  const [ingredientInput, setIngredientInput] = useDebouncedParam('ingredient');
+  const [nameInput, setNameInput] = useDebouncedSearchParam('name', { normalize: toUrlFilter });
+  const [ingredientInput, setIngredientInput] = useDebouncedSearchParam('ingredient', { normalize: toUrlFilter });
   // §3.4: only the id. The row is resolved from `rows` on every render, never copied.
   const [openId, setOpenId] = useState<string | null>(null);
 

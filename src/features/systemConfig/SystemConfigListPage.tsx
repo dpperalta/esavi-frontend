@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -29,13 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
+import { useDebouncedSearchParam } from '@/shared/hooks/useDebouncedSearchParam';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { systemConfigResource, useSyncSystemConfigDefaults } from './api';
 import { SystemConfigAuditSheet } from './SystemConfigAuditSheet';
 import { SystemConfigFormDialog } from './SystemConfigFormDialog';
 import { SystemConfigHistorySheet } from './SystemConfigHistorySheet';
 
-const SEARCH_DEBOUNCE_MS = 400;
 const SYSTEM_CONFIG_VALUE_TYPES: readonly SystemConfigValueType[] = [
   'string',
   'number',
@@ -148,43 +148,11 @@ export function SystemConfigListPage() {
   const includeInactive = searchParams.get('includeInactive') === 'true';
   const valueTypeFilter = searchParams.get('valueType') ?? '';
 
-  const [filtersInput, setFiltersInput] = useState({
-    name: searchParams.get('name') ?? '',
-    code: searchParams.get('code') ?? '',
-    scope: searchParams.get('scope') ?? '',
-  });
-
-  // Mismo criterio de *debounce* que `HealthFacilityListPage`: se escribe en `searchParams` tras
-  // una pausa, nunca en cada tecla — los tres filtros de texto comparten un único efecto porque
-  // cambian juntos con la misma cadencia (SPEC FE19 §3.4, §3.5).
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      const current = {
-        name: searchParams.get('name') ?? '',
-        code: searchParams.get('code') ?? '',
-        scope: searchParams.get('scope') ?? '',
-      };
-      if (
-        filtersInput.name === current.name &&
-        filtersInput.code === current.code &&
-        filtersInput.scope === current.scope
-      ) {
-        return;
-      }
-      const next = new URLSearchParams(searchParams);
-      (['name', 'code', 'scope'] as const).forEach((key) => {
-        if (filtersInput[key]) {
-          next.set(key, filtersInput[key]);
-        } else {
-          next.delete(key);
-        }
-      });
-      next.delete('page');
-      setSearchParams(next);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtersInput]);
+  // One debounced buffer per text filter (SPEC FE19 §3.4, §3.5), each written to `searchParams`
+  // on its own pause.
+  const [nameInput, setNameInput] = useDebouncedSearchParam('name');
+  const [codeInput, setCodeInput] = useDebouncedSearchParam('code');
+  const [scopeInput, setScopeInput] = useDebouncedSearchParam('scope');
 
   const filters: Record<string, string> = {};
   const nameParam = searchParams.get('name');
@@ -243,7 +211,9 @@ export function SystemConfigListPage() {
   }
 
   function handleClearFilters() {
-    setFiltersInput({ name: '', code: '', scope: '' });
+    setNameInput('');
+    setCodeInput('');
+    setScopeInput('');
     const next = new URLSearchParams(searchParams);
     next.delete('name');
     next.delete('code');
@@ -385,24 +355,24 @@ export function SystemConfigListPage() {
           <Label htmlFor="system-config-filter-name">{t('systemConfig.filters.name')}</Label>
           <Input
             id="system-config-filter-name"
-            value={filtersInput.name}
-            onChange={(event) => setFiltersInput((prev) => ({ ...prev, name: event.target.value }))}
+            value={nameInput}
+            onChange={(event) => setNameInput(event.target.value)}
           />
         </div>
         <div className="flex flex-col gap-1.5 sm:w-48">
           <Label htmlFor="system-config-filter-code">{t('systemConfig.filters.code')}</Label>
           <Input
             id="system-config-filter-code"
-            value={filtersInput.code}
-            onChange={(event) => setFiltersInput((prev) => ({ ...prev, code: event.target.value }))}
+            value={codeInput}
+            onChange={(event) => setCodeInput(event.target.value)}
           />
         </div>
         <div className="flex flex-col gap-1.5 sm:w-40">
           <Label htmlFor="system-config-filter-scope">{t('systemConfig.filters.scope')}</Label>
           <Input
             id="system-config-filter-scope"
-            value={filtersInput.scope}
-            onChange={(event) => setFiltersInput((prev) => ({ ...prev, scope: event.target.value }))}
+            value={scopeInput}
+            onChange={(event) => setScopeInput(event.target.value)}
           />
         </div>
         <div className="flex flex-col gap-1.5">

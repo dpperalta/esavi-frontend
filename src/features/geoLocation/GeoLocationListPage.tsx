@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -31,6 +31,7 @@ import {
 } from '@/shared/components/ui/select';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
+import { useDebouncedSearchParam } from '@/shared/hooks/useDebouncedSearchParam';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { geoLevelTypeResource } from '@/features/geoLevelType/api';
 import { geoLocationResource } from './api';
@@ -41,7 +42,6 @@ type ConfirmAction = 'deactivate' | 'activate';
 
 // Debounce before writing `q` into `searchParams` (SPEC FE04 §3.5) — same criterion as any text
 // filter, so a keystroke doesn't refetch and doesn't rewrite the URL on every character.
-const SEARCH_DEBOUNCE_MS = 400;
 
 interface RowActionsProps {
   row: GeoLocation;
@@ -126,36 +126,13 @@ export function GeoLocationListPage() {
   const deactivate = geoLocationResource.useDeactivate();
   const activate = geoLocationResource.useActivate!();
 
-  const [searchInput, setSearchInput] = useState(q);
+  const [searchInput, setSearchInput] = useDebouncedSearchParam('q');
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [auditId, setAuditId] = useState<string | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; action: ConfirmAction } | null>(
     null,
   );
-
-  // Writes the debounced value into `searchParams.q`, resetting `page` — never a separate
-  // `filters.search` the backend doesn't recognize (SPEC FE04 §3.3, hallazgo F).
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      const currentQ = searchParams.get('q') ?? '';
-      if (searchInput === currentQ) {
-        return;
-      }
-      const next = new URLSearchParams(searchParams);
-      if (searchInput) {
-        next.set('q', searchInput);
-      } else {
-        next.delete('q');
-      }
-      next.delete('page');
-      setSearchParams(next);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-    // Re-runs only when the debounced input changes — `searchParams`/`setSearchParams` would
-    // refire this on every navigation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchInput]);
 
   function handleGeoLevelChange(value: string) {
     const next = new URLSearchParams(searchParams);

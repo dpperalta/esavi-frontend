@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -23,6 +23,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
+import { useDebouncedSearchParam } from '@/shared/hooks/useDebouncedSearchParam';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { catalogTypeResource } from '@/features/catalogType/api';
 import { catalogItemResource } from '@/features/catalogItem/api';
@@ -33,7 +34,6 @@ import { HealthFacilityFormDialog } from './HealthFacilityFormDialog';
 const FACILITY_TYPE_CATALOG_CODE = 'healthFacilityType';
 // Debounce before writing `q` into `searchParams` — same criterion as `GeoLocationListPage`'s
 // own search field, so a keystroke doesn't refetch and doesn't rewrite the URL on every character.
-const SEARCH_DEBOUNCE_MS = 400;
 
 type ConfirmAction = 'deactivate' | 'activate';
 type ScreenMode = 'empty' | 'location' | 'search';
@@ -149,35 +149,13 @@ export function HealthFacilityListPage() {
   const deactivate = healthFacilityResource.useDeactivate();
   const activate = healthFacilityResource.useActivate!();
 
-  const [searchInput, setSearchInput] = useState(q);
+  const [searchInput, setSearchInput] = useDebouncedSearchParam('q');
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [auditId, setAuditId] = useState<string | null>(null);
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; action: ConfirmAction } | null>(
     null,
   );
-
-  // Writes the debounced value into `searchParams.q`, resetting `page` (SPEC FE06 §3.6).
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      const currentQ = searchParams.get('q') ?? '';
-      if (searchInput === currentQ) {
-        return;
-      }
-      const next = new URLSearchParams(searchParams);
-      if (searchInput) {
-        next.set('q', searchInput);
-      } else {
-        next.delete('q');
-      }
-      next.delete('page');
-      setSearchParams(next);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-    // Re-runs only when the debounced input changes — `searchParams`/`setSearchParams` would
-    // refire this on every navigation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchInput]);
 
   function handleLocationChange(nextGeoLocationId: string | null) {
     const next = new URLSearchParams(searchParams);

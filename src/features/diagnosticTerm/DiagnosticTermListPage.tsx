@@ -37,6 +37,7 @@ import {
 } from '@/shared/components/ui/sheet';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
+import { useDebouncedSearchParam } from '@/shared/hooks/useDebouncedSearchParam';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { diagnosticTermResource } from './api';
 import { DiagnosticTermAuditSheet } from './DiagnosticTermAuditSheet';
@@ -47,7 +48,6 @@ import {
 } from './DiagnosticTermRowActions';
 import { REVIEW_STATUSES, type ReviewStatus } from './schemas';
 
-const DEBOUNCE_MS = 400;
 // Below this the backend answers 400 (diagnosticTerm.validator.ts), so the term never travels.
 const SEARCH_MIN_LENGTH = 2;
 const IMPORT_PATH = '/diagnostic-terms/import';
@@ -58,39 +58,6 @@ function parseSource(value: string | null): TermSource | null {
 
 function parseReviewStatus(value: string | null): ReviewStatus | null {
   return REVIEW_STATUSES.find((status) => status === value) ?? null;
-}
-
-// A typing buffer for a text filter that lives in `searchParams` (SPEC FE25b §3.4): the input is
-// local, and the URL is written once the user stops typing. Writing a value clears `page`.
-function useDebouncedParam(key: string) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [buffer, setBuffer] = useState(searchParams.get(key) ?? '');
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      // The functional form reads the URL at write time, so another filter changed while this
-      // one was being typed is not overwritten.
-      setSearchParams((current) => {
-        if (buffer === (current.get(key) ?? '')) {
-          return current;
-        }
-        const next = new URLSearchParams(current);
-        if (buffer) {
-          next.set(key, buffer);
-        } else {
-          next.delete(key);
-        }
-        next.delete('page');
-        return next;
-      });
-    }, DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-    // Re-runs only when the typed value changes — `searchParams` would refire it on every
-    // navigation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buffer]);
-
-  return [buffer, setBuffer] as const;
 }
 
 interface FilterFieldsProps {
@@ -204,8 +171,8 @@ export function DiagnosticTermListPage() {
   const reviewStatus = isAdmin && includeInactive ? urlReviewStatus : null;
   const page = Number(searchParams.get('page') ?? '1') || 1;
 
-  const [searchInput, setSearchInput] = useDebouncedParam('q');
-  const [termGroupInput, setTermGroupInput] = useDebouncedParam('termGroup');
+  const [searchInput, setSearchInput] = useDebouncedSearchParam('q');
+  const [termGroupInput, setTermGroupInput] = useDebouncedSearchParam('termGroup');
   const [filtersSheetOpen, setFiltersSheetOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);

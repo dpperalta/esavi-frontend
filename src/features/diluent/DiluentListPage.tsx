@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -20,13 +20,13 @@ import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
+import { useDebouncedSearchParam } from '@/shared/hooks/useDebouncedSearchParam';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { diluentResource } from './api';
 import { DiluentAuditSheet } from './DiluentAuditSheet';
 import { DiluentFormDialog } from './DiluentFormDialog';
 import { DiluentRowActions, type DiluentConfirmAction } from './DiluentRowActions';
 
-const SEARCH_DEBOUNCE_MS = 400;
 // Below this the backend answers 400 (diluentCatalog.validator.ts), so the term never travels.
 const SEARCH_MIN_LENGTH = 2;
 
@@ -56,7 +56,7 @@ export function DiluentListPage() {
   const deactivate = diluentResource.useDeactivate();
   const activate = diluentResource.useActivate!();
 
-  const [searchInput, setSearchInput] = useState(q);
+  const [searchInput, setSearchInput] = useDebouncedSearchParam('q');
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [auditId, setAuditId] = useState<string | null>(null);
@@ -64,26 +64,6 @@ export function DiluentListPage() {
     id: string;
     action: DiluentConfirmAction;
   } | null>(null);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (searchInput === (searchParams.get('q') ?? '')) {
-        return;
-      }
-      const next = new URLSearchParams(searchParams);
-      if (searchInput) {
-        next.set('q', searchInput);
-      } else {
-        next.delete('q');
-      }
-      next.delete('page');
-      setSearchParams(next);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-    // Re-runs only when the typed value changes — `searchParams` would refire it on every
-    // navigation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchInput]);
 
   function updateParams(mutate: (next: URLSearchParams) => void) {
     const next = new URLSearchParams(searchParams);

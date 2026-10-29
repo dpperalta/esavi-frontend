@@ -619,6 +619,9 @@
         "progress": "Progress"
       },
       "caseCodeMissing": "No code",
+      "status": {
+        "inactive": "Inactive"
+      },
       "progressValue": "{{done}}/{{total}} stages",
       "filters": {
         "status": "Case file status",
