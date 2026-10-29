@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { SearchIcon, XIcon } from 'lucide-react';
@@ -24,6 +24,7 @@ import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
+import { useDebouncedSearchParam } from '@/shared/hooks/useDebouncedSearchParam';
 import { usePreferencesStore } from '@/shared/stores/preferencesStore';
 import { appRoleResource, useAppRoleDetail } from './api';
 import { AppRoleAuditSheet } from './AppRoleAuditSheet';
@@ -35,48 +36,25 @@ import { formatRoleLevel, SUPERADMIN_ROLE_CODE } from './roleLevels';
 // backend answers 400, so the term never leaves the field (CONVENTIONS.md §6.7).
 const SEARCH_MIN_LENGTH = 2;
 
-// Same value as every other listing of this repository (SPEC FE20 §6).
-const SEARCH_DEBOUNCE_MS = 400;
-
-interface SearchFieldProps {
-  value: string;
-  onCommit: (next: string) => void;
+function toSearchParam(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.length >= SEARCH_MIN_LENGTH ? trimmed : '';
 }
 
-function AppRoleSearchField({ value, onCommit }: SearchFieldProps) {
+interface SearchFieldProps {
+  onClear: () => void;
+}
+
+// An external change of `q` — the clear button of the empty state, the back button — reseeds the
+// input through the hook, without the debounce committing it straight back.
+function AppRoleSearchField({ onClear }: SearchFieldProps) {
   const { t } = useTranslation();
-  const [text, setText] = useState(value);
-  // What this field last handed to the page, so an external change of `q` — the clear button of
-  // the empty state, the back button — reseeds the input without the debounce committing it
-  // straight back.
-  const committedRef = useRef(value);
+  const [text, setText] = useDebouncedSearchParam('q', { normalize: toSearchParam });
 
-  useEffect(() => {
-    if (value !== committedRef.current) {
-      committedRef.current = value;
-      setText(value);
-    }
-  }, [value]);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      const next = text.trim().length >= SEARCH_MIN_LENGTH ? text.trim() : '';
-      if (next === committedRef.current) {
-        return;
-      }
-      committedRef.current = next;
-      onCommit(next);
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timeout);
-    // Only the typed text re-arms the timer; `onCommit` is recreated on every render of the page
-    // and would restart the debounce on each one.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text]);
-
+  // Clears the URL at once instead of waiting out the debounce.
   function handleClear() {
     setText('');
-    committedRef.current = '';
-    onCommit('');
+    onClear();
   }
 
   const label = t('appRole.search.placeholder');
@@ -351,7 +329,7 @@ export function AppRoleListPage() {
     <div className="flex flex-col gap-6 p-4 md:p-6">
       <h1 className="text-xl font-medium text-foreground">{t('appRole.list.title')}</h1>
 
-      <AppRoleSearchField value={q} onCommit={handleCommitSearch} />
+      <AppRoleSearchField onClear={() => handleCommitSearch('')} />
 
       <ResourceTable<AppRole>
         columns={columns}

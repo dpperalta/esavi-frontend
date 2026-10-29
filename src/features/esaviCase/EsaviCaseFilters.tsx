@@ -9,10 +9,7 @@ import { GeoLocationPicker } from '@/shared/components/GeoLocationPicker';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
-
-// The debounce criterion of `code` and of the health-facility search below — same value
-// HealthFacilityListPage's own search field uses, and the one F52 requires for `code`.
-const SEARCH_DEBOUNCE_MS = 400;
+import { useDebouncedSearchParam } from '@/shared/hooks/useDebouncedSearchParam';
 
 const DATE_COLUMNS = ['reportDate', 'eventDate', 'reportFillingDate'] as const;
 type DateColumn = (typeof DATE_COLUMNS)[number];
@@ -49,50 +46,21 @@ export interface EsaviCaseFiltersProps {
   patientName?: string;
 }
 
-function useDebouncedWriter(
-  setSearchParams: ReturnType<typeof useSearchParams>[1],
-  paramKey: string,
-  currentValue: string,
-  minLength: number,
-) {
-  const [draft, setDraft] = useState(currentValue);
+const CODE_MIN_LENGTH = 2;
 
-  useEffect(() => {
-    setDraft(currentValue);
-  }, [currentValue]);
-
-  useEffect(() => {
-    const trimmed = draft.trim();
-    const handle = window.setTimeout(() => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          if (trimmed.length >= minLength) {
-            next.set(paramKey, trimmed);
-          } else {
-            next.delete(paramKey);
-          }
-          return next;
-        },
-        { replace: true },
-      );
-    }, SEARCH_DEBOUNCE_MS);
-    return () => window.clearTimeout(handle);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- fires on `draft` only; re-running on `setSearchParams`/`paramKey`/`minLength` would restart the debounce for no reason.
-  }, [draft]);
-
-  return [draft, setDraft] as const;
+function toCodeParam(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.length >= CODE_MIN_LENGTH ? trimmed : '';
 }
 
-function CodeFilter({
-  value,
-  setSearchParams,
-}: {
-  value: string;
-  setSearchParams: ReturnType<typeof useSearchParams>[1];
-}) {
+function CodeFilter() {
   const { t } = useTranslation();
-  const [draft, setDraft] = useDebouncedWriter(setSearchParams, 'code', value, 2);
+  // Replaces the history entry and keeps `page`, as this filter always has.
+  const [draft, setDraft] = useDebouncedSearchParam('code', {
+    normalize: toCodeParam,
+    replace: true,
+    resetPage: false,
+  });
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -222,15 +190,15 @@ function DateColumnFilter({
 
   const rangeInvalid = !!draftFrom && !!draftTo && draftFrom > draftTo;
 
+  // Pushes a history entry, so the browser's back button restores the previous mode (SPEC FE09
+  // §4 step 10). It used to replace, and the back-button test only passed because the
+  // code filter's stale debounce rewrote the mount-time URL.
   function writeParams(mutate: (next: URLSearchParams) => void) {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        mutate(next);
-        return next;
-      },
-      { replace: true },
-    );
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      mutate(next);
+      return next;
+    });
   }
 
   // Changing mode clears the abandoned mode's params in this same write (§3.4, §3.5 rule 1):
@@ -340,7 +308,7 @@ export function EsaviCaseFilters({ patientName }: EsaviCaseFiltersProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <CodeFilter value={searchParams.get('code') ?? ''} setSearchParams={setSearchParams} />
+      <CodeFilter />
       {patientId && (
         <PatientCapsule patientId={patientId} patientName={patientName} setSearchParams={setSearchParams} />
       )}

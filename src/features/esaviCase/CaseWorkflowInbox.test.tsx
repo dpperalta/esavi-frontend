@@ -285,6 +285,19 @@ describe('CaseWorkflowInbox — menú de fila del registro', () => {
     expect(screen.queryByRole('menuitem', { name: 'Reactivar registro de flujo' })).not.toBeInTheDocument();
   });
 
+  // CONVENTIONS.md §10.1 — the inactive row carries the destructive badge besides the tint.
+  it('la fila inactiva lleva el badge «Inactivo» y la activa no', async () => {
+    mockCurrentUser('ADMIN', 50);
+    mockCatalogStatusSelect();
+    mockAdminListing([activeRow, inactiveRow]);
+
+    renderInbox(INCLUDE_INACTIVE_PATH);
+
+    await screen.findAllByRole('button', { name: 'ESAVI-0002' });
+    // One badge per rendering of the inactive row: desktop row and mobile card.
+    expect(screen.getAllByText('Inactivo')).toHaveLength(2);
+  });
+
   it('con SUPERADMIN, la fila inactiva ofrece «Reactivar»', async () => {
     mockCurrentUser('SUPERADMIN', 100);
     mockCatalogStatusSelect();

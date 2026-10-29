@@ -619,6 +619,9 @@
         "progress": "Progreso"
       },
       "caseCodeMissing": "Sin código",
+      "status": {
+        "inactive": "Inactivo"
+      },
       "progressValue": "{{done}}/{{total}} etapas",
       "filters": {
         "status": "Estado del expediente",

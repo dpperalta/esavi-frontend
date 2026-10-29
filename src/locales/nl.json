@@ -619,6 +619,9 @@
         "progress": "Voortgang"
       },
       "caseCodeMissing": "Geen code",
+      "status": {
+        "inactive": "Inactief"
+      },
       "progressValue": "{{done}}/{{total}} fasen",
       "filters": {
         "status": "Status van het dossier",

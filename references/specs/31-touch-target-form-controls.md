@@ -1,6 +1,6 @@
 # SPEC FE31 — Objetivo táctil de 44px en los controles de formulario
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE15 (tamaños `touch`/`icon-touch` de `<Button>`, Topbar responsive)
 > **Fecha:** 2026-10-28
 > **Objetivo:** Que todo campo, selector y botón por defecto mida 44px en dispositivos táctiles (`pointer: coarse`), sin cambiar el escritorio con ratón.
