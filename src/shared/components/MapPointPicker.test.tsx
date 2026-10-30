@@ -96,7 +96,11 @@ vi.mock('leaflet', () => {
 
   return {
     default: {
-      map: vi.fn(() => new FakeMap()),
+      // Like the real library, tags its container with its own class.
+      map: vi.fn((container: HTMLElement) => {
+        container.classList.add('leaflet-container');
+        return new FakeMap();
+      }),
       tileLayer: vi.fn(() => new FakeTileLayer()),
       marker: vi.fn((latlng: [number, number]) => new FakeMarker(latlng)),
       Icon: { Default: { prototype: {}, mergeOptions: vi.fn() } },
@@ -302,6 +306,17 @@ describe('MapPointPicker', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('No se pudo consultar el buscador de direcciones'),
     );
     vi.unstubAllGlobals();
+  });
+
+  it('pasar de solo lectura a editable no borra las clases que Leaflet puso en el contenedor', () => {
+    const { rerender } = render(
+      <MapPointPicker value={null} onChange={vi.fn()} disabled ariaLabel="Localidad del paciente" />,
+    );
+    expect(screen.getByRole('application')).toHaveClass('leaflet-container');
+
+    rerender(<MapPointPicker value={null} onChange={vi.fn()} ariaLabel="Localidad del paciente" />);
+
+    expect(screen.getByRole('application')).toHaveClass('leaflet-container');
   });
 
   it('en modo solo lectura no muestra el buscador', () => {
