@@ -1502,8 +1502,7 @@
         "blocked": {
           "sex": "Deze wijziging van geslacht kan niet worden opgeslagen: er zijn zwangerschapsgegevens geregistreerd in dit dossier. Leeg eerst het betreffende blok.",
           "age": "Deze wijziging kan niet worden opgeslagen: de patiënt zou buiten de leeftijdsrange voor zwangerschap vallen, en er zijn zwangerschapsgegevens geregistreerd in dit dossier. Leeg eerst het betreffende blok.",
-          "complications": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Verwijder ze één voor één voordat het blok geleegd kan worden.",
-          "complicationsNeedsAdmin": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Alleen een beheerder kan ze verwijderen voordat het blok geleegd kan worden."
+          "complications": "Er zijn {{count}} actieve complicatie(s) geregistreerd. Verwijder ze één voor één voordat het blok geleegd kan worden."
         },
         "clearBlock": "Zwangerschapsblok leegmaken",
         "cleared": "Het zwangerschapsblok is geleegd. Je kunt de wijziging nu opslaan."
@@ -1652,7 +1651,6 @@
         "editTitle": "Medicatie bewerken"
       },
       "gateLocked": "Dit kan niet worden gewijzigd zolang er medicatie geregistreerd staat. Verwijder deze één voor één om het antwoord te wijzigen.",
-      "gateLockedNeedsAdmin": "Dit kan niet worden gewijzigd zolang er medicatie geregistreerd staat. Een beheerder is nodig om deze te verwijderen.",
       "mismatch": "Dit antwoord komt niet overeen met de hieronder geregistreerde medicatie.",
       "error": {
         "load": "We konden de gelijktijdige medicatie niet laden.",
@@ -1685,8 +1683,7 @@
         "delete": "Een voorgeschiedenis intrekken vereist een beheerder in deze omgeving, terwijl vastleggen en corrigeren dat niet doet."
       },
       "mismatch": "Hieronder staat medische voorgeschiedenis geregistreerd en geen van deze antwoorden zegt dat die er is.",
-      "gateLocked": "Dit is het enige antwoord dat de geregistreerde voorgeschiedenis draagt; het kan niet worden gewijzigd zolang die bestaat. Verwijder de regels één voor één om het te wijzigen.",
-      "gateLockedNeedsAdmin": "Dit is het enige antwoord dat de geregistreerde voorgeschiedenis draagt; het kan niet worden gewijzigd zolang die bestaat. Een beheerder is nodig om de regels te verwijderen."
+      "gateLocked": "Dit is het enige antwoord dat de geregistreerde voorgeschiedenis draagt; het kan niet worden gewijzigd zolang die bestaat. Verwijder de regels één voor één om het te wijzigen."
     },
     "satellites": {
       "deleteTitle": "Deactiveren",

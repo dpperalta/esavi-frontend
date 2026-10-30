@@ -596,9 +596,9 @@ describe('PatientFormDialog — el bloqueo de embarazo del paso 13, sexo y fecha
     expect(await screen.findByText(/dejaría al paciente fuera del rango de edad del embarazo/)).toBeInTheDocument();
   }, 60000);
 
-  it('con complicaciones activas, el diálogo las cuenta, no ofrece vaciar y con USER menciona al administrador', async () => {
+  it('con complicaciones activas, el diálogo las cuenta, no ofrece vaciar y con NOTIFIER pide retirarlas (SPEC FE33 §3.5)', async () => {
     const user = setupUser();
-    signInAs('USER', 25);
+    signInAs('NOTIFIER', 25);
     mockSexCatalog();
     mockGeoLocationPickerEmpty();
     mockPatientDetail({
@@ -618,7 +618,7 @@ describe('PatientFormDialog — el bloqueo de embarazo del paso 13, sexo y fecha
 
     expect(
       await screen.findByText(
-        'Hay 1 complicación(es) activa(s) registradas. Sólo un administrador puede retirarlas antes de poder vaciar el bloque.',
+        'Hay 1 complicación(es) activa(s) registradas. Retíralas una a una antes de poder vaciar el bloque.',
       ),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Vaciar el bloque de embarazo' })).toBeDisabled();

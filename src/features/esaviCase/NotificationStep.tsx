@@ -65,8 +65,6 @@ import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { ROLE_LEVELS } from '@/shared/config/roles';
-import { useCan } from '@/shared/hooks/useCan';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 import { useProgressiveSections } from '@/shared/hooks/useProgressiveSections';
 import {
@@ -375,10 +373,6 @@ function NotificationFormBody({
     pregnancyId !== null,
   );
   const hasActiveComplications = (complications.data?.rows.length ?? 0) > 0;
-  // `useCan()` decide aquí sólo qué frase se muestra, nunca si el control existe (§3.5, la línea
-  // que §10.4 no quiere que se cruce): mientras `NOTIFMED-005A` siga en ADMIN, un USER no puede
-  // borrar las filas y por tanto no puede cambiar la respuesta en absoluto.
-  const canAdminSatellites = useCan(ROLE_LEVELS.ADMIN);
 
   const defaultValues: NotificationFormValues = {
     esaviDescription: notification?.esaviDescription ?? '',
@@ -993,11 +987,7 @@ function NotificationFormBody({
                     id={`medicalHistory-gateLocked-${name}`}
                     className="text-sm text-muted-foreground"
                   >
-                    {t(
-                      canAdminSatellites
-                        ? 'notification.medicalHistory.gateLocked'
-                        : 'notification.medicalHistory.gateLockedNeedsAdmin',
-                    )}
+                    {t('notification.medicalHistory.gateLocked')}
                   </p>
                 )}
               </div>
@@ -1025,11 +1015,7 @@ function NotificationFormBody({
                 `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
               {hasActiveMedications && (
                 <p className="text-sm text-muted-foreground">
-                  {t(
-                    canAdminSatellites
-                      ? 'notification.medications.gateLocked'
-                      : 'notification.medications.gateLockedNeedsAdmin',
-                  )}
+                  {t('notification.medications.gateLocked')}
                 </p>
               )}
             </div>

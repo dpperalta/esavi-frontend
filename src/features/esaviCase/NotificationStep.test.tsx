@@ -1490,15 +1490,16 @@ function mockReentryWithMedications(rows: unknown[]) {
 }
 
 describe('NotificationStep — compuerta de takesMedication (SPEC FE12b §4 paso 11)', () => {
-  it('con una medicación cargada y rol USER, el campo queda deshabilitado y menciona a un administrador', async () => {
-    signInAs('USER', 25);
+  it('con una medicación cargada y rol NOTIFIER, el campo queda deshabilitado y pide borrarlas una a una (SPEC FE33 §3.5)', async () => {
+    signInAs('NOTIFIER', 25);
     mockReentryWithMedications([MEDICATION_ROW]);
 
     renderNotificationStep();
 
     const field = await screen.findByRole('combobox', { name: '¿El paciente estaba tomando algún medicamento cuando se vacunó?' });
     await waitFor(() => expect(field).toBeDisabled());
-    expect(await screen.findByText(/Hace falta un administrador/)).toBeInTheDocument();
+    expect(await screen.findByText(/Bórralas una a una/)).toBeInTheDocument();
+    expect(screen.queryByText(/administrador/)).not.toBeInTheDocument();
   }, 30000);
 
   it('con una medicación cargada y rol ADMIN, el campo queda deshabilitado sin mencionar a un administrador', async () => {
@@ -2792,14 +2793,14 @@ describe('NotificationStep  — la compuerta de antecedentes medicos (SPEC FE12e
     await user.click(previousEventField);
     await user.click(await screen.findByRole('option', { name: 'No' }));
 
-    // La otra es ahora la única que sostiene las filas: es la única que se bloquea, y con el
-    // texto de rol USER, que no puede retirarlas él mismo (§3.5).
+    // The other one now holds the rows alone: it's the only one locked, and since NOTIFIER-level
+    // users remove the rows themselves since SPEC F64, the text says so (SPEC FE33 §3.5).
     const relevantField = await screen.findByRole('combobox', {
       name: '¿El paciente presenta antecedentes médicos relevantes?',
     });
     await waitFor(() => expect(relevantField).toBeDisabled());
     expect(previousEventField).not.toBeDisabled();
-    expect(await screen.findByText(/Hace falta un administrador para borrarlos/)).toBeInTheDocument();
+    expect(await screen.findByText(/Bórralos uno a uno/)).toBeInTheDocument();
   }, 30000);
 
   it('con filas y ninguna bandera en «Sí», la lista se muestra igual con el aviso de discrepancia', async () => {

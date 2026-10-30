@@ -116,15 +116,15 @@ function renderList(readOnly = false) {
   );
 }
 
-describe('NotifierList — «Quitar» exige ADMIN (SPEC FE10 §7 riesgo, §4 paso 10)', () => {
-  it('con USER, «Editar» se pinta y «Quitar» no', async () => {
-    signInAs('USER', 25);
+describe('NotifierList — «Quitar» sigue al modo de sólo lectura del paso (SPEC FE33 §3.5)', () => {
+  it('con NOTIFIER, «Editar» y «Quitar» se pintan: NOTIFIER-005A es NOTIFIER desde F64', async () => {
+    signInAs('NOTIFIER', 25);
     mockList([makeListRow()]);
 
     renderList();
 
     expect(await screen.findByRole('button', { name: 'Editar' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Quitar' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Quitar' })).toBeInTheDocument();
   });
 
   it('con ADMIN, «Quitar» también se pinta', async () => {

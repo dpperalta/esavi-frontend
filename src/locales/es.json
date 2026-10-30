@@ -1502,8 +1502,7 @@
         "blocked": {
           "sex": "No se puede guardar este cambio de sexo: hay datos de embarazo registrados en el expediente. Vacía primero el bloque correspondiente.",
           "age": "No se puede guardar este cambio: dejaría al paciente fuera del rango de edad del embarazo, y hay datos de embarazo registrados en el expediente. Vacía primero el bloque correspondiente.",
-          "complications": "Hay {{count}} complicación(es) activa(s) registradas. Retíralas una a una antes de poder vaciar el bloque.",
-          "complicationsNeedsAdmin": "Hay {{count}} complicación(es) activa(s) registradas. Sólo un administrador puede retirarlas antes de poder vaciar el bloque."
+          "complications": "Hay {{count}} complicación(es) activa(s) registradas. Retíralas una a una antes de poder vaciar el bloque."
         },
         "clearBlock": "Vaciar el bloque de embarazo",
         "cleared": "El bloque de embarazo se vació. Ya puedes guardar el cambio."
@@ -1652,7 +1651,6 @@
         "editTitle": "Editar medicación"
       },
       "gateLocked": "No se puede cambiar mientras haya medicaciones registradas. Bórralas una a una para poder cambiar la respuesta.",
-      "gateLockedNeedsAdmin": "No se puede cambiar mientras haya medicaciones registradas. Hace falta un administrador para borrarlas.",
       "mismatch": "Esta respuesta no coincide con la medicación registrada más abajo.",
       "error": {
         "load": "No pudimos cargar la medicación concomitante.",
@@ -1685,8 +1683,7 @@
         "delete": "Retirar un antecedente exige un administrador en este despliegue, aunque registrarlo y corregirlo no."
       },
       "mismatch": "Hay antecedentes médicos registrados más abajo y ninguna de estas respuestas dice que los haya.",
-      "gateLocked": "Es la única respuesta que sostiene los antecedentes registrados; no se puede cambiar mientras existan. Bórralos uno a uno para poder cambiarla.",
-      "gateLockedNeedsAdmin": "Es la única respuesta que sostiene los antecedentes registrados; no se puede cambiar mientras existan. Hace falta un administrador para borrarlos."
+      "gateLocked": "Es la única respuesta que sostiene los antecedentes registrados; no se puede cambiar mientras existan. Bórralos uno a uno para poder cambiarla."
     },
     "satellites": {
       "deleteTitle": "Dar de baja",
