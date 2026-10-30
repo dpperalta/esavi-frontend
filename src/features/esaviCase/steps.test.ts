@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
+import { ROLE_LEVELS } from '@/shared/config/roles';
 import {
   CASE_WIZARD_STEPS,
+  STEP_MIN_LEVEL,
+  canWriteStep,
   findNextRequiredStep,
   findPreviousRequiredStep,
   isReachableStepSlug,
@@ -402,5 +405,45 @@ describe('findNextRequiredStep', () => {
 
   it('desde closure devuelve null', () => {
     expect(findNextRequiredStep(indexOfStep('closure'), buildStages(), null)).toBeNull();
+  });
+});
+
+describe('STEP_MIN_LEVEL y canWriteStep (SPEC FE33 §3.5)', () => {
+  it('el mapa es total sobre CASE_WIZARD_STEPS', () => {
+    expect(Object.keys(STEP_MIN_LEVEL).sort()).toEqual(
+      CASE_WIZARD_STEPS.map((step) => step.slug).sort(),
+    );
+  });
+
+  it.each([
+    ['patient', ROLE_LEVELS.NOTIFIER],
+    ['case-opening', ROLE_LEVELS.NOTIFIER],
+    ['classification', ROLE_LEVELS.NOTIFIER],
+    ['notification', ROLE_LEVELS.NOTIFIER],
+    ['investigation', ROLE_LEVELS.INVESTIGATOR],
+    ['final-classification', ROLE_LEVELS.EVALUATOR],
+    ['closure', ROLE_LEVELS.EVALUATOR],
+  ] as const)('%s exige %i: un nivel menos no escribe, el mínimo sí', (slug, minLevel) => {
+    expect(STEP_MIN_LEVEL[slug]).toBe(minLevel);
+    expect(canWriteStep(slug, minLevel - 1)).toBe(false);
+    expect(canWriteStep(slug, minLevel)).toBe(true);
+  });
+
+  it('USER (20) no escribe ningún paso', () => {
+    for (const step of CASE_WIZARD_STEPS) {
+      expect(canWriteStep(step.slug, ROLE_LEVELS.USER)).toBe(false);
+    }
+  });
+
+  it('ADMIN escribe todos los pasos por la escalera, sin rama propia', () => {
+    for (const step of CASE_WIZARD_STEPS) {
+      expect(canWriteStep(step.slug, ROLE_LEVELS.ADMIN)).toBe(true);
+    }
+  });
+
+  it('las verificaciones del plan: investigation en 25 y 30, closure en 30', () => {
+    expect(canWriteStep('investigation', 25)).toBe(false);
+    expect(canWriteStep('investigation', 30)).toBe(true);
+    expect(canWriteStep('closure', 30)).toBe(false);
   });
 });
