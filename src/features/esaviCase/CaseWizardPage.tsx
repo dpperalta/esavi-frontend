@@ -70,7 +70,7 @@ export function CaseWizardPage() {
   const workflow = useCaseWorkflow(id);
   const caseDetail = esaviCaseResource.useOne(id ?? '');
   const flags = useCaseWizardStepFlags(id ?? '', workflow.data?.stages);
-  const canReopen = useCan(ROLE_LEVELS.ADMIN);
+  const canReopen = useCan(ROLE_LEVELS.EVALUATOR);
   // Hooks run before the redirect below, so an unknown `:step` borrows `classification`'s
   // threshold for that one render — it never reaches the screen (SPEC FE33 §3.5).
   const activeStepReadOnly = useStepReadOnly(

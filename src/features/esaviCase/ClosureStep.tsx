@@ -424,7 +424,7 @@ function ClosureSummaryRow({ labelKey, value }: { labelKey: string; value: strin
 function ClosureStepClosed({ caseId, headingRef }: ClosureStepModeProps) {
   const { t } = useTranslation();
   const workflow = useCaseWorkflow(caseId);
-  const canReopen = useCan(ROLE_LEVELS.ADMIN);
+  const canReopen = useCan(ROLE_LEVELS.EVALUATOR);
 
   if (!workflow.data) {
     return <ClosureStepSkeleton />;

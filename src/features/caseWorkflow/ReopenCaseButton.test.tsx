@@ -59,10 +59,25 @@ function renderButton() {
 // SPEC FE14b §4 paso 4
 describe('ReopenCaseButton — ESAVI-CASEFLOW-009', () => {
   it('con USER no renderiza ningún botón', async () => {
-    mockCurrentUser('USER', 25);
+    mockCurrentUser('USER', 20);
     renderButton();
 
     await waitFor(() => expect(screen.queryByRole('button')).toBeNull());
+  });
+
+  it('con INVESTIGATOR, el nivel justo por debajo, no renderiza ningún botón (SPEC FE33 §3.5)', async () => {
+    mockCurrentUser('INVESTIGATOR', 30);
+    renderButton();
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('con EVALUATOR aparece «Reabrir»: F64 bajó la ruta desde ADMIN (SPEC FE33 §3.5)', async () => {
+    mockCurrentUser('EVALUATOR', 40);
+    renderButton();
+
+    expect(await screen.findByRole('button', { name: 'Reabrir' })).toBeInTheDocument();
   });
 
   it('con ADMIN, confirmar hace un PATCH …/reopen', async () => {
