@@ -149,7 +149,7 @@ function renderSelect(props: { scoped?: boolean } = {}) {
 describe('HealthFacilitySelect — filtro por cobertura (SPEC FE10 §1C, §5)', () => {
   it('con USER, una unidad fuera de cobertura aparece deshabilitada y con su razón, no oculta', async () => {
     const user = setupUser();
-    signInAs('USER', 25);
+    signInAs('USER', 20);
     mockCoverage();
     mockSearchResults();
 
@@ -167,7 +167,7 @@ describe('HealthFacilitySelect — filtro por cobertura (SPEC FE10 §1C, §5)', 
 
   it('el cruce es contra coverage, no contra assigned: un cantón sólo en coverage sigue elegible', async () => {
     const user = setupUser();
-    signInAs('USER', 25);
+    signInAs('USER', 20);
     mockCoverage();
     mockSearchResults();
 
@@ -178,6 +178,21 @@ describe('HealthFacilitySelect — filtro por cobertura (SPEC FE10 §1C, §5)', 
     const inOption = await screen.findByRole('option', { name: /Centro de salud Rumiñahui/ });
     expect(inOption).toHaveAttribute('aria-disabled', 'false');
     expect(inOption).not.toHaveTextContent('Fuera de tu cobertura geográfica');
+  }, 90000);
+
+  it('con EVALUATOR también se filtra: todo rol por debajo de ADMIN queda acotado (SPEC FE33 §3.5)', async () => {
+    const user = setupUser();
+    signInAs('EVALUATOR', 40);
+    mockCoverage();
+    mockSearchResults();
+
+    renderSelect();
+
+    await user.type(screen.getByRole('combobox', { name: 'Unidad de salud' }), 'Centro');
+
+    const outOption = await screen.findByRole('option', { name: /Centro de salud Otro Cantón/ });
+    expect(outOption).toHaveAttribute('aria-disabled', 'true');
+    expect(outOption).toHaveTextContent('Fuera de tu cobertura geográfica');
   }, 90000);
 
   it('con ADMIN sin filas de cobertura, todas las unidades siguen elegibles', async () => {
@@ -198,7 +213,7 @@ describe('HealthFacilitySelect — filtro por cobertura (SPEC FE10 §1C, §5)', 
 
   it('con scoped={false}, un USER ve elegible una unidad fuera de cobertura (SPEC FE12a §4 paso 6)', async () => {
     const user = setupUser();
-    signInAs('USER', 25);
+    signInAs('USER', 20);
     mockCoverage();
     mockSearchResults();
 

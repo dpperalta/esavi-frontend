@@ -20,8 +20,9 @@ export interface HealthFacilitySelectProps {
 }
 
 // `<EntitySearchSelect>` over ESAVI-HFAC-006, crossed with ESAVI-USERGEO-008 (SPEC FE10 §1C, §4
-// paso 11). The filter only applies at exactly `USER` level — the same threshold
-// `resolveUserGeoScopeIds` uses on the backend: an ADMIN or above sees the whole national table
+// paso 11). The filter applies below `ADMIN` — the same threshold `resolveUserGeoScopeIds` uses on
+// the backend, which also scopes the case-stage roles of SPEC F64 (SPEC FE33 §3.5, risk in §7 for
+// a custom role at level >= 50 not named ADMIN): an ADMIN or above sees the whole national table
 // unfiltered, because the `POST` doesn't restrict them either (§6, decisión tomada). Out-of-scope
 // facilities stay in the list, disabled with their reason visible — hiding them reproduces
 // exactly the "unidad no encontrada" confusion the reason exists to prevent (§1C).
@@ -36,7 +37,7 @@ export function HealthFacilitySelect({
 }: HealthFacilitySelectProps) {
   const { t } = useTranslation();
   const { data: user } = useCurrentUser();
-  const appliesFilter = scoped && !!user && getEffectiveLevel(user.roles) === ROLE_LEVELS.USER;
+  const appliesFilter = scoped && !!user && getEffectiveLevel(user.roles) < ROLE_LEVELS.ADMIN;
 
   const coverage = useUserGeoCoverage(appliesFilter ? user.userId : '');
   // Crossed against `coverage` — the full recursive expansion, which already includes the

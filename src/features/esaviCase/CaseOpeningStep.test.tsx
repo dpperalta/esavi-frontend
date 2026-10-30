@@ -227,8 +227,8 @@ function mockEmptyNotifierList(caseId: string) {
 }
 
 describe('CaseOpeningStep — bloqueo por cobertura vacía (SPEC FE10 §1D, §5)', () => {
-  it('con USER y cobertura vacía, el formulario no se pinta', async () => {
-    signInAs('USER', 25);
+  it('con NOTIFIER y cobertura vacía, el formulario no se pinta (SPEC FE33 §3.5)', async () => {
+    signInAs('NOTIFIER', 25);
     mockCoverage({ assigned: [], coverage: [], count: 0 });
 
     const router = createMemoryRouter(
@@ -462,7 +462,7 @@ describe('CaseOpeningStep — 409 por expediente cerrado (SPEC FE17 §4 paso 7)'
 describe('CaseOpeningStep — cadena CASE-001 → NOTIFIER-001 (SPEC FE10 §3.2, §5, §6)', () => {
   it('crea el caso, abre el modal de notificador; si el POST del notificador falla, el caso sigue creado y visible, con reintento', async () => {
     const user = setupUser();
-    signInAs('USER', 25);
+    signInAs('USER', 20);
     mockCoverage({
       assigned: [{ geoLocationId: 'g1', name: 'Pichincha', level: 1 }],
       coverage: [{ geoLocationId: 'g1', name: 'Pichincha', level: 1, parentGeoLocationId: null }],
@@ -539,7 +539,7 @@ describe('CaseOpeningStep — cadena CASE-001 → NOTIFIER-001 (SPEC FE10 §3.2,
 
   it('tras crear, el botón atrás del navegador no vuelve a ofrecer «Crear caso»', async () => {
     const user = setupUser();
-    signInAs('USER', 25);
+    signInAs('USER', 20);
     mockCoverage({
       assigned: [{ geoLocationId: 'g1', name: 'Pichincha', level: 1 }],
       coverage: [{ geoLocationId: 'g1', name: 'Pichincha', level: 1, parentGeoLocationId: null }],

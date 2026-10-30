@@ -61,9 +61,10 @@ export function CaseOpeningStep() {
   const [pregnancyBlockOpen, setPregnancyBlockOpen] = useState(false);
 
   const { data: user } = useCurrentUser();
-  // El mismo umbral que `resolveUserGeoScopeIds` en el backend (SPEC FE10 §1C, §6): sólo se
-  // aplica con nivel exactamente USER.
-  const appliesFilter = !!user && getEffectiveLevel(user.roles) === ROLE_LEVELS.USER;
+  // Mirrors `resolveUserGeoScopeIds` on the backend (SPEC FE10 §1C, SPEC FE33 §3.5): everyone below
+  // ADMIN is scoped, including the case-stage roles of SPEC F64. The backend's `isAdmin` compares
+  // by name, so a custom role at level >= 50 not named ADMIN/SUPERADMIN would diverge (FE33 §7).
+  const appliesFilter = !!user && getEffectiveLevel(user.roles) < ROLE_LEVELS.ADMIN;
   const coverage = useUserGeoCoverage(appliesFilter ? user.userId : '');
   const coverageIsEmpty = appliesFilter && !coverage.isLoading && (coverage.data?.assigned.length ?? 0) === 0;
 
