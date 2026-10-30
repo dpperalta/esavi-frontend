@@ -1768,6 +1768,9 @@
     }
   },
   "investigation": {
+    "readOnly": {
+      "notStarted": "The investigation hasn't been started yet."
+    },
     "pregnancy": {
       "title": "Questions for women",
       "hint": "Mainly between 12 and 49 years old, or whenever pregnancy is suspected",

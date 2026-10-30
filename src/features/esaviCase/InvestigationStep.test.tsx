@@ -583,7 +583,11 @@ function mockSectionDependencies() {
       HttpResponse.json({
         ok: true,
         message: 'ok',
-        data: { userId: 'user-1', roles: [{ roleId: 'r1', name: 'USER', code: 'USER', level: 25 }] },
+        // The step is read-only below INVESTIGATOR (SPEC FE33 §3.5).
+        data: {
+          userId: 'user-1',
+          roles: [{ roleId: 'r1', name: 'INVESTIGATOR', code: 'INVESTIGATOR', level: 30 }],
+        },
       }),
     ),
     http.get('http://localhost:4500/api/geo-level-types', () =>
@@ -796,6 +800,52 @@ function renderInvestigationStep(
     </QueryClientProvider>,
   );
 }
+
+describe('InvestigationStep — rol insuficiente (SPEC FE33 §3.5)', () => {
+  function signInAsNotifier() {
+    server.use(
+      http.get('http://localhost:4500/api/users/me', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            userId: 'user-1',
+            roles: [{ roleId: 'r1', name: 'NOTIFIER', code: 'NOTIFIER', level: 25 }],
+          },
+        }),
+      ),
+    );
+  }
+
+  it('con NOTIFIER y sin investigación no hay POST y se explica que no se ha iniciado', async () => {
+    signInAsNotifier();
+    mockWorkflow(false);
+    let postCount = 0;
+    server.use(
+      http.post('http://localhost:4500/api/investigations', () => {
+        postCount++;
+        return HttpResponse.json({ ok: true, message: 'ok', data: investigationDetail() });
+      }),
+    );
+
+    renderInvestigationStep();
+
+    expect(await screen.findByText('La investigación todavía no se ha iniciado.')).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(postCount).toBe(0);
+  });
+
+  it('con NOTIFIER y la investigación ya creada, todo se ve y los controles están deshabilitados', async () => {
+    signInAsNotifier();
+    mockWorkflow(true);
+    mockInvestigationDetail();
+
+    renderInvestigationStep();
+
+    expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
+    expect(await screen.findByRole('switch', { name: 'Historia clínica' })).toBeDisabled();
+  });
+});
 
 describe('InvestigationStep — vacío pero vivo (SPEC FE13a §4 paso 6)', () => {
   it('entrar en un caso sin investigación dispara un solo POST', async () => {

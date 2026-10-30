@@ -72,6 +72,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { usePregnancyGate } from '@/shared/hooks/usePregnancyGate';
 import { useProgressiveSections } from '@/shared/hooks/useProgressiveSections';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
+import { useStepReadOnly } from './useStepReadOnly';
 
 // The empty-sections warning of SPEC FE13e §3.6: computed on what the server already answered,
 // never on any `useForm`'s live state — a section counts as empty when every one of its data
@@ -275,6 +276,18 @@ function InvestigationCreateErrorState({ error, onRetry }: InvestigationCreateEr
   );
 }
 
+// A read-only step can't create the header (SPEC FE33 §3.5), so without one there's nothing to
+// show — this replaces the skeleton that would otherwise spin forever.
+function InvestigationNotStartedState() {
+  const { t } = useTranslation();
+
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border p-8 text-center">
+      <p className="text-sm text-muted-foreground">{t('investigation.readOnly.notStarted')}</p>
+    </div>
+  );
+}
+
 type InvestigationSectionId =
   | 'source'
   | 'basicInfo'
@@ -357,7 +370,8 @@ interface InvestigationStepBodyProps {
   // (SPEC FE12f §3.1, adapted): a fresh step is walked through section by section; one that
   // already existed shows in full from the first render.
   existedOnMount: boolean;
-  isClosed: boolean;
+  // Closed case or a level below INVESTIGATOR (SPEC FE33 §3.5).
+  isReadOnly: boolean;
 }
 
 function InvestigationStepBody({
@@ -376,7 +390,7 @@ function InvestigationStepBody({
   patientId,
   pregnancyGate,
   existedOnMount,
-  isClosed,
+  isReadOnly,
 }: InvestigationStepBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -466,7 +480,7 @@ function InvestigationStepBody({
   ];
   const lastWithButton: InvestigationSectionId = 'otherFindings';
 
-  const revealAllRef = useRef(existedOnMount || isClosed);
+  const revealAllRef = useRef(existedOnMount || isReadOnly);
   const { isVisible, frontier, advance } = useProgressiveSections<InvestigationSectionId>({
     sections,
     revealAll: revealAllRef.current,
@@ -613,7 +627,7 @@ function InvestigationStepBody({
           caseId={caseId}
           investigationId={investigationId}
           investigationSource={investigationSource}
-          disabled={isClosed}
+          disabled={isReadOnly}
           showSaveButton={frontier === 'source'}
           onSaved={() => {
             clearDraft();
@@ -634,7 +648,7 @@ function InvestigationStepBody({
           investigation={investigation}
           investigationAutopsy={investigationAutopsy}
           notification={notification}
-          disabled={isClosed}
+          disabled={isReadOnly}
           showSaveButton={frontier === 'basicInfo'}
           onSaved={() => {
             clearDraft();
@@ -655,14 +669,14 @@ function InvestigationStepBody({
         />
       )}
 
-      {isVisible('team') && <TeamMemberList investigationId={investigationId} disabled={isClosed} />}
+      {isVisible('team') && <TeamMemberList investigationId={investigationId} disabled={isReadOnly} />}
 
       {isVisible('medicalHistory') && (
         <MedicalHistorySection
           caseId={caseId}
           investigationId={investigationId}
           medicalHistory={medicalHistory}
-          disabled={isClosed}
+          disabled={isReadOnly}
           showSaveButton={frontier === 'medicalHistory'}
           onSaved={() => {
             clearDraft();
@@ -681,7 +695,7 @@ function InvestigationStepBody({
           investigationId={investigationId}
           medicalHistory={medicalHistory}
           pregnancyGate={pregnancyGate}
-          disabled={isClosed}
+          disabled={isReadOnly}
           showSaveButton={frontier === 'pregnancy'}
           onSaved={() => {
             clearDraft();
@@ -700,7 +714,7 @@ function InvestigationStepBody({
           caseId={caseId}
           investigationId={investigationId}
           clinicalEvaluation={clinicalEvaluation}
-          disabled={isClosed}
+          disabled={isReadOnly}
           showSaveButton={frontier === 'clinicalEvaluation'}
           onSaved={() => {
             clearDraft();
@@ -716,7 +730,7 @@ function InvestigationStepBody({
 
       {isVisible('evaluationInstitutions') && (
         <div className="flex flex-col gap-3">
-          <EvaluationInstitutionList investigationId={investigationId} disabled={isClosed} />
+          <EvaluationInstitutionList investigationId={investigationId} disabled={isReadOnly} />
           {frontier === 'evaluationInstitutions' && (
             <Button type="button" className="min-h-11 w-full md:w-auto md:self-end" onClick={advance}>
               {t('caseWizard.actions.next')}
@@ -729,7 +743,7 @@ function InvestigationStepBody({
         <DiagnosticList
           caseId={caseId}
           investigationId={investigationId}
-          disabled={isClosed}
+          disabled={isReadOnly}
           // Defensive per SPEC FE13c §3.6/§4 paso 7: this step already guarantees the investigation
           // header exists before this section can ever mount, so the retry just re-reads — there is
           // nothing new to create.
@@ -740,7 +754,7 @@ function InvestigationStepBody({
       )}
 
       {isVisible('vaccinesAdministered') && (
-        <VaccineAdministeredList investigationId={investigationId} disabled={isClosed} />
+        <VaccineAdministeredList investigationId={investigationId} disabled={isReadOnly} />
       )}
 
       {isVisible('vaccinationContext') && (
@@ -748,7 +762,7 @@ function InvestigationStepBody({
           caseId={caseId}
           investigationId={investigationId}
           vaccinationContext={vaccinationContext}
-          disabled={isClosed}
+          disabled={isReadOnly}
           showSaveButton={frontier === 'vaccinationContext'}
           onSaved={() => {
             clearDraft();
@@ -767,7 +781,7 @@ function InvestigationStepBody({
           caseId={caseId}
           investigationId={investigationId}
           coldChain={coldChain}
-          disabled={isClosed}
+          disabled={isReadOnly}
           transportRevealed={isVisible('coldChainTransport')}
           onRevealTransport={advance}
           showSaveButton={frontier === 'coldChainTransport'}
@@ -788,7 +802,7 @@ function InvestigationStepBody({
           caseId={caseId}
           investigationId={investigationId}
           administrationError={administrationError}
-          disabled={isClosed}
+          disabled={isReadOnly}
           practicesRevealed={isVisible('administrationErrorPractices')}
           onRevealPractices={advance}
           showSaveButton={frontier === 'administrationErrorPractices'}
@@ -810,7 +824,7 @@ function InvestigationStepBody({
           investigationId={investigationId}
           patientId={patientId}
           community={community}
-          disabled={isClosed}
+          disabled={isReadOnly}
           showSaveButton={frontier === 'community'}
           onSaved={() => {
             clearDraft();
@@ -829,7 +843,7 @@ function InvestigationStepBody({
           <OtherFindingsSection
             investigationId={investigationId}
             investigation={investigation}
-            disabled={isClosed}
+            disabled={isReadOnly}
             showSaveButton={frontier === 'otherFindings'}
             onSaved={() => {
               clearDraft();
@@ -867,6 +881,7 @@ export interface InvestigationStepProps {
 export function InvestigationStep({ caseId }: InvestigationStepProps) {
   const queryClient = useQueryClient();
   const workflow = useCaseWorkflow(caseId);
+  const { isReadOnly } = useStepReadOnly('investigation', caseId);
   const stageExists = workflow.data?.stages.investigation.exists === true;
   const investigation = useInvestigationByCase(caseId, stageExists);
   const investigationSource = useInvestigationSourceByCase(caseId, stageExists);
@@ -919,7 +934,10 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
   }
 
   useEffect(() => {
-    if (!workflow.data || stageExists) {
+    // A read-only step never creates the header: ESAVI-INVESTGN-001 needs INVESTIGATOR (SPEC FE33
+    // §3.5), and a closed case rejects it anyway. `isReadOnly` is a dependency so the POST still
+    // fires once `['user','me']` resolves a sufficient level.
+    if (!workflow.data || stageExists || isReadOnly) {
       return;
     }
     if (attemptedCaseIdRef.current === caseId) {
@@ -927,7 +945,7 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
     }
     createHeader();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workflow.data, stageExists, caseId]);
+  }, [workflow.data, stageExists, caseId, isReadOnly]);
 
   function handleRetry() {
     attemptedCaseIdRef.current = null;
@@ -949,6 +967,9 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
   }
 
   if (!stageExists) {
+    if (isReadOnly) {
+      return <InvestigationNotStartedState />;
+    }
     if (create.isError) {
       return <InvestigationCreateErrorState error={create.error} onRetry={handleRetry} />;
     }
@@ -988,7 +1009,7 @@ export function InvestigationStep({ caseId }: InvestigationStepProps) {
       patientId={patientId}
       pregnancyGate={pregnancyGate}
       existedOnMount={existedOnMountRef.current ?? false}
-      isClosed={workflow.data.status.code === 'CLOSED'}
+      isReadOnly={isReadOnly}
     />
   );
 }

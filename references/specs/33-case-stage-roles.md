@@ -5,6 +5,16 @@
 > **Fecha:** 2026-10-30
 > **Objetivo:** Que el cliente refleje los tres roles nuevos del recorrido del caso: cada paso del asistente se puede editar o queda en solo lectura según el nivel del usuario, y `USER` pasa a ser un rol de consulta.
 
+> **Nota de implementación (2026-10-30)** — rama `spec-33-case-stage-roles`. Diferencias entre el texto y lo implementado; mandan sobre el cuerpo cuando lo contradicen.
+>
+> - **El filtro geográfico (paso 11) se adelantó al paso 1.** Bajar `USER` a 20 dejaba en rojo dos tests que simulaban `USER` en 25 contra la comparación `=== ROLE_LEVELS.USER`, y el plan exige que cada paso quede en verde.
+> - **`PatientStep` recibe `readOnly` por prop, no llama al hook.** Vive en `features/patient` y `CONVENTIONS.md` §3 prohíbe importar de `features/esaviCase`; `CaseWizardPage` calcula `useStepReadOnly('patient', id)` y se lo pasa.
+> - **`NotificationStep` no lleva `fieldset disabled`.** Nunca lo tuvo con el caso cerrado: su solo lectura son las listas de satélites sin acciones, `revealAll` y la barra sin «Guardar» ni «Completar etapa» (paso 7). Envolver el paso entero deshabilitaría «Ver auditoría» dentro de las listas, que `SUPERADMIN` sigue usando con el caso cerrado. Los campos de cabecera se pueden teclear pero nada se guarda — el mismo comportamiento que con el caso cerrado. La verificación del paso 5 («`fieldset` deshabilitado» en los cuatro pasos) se cumple en `CaseOpeningStep` y `ClassificationStep`; en `PatientStep` se cumple ocultando «Editar paciente».
+> - **`ClassificationStep` no tenía modo de solo lectura**, ni siquiera con el caso cerrado. Ahora lleva el `fieldset disabled` de `isReadOnly`, así que también un caso cerrado lo muestra deshabilitado.
+> - **`InvestigationStep` crea su cabecera con un `POST` al entrar** (`ESAVI-INVESTGN-001`, SPEC FE13a), y el spec no lo preveía. En solo lectura ese `POST` ya no se dispara —un `NOTIFIER` recibía un `403` sólo por mirar—, y la rama «la investigación no existe y no puedo crearla» pinta un estado vacío con una clave nueva, `investigation.readOnly.notStarted`, en es/en/nl. Se suma a las dos claves de §3.8.
+> - **`ClosureStep` oculta «Cerrar expediente» con `isReadOnly` del paso `closure`** desde el paso 6, no con un `useCan(EVALUATOR)` aparte en el paso 8: es el mismo umbral (`STEP_MIN_LEVEL.closure`) y una sola fuente.
+> - **`canWriteStep` no tiene consumidor en producción.** `useStepReadOnly` pasa por `useCan(STEP_MIN_LEVEL[slug])` para no saltarse `CONVENTIONS.md` §11; `canWriteStep` queda como función pura probada.
+
 ---
 
 ## 1. Por qué existe este spec

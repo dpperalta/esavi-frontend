@@ -28,6 +28,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
 import { cn } from '@/shared/lib/utils';
+import { useStepReadOnly } from './useStepReadOnly';
 
 interface ClosureStepProps {
   caseId: string;
@@ -278,6 +279,9 @@ function ClosureStepOpen({ caseId, headingRef }: ClosureStepModeProps) {
   const queryClient = useQueryClient();
   const readiness = useCloseReadiness(caseId);
   const closeCase = useCloseCase(caseId);
+  // Only 'role' can apply in this mode — a closed case renders `ClosureStepClosed` instead. Closing
+  // is ESAVI-CASEFLOW-008, EVALUATOR (SPEC FE33 §3.5).
+  const { isReadOnly } = useStepReadOnly('closure', caseId);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   function retry() {
@@ -352,23 +356,25 @@ function ClosureStepOpen({ caseId, headingRef }: ClosureStepModeProps) {
         </>
       )}
 
-      <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background/95 p-4 backdrop-blur-sm md:static md:border-t-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
-        <div className="flex flex-col items-end gap-1">
-          <Button
-            size="touch"
-            onClick={() => setConfirmOpen(true)}
-            disabled={!readiness.canClose}
-            aria-describedby={!readiness.canClose && !hasLoadError ? BLOCKED_HINT_ID : undefined}
-          >
-            {t('caseWorkflow.close.action')}
-          </Button>
-          {!readiness.canClose && !hasLoadError && (
-            <p id={BLOCKED_HINT_ID} className="text-sm text-muted-foreground">
-              {t('caseWorkflow.close.blockedHint')}
-            </p>
-          )}
+      {!isReadOnly && (
+        <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background/95 p-4 backdrop-blur-sm md:static md:border-t-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              size="touch"
+              onClick={() => setConfirmOpen(true)}
+              disabled={!readiness.canClose}
+              aria-describedby={!readiness.canClose && !hasLoadError ? BLOCKED_HINT_ID : undefined}
+            >
+              {t('caseWorkflow.close.action')}
+            </Button>
+            {!readiness.canClose && !hasLoadError && (
+              <p id={BLOCKED_HINT_ID} className="text-sm text-muted-foreground">
+                {t('caseWorkflow.close.blockedHint')}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>

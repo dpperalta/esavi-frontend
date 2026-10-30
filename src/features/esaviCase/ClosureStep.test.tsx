@@ -25,6 +25,8 @@ beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
+  // Closing is EVALUATOR (SPEC FE33 §3.5); tests that need another role sign in again.
+  mockCurrentUser('EVALUATOR', 40);
 });
 
 const NO_STAGE = { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null };
@@ -310,6 +312,23 @@ describe('ClosureStep — modo abierto', () => {
 
     expect(await screen.findByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Cerrar expediente' })).toBeDisabled();
+  });
+});
+
+describe('ClosureStep — rol insuficiente (SPEC FE33 §3.5)', () => {
+  it('con INVESTIGATOR la lista de comprobación se ve pero no hay «Cerrar expediente»', async () => {
+    mockCurrentUser('INVESTIGATOR', 30);
+    mockWorkflow({ classification: YES_STAGE });
+    server.use(
+      http.get(`http://localhost:4500/api/classifications/case/${CASE_1}`, () =>
+        ok({ classificationId: 'c1', isSeriousEvent: false, isActive: true }),
+      ),
+    );
+
+    renderStep();
+
+    expect(await screen.findByRole('heading', { name: 'Cierre del expediente' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cerrar expediente' })).not.toBeInTheDocument();
   });
 });
 

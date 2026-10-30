@@ -1768,6 +1768,9 @@
     }
   },
   "investigation": {
+    "readOnly": {
+      "notStarted": "Het onderzoek is nog niet gestart."
+    },
     "pregnancy": {
       "title": "Vragen voor vrouwen",
       "hint": "Voornamelijk tussen 12 en 49 jaar, of wanneer zwangerschap wordt vermoed",

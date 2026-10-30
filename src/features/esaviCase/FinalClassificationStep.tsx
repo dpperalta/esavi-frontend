@@ -30,6 +30,7 @@ import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
 import { resolveDraftConflict, useDraftsStore } from '@/shared/stores/draftsStore';
 import { useCaseWizard } from './CaseWizardContext';
+import { useStepReadOnly } from './useStepReadOnly';
 
 type ImportanceField = (typeof IMPORTANCE_FIELDS)[number];
 type ImportanceBlock = 'A' | 'B' | 'C';
@@ -539,6 +540,8 @@ export interface FinalClassificationStepProps {
 export function FinalClassificationStep({ caseId }: FinalClassificationStepProps) {
   const { t } = useTranslation();
   const workflow = useCaseWorkflow(caseId);
+  // Closed case or a level below EVALUATOR (SPEC FE33 §3.5).
+  const { isReadOnly } = useStepReadOnly('final-classification', caseId);
   const stageExists = workflow.data?.stages.finalClassification.exists === true;
   // El `006` sólo se llama en reentrada (SPEC FE14a §3.6, decisión de §1B): la fila nace con el
   // primer «Guardar», nunca al entrar al paso.
@@ -581,13 +584,11 @@ export function FinalClassificationStep({ caseId }: FinalClassificationStepProps
     );
   }
 
-  const isClosed = workflow.data.status.code === 'CLOSED';
-
   return (
     <FinalClassificationFormBody
       caseId={caseId}
       finalClassification={finalClassification.data ?? null}
-      disabled={isClosed}
+      disabled={isReadOnly}
     />
   );
 }

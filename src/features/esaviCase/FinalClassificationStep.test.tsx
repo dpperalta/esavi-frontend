@@ -36,6 +36,19 @@ beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
+  // The step is read-only below EVALUATOR (SPEC FE33 §3.5).
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          userId: 'user-1',
+          roles: [{ roleId: 'r1', name: 'EVALUATOR', code: 'EVALUATOR', level: 40 }],
+        },
+      }),
+    ),
+  );
   toastInfo.mockClear();
   // `useDraftsStore` is a module-level singleton (`persist` middleware) — `localStorage.clear()`
   // alone doesn't reset its already-hydrated in-memory state, so a draft seeded by one test would
@@ -437,6 +450,30 @@ describe('FinalClassificationStep — estados de §3.6', () => {
       expect(screen.getByRole('combobox', { name: 'Importancia A' })).toBeInTheDocument(),
     );
     expect(hit).toBe(false);
+  });
+});
+
+describe('FinalClassificationStep — rol insuficiente (SPEC FE33 §3.5)', () => {
+  it('con INVESTIGATOR el formulario se pinta deshabilitado', async () => {
+    server.use(
+      http.get('http://localhost:4500/api/users/me', () =>
+        HttpResponse.json({
+          ok: true,
+          message: 'ok',
+          data: {
+            userId: 'user-1',
+            roles: [{ roleId: 'r1', name: 'INVESTIGATOR', code: 'INVESTIGATOR', level: 30 }],
+          },
+        }),
+      ),
+    );
+    mockCatalog();
+    mockWorkflow(false);
+
+    renderStep();
+
+    const importanceA = await screen.findByRole('combobox', { name: 'Importancia A' });
+    expect(importanceA).toBeDisabled();
   });
 });
 
