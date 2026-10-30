@@ -289,7 +289,7 @@ describe('PregnancySection — B2 (SPEC FE13b §4 paso 7)', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Hay 2 afecciones médicas del recién nacido registradas. Sólo un administrador puede retirarlas antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer».',
+        'Hay 2 afecciones médicas del recién nacido registradas. Retíralas una a una antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer».',
       ),
     ).toBeInTheDocument();
     expect(putCalled).toBe(false);

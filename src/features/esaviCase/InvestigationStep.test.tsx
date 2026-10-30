@@ -835,15 +835,27 @@ describe('InvestigationStep — rol insuficiente (SPEC FE33 §3.5)', () => {
     expect(postCount).toBe(0);
   });
 
-  it('con NOTIFIER y la investigación ya creada, todo se ve y los controles están deshabilitados', async () => {
+  it('con NOTIFIER y la investigación ya creada, todo se ve, los controles están deshabilitados y ninguna sección crea su fila', async () => {
     signInAsNotifier();
     mockWorkflow(true);
     mockInvestigationDetail();
+    const sectionPosts: string[] = [];
+    server.use(
+      http.post(/\/api\/investigation-[a-z-]+$/, ({ request }) => {
+        sectionPosts.push(new URL(request.url).pathname);
+        return HttpResponse.json(
+          { ok: false, message: 'forbidden', code: 'AUTH_ROLE_FORBIDDEN' },
+          { status: 403 },
+        );
+      }),
+    );
 
     renderInvestigationStep();
 
     expect(await screen.findByText('Datos del equipo de investigación')).toBeInTheDocument();
     expect(await screen.findByRole('switch', { name: 'Historia clínica' })).toBeDisabled();
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(sectionPosts).toEqual([]);
   });
 });
 

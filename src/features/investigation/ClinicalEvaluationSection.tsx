@@ -156,10 +156,13 @@ export function ClinicalEvaluationSection({
   }
 
   useEffect(() => {
-    if (clinicalEvaluation !== null || attemptedRef.current) return;
+    // A read-only step (closed case, or a level below INVESTIGATOR) never creates the row: the
+    // server answers 409 or 403 (SPEC FE33 §3.5). `disabled` is a dependency so the POST still
+    // fires once `['user','me']` resolves a sufficient level.
+    if (clinicalEvaluation !== null || attemptedRef.current || disabled) return;
     openClinicalEvaluation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clinicalEvaluation]);
+  }, [clinicalEvaluation, disabled]);
 
   function handleRetry() {
     attemptedRef.current = false;

@@ -582,6 +582,7 @@
       "CASEFLOW_007_STAGE_NOT_STARTED": "Deze fase is nog niet gestart.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Deze fase is al voltooid.",
       "CASEFLOW_007_CASE_CLOSED": "Dit dossier is gesloten.",
+      "CASEFLOW_007_STAGE_FORBIDDEN": "Je rol kan deze fase niet voltooien.",
       "CASEFLOW_002_STATUS_NOT_FOUND": "Die status bestaat niet in de catalogus. Het filter is gewist.",
       "CASEFLOW_008_NOT_FOUND": "Het geval heeft geen workflowdossier.",
       "CASEFLOW_008_ALREADY_CLOSED": "Dit dossier was al gesloten.",
@@ -712,7 +713,7 @@
       "blockedHint": "Los wat nog openstaat op om het dossier te kunnen sluiten.",
       "action": "Dossier sluiten",
       "confirmTitle": "Dit dossier sluiten?",
-      "confirmBody": "Het dossier wordt alleen-lezen. Alleen een beheerder kan het weer heropenen.",
+      "confirmBody": "Het dossier wordt alleen-lezen. Alleen een beoordelaar of beheerder kan het weer heropenen.",
       "confirmWarnings": "Er zijn onopgeloste waarschuwingen:",
       "confirmAction": "Dossier sluiten",
       "success": "Dossier gesloten."
@@ -1535,7 +1536,7 @@
           "confirm": "De complicatie «{{name}}» verwijderen? Deze actie kan hier niet ongedaan worden gemaakt."
         },
         "roleForbidden": {
-          "delete": "Het verwijderen van een complicatie vereist een beheerder in deze implementatie."
+          "delete": "Je rol kan geen zwangerschapscomplicaties verwijderen."
         }
       }
     },
@@ -1680,7 +1681,7 @@
         "confirm": "„{{name}}” intrekken? Dit kan hier niet ongedaan worden gemaakt."
       },
       "roleForbidden": {
-        "delete": "Een voorgeschiedenis intrekken vereist een beheerder in deze omgeving, terwijl vastleggen en corrigeren dat niet doet."
+        "delete": "Je rol kan geen medische voorgeschiedenis verwijderen."
       },
       "mismatch": "Hieronder staat medische voorgeschiedenis geregistreerd en geen van deze antwoorden zegt dat die er is.",
       "gateLocked": "Dit is het enige antwoord dat de geregistreerde voorgeschiedenis draagt; het kan niet worden gewijzigd zolang die bestaat. Verwijder de regels één voor één om het te wijzigen."
@@ -1689,8 +1690,8 @@
       "deleteTitle": "Deactiveren",
       "deleteConfirm": "«{{name}}» deactiveren? Deze actie kan hier niet ongedaan worden gemaakt.",
       "deleteAction": "Deactiveren",
-      "adminRequiredEdit": "Het corrigeren van deze klinische inhoud vereist een beheerder in deze omgeving.",
-      "adminRequiredDelete": "Het verwijderen van deze klinische inhoud vereist een beheerder in deze omgeving."
+      "adminRequiredEdit": "Je rol kan deze klinische inhoud niet corrigeren.",
+      "adminRequiredDelete": "Je rol kan deze klinische inhoud niet verwijderen."
     },
     "roleForbidden": {
       "editDelete": "Het corrigeren of verwijderen van deze klinische inhoud vereist een hogere rol in deze omgeving."
@@ -1886,8 +1887,8 @@
       "meddraUnavailable": "Het MedDRA-woordenboek is nu niet beschikbaar. Typ de naam rechtstreeks in.",
       "outcomeLocked": {
         "title": "De uitkomst kan niet worden gewijzigd",
-        "description_one": "Er is {{count}} medische aandoening van de pasgeborene geregistreerd. Alleen een beheerder kan deze verwijderen voordat de uitkomst gewijzigd kan worden naar iets anders dan «Levend geboren met medische aandoening bij de geboorte».",
-        "description_other": "Er zijn {{count}} medische aandoeningen van de pasgeborene geregistreerd. Alleen een beheerder kan ze verwijderen voordat de uitkomst gewijzigd kan worden naar iets anders dan «Levend geboren met medische aandoening bij de geboorte»."
+        "description_one": "Er is {{count}} medische aandoening van de pasgeborene geregistreerd. Verwijder deze voordat de uitkomst gewijzigd kan worden naar iets anders dan «Levend geboren met medische aandoening bij de geboorte».",
+        "description_other": "Er zijn {{count}} medische aandoeningen van de pasgeborene geregistreerd. Verwijder ze één voor één voordat de uitkomst gewijzigd kan worden naar iets anders dan «Levend geboren met medische aandoening bij de geboorte»."
       },
       "form": {
         "createTitle": "Medische aandoening van de pasgeborene toevoegen",

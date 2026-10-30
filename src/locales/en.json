@@ -582,6 +582,7 @@
       "CASEFLOW_007_STAGE_NOT_STARTED": "This stage hasn't started yet.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "This stage is already complete.",
       "CASEFLOW_007_CASE_CLOSED": "This case file is closed.",
+      "CASEFLOW_007_STAGE_FORBIDDEN": "Your role can't complete this stage.",
       "CASEFLOW_002_STATUS_NOT_FOUND": "That status does not exist in the catalog. The filter was cleared.",
       "CASEFLOW_008_NOT_FOUND": "The case has no workflow record.",
       "CASEFLOW_008_ALREADY_CLOSED": "This case file was already closed.",
@@ -712,7 +713,7 @@
       "blockedHint": "Resolve what's pending to be able to close the case file.",
       "action": "Close case file",
       "confirmTitle": "Close this case file?",
-      "confirmBody": "The case file will become read-only. Only an administrator will be able to reopen it.",
+      "confirmBody": "The case file will become read-only. Only an evaluator or administrator will be able to reopen it.",
       "confirmWarnings": "There are unresolved warnings:",
       "confirmAction": "Close case file",
       "success": "Case file closed."
@@ -1535,7 +1536,7 @@
           "confirm": "Delete the complication «{{name}}»? This action cannot be undone from here."
         },
         "roleForbidden": {
-          "delete": "Removing a complication requires an administrator in this deployment."
+          "delete": "Your role can't remove pregnancy complications."
         }
       }
     },
@@ -1680,7 +1681,7 @@
         "confirm": "Retire the antecedent “{{name}}”? This cannot be undone from here."
       },
       "roleForbidden": {
-        "delete": "Retiring an antecedent takes an administrator in this deployment, even though recording and correcting one does not."
+        "delete": "Your role can't remove medical history entries."
       },
       "mismatch": "There are medical antecedents recorded below and none of these answers says there are any.",
       "gateLocked": "It is the only answer holding up the recorded antecedents, so it can't be changed while they exist. Delete them one row at a time to change it."
@@ -1689,8 +1690,8 @@
       "deleteTitle": "Deactivate",
       "deleteConfirm": "Deactivate «{{name}}»? This action can't be undone from here.",
       "deleteAction": "Deactivate",
-      "adminRequiredEdit": "Correcting this clinical content requires an administrator in this deployment.",
-      "adminRequiredDelete": "Removing this clinical content requires an administrator in this deployment."
+      "adminRequiredEdit": "Your role can't correct this clinical content.",
+      "adminRequiredDelete": "Your role can't remove this clinical content."
     },
     "roleForbidden": {
       "editDelete": "Correcting or removing this clinical content requires a higher role in this deployment."
@@ -1886,8 +1887,8 @@
       "meddraUnavailable": "The MedDRA dictionary isn't available right now. Type the name directly.",
       "outcomeLocked": {
         "title": "The outcome can't be changed",
-        "description_one": "There is {{count}} newborn medical condition recorded. Only an administrator can remove it before the outcome can be changed to something other than \"Live born with medical condition at birth\".",
-        "description_other": "There are {{count}} newborn medical conditions recorded. Only an administrator can remove them before the outcome can be changed to something other than \"Live born with medical condition at birth\"."
+        "description_one": "There is {{count}} newborn medical condition recorded. Remove it before the outcome can be changed to something other than \"Live born with medical condition at birth\".",
+        "description_other": "There are {{count}} newborn medical conditions recorded. Remove them one by one before the outcome can be changed to something other than \"Live born with medical condition at birth\"."
       },
       "form": {
         "createTitle": "Add newborn medical condition",

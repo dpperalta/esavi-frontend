@@ -260,7 +260,7 @@ describe('EventFormDialog — SPEC FE12b §4 paso 9', () => {
   }, 60000);
 
   // SPEC FE12b §4 paso 13 — el aviso de administrador de §10.4, no un toast genérico.
-  it('un 403 AUTH_ROLE_FORBIDDEN en el PUT muestra el aviso de administrador, no un toast genérico', async () => {
+  it('un 403 AUTH_ROLE_FORBIDDEN en el PUT muestra el aviso de rol insuficiente, no un toast genérico', async () => {
     server.use(
       http.get(`http://localhost:4500/api/notification-events/${EVENT_ID}`, () =>
         HttpResponse.json({ ok: true, message: 'ok', data: baseEventRow() }),
@@ -281,7 +281,7 @@ describe('EventFormDialog — SPEC FE12b §4 paso 9', () => {
 
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
     expect(toastError).toHaveBeenCalledWith(
-      'Corregir este contenido clínico exige un administrador en este despliegue.',
+      'Tu rol no puede corregir este contenido clínico.',
     );
   }, 60000);
 });

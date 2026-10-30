@@ -582,6 +582,7 @@
       "CASEFLOW_007_STAGE_NOT_STARTED": "Esta etapa aún no se ha iniciado.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "Esta etapa ya se completó.",
       "CASEFLOW_007_CASE_CLOSED": "Este expediente está cerrado.",
+      "CASEFLOW_007_STAGE_FORBIDDEN": "Tu rol no puede completar esta etapa.",
       "CASEFLOW_002_STATUS_NOT_FOUND": "Ese estado no existe en el catálogo. Se limpió el filtro.",
       "CASEFLOW_008_NOT_FOUND": "El caso no tiene expediente de flujo.",
       "CASEFLOW_008_ALREADY_CLOSED": "Este expediente ya estaba cerrado.",
@@ -712,7 +713,7 @@
       "blockedHint": "Resuelve lo pendiente para poder cerrar el expediente.",
       "action": "Cerrar expediente",
       "confirmTitle": "¿Cerrar este expediente?",
-      "confirmBody": "El expediente pasará a sólo lectura. Únicamente un administrador podrá reabrirlo.",
+      "confirmBody": "El expediente pasará a sólo lectura. Únicamente un evaluador o administrador podrá reabrirlo.",
       "confirmWarnings": "Hay avisos sin resolver:",
       "confirmAction": "Cerrar expediente",
       "success": "Expediente cerrado."
@@ -1535,7 +1536,7 @@
           "confirm": "¿Eliminar la complicación «{{name}}»? Esta acción no se puede deshacer desde aquí."
         },
         "roleForbidden": {
-          "delete": "Retirar una complicación exige un administrador en este despliegue."
+          "delete": "Tu rol no puede retirar complicaciones del embarazo."
         }
       }
     },
@@ -1680,7 +1681,7 @@
         "confirm": "¿Dar de baja el antecedente «{{name}}»? Esta acción no se puede deshacer desde aquí."
       },
       "roleForbidden": {
-        "delete": "Retirar un antecedente exige un administrador en este despliegue, aunque registrarlo y corregirlo no."
+        "delete": "Tu rol no puede retirar antecedentes médicos."
       },
       "mismatch": "Hay antecedentes médicos registrados más abajo y ninguna de estas respuestas dice que los haya.",
       "gateLocked": "Es la única respuesta que sostiene los antecedentes registrados; no se puede cambiar mientras existan. Bórralos uno a uno para poder cambiarla."
@@ -1689,8 +1690,8 @@
       "deleteTitle": "Dar de baja",
       "deleteConfirm": "¿Dar de baja «{{name}}»? Esta acción no se puede deshacer desde aquí.",
       "deleteAction": "Dar de baja",
-      "adminRequiredEdit": "Corregir este contenido clínico exige un administrador en este despliegue.",
-      "adminRequiredDelete": "Retirar este contenido clínico exige un administrador en este despliegue."
+      "adminRequiredEdit": "Tu rol no puede corregir este contenido clínico.",
+      "adminRequiredDelete": "Tu rol no puede retirar este contenido clínico."
     },
     "roleForbidden": {
       "editDelete": "Corregir o retirar este contenido clínico exige un rol superior en este despliegue."
@@ -1890,8 +1891,8 @@
       },
       "outcomeLocked": {
         "title": "No se puede cambiar el desenlace",
-        "description_one": "Hay {{count}} afección médica del recién nacido registrada. Sólo un administrador puede retirarla antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer».",
-        "description_other": "Hay {{count}} afecciones médicas del recién nacido registradas. Sólo un administrador puede retirarlas antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer»."
+        "description_one": "Hay {{count}} afección médica del recién nacido registrada. Retírala antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer».",
+        "description_other": "Hay {{count}} afecciones médicas del recién nacido registradas. Retíralas una a una antes de poder cambiar el desenlace a uno distinto de «Nacido vivo con afección médica al nacer»."
       }
     },
     "clinicalEvaluation": {
