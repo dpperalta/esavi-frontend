@@ -348,7 +348,7 @@ describe('ClosureStep — modo cerrado', () => {
     expect(
       screen.getByText(format(new Date('2026-09-05T08:30:00.000Z'), 'dd/MM/yyyy HH:mm')),
     ).toBeInTheDocument();
-    expect(screen.getByText('Pídeselo a un administrador para reabrirlo.')).toBeInTheDocument();
+    expect(screen.getByText('Pídeselo a un evaluador o administrador para reabrirlo.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Reabrir' })).not.toBeInTheDocument();
   });
 
@@ -359,7 +359,7 @@ describe('ClosureStep — modo cerrado', () => {
     renderStep();
 
     expect(await screen.findByRole('button', { name: 'Reabrir' })).toBeInTheDocument();
-    expect(screen.queryByText('Pídeselo a un administrador para reabrirlo.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Pídeselo a un evaluador o administrador para reabrirlo.')).not.toBeInTheDocument();
   });
 
   it('lastReopenedAt: null se pinta como «Nunca»', async () => {

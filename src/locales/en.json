@@ -723,7 +723,7 @@
       "reopenCount": "Times reopened",
       "lastReopenedAt": "Last reopened",
       "never": "Never",
-      "askAdmin": "Ask an administrator to reopen it."
+      "askAdmin": "Ask an evaluator or administrator to reopen it."
     },
     "validation": {
       "request": {
@@ -923,9 +923,10 @@
       "generic": "We couldn't load the case file"
     },
     "readOnly": {
-      "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again.",
+      "closedBanner": "This case file is closed. Ask an evaluator or administrator to reopen it to edit it again.",
       "closedBannerAdmin": "This case file is closed.",
       "pendingValidationBanner": "This case file is pending validation. You can keep working, but it can't be closed until the validation is resolved.",
+      "stageForbiddenBanner": "Your role can view this stage, but not edit it.",
       "inactiveWorkflowBanner": "The workflow record for this case file is deactivated. Only superadministrators can see it."
     }
   },

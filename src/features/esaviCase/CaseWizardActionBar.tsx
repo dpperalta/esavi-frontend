@@ -26,6 +26,7 @@ import {
   stageWorkflowKey,
   type CaseWizardStepSlug,
 } from './steps';
+import { useStepReadOnly } from './useStepReadOnly';
 
 interface CaseWizardActionBarProps {
   caseId: string;
@@ -44,13 +45,15 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
   const { activeStep, isDirty, pendingFields } = useCaseWizard();
   const [pendingNavigation, setPendingNavigation] = useState<CaseWizardStepSlug | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  // Closed case or a level below the active step's threshold (SPEC FE33 §3.5): no «Guardar», no
+  // «Completar etapa» and no pending-fields list — «Anterior» and «Siguiente» stay.
+  const { isReadOnly } = useStepReadOnly(activeSlug, caseId);
 
   if (!workflow.data) {
     return null;
   }
 
-  const { status, stages } = workflow.data;
-  const isClosed = status.code === 'CLOSED';
+  const { stages } = workflow.data;
   const activeStepDefinition = CASE_WIZARD_STEPS.find((step) => step.slug === activeSlug);
   const activeStageEntry = activeStepDefinition?.stage
     ? stages[stageWorkflowKey(activeStepDefinition.stage)]
@@ -122,7 +125,7 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
   return (
     <>
       <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background/95 p-4 backdrop-blur-sm md:static md:border-t-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
-        {!isClosed && activeStepDefinition?.stage && pendingFields.length > 0 && (
+        {!isReadOnly && activeStepDefinition?.stage && pendingFields.length > 0 && (
           <div className="text-xs">
             <p className="font-medium text-foreground">
               {t('caseWizard.actions.pendingFieldsTitle')}
@@ -140,7 +143,7 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
             {t('caseWizard.actions.previous')}
           </Button>
           <div className="ml-auto flex flex-wrap justify-end gap-2">
-            {!isClosed && (
+            {!isReadOnly && (
               <Button
                 variant="outline"
                 size="touch"
@@ -150,7 +153,7 @@ export function CaseWizardActionBar({ caseId, activeSlug }: CaseWizardActionBarP
                 {t('caseWizard.actions.save')}
               </Button>
             )}
-            {!isClosed && activeStepDefinition?.stage && (
+            {!isReadOnly && activeStepDefinition?.stage && (
               <Button
                 variant="secondary"
                 size="touch"

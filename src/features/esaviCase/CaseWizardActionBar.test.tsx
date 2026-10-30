@@ -28,7 +28,21 @@ beforeEach(() => {
   tokenStore.setRefreshToken('a-refresh-token');
   classificationCalls = 0;
   notificationCalls = 0;
+  // «Guardar» and «Completar etapa» exist only above the step's threshold (SPEC FE33 §3.5).
+  mockCurrentUser('EVALUATOR', 40);
 });
+
+function mockCurrentUser(roleName: string, level: number) {
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { userId: 'user-1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+      }),
+    ),
+  );
+}
 
 function mockWorkflow(classificationExists: boolean) {
   server.use(
@@ -236,6 +250,19 @@ describe('CaseWizardActionBar', () => {
 
     const completeStageButton = await screen.findByRole('button', { name: 'Completar etapa' });
     expect(completeStageButton).toBeEnabled();
+  });
+
+  it('con USER no hay «Guardar» ni «Completar etapa», pero «Siguiente» sigue (SPEC FE33 §3.5)', async () => {
+    mockCurrentUser('USER', 20);
+    mockWorkflow(true);
+
+    renderActionBar();
+
+    expect(await screen.findByRole('button', { name: 'Siguiente' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
   });
 });
 

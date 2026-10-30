@@ -723,7 +723,7 @@
       "reopenCount": "Veces reabierto",
       "lastReopenedAt": "Última reapertura",
       "never": "Nunca",
-      "askAdmin": "Pídeselo a un administrador para reabrirlo."
+      "askAdmin": "Pídeselo a un evaluador o administrador para reabrirlo."
     },
     "validation": {
       "request": {
@@ -923,9 +923,10 @@
       "generic": "No pudimos cargar el expediente"
     },
     "readOnly": {
-      "closedBanner": "Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo.",
+      "closedBanner": "Este expediente está cerrado. Pide a un evaluador o administrador que lo reabra para volver a editarlo.",
       "closedBannerAdmin": "Este expediente está cerrado.",
       "pendingValidationBanner": "Este expediente está pendiente de validación. Puedes seguir trabajando, pero no se podrá cerrar hasta resolverla.",
+      "stageForbiddenBanner": "Tu rol puede consultar esta etapa, pero no editarla.",
       "inactiveWorkflowBanner": "El registro de flujo de este expediente está desactivado. Sólo los superadministradores pueden verlo."
     }
   },

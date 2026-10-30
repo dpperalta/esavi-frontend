@@ -71,7 +71,12 @@ export function CaseWizardPage() {
   const caseDetail = esaviCaseResource.useOne(id ?? '');
   const flags = useCaseWizardStepFlags(id ?? '', workflow.data?.stages);
   const canReopen = useCan(ROLE_LEVELS.ADMIN);
-  const patientStepReadOnly = useStepReadOnly('patient', id);
+  // Hooks run before the redirect below, so an unknown `:step` borrows `classification`'s
+  // threshold for that one render — it never reaches the screen (SPEC FE33 §3.5).
+  const activeStepReadOnly = useStepReadOnly(
+    step && isReachableStepSlug(step) ? step : 'classification',
+    id,
+  );
 
   if (!id) {
     return <Navigate to="/esavi-cases" replace />;
@@ -154,6 +159,18 @@ export function CaseWizardPage() {
             </div>
           )}
 
+          {/* SPEC FE33 §3.6 — 'closed' wins over 'role' inside `useStepReadOnly`, so this and the
+              closed banner never stack. Shown on «Cierre» too: there it explains the missing
+              «Cerrar expediente». */}
+          {activeStepReadOnly.reason === 'role' && (
+            <div
+              role="status"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground"
+            >
+              {t('caseWizard.readOnly.stageForbiddenBanner')}
+            </div>
+          )}
+
           {/* SPEC FE23 §3.1 — informative only: the backend accepts writes while pending, so the
               step stays editable. Skipped on «Cierre», whose `notPendingValidation` line says it. */}
           {status.code === 'PENDING_VALIDATION' && step !== 'closure' && (
@@ -174,7 +191,7 @@ export function CaseWizardPage() {
             <PatientStep
               caseId={id}
               patientId={caseDetail.data.patient.patientId}
-              readOnly={patientStepReadOnly.isReadOnly}
+              readOnly={activeStepReadOnly.isReadOnly}
             />
           )}
           {step === 'case-opening' && <CaseOpeningStep />}

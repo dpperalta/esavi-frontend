@@ -13,6 +13,8 @@
 > - **`ClassificationStep` no tenía modo de solo lectura**, ni siquiera con el caso cerrado. Ahora lleva el `fieldset disabled` de `isReadOnly`, así que también un caso cerrado lo muestra deshabilitado.
 > - **`InvestigationStep` crea su cabecera con un `POST` al entrar** (`ESAVI-INVESTGN-001`, SPEC FE13a), y el spec no lo preveía. En solo lectura ese `POST` ya no se dispara —un `NOTIFIER` recibía un `403` sólo por mirar—, y la rama «la investigación no existe y no puedo crearla» pinta un estado vacío con una clave nueva, `investigation.readOnly.notStarted`, en es/en/nl. Se suma a las dos claves de §3.8.
 > - **`ClosureStep` oculta «Cerrar expediente» con `isReadOnly` del paso `closure`** desde el paso 6, no con un `useCan(EVALUATOR)` aparte en el paso 8: es el mismo umbral (`STEP_MIN_LEVEL.closure`) y una sola fuente.
+> - **`caseWizard.readOnly.stageForbiddenBanner` se añadió en el paso 7**, no en el 12: el aviso la necesitaba para renderizar. El paso 12 queda con `CASEFLOW_007_STAGE_FORBIDDEN`.
+> - **Los textos de «pedir la reapertura» nombran al evaluador.** `caseWizard.readOnly.closedBanner` y `caseWorkflow.closed.askAdmin` decían «un administrador»; con F64 reabre `EVALUATOR`, así que pasan a «un evaluador o administrador» (y sus equivalentes en en/nl). Decisión del usuario durante el paso 7.
 > - **`canWriteStep` no tiene consumidor en producción.** `useStepReadOnly` pasa por `useCan(STEP_MIN_LEVEL[slug])` para no saltarse `CONVENTIONS.md` §11; `canWriteStep` queda como función pura probada.
 
 ---

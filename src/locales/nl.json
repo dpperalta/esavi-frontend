@@ -723,7 +723,7 @@
       "reopenCount": "Aantal keer heropend",
       "lastReopenedAt": "Laatst heropend",
       "never": "Nooit",
-      "askAdmin": "Vraag een beheerder om het te heropenen."
+      "askAdmin": "Vraag een beoordelaar of beheerder om het te heropenen."
     },
     "validation": {
       "request": {
@@ -923,9 +923,10 @@
       "generic": "We konden het dossier niet laden"
     },
     "readOnly": {
-      "closedBanner": "Dit dossier is gesloten. Vraag een beheerder om het opnieuw te openen om te bewerken.",
+      "closedBanner": "Dit dossier is gesloten. Vraag een beoordelaar of beheerder om het opnieuw te openen om te bewerken.",
       "closedBannerAdmin": "Dit dossier is gesloten.",
       "pendingValidationBanner": "Dit dossier wacht op validatie. Je kunt verder werken, maar het kan pas worden gesloten als de validatie is afgerond.",
+      "stageForbiddenBanner": "Je rol kan deze fase bekijken, maar niet bewerken.",
       "inactiveWorkflowBanner": "Het workflowrecord van dit dossier is gedeactiveerd. Alleen superbeheerders kunnen het zien."
     }
   },
