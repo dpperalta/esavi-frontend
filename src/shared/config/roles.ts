@@ -1,9 +1,14 @@
 // Mirror of esavi-backend/src/constants/roles.constants.ts. Fallback only: the real authority
 // is role.level, which ESAVI-USER-007 already brings per role (ARCHITECTURE.md §4.4, CONVENTIONS.md §11).
+// NOTIFIER, INVESTIGATOR and EVALUATOR are the case-stage roles of SPEC F64; USER dropped to 20 there
+// and became read-only on the case file (SPEC FE33).
 export const ROLE_LEVELS = {
   SUPERADMIN: 100,
   ADMIN: 50,
-  USER: 25,
+  EVALUATOR: 40,
+  INVESTIGATOR: 30,
+  NOTIFIER: 25,
+  USER: 20,
   ANALYTICS: 10,
 } as const;
 

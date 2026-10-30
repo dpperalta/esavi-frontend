@@ -22,7 +22,24 @@ beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
+  // Requesting is NOTIFIER and resolving EVALUATOR (SPEC FE33 §3.5): the default can do both.
+  mockCurrentUser('EVALUATOR', 40);
 });
+
+function mockCurrentUser(roleName: string, level: number) {
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          userId: 'user-1',
+          roles: [{ roleId: 'r1', name: roleName, code: roleName, level }],
+        },
+      }),
+    ),
+  );
+}
 
 function renderHeader() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });

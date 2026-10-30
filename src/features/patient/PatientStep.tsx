@@ -146,7 +146,15 @@ function SelectedPatientSummary({ patientId, onChange }: { patientId: string; on
 // Modo reentrada (SPEC FE10 §3.1, §13): identidad en sólo lectura + «Editar paciente», que abre
 // el mismo `PatientFormDialog` del paso 8 (`004`). No ofrece cambiar de paciente — no hay campo
 // de búsqueda ni selector alguno en esta rama, sólo el resumen y el botón de edición.
-function PatientStepReentry({ caseId, patientId }: { caseId: string; patientId: string }) {
+function PatientStepReentry({
+  caseId,
+  patientId,
+  readOnly,
+}: {
+  caseId: string;
+  patientId: string;
+  readOnly: boolean;
+}) {
   const { t } = useTranslation();
   const existing = patientResource.useOne(patientId);
   const [editOpen, setEditOpen] = useState(false);
@@ -163,9 +171,11 @@ function PatientStepReentry({ caseId, patientId }: { caseId: string; patientId: 
           {existing.data.names} {existing.data.lastNames}
         </p>
         <p className="text-sm text-muted-foreground">{existing.data.documentNumber ?? '—'}</p>
-        <Button type="button" variant="outline" className="self-start" onClick={() => setEditOpen(true)}>
-          {t('patient.reentry.editButton')}
-        </Button>
+        {!readOnly && (
+          <Button type="button" variant="outline" className="self-start" onClick={() => setEditOpen(true)}>
+            {t('patient.reentry.editButton')}
+          </Button>
+        )}
       </CardContent>
       <PatientFormDialog open={editOpen} caseId={caseId} patientId={patientId} onOpenChange={setEditOpen} />
     </Card>
@@ -179,13 +189,20 @@ export interface PatientStepProps {
   // que no existe.
   caseId?: string;
   patientId?: string;
+  // Reentry only: computed by `CaseWizardPage` with `useStepReadOnly('patient', …)` and passed
+  // down, because this feature can't import from `esaviCase` (CONVENTIONS.md §3, SPEC FE33 §3.5).
+  readOnly?: boolean;
 }
 
 // Paso 1 del alta y, con `patientId`, su reentrada (SPEC FE10 §3.1, §13): buscar o crear al
 // paciente, o mostrarlo de sólo lectura con edición.
-export function PatientStep({ caseId, patientId: reentryPatientId }: PatientStepProps = {}) {
+export function PatientStep({
+  caseId,
+  patientId: reentryPatientId,
+  readOnly = false,
+}: PatientStepProps = {}) {
   if (reentryPatientId && caseId) {
-    return <PatientStepReentry caseId={caseId} patientId={reentryPatientId} />;
+    return <PatientStepReentry caseId={caseId} patientId={reentryPatientId} readOnly={readOnly} />;
   }
   return <PatientStepCreate />;
 }

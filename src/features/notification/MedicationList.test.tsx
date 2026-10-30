@@ -154,7 +154,7 @@ describe('MedicationList — SPEC FE12b §4 paso 10', () => {
   });
 
   // SPEC FE12b §4 paso 14 — el bloqueo por rol en el 005A: un 403 explica, no un toast genérico.
-  it('un 403 AUTH_ROLE_FORBIDDEN al confirmar la baja muestra el aviso de administrador', async () => {
+  it('un 403 AUTH_ROLE_FORBIDDEN al confirmar la baja muestra el aviso de rol insuficiente', async () => {
     const user = setupUser();
     server.use(
       http.get('http://localhost:4500/api/notification-medications/case/case-1', () =>
@@ -177,7 +177,7 @@ describe('MedicationList — SPEC FE12b §4 paso 10', () => {
 
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
     expect(toastError).toHaveBeenCalledWith(
-      'Retirar este contenido clínico exige un administrador en este despliegue.',
+      'Tu rol no puede retirar este contenido clínico.',
     );
   });
 });

@@ -16,11 +16,14 @@ describe('filterNavigationByLevel', () => {
     expect(visible.some((item) => item.key === 'nav.home')).toBe(true);
   });
 
-  it('con USER aparecen todos los hijos menos «Usuarios», «Roles», «Configuraciones» y «Medicamentos WHODrug»', () => {
+  it('con USER aparecen todos los hijos menos «Registrar», «Usuarios», «Roles», «Configuraciones» y «Medicamentos WHODrug»', () => {
     const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.USER);
 
-    expect(countChildren(visible)).toBe(10);
+    expect(countChildren(visible)).toBe(9);
     const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
+    // SPEC FE33 §3.1 — the alta is NOTIFIER since SPEC F64; USER only reads the case file.
+    expect(allKeys).not.toContain('nav.items.caseRegister');
+    expect(allKeys).toContain('nav.items.caseBrowse');
     expect(allKeys).not.toContain('nav.items.user');
     expect(allKeys).not.toContain('nav.items.geoBulkImport');
     // SPEC FE19 §2, §6 — desviación declarada: systemConfig exige SUPERADMIN, no USER.
@@ -30,6 +33,13 @@ describe('filterNavigationByLevel', () => {
     expect(allKeys).not.toContain('nav.items.appRole');
     // SPEC FE25d §3.1 — ADMIN, the real minimum of ESAVI-WHODPROD-002B, its only listing.
     expect(allKeys).not.toContain('nav.items.whodrugProduct');
+  });
+
+  it('con NOTIFIER aparece «Registrar»', () => {
+    const visible = filterNavigationByLevel(NAVIGATION, ROLE_LEVELS.NOTIFIER);
+
+    const allKeys = visible.flatMap((item) => item.children?.map((child) => child.key) ?? []);
+    expect(allKeys).toContain('nav.items.caseRegister');
   });
 
   it('con ADMIN aparecen catorce hijos, sin «Configuraciones»', () => {

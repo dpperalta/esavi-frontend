@@ -582,6 +582,7 @@
       "CASEFLOW_007_STAGE_NOT_STARTED": "This stage hasn't started yet.",
       "CASEFLOW_007_STAGE_ALREADY_COMPLETED": "This stage is already complete.",
       "CASEFLOW_007_CASE_CLOSED": "This case file is closed.",
+      "CASEFLOW_007_STAGE_FORBIDDEN": "Your role can't complete this stage.",
       "CASEFLOW_002_STATUS_NOT_FOUND": "That status does not exist in the catalog. The filter was cleared.",
       "CASEFLOW_008_NOT_FOUND": "The case has no workflow record.",
       "CASEFLOW_008_ALREADY_CLOSED": "This case file was already closed.",
@@ -712,7 +713,7 @@
       "blockedHint": "Resolve what's pending to be able to close the case file.",
       "action": "Close case file",
       "confirmTitle": "Close this case file?",
-      "confirmBody": "The case file will become read-only. Only an administrator will be able to reopen it.",
+      "confirmBody": "The case file will become read-only. Only an evaluator or administrator will be able to reopen it.",
       "confirmWarnings": "There are unresolved warnings:",
       "confirmAction": "Close case file",
       "success": "Case file closed."
@@ -723,7 +724,7 @@
       "reopenCount": "Times reopened",
       "lastReopenedAt": "Last reopened",
       "never": "Never",
-      "askAdmin": "Ask an administrator to reopen it."
+      "askAdmin": "Ask an evaluator or administrator to reopen it."
     },
     "validation": {
       "request": {
@@ -923,9 +924,10 @@
       "generic": "We couldn't load the case file"
     },
     "readOnly": {
-      "closedBanner": "This case file is closed. Ask an administrator to reopen it to edit it again.",
+      "closedBanner": "This case file is closed. Ask an evaluator or administrator to reopen it to edit it again.",
       "closedBannerAdmin": "This case file is closed.",
       "pendingValidationBanner": "This case file is pending validation. You can keep working, but it can't be closed until the validation is resolved.",
+      "stageForbiddenBanner": "Your role can view this stage, but not edit it.",
       "inactiveWorkflowBanner": "The workflow record for this case file is deactivated. Only superadministrators can see it."
     }
   },
@@ -1501,8 +1503,7 @@
         "blocked": {
           "sex": "This sex change cannot be saved: there is pregnancy data recorded on this case. Clear the corresponding block first.",
           "age": "This change cannot be saved: it would leave the patient outside the pregnancy age range, and there is pregnancy data recorded on this case. Clear the corresponding block first.",
-          "complications": "There are {{count}} active complication(s) recorded. Remove them one by one before the block can be cleared.",
-          "complicationsNeedsAdmin": "There are {{count}} active complication(s) recorded. Only an administrator can remove them before the block can be cleared."
+          "complications": "There are {{count}} active complication(s) recorded. Remove them one by one before the block can be cleared."
         },
         "clearBlock": "Clear the pregnancy block",
         "cleared": "The pregnancy block was cleared. You can now save the change."
@@ -1535,7 +1536,7 @@
           "confirm": "Delete the complication «{{name}}»? This action cannot be undone from here."
         },
         "roleForbidden": {
-          "delete": "Removing a complication requires an administrator in this deployment."
+          "delete": "Your role can't remove pregnancy complications."
         }
       }
     },
@@ -1651,7 +1652,6 @@
         "editTitle": "Edit medication"
       },
       "gateLocked": "This can't be changed while there is medication on record. Delete it one row at a time to change the answer.",
-      "gateLockedNeedsAdmin": "This can't be changed while there is medication on record. An administrator is needed to delete it.",
       "mismatch": "This answer doesn't match the medication recorded below.",
       "error": {
         "load": "We couldn't load the concomitant medication.",
@@ -1681,18 +1681,17 @@
         "confirm": "Retire the antecedent “{{name}}”? This cannot be undone from here."
       },
       "roleForbidden": {
-        "delete": "Retiring an antecedent takes an administrator in this deployment, even though recording and correcting one does not."
+        "delete": "Your role can't remove medical history entries."
       },
       "mismatch": "There are medical antecedents recorded below and none of these answers says there are any.",
-      "gateLocked": "It is the only answer holding up the recorded antecedents, so it can't be changed while they exist. Delete them one row at a time to change it.",
-      "gateLockedNeedsAdmin": "It is the only answer holding up the recorded antecedents, so it can't be changed while they exist. An administrator is needed to delete them."
+      "gateLocked": "It is the only answer holding up the recorded antecedents, so it can't be changed while they exist. Delete them one row at a time to change it."
     },
     "satellites": {
       "deleteTitle": "Deactivate",
       "deleteConfirm": "Deactivate «{{name}}»? This action can't be undone from here.",
       "deleteAction": "Deactivate",
-      "adminRequiredEdit": "Correcting this clinical content requires an administrator in this deployment.",
-      "adminRequiredDelete": "Removing this clinical content requires an administrator in this deployment."
+      "adminRequiredEdit": "Your role can't correct this clinical content.",
+      "adminRequiredDelete": "Your role can't remove this clinical content."
     },
     "roleForbidden": {
       "editDelete": "Correcting or removing this clinical content requires a higher role in this deployment."
@@ -1768,6 +1767,9 @@
     }
   },
   "investigation": {
+    "readOnly": {
+      "notStarted": "The investigation hasn't been started yet."
+    },
     "pregnancy": {
       "title": "Questions for women",
       "hint": "Mainly between 12 and 49 years old, or whenever pregnancy is suspected",
@@ -1885,8 +1887,8 @@
       "meddraUnavailable": "The MedDRA dictionary isn't available right now. Type the name directly.",
       "outcomeLocked": {
         "title": "The outcome can't be changed",
-        "description_one": "There is {{count}} newborn medical condition recorded. Only an administrator can remove it before the outcome can be changed to something other than \"Live born with medical condition at birth\".",
-        "description_other": "There are {{count}} newborn medical conditions recorded. Only an administrator can remove them before the outcome can be changed to something other than \"Live born with medical condition at birth\"."
+        "description_one": "There is {{count}} newborn medical condition recorded. Remove it before the outcome can be changed to something other than \"Live born with medical condition at birth\".",
+        "description_other": "There are {{count}} newborn medical conditions recorded. Remove them one by one before the outcome can be changed to something other than \"Live born with medical condition at birth\"."
       },
       "form": {
         "createTitle": "Add newborn medical condition",

@@ -25,6 +25,8 @@ beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
+  // Closing is EVALUATOR (SPEC FE33 §3.5); tests that need another role sign in again.
+  mockCurrentUser('EVALUATOR', 40);
 });
 
 const NO_STAGE = { exists: false, id: null, startedAt: null, endedAt: null, durationMinutes: null };
@@ -313,6 +315,23 @@ describe('ClosureStep — modo abierto', () => {
   });
 });
 
+describe('ClosureStep — rol insuficiente (SPEC FE33 §3.5)', () => {
+  it('con INVESTIGATOR la lista de comprobación se ve pero no hay «Cerrar expediente»', async () => {
+    mockCurrentUser('INVESTIGATOR', 30);
+    mockWorkflow({ classification: YES_STAGE });
+    server.use(
+      http.get(`http://localhost:4500/api/classifications/case/${CASE_1}`, () =>
+        ok({ classificationId: 'c1', isSeriousEvent: false, isActive: true }),
+      ),
+    );
+
+    renderStep();
+
+    expect(await screen.findByRole('heading', { name: 'Cierre del expediente' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Cerrar expediente' })).not.toBeInTheDocument();
+  });
+});
+
 // SPEC FE14b §4 paso 6
 describe('ClosureStep — modo cerrado', () => {
   it('con CLOSED y USER se ven los tres datos y el texto de pedírselo a un administrador', async () => {
@@ -329,7 +348,7 @@ describe('ClosureStep — modo cerrado', () => {
     expect(
       screen.getByText(format(new Date('2026-09-05T08:30:00.000Z'), 'dd/MM/yyyy HH:mm')),
     ).toBeInTheDocument();
-    expect(screen.getByText('Pídeselo a un administrador para reabrirlo.')).toBeInTheDocument();
+    expect(screen.getByText('Pídeselo a un evaluador o administrador para reabrirlo.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Reabrir' })).not.toBeInTheDocument();
   });
 
@@ -340,7 +359,7 @@ describe('ClosureStep — modo cerrado', () => {
     renderStep();
 
     expect(await screen.findByRole('button', { name: 'Reabrir' })).toBeInTheDocument();
-    expect(screen.queryByText('Pídeselo a un administrador para reabrirlo.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Pídeselo a un evaluador o administrador para reabrirlo.')).not.toBeInTheDocument();
   });
 
   it('lastReopenedAt: null se pinta como «Nunca»', async () => {

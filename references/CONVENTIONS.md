@@ -345,7 +345,9 @@ Se configura una sola vez en el `<Toaster>`. Ninguna llamada a `toast()` pasa `p
 
 ## 11. Autorización en el cliente
 
-`ROLE_LEVELS` se replica: `SUPERADMIN 100 > ADMIN 50 > USER 25 > ANALYTICS 10`. `useCan()` y `<RequireRole>` son los únicos consumidores.
+`ROLE_LEVELS` se replica: `SUPERADMIN 100 > ADMIN 50 > EVALUATOR 40 > INVESTIGATOR 30 > NOTIFIER 25 > USER 20 > ANALYTICS 10`. `useCan()` y `<RequireRole>` son los únicos consumidores.
+
+Los tres del medio son los roles por etapa del caso (SPEC F64 del backend, SPEC FE33): `NOTIFIER` escribe los pasos 1–4, `INVESTIGATOR` además la investigación, `EVALUATOR` además la clasificación final, el cierre, la reapertura y la resolución de la validación. **`USER` es de solo consulta:** lee el expediente de su territorio pero no lo escribe. Un umbral de escritura del caso nunca es `ROLE_LEVELS.USER`.
 
 **Esto es experiencia de usuario, no seguridad.** Oculta lo que el usuario no puede hacer para que no lo intente. El backend sigue siendo la única autoridad, así que:
 

@@ -1,8 +1,9 @@
 # Inventario de rutas del backend
 
 > **Fuente:** `esavi-backend/tests/setup/routeRules.ts` → `ROUTE_RULES`
-> **Generado:** 2026-09-23 · **355 rutas** en **46 grupos**
-> **Verificado:** 2026-09-23 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente
+> **Generado:** 2026-10-30 · **355 rutas** en **46 grupos**
+> **Verificado:** 2026-10-30 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente (363 coincidencias de `router.<verbo>(`, una de ellas comentada en `seed.routes.ts:8`: 362 = 355 + 7)
+> **Cambios de la regeneración del 2026-10-30 (SPEC F64 del backend, consumido por SPEC FE33):** roles por etapa del caso. **77 rutas cambian de rol mínimo** y ninguna se crea ni se borra; mismo total de 355/46. 38 pasan del literal `USER` a `NOTIFIER` (mismo nivel 25: alta de paciente y caso, notificador, clasificación inicial, notificación y sus satélites, `CASEFLOW-007` complete-stage y `CASEFLOW-010` request-validation). 34 pasan de `USER` a `INVESTIGATOR` (la investigación y sus satélites, `EVALINST` incluido). 5 pasan a `EVALUATOR`: `FINCLASS-001`/`004`, `CASEFLOW-008` close y `CASEFLOW-011` resolve-validation desde `USER`, y `CASEFLOW-009` reopen, que **baja** desde `ADMIN`. El literal `USER` baja de 25 a 20 y queda como rol de consulta: todas las lecturas siguen en él. `CASEFLOW-007` gana el error `403 CASEFLOW_007_STAGE_FORBIDDEN` (`INVESTIGATION` exige 30, `FINAL_CLASSIFICATION` 40), que esta tabla no puede expresar
 > **Cambios de la regeneración del 2026-09-23 (SPEC F62 del backend):** una ruta nueva, `ESAVI-USER-008` — `GET /api/users/search?q=…`, rol mínimo `ADMIN`, el mismo que los dos listados de usuarios. Es el único filtro de texto que acepta `appUser`: `002A` y `002B` siguen sin aceptar nada más que `limit` y `offset`. Un solo parámetro `q`, resuelto por tres ramas en `OR` — tokens de `firstName`+`lastName` (palabra completa, desacentuada, conjuntiva), `email` exacto y `username` exacto sensible a mayúsculas —, porque las cinco columnas están cifradas y no admiten `ILIKE`. Ningún grupo nuevo; 354 → 355 rutas, 46 grupos.
 > **La fuente se movió:** `ROUTE_RULES` ya no vive en `tests/auth/roles.test.ts` sino en `tests/setup/routeRules.ts`; `references/scripts/extract-routes.cjs` busca ahora la primera de las dos.
 > **Cambios de la regeneración del 2026-09-21 (SPEC F60 del backend):** dieciocho rutas de los siete satélites del paso 4 con `isActive` cambiaron de rol mínimo. Once bajaron a `USER`: el `PUT` (`004`) y el `DELETE .../:id` (`005A`) de `NOTIFEVT`, `NOTIFVAC`, `NOTIFDIL` y `NOTIFMED`, y el `DELETE .../:id` (`005A`) de `NOTIFPRG`, `PREGCOMP` y `MEDHIST`. Siete `PATCH .../activate/:id` (`005B`), uno por cada una de esas siete entidades, bajaron de `SUPERADMIN` a `ADMIN`. Ningún grupo ni ruta nuevos; mismo total de 354/46. Los `002B` y los `005C` no cambian.
@@ -27,10 +28,13 @@ por tanto, la lista autoritativa de lo que el frontend puede consumir.
 |---|---|
 | `SUPERADMIN` | 100 |
 | `ADMIN` | 50 |
-| `USER` | 25 |
+| `EVALUATOR` | 40 |
+| `INVESTIGATOR` | 30 |
+| `NOTIFIER` | 25 |
+| `USER` | 20 |
 | `ANALYTICS` | 10 |
 
-Una ruta con rol mínimo `USER` admite también a `ADMIN` y `SUPERADMIN`. Replicar
+Una ruta con rol mínimo `USER` admite también a todos los roles por encima. Replicar
 esta tabla en el cliente es lo que permite `useCan()` y `<RequireRole>`.
 
 ## Rutas sin fila en esta tabla
@@ -72,7 +76,6 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 ---
 
 ## Rutas por entidad
-### APPROLE
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
@@ -94,11 +97,11 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/esavi-cases` | USER | `ESAVI-CASE-001` |
+| `POST` | `/api/esavi-cases` | NOTIFIER | `ESAVI-CASE-001` |
 | `GET` | `/api/esavi-cases` | USER | `ESAVI-CASE-002A` |
 | `GET` | `/api/esavi-cases/admin` | ADMIN | `ESAVI-CASE-002B` |
 | `GET` | `/api/esavi-cases/:id` | USER | `ESAVI-CASE-003` |
-| `PUT` | `/api/esavi-cases/:id` | USER | `ESAVI-CASE-004` |
+| `PUT` | `/api/esavi-cases/:id` | NOTIFIER | `ESAVI-CASE-004` |
 | `DELETE` | `/api/esavi-cases/:id` | ADMIN | `ESAVI-CASE-005A` |
 | `PATCH` | `/api/esavi-cases/activate/:id` | SUPERADMIN | `ESAVI-CASE-005B` |
 
@@ -110,11 +113,11 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `GET` | `/api/case-workflows/admin` | ADMIN | `ESAVI-CASEFLOW-002B` |
 | `PATCH` | `/api/case-workflows/activate/:id` | SUPERADMIN | `ESAVI-CASEFLOW-005B` |
 | `GET` | `/api/case-workflows/case/:id` | USER | `ESAVI-CASEFLOW-006` |
-| `PATCH` | `/api/case-workflows/case/:id/complete-stage` | USER | `ESAVI-CASEFLOW-007` |
-| `PATCH` | `/api/case-workflows/case/:id/close` | USER | `ESAVI-CASEFLOW-008` |
-| `PATCH` | `/api/case-workflows/case/:id/reopen` | ADMIN | `ESAVI-CASEFLOW-009` |
-| `PATCH` | `/api/case-workflows/case/:id/request-validation` | USER | `ESAVI-CASEFLOW-010` |
-| `PATCH` | `/api/case-workflows/case/:id/resolve-validation` | USER | `ESAVI-CASEFLOW-011` |
+| `PATCH` | `/api/case-workflows/case/:id/complete-stage` | NOTIFIER | `ESAVI-CASEFLOW-007` |
+| `PATCH` | `/api/case-workflows/case/:id/close` | EVALUATOR | `ESAVI-CASEFLOW-008` |
+| `PATCH` | `/api/case-workflows/case/:id/reopen` | EVALUATOR | `ESAVI-CASEFLOW-009` |
+| `PATCH` | `/api/case-workflows/case/:id/request-validation` | NOTIFIER | `ESAVI-CASEFLOW-010` |
+| `PATCH` | `/api/case-workflows/case/:id/resolve-validation` | EVALUATOR | `ESAVI-CASEFLOW-011` |
 | `GET` | `/api/case-workflows/:id` | USER | `ESAVI-CASEFLOW-003` |
 | `DELETE` | `/api/case-workflows/:id` | ADMIN | `ESAVI-CASEFLOW-005A` |
 
@@ -147,12 +150,12 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/classifications` | USER | `ESAVI-CLASSIF-001` |
+| `POST` | `/api/classifications` | NOTIFIER | `ESAVI-CLASSIF-001` |
 | `GET` | `/api/classifications` | USER | `ESAVI-CLASSIF-002A` |
 | `GET` | `/api/classifications/admin` | ADMIN | `ESAVI-CLASSIF-002B` |
 | `GET` | `/api/classifications/case/:id` | USER | `ESAVI-CLASSIF-006` |
 | `GET` | `/api/classifications/:id` | USER | `ESAVI-CLASSIF-003` |
-| `PUT` | `/api/classifications/:id` | USER | `ESAVI-CLASSIF-004` |
+| `PUT` | `/api/classifications/:id` | NOTIFIER | `ESAVI-CLASSIF-004` |
 | `DELETE` | `/api/classifications/:id` | ADMIN | `ESAVI-CLASSIF-005A` |
 | `PATCH` | `/api/classifications/activate/:id` | SUPERADMIN | `ESAVI-CLASSIF-005B` |
 | `DELETE` | `/api/classifications/purge/:id` | SUPERADMIN | `ESAVI-CLASSIF-005C` |
@@ -186,27 +189,27 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/evaluation-institutions` | USER | `ESAVI-EVALINST-001` |
+| `POST` | `/api/evaluation-institutions` | INVESTIGATOR | `ESAVI-EVALINST-001` |
 | `GET` | `/api/evaluation-institutions/admin/investigation/:id` | ADMIN | `ESAVI-EVALINST-002B` |
 | `GET` | `/api/evaluation-institutions/investigation/:id` | USER | `ESAVI-EVALINST-002A` |
 | `DELETE` | `/api/evaluation-institutions/purge/:id` | SUPERADMIN | `ESAVI-EVALINST-005C` |
 | `PATCH` | `/api/evaluation-institutions/activate/:id` | ADMIN | `ESAVI-EVALINST-005B` |
 | `GET` | `/api/evaluation-institutions/:id` | USER | `ESAVI-EVALINST-003` |
-| `PUT` | `/api/evaluation-institutions/:id` | USER | `ESAVI-EVALINST-004` |
-| `DELETE` | `/api/evaluation-institutions/:id` | USER | `ESAVI-EVALINST-005A` |
+| `PUT` | `/api/evaluation-institutions/:id` | INVESTIGATOR | `ESAVI-EVALINST-004` |
+| `DELETE` | `/api/evaluation-institutions/:id` | INVESTIGATOR | `ESAVI-EVALINST-005A` |
 
 ### FINCLASS
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/final-classifications` | USER | `ESAVI-FINCLASS-001` |
+| `POST` | `/api/final-classifications` | EVALUATOR | `ESAVI-FINCLASS-001` |
 | `GET` | `/api/final-classifications` | USER | `ESAVI-FINCLASS-002A` |
 | `GET` | `/api/final-classifications/admin` | ADMIN | `ESAVI-FINCLASS-002B` |
 | `PATCH` | `/api/final-classifications/activate/:id` | SUPERADMIN | `ESAVI-FINCLASS-005B` |
 | `DELETE` | `/api/final-classifications/purge/:id` | SUPERADMIN | `ESAVI-FINCLASS-005C` |
 | `GET` | `/api/final-classifications/case/:id` | USER | `ESAVI-FINCLASS-006` |
 | `GET` | `/api/final-classifications/:id` | USER | `ESAVI-FINCLASS-003` |
-| `PUT` | `/api/final-classifications/:id` | USER | `ESAVI-FINCLASS-004` |
+| `PUT` | `/api/final-classifications/:id` | EVALUATOR | `ESAVI-FINCLASS-004` |
 | `DELETE` | `/api/final-classifications/:id` | ADMIN | `ESAVI-FINCLASS-005A` |
 
 ### GEOLOC
@@ -250,87 +253,87 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-administration-errors` | USER | `ESAVI-INVADMER-001` |
+| `POST` | `/api/investigation-administration-errors` | INVESTIGATOR | `ESAVI-INVADMER-001` |
 | `GET` | `/api/investigation-administration-errors` | USER | `ESAVI-INVADMER-002A` |
 | `GET` | `/api/investigation-administration-errors/admin` | ADMIN | `ESAVI-INVADMER-002B` |
 | `DELETE` | `/api/investigation-administration-errors/purge/:id` | SUPERADMIN | `ESAVI-INVADMER-005C` |
 | `GET` | `/api/investigation-administration-errors/case/:id` | USER | `ESAVI-INVADMER-006` |
 | `GET` | `/api/investigation-administration-errors/:id` | USER | `ESAVI-INVADMER-003` |
-| `PUT` | `/api/investigation-administration-errors/:id` | USER | `ESAVI-INVADMER-004` |
+| `PUT` | `/api/investigation-administration-errors/:id` | INVESTIGATOR | `ESAVI-INVADMER-004` |
 
 ### INVAUT
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-autopsies` | USER | `ESAVI-INVAUT-001` |
+| `POST` | `/api/investigation-autopsies` | INVESTIGATOR | `ESAVI-INVAUT-001` |
 | `GET` | `/api/investigation-autopsies` | USER | `ESAVI-INVAUT-002A` |
 | `GET` | `/api/investigation-autopsies/admin` | ADMIN | `ESAVI-INVAUT-002B` |
 | `GET` | `/api/investigation-autopsies/case/:id` | USER | `ESAVI-INVAUT-006` |
 | `GET` | `/api/investigation-autopsies/:id` | USER | `ESAVI-INVAUT-003` |
-| `PUT` | `/api/investigation-autopsies/:id` | USER | `ESAVI-INVAUT-004` |
+| `PUT` | `/api/investigation-autopsies/:id` | INVESTIGATOR | `ESAVI-INVAUT-004` |
 | `DELETE` | `/api/investigation-autopsies/purge/:id` | SUPERADMIN | `ESAVI-INVAUT-005C` |
 
 ### INVCLIEV
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-clinical-evaluations` | USER | `ESAVI-INVCLIEV-001` |
+| `POST` | `/api/investigation-clinical-evaluations` | INVESTIGATOR | `ESAVI-INVCLIEV-001` |
 | `GET` | `/api/investigation-clinical-evaluations` | USER | `ESAVI-INVCLIEV-002A` |
 | `GET` | `/api/investigation-clinical-evaluations/admin` | ADMIN | `ESAVI-INVCLIEV-002B` |
 | `DELETE` | `/api/investigation-clinical-evaluations/purge/:id` | SUPERADMIN | `ESAVI-INVCLIEV-005C` |
 | `GET` | `/api/investigation-clinical-evaluations/case/:id` | USER | `ESAVI-INVCLIEV-006` |
 | `GET` | `/api/investigation-clinical-evaluations/:id` | USER | `ESAVI-INVCLIEV-003` |
-| `PUT` | `/api/investigation-clinical-evaluations/:id` | USER | `ESAVI-INVCLIEV-004` |
+| `PUT` | `/api/investigation-clinical-evaluations/:id` | INVESTIGATOR | `ESAVI-INVCLIEV-004` |
 
 ### INVCOLD
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-cold-chains` | USER | `ESAVI-INVCOLD-001` |
+| `POST` | `/api/investigation-cold-chains` | INVESTIGATOR | `ESAVI-INVCOLD-001` |
 | `GET` | `/api/investigation-cold-chains` | USER | `ESAVI-INVCOLD-002A` |
 | `GET` | `/api/investigation-cold-chains/admin` | ADMIN | `ESAVI-INVCOLD-002B` |
 | `DELETE` | `/api/investigation-cold-chains/purge/:id` | SUPERADMIN | `ESAVI-INVCOLD-005C` |
 | `GET` | `/api/investigation-cold-chains/case/:id` | USER | `ESAVI-INVCOLD-006` |
 | `GET` | `/api/investigation-cold-chains/:id` | USER | `ESAVI-INVCOLD-003` |
-| `PUT` | `/api/investigation-cold-chains/:id` | USER | `ESAVI-INVCOLD-004` |
+| `PUT` | `/api/investigation-cold-chains/:id` | INVESTIGATOR | `ESAVI-INVCOLD-004` |
 
 ### INVCOMM
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-communities` | USER | `ESAVI-INVCOMM-001` |
+| `POST` | `/api/investigation-communities` | INVESTIGATOR | `ESAVI-INVCOMM-001` |
 | `GET` | `/api/investigation-communities` | USER | `ESAVI-INVCOMM-002A` |
 | `GET` | `/api/investigation-communities/admin` | ADMIN | `ESAVI-INVCOMM-002B` |
 | `DELETE` | `/api/investigation-communities/purge/:id` | SUPERADMIN | `ESAVI-INVCOMM-005C` |
 | `GET` | `/api/investigation-communities/case/:id` | USER | `ESAVI-INVCOMM-006` |
 | `GET` | `/api/investigation-communities/:id` | USER | `ESAVI-INVCOMM-003` |
-| `PUT` | `/api/investigation-communities/:id` | USER | `ESAVI-INVCOMM-004` |
+| `PUT` | `/api/investigation-communities/:id` | INVESTIGATOR | `ESAVI-INVCOMM-004` |
 
 ### INVDIAG
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-diagnostics` | USER | `ESAVI-INVDIAG-001` |
+| `POST` | `/api/investigation-diagnostics` | INVESTIGATOR | `ESAVI-INVDIAG-001` |
 | `GET` | `/api/investigation-diagnostics/case/:id` | USER | `ESAVI-INVDIAG-006` |
 | `GET` | `/api/investigation-diagnostics/admin/investigation/:id` | ADMIN | `ESAVI-INVDIAG-002B` |
 | `GET` | `/api/investigation-diagnostics/investigation/:id` | USER | `ESAVI-INVDIAG-002A` |
 | `DELETE` | `/api/investigation-diagnostics/purge/:id` | SUPERADMIN | `ESAVI-INVDIAG-005C` |
 | `PATCH` | `/api/investigation-diagnostics/activate/:id` | ADMIN | `ESAVI-INVDIAG-005B` |
 | `GET` | `/api/investigation-diagnostics/:id` | USER | `ESAVI-INVDIAG-003` |
-| `PUT` | `/api/investigation-diagnostics/:id` | USER | `ESAVI-INVDIAG-004` |
-| `DELETE` | `/api/investigation-diagnostics/:id` | USER | `ESAVI-INVDIAG-005A` |
+| `PUT` | `/api/investigation-diagnostics/:id` | INVESTIGATOR | `ESAVI-INVDIAG-004` |
+| `DELETE` | `/api/investigation-diagnostics/:id` | INVESTIGATOR | `ESAVI-INVDIAG-005A` |
 
 ### INVESTGN
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigations` | USER | `ESAVI-INVESTGN-001` |
+| `POST` | `/api/investigations` | INVESTIGATOR | `ESAVI-INVESTGN-001` |
 | `GET` | `/api/investigations` | USER | `ESAVI-INVESTGN-002A` |
 | `GET` | `/api/investigations/admin` | ADMIN | `ESAVI-INVESTGN-002B` |
 | `GET` | `/api/investigations/case/:id` | USER | `ESAVI-INVESTGN-006` |
 | `GET` | `/api/investigations/:id` | USER | `ESAVI-INVESTGN-003` |
-| `PUT` | `/api/investigations/:id` | USER | `ESAVI-INVESTGN-004` |
-| `DELETE` | `/api/investigations/:id` | USER | `ESAVI-INVESTGN-005A` |
+| `PUT` | `/api/investigations/:id` | INVESTIGATOR | `ESAVI-INVESTGN-004` |
+| `DELETE` | `/api/investigations/:id` | INVESTIGATOR | `ESAVI-INVESTGN-005A` |
 | `PATCH` | `/api/investigations/activate/:id` | SUPERADMIN | `ESAVI-INVESTGN-005B` |
 | `DELETE` | `/api/investigations/purge/:id` | SUPERADMIN | `ESAVI-INVESTGN-005C` |
 
@@ -338,78 +341,78 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-medical-histories` | USER | `ESAVI-INVMEDH-001` |
+| `POST` | `/api/investigation-medical-histories` | INVESTIGATOR | `ESAVI-INVMEDH-001` |
 | `GET` | `/api/investigation-medical-histories` | USER | `ESAVI-INVMEDH-002A` |
 | `GET` | `/api/investigation-medical-histories/admin` | ADMIN | `ESAVI-INVMEDH-002B` |
 | `DELETE` | `/api/investigation-medical-histories/purge/:id` | SUPERADMIN | `ESAVI-INVMEDH-005C` |
 | `GET` | `/api/investigation-medical-histories/case/:id` | USER | `ESAVI-INVMEDH-006` |
 | `GET` | `/api/investigation-medical-histories/:id` | USER | `ESAVI-INVMEDH-003` |
-| `PUT` | `/api/investigation-medical-histories/:id` | USER | `ESAVI-INVMEDH-004` |
+| `PUT` | `/api/investigation-medical-histories/:id` | INVESTIGATOR | `ESAVI-INVMEDH-004` |
 
 ### INVPREG
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-pregnancy-conditions` | USER | `ESAVI-INVPREG-001` |
+| `POST` | `/api/investigation-pregnancy-conditions` | INVESTIGATOR | `ESAVI-INVPREG-001` |
 | `GET` | `/api/investigation-pregnancy-conditions/admin/investigation/:id` | ADMIN | `ESAVI-INVPREG-002B` |
 | `GET` | `/api/investigation-pregnancy-conditions/investigation/:id` | USER | `ESAVI-INVPREG-002A` |
 | `DELETE` | `/api/investigation-pregnancy-conditions/purge/:id` | SUPERADMIN | `ESAVI-INVPREG-005C` |
 | `PATCH` | `/api/investigation-pregnancy-conditions/activate/:id` | ADMIN | `ESAVI-INVPREG-005B` |
 | `GET` | `/api/investigation-pregnancy-conditions/:id` | USER | `ESAVI-INVPREG-003` |
-| `PUT` | `/api/investigation-pregnancy-conditions/:id` | USER | `ESAVI-INVPREG-004` |
-| `DELETE` | `/api/investigation-pregnancy-conditions/:id` | USER | `ESAVI-INVPREG-005A` |
+| `PUT` | `/api/investigation-pregnancy-conditions/:id` | INVESTIGATOR | `ESAVI-INVPREG-004` |
+| `DELETE` | `/api/investigation-pregnancy-conditions/:id` | INVESTIGATOR | `ESAVI-INVPREG-005A` |
 
 ### INVSRC
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-sources` | USER | `ESAVI-INVSRC-001` |
+| `POST` | `/api/investigation-sources` | INVESTIGATOR | `ESAVI-INVSRC-001` |
 | `GET` | `/api/investigation-sources` | USER | `ESAVI-INVSRC-002A` |
 | `GET` | `/api/investigation-sources/admin` | ADMIN | `ESAVI-INVSRC-002B` |
 | `GET` | `/api/investigation-sources/case/:id` | USER | `ESAVI-INVSRC-006` |
 | `GET` | `/api/investigation-sources/:id` | USER | `ESAVI-INVSRC-003` |
-| `PUT` | `/api/investigation-sources/:id` | USER | `ESAVI-INVSRC-004` |
+| `PUT` | `/api/investigation-sources/:id` | INVESTIGATOR | `ESAVI-INVSRC-004` |
 | `DELETE` | `/api/investigation-sources/purge/:id` | SUPERADMIN | `ESAVI-INVSRC-005C` |
 
 ### INVTEAM
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-team-members` | USER | `ESAVI-INVTEAM-001` |
+| `POST` | `/api/investigation-team-members` | INVESTIGATOR | `ESAVI-INVTEAM-001` |
 | `GET` | `/api/investigation-team-members/admin/investigation/:id` | ADMIN | `ESAVI-INVTEAM-002B` |
 | `GET` | `/api/investigation-team-members/investigation/:id` | USER | `ESAVI-INVTEAM-002A` |
 | `GET` | `/api/investigation-team-members/case/:id` | USER | `ESAVI-INVTEAM-006` |
 | `DELETE` | `/api/investigation-team-members/purge/:id` | SUPERADMIN | `ESAVI-INVTEAM-005C` |
 | `PATCH` | `/api/investigation-team-members/activate/:id` | ADMIN | `ESAVI-INVTEAM-005B` |
 | `GET` | `/api/investigation-team-members/:id` | USER | `ESAVI-INVTEAM-003` |
-| `PUT` | `/api/investigation-team-members/:id` | USER | `ESAVI-INVTEAM-004` |
-| `DELETE` | `/api/investigation-team-members/:id` | USER | `ESAVI-INVTEAM-005A` |
+| `PUT` | `/api/investigation-team-members/:id` | INVESTIGATOR | `ESAVI-INVTEAM-004` |
+| `DELETE` | `/api/investigation-team-members/:id` | INVESTIGATOR | `ESAVI-INVTEAM-005A` |
 
 ### INVVACAD
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-vaccines-administered` | USER | `ESAVI-INVVACAD-001` |
+| `POST` | `/api/investigation-vaccines-administered` | INVESTIGATOR | `ESAVI-INVVACAD-001` |
 | `GET` | `/api/investigation-vaccines-administered/admin/investigation/:id` | ADMIN | `ESAVI-INVVACAD-002B` |
 | `GET` | `/api/investigation-vaccines-administered/investigation/:id` | USER | `ESAVI-INVVACAD-002A` |
 | `GET` | `/api/investigation-vaccines-administered/case/:id` | USER | `ESAVI-INVVACAD-006` |
 | `DELETE` | `/api/investigation-vaccines-administered/purge/:id` | SUPERADMIN | `ESAVI-INVVACAD-005C` |
 | `PATCH` | `/api/investigation-vaccines-administered/activate/:id` | ADMIN | `ESAVI-INVVACAD-005B` |
 | `GET` | `/api/investigation-vaccines-administered/:id` | USER | `ESAVI-INVVACAD-003` |
-| `PUT` | `/api/investigation-vaccines-administered/:id` | USER | `ESAVI-INVVACAD-004` |
-| `DELETE` | `/api/investigation-vaccines-administered/:id` | USER | `ESAVI-INVVACAD-005A` |
+| `PUT` | `/api/investigation-vaccines-administered/:id` | INVESTIGATOR | `ESAVI-INVVACAD-004` |
+| `DELETE` | `/api/investigation-vaccines-administered/:id` | INVESTIGATOR | `ESAVI-INVVACAD-005A` |
 
 ### INVVACTX
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/investigation-vaccination-contexts` | USER | `ESAVI-INVVACTX-001` |
+| `POST` | `/api/investigation-vaccination-contexts` | INVESTIGATOR | `ESAVI-INVVACTX-001` |
 | `GET` | `/api/investigation-vaccination-contexts` | USER | `ESAVI-INVVACTX-002A` |
 | `GET` | `/api/investigation-vaccination-contexts/admin` | ADMIN | `ESAVI-INVVACTX-002B` |
 | `DELETE` | `/api/investigation-vaccination-contexts/purge/:id` | SUPERADMIN | `ESAVI-INVVACTX-005C` |
 | `GET` | `/api/investigation-vaccination-contexts/case/:id` | USER | `ESAVI-INVVACTX-006` |
 | `GET` | `/api/investigation-vaccination-contexts/:id` | USER | `ESAVI-INVVACTX-003` |
-| `PUT` | `/api/investigation-vaccination-contexts/:id` | USER | `ESAVI-INVVACTX-004` |
+| `PUT` | `/api/investigation-vaccination-contexts/:id` | INVESTIGATOR | `ESAVI-INVVACTX-004` |
 
 ### MEDDRA
 
@@ -421,26 +424,26 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-medical-histories` | USER | `ESAVI-MEDHIST-001` |
+| `POST` | `/api/notification-medical-histories` | NOTIFIER | `ESAVI-MEDHIST-001` |
 | `GET` | `/api/notification-medical-histories/case/:id` | USER | `ESAVI-MEDHIST-006` |
 | `GET` | `/api/notification-medical-histories/admin/notification/:id` | ADMIN | `ESAVI-MEDHIST-002B` |
 | `GET` | `/api/notification-medical-histories/notification/:id` | USER | `ESAVI-MEDHIST-002A` |
 | `DELETE` | `/api/notification-medical-histories/purge/:id` | SUPERADMIN | `ESAVI-MEDHIST-005C` |
 | `PATCH` | `/api/notification-medical-histories/activate/:id` | ADMIN | `ESAVI-MEDHIST-005B` |
 | `GET` | `/api/notification-medical-histories/:id` | USER | `ESAVI-MEDHIST-003` |
-| `PUT` | `/api/notification-medical-histories/:id` | USER | `ESAVI-MEDHIST-004` |
-| `DELETE` | `/api/notification-medical-histories/:id` | USER | `ESAVI-MEDHIST-005A` |
+| `PUT` | `/api/notification-medical-histories/:id` | NOTIFIER | `ESAVI-MEDHIST-004` |
+| `DELETE` | `/api/notification-medical-histories/:id` | NOTIFIER | `ESAVI-MEDHIST-005A` |
 
 ### NOTIFCN
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notifications` | USER | `ESAVI-NOTIFCN-001` |
+| `POST` | `/api/notifications` | NOTIFIER | `ESAVI-NOTIFCN-001` |
 | `GET` | `/api/notifications` | USER | `ESAVI-NOTIFCN-002A` |
 | `GET` | `/api/notifications/admin` | ADMIN | `ESAVI-NOTIFCN-002B` |
 | `GET` | `/api/notifications/case/:id` | USER | `ESAVI-NOTIFCN-006` |
 | `GET` | `/api/notifications/:id` | USER | `ESAVI-NOTIFCN-003` |
-| `PUT` | `/api/notifications/:id` | USER | `ESAVI-NOTIFCN-004` |
+| `PUT` | `/api/notifications/:id` | NOTIFIER | `ESAVI-NOTIFCN-004` |
 | `DELETE` | `/api/notifications/:id` | ADMIN | `ESAVI-NOTIFCN-005A` |
 | `PATCH` | `/api/notifications/activate/:id` | SUPERADMIN | `ESAVI-NOTIFCN-005B` |
 | `DELETE` | `/api/notifications/purge/:id` | SUPERADMIN | `ESAVI-NOTIFCN-005C` |
@@ -449,39 +452,39 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-diluents` | USER | `ESAVI-NOTIFDIL-001` |
+| `POST` | `/api/notification-diluents` | NOTIFIER | `ESAVI-NOTIFDIL-001` |
 | `GET` | `/api/notification-diluents/admin/vaccine/:id` | ADMIN | `ESAVI-NOTIFDIL-002B` |
 | `GET` | `/api/notification-diluents/vaccine/:id` | USER | `ESAVI-NOTIFDIL-002A` |
 | `DELETE` | `/api/notification-diluents/purge/:id` | SUPERADMIN | `ESAVI-NOTIFDIL-005C` |
 | `PATCH` | `/api/notification-diluents/activate/:id` | ADMIN | `ESAVI-NOTIFDIL-005B` |
 | `GET` | `/api/notification-diluents/:id` | USER | `ESAVI-NOTIFDIL-003` |
-| `PUT` | `/api/notification-diluents/:id` | USER | `ESAVI-NOTIFDIL-004` |
-| `DELETE` | `/api/notification-diluents/:id` | USER | `ESAVI-NOTIFDIL-005A` |
+| `PUT` | `/api/notification-diluents/:id` | NOTIFIER | `ESAVI-NOTIFDIL-004` |
+| `DELETE` | `/api/notification-diluents/:id` | NOTIFIER | `ESAVI-NOTIFDIL-005A` |
 
 ### NOTIFEVT
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-events` | USER | `ESAVI-NOTIFEVT-001` |
+| `POST` | `/api/notification-events` | NOTIFIER | `ESAVI-NOTIFEVT-001` |
 | `GET` | `/api/notification-events/case/:id` | USER | `ESAVI-NOTIFEVT-006` |
 | `GET` | `/api/notification-events/admin/notification/:id` | ADMIN | `ESAVI-NOTIFEVT-002B` |
 | `GET` | `/api/notification-events/notification/:id` | USER | `ESAVI-NOTIFEVT-002A` |
 | `DELETE` | `/api/notification-events/purge/:id` | SUPERADMIN | `ESAVI-NOTIFEVT-005C` |
 | `PATCH` | `/api/notification-events/activate/:id` | ADMIN | `ESAVI-NOTIFEVT-005B` |
 | `GET` | `/api/notification-events/:id` | USER | `ESAVI-NOTIFEVT-003` |
-| `PUT` | `/api/notification-events/:id` | USER | `ESAVI-NOTIFEVT-004` |
-| `DELETE` | `/api/notification-events/:id` | USER | `ESAVI-NOTIFEVT-005A` |
+| `PUT` | `/api/notification-events/:id` | NOTIFIER | `ESAVI-NOTIFEVT-004` |
+| `DELETE` | `/api/notification-events/:id` | NOTIFIER | `ESAVI-NOTIFEVT-005A` |
 
 ### NOTIFIER
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notifiers` | USER | `ESAVI-NOTIFIER-001` |
+| `POST` | `/api/notifiers` | NOTIFIER | `ESAVI-NOTIFIER-001` |
 | `GET` | `/api/notifiers` | USER | `ESAVI-NOTIFIER-002A` |
 | `GET` | `/api/notifiers/admin` | ADMIN | `ESAVI-NOTIFIER-002B` |
 | `GET` | `/api/notifiers/:id` | USER | `ESAVI-NOTIFIER-003` |
-| `PUT` | `/api/notifiers/:id` | USER | `ESAVI-NOTIFIER-004` |
-| `DELETE` | `/api/notifiers/:id` | USER | `ESAVI-NOTIFIER-005A` |
+| `PUT` | `/api/notifiers/:id` | NOTIFIER | `ESAVI-NOTIFIER-004` |
+| `DELETE` | `/api/notifiers/:id` | NOTIFIER | `ESAVI-NOTIFIER-005A` |
 | `PATCH` | `/api/notifiers/activate/:id` | SUPERADMIN | `ESAVI-NOTIFIER-005B` |
 | `DELETE` | `/api/notifiers/purge/:id` | SUPERADMIN | `ESAVI-NOTIFIER-005C` |
 
@@ -489,63 +492,63 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-medications` | USER | `ESAVI-NOTIFMED-001` |
+| `POST` | `/api/notification-medications` | NOTIFIER | `ESAVI-NOTIFMED-001` |
 | `GET` | `/api/notification-medications/case/:id` | USER | `ESAVI-NOTIFMED-006` |
 | `GET` | `/api/notification-medications/admin/notification/:id` | ADMIN | `ESAVI-NOTIFMED-002B` |
 | `GET` | `/api/notification-medications/notification/:id` | USER | `ESAVI-NOTIFMED-002A` |
 | `DELETE` | `/api/notification-medications/purge/:id` | SUPERADMIN | `ESAVI-NOTIFMED-005C` |
 | `PATCH` | `/api/notification-medications/activate/:id` | ADMIN | `ESAVI-NOTIFMED-005B` |
 | `GET` | `/api/notification-medications/:id` | USER | `ESAVI-NOTIFMED-003` |
-| `PUT` | `/api/notification-medications/:id` | USER | `ESAVI-NOTIFMED-004` |
-| `DELETE` | `/api/notification-medications/:id` | USER | `ESAVI-NOTIFMED-005A` |
+| `PUT` | `/api/notification-medications/:id` | NOTIFIER | `ESAVI-NOTIFMED-004` |
+| `DELETE` | `/api/notification-medications/:id` | NOTIFIER | `ESAVI-NOTIFMED-005A` |
 
 ### NOTIFPRG
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-pregnancies` | USER | `ESAVI-NOTIFPRG-001` |
+| `POST` | `/api/notification-pregnancies` | NOTIFIER | `ESAVI-NOTIFPRG-001` |
 | `GET` | `/api/notification-pregnancies/notification/:id` | USER | `ESAVI-NOTIFPRG-006` |
 | `DELETE` | `/api/notification-pregnancies/purge/:id` | SUPERADMIN | `ESAVI-NOTIFPRG-005C` |
 | `PATCH` | `/api/notification-pregnancies/activate/:id` | ADMIN | `ESAVI-NOTIFPRG-005B` |
 | `GET` | `/api/notification-pregnancies/:id` | USER | `ESAVI-NOTIFPRG-003` |
-| `PUT` | `/api/notification-pregnancies/:id` | USER | `ESAVI-NOTIFPRG-004` |
-| `DELETE` | `/api/notification-pregnancies/:id` | USER | `ESAVI-NOTIFPRG-005A` |
+| `PUT` | `/api/notification-pregnancies/:id` | NOTIFIER | `ESAVI-NOTIFPRG-004` |
+| `DELETE` | `/api/notification-pregnancies/:id` | NOTIFIER | `ESAVI-NOTIFPRG-005A` |
 
 ### NOTIFVAC
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-vaccines` | USER | `ESAVI-NOTIFVAC-001` |
+| `POST` | `/api/notification-vaccines` | NOTIFIER | `ESAVI-NOTIFVAC-001` |
 | `GET` | `/api/notification-vaccines/case/:id` | USER | `ESAVI-NOTIFVAC-006` |
 | `GET` | `/api/notification-vaccines/admin/notification/:id` | ADMIN | `ESAVI-NOTIFVAC-002B` |
 | `GET` | `/api/notification-vaccines/notification/:id` | USER | `ESAVI-NOTIFVAC-002A` |
 | `DELETE` | `/api/notification-vaccines/purge/:id` | SUPERADMIN | `ESAVI-NOTIFVAC-005C` |
 | `PATCH` | `/api/notification-vaccines/activate/:id` | ADMIN | `ESAVI-NOTIFVAC-005B` |
 | `GET` | `/api/notification-vaccines/:id` | USER | `ESAVI-NOTIFVAC-003` |
-| `PUT` | `/api/notification-vaccines/:id` | USER | `ESAVI-NOTIFVAC-004` |
-| `DELETE` | `/api/notification-vaccines/:id` | USER | `ESAVI-NOTIFVAC-005A` |
+| `PUT` | `/api/notification-vaccines/:id` | NOTIFIER | `ESAVI-NOTIFVAC-004` |
+| `DELETE` | `/api/notification-vaccines/:id` | NOTIFIER | `ESAVI-NOTIFVAC-005A` |
 
 ### NSEVNOT
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/non-severe-notifications` | USER | `ESAVI-NSEVNOT-001` |
+| `POST` | `/api/non-severe-notifications` | NOTIFIER | `ESAVI-NSEVNOT-001` |
 | `GET` | `/api/non-severe-notifications/case/:id` | USER | `ESAVI-NSEVNOT-006` |
 | `DELETE` | `/api/non-severe-notifications/purge/:id` | SUPERADMIN | `ESAVI-NSEVNOT-005C` |
 | `GET` | `/api/non-severe-notifications/:id` | USER | `ESAVI-NSEVNOT-003` |
-| `PUT` | `/api/non-severe-notifications/:id` | USER | `ESAVI-NSEVNOT-004` |
+| `PUT` | `/api/non-severe-notifications/:id` | NOTIFIER | `ESAVI-NSEVNOT-004` |
 
 ### PATIENT
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/patients` | USER | `ESAVI-PATIENT-001` |
+| `POST` | `/api/patients` | NOTIFIER | `ESAVI-PATIENT-001` |
 | `GET` | `/api/patients` | USER | `ESAVI-PATIENT-002A` |
 | `GET` | `/api/patients/admin` | ADMIN | `ESAVI-PATIENT-002B` |
 | `GET` | `/api/patients/search/:id` | USER | `ESAVI-PATIENT-006` |
 | `GET` | `/api/patients/search-by-name?name=A` | USER | `ESAVI-PATIENT-007` |
 | `GET` | `/api/patients/:id` | USER | `ESAVI-PATIENT-003` |
-| `PUT` | `/api/patients/:id` | USER | `ESAVI-PATIENT-004` |
+| `PUT` | `/api/patients/:id` | NOTIFIER | `ESAVI-PATIENT-004` |
 | `DELETE` | `/api/patients/:id` | ADMIN | `ESAVI-PATIENT-005A` |
 | `PATCH` | `/api/patients/activate/:id` | SUPERADMIN | `ESAVI-PATIENT-005B` |
 
@@ -553,24 +556,24 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/notification-pregnancy-complications` | USER | `ESAVI-PREGCOMP-001` |
+| `POST` | `/api/notification-pregnancy-complications` | NOTIFIER | `ESAVI-PREGCOMP-001` |
 | `GET` | `/api/notification-pregnancy-complications/admin/pregnancy/:id` | ADMIN | `ESAVI-PREGCOMP-002B` |
 | `GET` | `/api/notification-pregnancy-complications/pregnancy/:id` | USER | `ESAVI-PREGCOMP-002A` |
 | `DELETE` | `/api/notification-pregnancy-complications/purge/:id` | SUPERADMIN | `ESAVI-PREGCOMP-005C` |
 | `PATCH` | `/api/notification-pregnancy-complications/activate/:id` | ADMIN | `ESAVI-PREGCOMP-005B` |
 | `GET` | `/api/notification-pregnancy-complications/:id` | USER | `ESAVI-PREGCOMP-003` |
-| `PUT` | `/api/notification-pregnancy-complications/:id` | USER | `ESAVI-PREGCOMP-004` |
-| `DELETE` | `/api/notification-pregnancy-complications/:id` | USER | `ESAVI-PREGCOMP-005A` |
+| `PUT` | `/api/notification-pregnancy-complications/:id` | NOTIFIER | `ESAVI-PREGCOMP-004` |
+| `DELETE` | `/api/notification-pregnancy-complications/:id` | NOTIFIER | `ESAVI-PREGCOMP-005A` |
 
 ### SEVNOT
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
-| `POST` | `/api/severe-notifications` | USER | `ESAVI-SEVNOT-001` |
+| `POST` | `/api/severe-notifications` | NOTIFIER | `ESAVI-SEVNOT-001` |
 | `GET` | `/api/severe-notifications/case/:id` | USER | `ESAVI-SEVNOT-006` |
 | `DELETE` | `/api/severe-notifications/purge/:id` | SUPERADMIN | `ESAVI-SEVNOT-005C` |
 | `GET` | `/api/severe-notifications/:id` | USER | `ESAVI-SEVNOT-003` |
-| `PUT` | `/api/severe-notifications/:id` | USER | `ESAVI-SEVNOT-004` |
+| `PUT` | `/api/severe-notifications/:id` | NOTIFIER | `ESAVI-SEVNOT-004` |
 
 ### SYSCONF
 

@@ -399,15 +399,17 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="relative isolate">
+      <div className={cn('relative isolate', disabled && 'pointer-events-none')}>
+        {/* The className here must stay a constant string. Leaflet adds its own classes to this
+            node imperatively (`leaflet-container`, `leaflet-fade-anim`, …); any re-render that
+            changes the prop makes React rewrite the attribute and strip them, which leaves the map
+            black — no container background, tiles unstyled. `disabled` flips after mount whenever
+            the section's row is created on reveal (FE13e), so its class lives on the wrapper. */}
         <div
           ref={containerRef}
           role="application"
           aria-label={ariaLabel}
-          className={cn(
-            'isolate aspect-[16/10] w-full rounded-md border',
-            disabled && 'pointer-events-none',
-          )}
+          className="isolate aspect-[16/10] w-full rounded-md border"
         />
         {!disabled && (
           // Sibling of the Leaflet container, not a child: clicks and scrolls on the overlay never

@@ -42,6 +42,7 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { esaviCaseResource } from './api';
 import { useCaseWizard } from './CaseWizardContext';
 import { SeverityCriteriaGroup } from './SeverityCriteriaGroup';
+import { useStepReadOnly } from './useStepReadOnly';
 
 export interface ClassificationAgeFieldProps {
   // Ambas en `false` hasta que las dos queries de las que depende el modo (`esaviCase`, `patient`)
@@ -186,6 +187,8 @@ interface ClassificationFormBodyProps {
   // la gravedad aquí dejaría una ficha de la rama contraria colgando para siempre — `notificationType`
   // se deriva una sola vez y `004` la ignora llegue o no (§1 "por qué existe este spec").
   notificationStarted: boolean;
+  // SPEC FE33 §3.5: a closed case or a level below NOTIFIER.
+  isReadOnly: boolean;
 }
 
 // El formulario en sí (SPEC FE11 §3.1, §3.4): sólo se monta una vez que `ClassificationStep`
@@ -198,6 +201,7 @@ function ClassificationFormBody({
   readyToResolveAge,
   canCalculateAge,
   notificationStarted,
+  isReadOnly,
 }: ClassificationFormBodyProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -326,7 +330,7 @@ function ClassificationFormBody({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <fieldset disabled={isReadOnly} className="flex min-w-0 flex-col gap-6 border-0 p-0">
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-foreground">{t('classification.gate.label')}</span>
         {notificationStarted && (
@@ -462,7 +466,7 @@ function ClassificationFormBody({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </fieldset>
   );
 }
 
@@ -477,6 +481,7 @@ export function ClassificationStep({ caseId }: ClassificationStepProps) {
   const esaviCase = esaviCaseResource.useOne(caseId);
   const patientId = esaviCase.data?.patient.patientId;
   const patient = patientResource.useOne(patientId ?? '');
+  const { isReadOnly } = useStepReadOnly('classification', caseId);
 
   const stageExists = workflow.data?.stages.classification.exists === true;
   // `006` sólo se llama en reentrada (SPEC FE11 §3.2, decisión §6): evita un `404
@@ -504,6 +509,7 @@ export function ClassificationStep({ caseId }: ClassificationStepProps) {
       readyToResolveAge={readyToResolveAge}
       canCalculateAge={canCalculateAge}
       notificationStarted={workflow.data?.stages.notification.exists === true}
+      isReadOnly={isReadOnly}
     />
   );
 }

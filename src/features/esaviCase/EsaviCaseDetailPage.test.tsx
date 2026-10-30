@@ -315,7 +315,7 @@ describe('EsaviCaseDetailPage — validación (ESAVI-CASEFLOW-010 / ESAVI-CASEFL
   });
 
   it('en revisión, la insignia nombra el estado anterior y ofrece «Resolver validación»', async () => {
-    mockCurrentUser('USER', 25);
+    mockCurrentUser('EVALUATOR', 40);
     mockReads({ status: PENDING_VALIDATION, previousStatus: IN_NOTIFICATION });
 
     renderPage();

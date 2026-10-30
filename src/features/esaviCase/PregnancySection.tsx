@@ -24,9 +24,9 @@ export interface PregnancySectionProps {
   // con su propia explicación (SPEC FE12d §3.6, §4 paso 9), sin esperar a que el bloque completo
   // desaparezca.
   pregnancyId: string | null;
-  // Expediente cerrado (§3.6, mismo criterio que las listas de FE12b/FE12c): sin «Añadir» y sin
-  // acciones de fila, aquí ni en la lista de complicaciones.
-  isClosed: boolean;
+  // Closed case or a level below NOTIFIER (SPEC FE12d §3.6, SPEC FE33 §3.5): no «Añadir» and no
+  // row actions, here or in the complications list.
+  isReadOnly: boolean;
   // La derivación de §6.5: hay ≥1 complicación activa. «Derivado en render, no es estado» — el
   // campo se muestra en `'YES'` bloqueado, pero nada escribe ese valor en el formulario; quien
   // guarda decide el envío efectivo (SPEC FE12d §4 paso 11, §3.4 tabla).
@@ -57,7 +57,7 @@ export function PregnancySection({
   pregnancyGate,
   configMissing,
   pregnancyId,
-  isClosed,
+  isReadOnly,
   complicationsDerived,
   loadError,
   onRetryLoad,
@@ -253,7 +253,7 @@ export function PregnancySection({
         </>
       )}
 
-      <PregnancyComplicationList pregnancyId={pregnancyId} readOnly={isClosed} />
+      <PregnancyComplicationList pregnancyId={pregnancyId} readOnly={isReadOnly} />
 
       {/* The complication list comes before its severe-branch summary, not after: SPEC FE12e §3.1
           orders section 4 as the five questions, the complication list, then

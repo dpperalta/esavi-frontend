@@ -15,8 +15,6 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Skeleton } from '@/shared/components/ui/skeleton';
-import { ROLE_LEVELS } from '@/shared/config/roles';
-import { useCan } from '@/shared/hooks/useCan';
 import { useCloseWhenReadOnly } from '@/shared/hooks/useCloseWhenReadOnly';
 import { NotifierFormDialog } from './NotifierFormDialog';
 import { notifierResource } from './api';
@@ -33,13 +31,11 @@ export interface NotifierListProps {
 
 function NotifierRow({
   row,
-  canRemove,
   readOnly,
   onEdit,
   onRemove,
 }: {
   row: NotifierListRow;
-  canRemove: boolean;
   readOnly: boolean;
   onEdit: () => void;
   onRemove: () => void;
@@ -59,14 +55,9 @@ function NotifierRow({
             <Button type="button" variant="outline" size="sm" onClick={onEdit}>
               {t('common.actions.edit')}
             </Button>
-          {/* NOTIFIER-005A exige ADMIN (SPEC FE10 §7 riesgo): oculto, no deshabilitado, hasta que
-              el rol baje — la interfaz lo dice explícitamente en vez de dejar el botón sin
-              explicación. */}
-            {canRemove && (
-              <Button type="button" variant="destructive" size="sm" onClick={onRemove}>
-                {t('notifier.list.removeButton')}
-              </Button>
-            )}
+            <Button type="button" variant="destructive" size="sm" onClick={onRemove}>
+              {t('notifier.list.removeButton')}
+            </Button>
           </div>
         )}
       </CardContent>
@@ -74,13 +65,14 @@ function NotifierRow({
   );
 }
 
-// El patrón canónico lista + modal (SPEC FE10 §3.1, §4 paso 10) que nace aquí: nombre, apellido y
-// profesión por fila, *Editar* siempre visible y *Quitar* sólo con `useCan(ADMIN)`. La fila lee
-// `row.profession`/`row.case` resueltos — nunca un `professionItemId`/`caseId` plano, que
-// `NotifierListRow` no declara al primer nivel (SPEC FE10 §3.3).
+// The canonical list + modal pattern (SPEC FE10 §3.1, §4 paso 10) born here: name and profession per
+// row, with *Editar* and *Quitar* whenever the list isn't `readOnly`. NOTIFIER-005A is NOTIFIER
+// since SPEC F64 — the same level as the whole case-opening step — so it needs no gate of its own
+// (SPEC FE33 §3.5). The row reads the resolved `row.profession`/`row.case`, never a flat
+// `professionItemId`/`caseId`, which `NotifierListRow` doesn't declare at the top level (SPEC FE10
+// §3.3).
 export function NotifierList({ caseId, onCountChange, readOnly = false }: NotifierListProps) {
   const { t } = useTranslation();
-  const canRemove = useCan(ROLE_LEVELS.ADMIN);
   const list = notifierResource.useList({ pageSize: 100, filters: { caseId } });
   const deactivate = notifierResource.useDeactivate();
 
@@ -138,7 +130,6 @@ export function NotifierList({ caseId, onCountChange, readOnly = false }: Notifi
             <NotifierRow
               key={row.notifierId}
               row={row}
-              canRemove={canRemove}
               readOnly={readOnly}
               onEdit={() => setDialog({ open: true, notifierId: row.notifierId })}
               onRemove={() => setRemoveTarget(row.notifierId)}

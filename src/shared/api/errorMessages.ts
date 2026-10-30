@@ -60,6 +60,9 @@ const ERROR_CODE_KEYS: Record<string, string> = {
   CASEFLOW_007_STAGE_NOT_STARTED: 'caseWorkflow.errors.CASEFLOW_007_STAGE_NOT_STARTED',
   CASEFLOW_007_STAGE_ALREADY_COMPLETED: 'caseWorkflow.errors.CASEFLOW_007_STAGE_ALREADY_COMPLETED',
   CASEFLOW_007_CASE_CLOSED: 'caseWorkflow.errors.CASEFLOW_007_CASE_CLOSED',
+  // SPEC FE33 §3.5 — the stage guard of SPEC F64: a rejected action, not a lost screen, so it's a
+  // toast like its siblings and never a redirect (INVESTIGATION needs 30, FINAL_CLASSIFICATION 40).
+  CASEFLOW_007_STAGE_FORBIDDEN: 'caseWorkflow.errors.CASEFLOW_007_STAGE_FORBIDDEN',
   // SPEC FE09 §3.5 — not a toast: CaseWorkflowInbox reads this text itself and shows it inline
   // next to the `statusCode` selector, after clearing the offending filter from the URL.
   CASEFLOW_002_STATUS_NOT_FOUND: 'caseWorkflow.errors.CASEFLOW_002_STATUS_NOT_FOUND',

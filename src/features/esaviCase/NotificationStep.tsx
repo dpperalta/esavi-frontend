@@ -65,8 +65,6 @@ import { RadioGroup, RadioGroupItem } from '@/shared/components/ui/radio-group';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Switch } from '@/shared/components/ui/switch';
 import { Textarea } from '@/shared/components/ui/textarea';
-import { ROLE_LEVELS } from '@/shared/config/roles';
-import { useCan } from '@/shared/hooks/useCan';
 import { useCatalogItemsByTypeCode } from '@/shared/hooks/useCatalogItemsByTypeCode';
 import { useProgressiveSections } from '@/shared/hooks/useProgressiveSections';
 import {
@@ -81,6 +79,7 @@ import { PregnancySection } from './PregnancySection';
 import { ShowInactiveSwitch } from './ShowInactiveSwitch';
 import { VaccinationBackgroundSection } from './VaccinationBackgroundSection';
 import { VerificationSourceSection } from './VerificationSourceSection';
+import { useStepReadOnly } from './useStepReadOnly';
 
 // The four severe-branch flags of section 1 (SPEC FE12e §3.1), inline since the block that held
 // them was dissolved. They share shape and behaviour, so they render from a list.
@@ -289,10 +288,10 @@ interface NotificationFormBodyProps {
   // el paciente tiene registrado. `name` ya llega en el idioma activo (§7.2, "el `catalogItem` que
   // trae `ESAVI-PATIENT-003`").
   patientSexName: string | null;
-  // Caso cerrado (SPEC FE12b §3.6): las listas de satélites pasan a sólo lectura — sin «Añadir»
-  // y sin acciones de fila. El aviso en sí lo pinta `CaseWizardPage` (FE08); esto sólo retira las
-  // acciones que ese aviso ya explica que no aplican.
-  isClosed: boolean;
+  // Closed case (SPEC FE12b §3.6) or a level below NOTIFIER (SPEC FE33 §3.5): the satellite lists
+  // go read-only — no «Añadir» and no row actions. `CaseWizardPage` paints the banner; this only
+  // removes the actions that banner already explains don't apply.
+  isReadOnly: boolean;
   // El `GET` del bloque de embarazo falló (SPEC FE12d §4 paso 14): `readyToRenderForm` ya lo
   // espera para no parpadear, pero sin este banner el fallo quedaba en silencio y el bloque se
   // pintaba vacío como si no hubiera datos que leer.
@@ -318,7 +317,7 @@ function NotificationFormBody({
   pregnancyGate,
   pregnancyConfigMissing,
   patientSexName,
-  isClosed,
+  isReadOnly,
   pregnancyLoadError,
   onRetryPregnancyLoad,
   stageExisted,
@@ -374,10 +373,6 @@ function NotificationFormBody({
     pregnancyId !== null,
   );
   const hasActiveComplications = (complications.data?.rows.length ?? 0) > 0;
-  // `useCan()` decide aquí sólo qué frase se muestra, nunca si el control existe (§3.5, la línea
-  // que §10.4 no quiere que se cruce): mientras `NOTIFMED-005A` siga en ADMIN, un USER no puede
-  // borrar las filas y por tanto no puede cambiar la respuesta en absoluto.
-  const canAdminSatellites = useCan(ROLE_LEVELS.ADMIN);
 
   const defaultValues: NotificationFormValues = {
     esaviDescription: notification?.esaviDescription ?? '',
@@ -813,9 +808,9 @@ function NotificationFormBody({
   ];
 
   // Read once, frozen on purpose (SPEC FE12f §3.4): re-reading it would let the row created by the
-  // first advance reveal the whole step. A closed case enters the same branch — everything visible,
-  // no advance button, read-only as before.
-  const revealAllRef = useRef(stageExisted || isClosed);
+  // first advance reveal the whole step. A read-only step (closed case or insufficient role, SPEC
+  // FE33 §3.5) enters the same branch — everything visible, no advance button.
+  const revealAllRef = useRef(stageExisted || isReadOnly);
   const { isVisible, frontier, advance } = useProgressiveSections<NotificationSectionId>({
     sections,
     revealAll: revealAllRef.current,
@@ -992,11 +987,7 @@ function NotificationFormBody({
                     id={`medicalHistory-gateLocked-${name}`}
                     className="text-sm text-muted-foreground"
                   >
-                    {t(
-                      canAdminSatellites
-                        ? 'notification.medicalHistory.gateLocked'
-                        : 'notification.medicalHistory.gateLockedNeedsAdmin',
-                    )}
+                    {t('notification.medicalHistory.gateLocked')}
                   </p>
                 )}
               </div>
@@ -1024,11 +1015,7 @@ function NotificationFormBody({
                 `disabled` (§3.7) — un control gris sin motivo es indistinguible de un fallo. */}
               {hasActiveMedications && (
                 <p className="text-sm text-muted-foreground">
-                  {t(
-                    canAdminSatellites
-                      ? 'notification.medications.gateLocked'
-                      : 'notification.medications.gateLockedNeedsAdmin',
-                  )}
+                  {t('notification.medications.gateLocked')}
                 </p>
               )}
             </div>
@@ -1076,7 +1063,11 @@ function NotificationFormBody({
               </p>
             )}
           </div>
-          <MedicalHistoryList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+          <MedicalHistoryList
+            caseId={caseId}
+            notificationId={notificationId}
+            readOnly={isReadOnly}
+          />
           {renderAdvanceButton('medicalHistory')}
         </section>
       )}
@@ -1090,7 +1081,7 @@ function NotificationFormBody({
           <MedicationList
             caseId={caseId}
             notificationId={notificationId}
-            readOnly={isClosed}
+            readOnly={isReadOnly}
             takesMedication={watchedValues.takesMedication ?? null}
           />
           {renderAdvanceButton('medications')}
@@ -1108,7 +1099,7 @@ function NotificationFormBody({
             pregnancyGate={pregnancyGate}
             configMissing={pregnancyConfigMissing}
             pregnancyId={pregnancyId}
-            isClosed={isClosed}
+            isReadOnly={isReadOnly}
             complicationsDerived={hasActiveComplications}
             loadError={pregnancyLoadError}
             onRetryLoad={onRetryPregnancyLoad}
@@ -1149,7 +1140,7 @@ function NotificationFormBody({
             caseId={caseId}
             notificationId={notificationId}
             eventDate={eventDate}
-            readOnly={isClosed}
+            readOnly={isReadOnly}
             showsDiluents={notificationType === 'SEVERE'}
           />
           {renderAdvanceButton('vaccines')}
@@ -1158,7 +1149,7 @@ function NotificationFormBody({
 
       {isVisible('events') && (
         <div data-section="events" className="contents">
-          <EventList caseId={caseId} notificationId={notificationId} readOnly={isClosed} />
+          <EventList caseId={caseId} notificationId={notificationId} readOnly={isReadOnly} />
           {renderAdvanceButton('events')}
         </div>
       )}
@@ -1325,6 +1316,7 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
   const { t } = useTranslation();
   const workflow = useCaseWorkflow(caseId);
   const esaviCase = esaviCaseResource.useOne(caseId);
+  const { isReadOnly } = useStepReadOnly('notification', caseId);
   const stageExists = workflow.data?.stages.notification.exists === true;
   // `006` sólo se llama en reentrada (mismo motivo que `useClassificationByCase`, SPEC FE11 §3.2).
   const classificationStageExists = workflow.data?.stages.classification.exists === true;
@@ -1453,9 +1445,6 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
   }
 
   const notificationType = notificationTypeMaybe as 'SEVERE' | 'NON_SEVERE';
-  // Mismo criterio que `CaseWizardPage.tsx` (§10.3: la comprobación de `CLOSED` sigue entera en
-  // el cliente, no la impone el servidor en estos satélites).
-  const isClosed = workflow.data?.status.code === 'CLOSED';
 
   return (
     <NotificationFormBody
@@ -1469,7 +1458,7 @@ export function NotificationStep({ caseId }: NotificationStepProps) {
       pregnancyGate={pregnancyGate}
       pregnancyConfigMissing={pregnancyConfigMissing}
       patientSexName={patient.data?.sex?.name ?? null}
-      isClosed={isClosed}
+      isReadOnly={isReadOnly}
       pregnancyLoadError={notificationPregnancy.isError}
       onRetryPregnancyLoad={() => void notificationPregnancy.refetch()}
       stageExisted={stageExists}

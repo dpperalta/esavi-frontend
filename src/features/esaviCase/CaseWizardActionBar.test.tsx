@@ -5,13 +5,24 @@ import { useEffect, type ReactNode } from 'react';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
 import { createMemoryRouter, MemoryRouter, RouterProvider } from 'react-router-dom';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setupUser } from '@/test/user';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider, useCaseWizard } from './CaseWizardContext';
 import type { CaseWizardStepSlug } from './steps';
+
+const toastError = vi.fn();
+vi.mock('sonner', () => ({
+  toast: {
+    error: (...args: unknown[]) => toastError(...args),
+    success: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+    dismiss: vi.fn(),
+  },
+}));
 
 const server = setupServer();
 
@@ -28,7 +39,22 @@ beforeEach(() => {
   tokenStore.setRefreshToken('a-refresh-token');
   classificationCalls = 0;
   notificationCalls = 0;
+  toastError.mockClear();
+  // «Guardar» and «Completar etapa» exist only above the step's threshold (SPEC FE33 §3.5).
+  mockCurrentUser('EVALUATOR', 40);
 });
+
+function mockCurrentUser(roleName: string, level: number) {
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { userId: 'user-1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+      }),
+    ),
+  );
+}
 
 function mockWorkflow(classificationExists: boolean) {
   server.use(
@@ -236,6 +262,47 @@ describe('CaseWizardActionBar', () => {
 
     const completeStageButton = await screen.findByRole('button', { name: 'Completar etapa' });
     expect(completeStageButton).toBeEnabled();
+  });
+
+  it('un 403 CASEFLOW_007_STAGE_FORBIDDEN es un toast de rechazo: la barra sigue ahí (SPEC FE33 §3.5)', async () => {
+    const user = setupUser();
+    mockWorkflow(true);
+    server.use(
+      http.patch('http://localhost:4500/api/case-workflows/case/case-1/complete-stage', () =>
+        HttpResponse.json(
+          {
+            ok: false,
+            message: 'forbidden',
+            code: 'CASEFLOW_007_STAGE_FORBIDDEN',
+            errors: { stage: 'CLASSIFICATION' },
+          },
+          { status: 403 },
+        ),
+      ),
+    );
+
+    renderActionBar();
+
+    await user.click(await screen.findByRole('button', { name: 'Completar etapa' }));
+
+    await waitFor(() =>
+      expect(toastError).toHaveBeenCalledWith('Tu rol no puede completar esta etapa.'),
+    );
+    expect(screen.getByRole('button', { name: 'Completar etapa' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument();
+  });
+
+  it('con USER no hay «Guardar» ni «Completar etapa», pero «Siguiente» sigue (SPEC FE33 §3.5)', async () => {
+    mockCurrentUser('USER', 20);
+    mockWorkflow(true);
+
+    renderActionBar();
+
+    expect(await screen.findByRole('button', { name: 'Siguiente' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
   });
 });
 

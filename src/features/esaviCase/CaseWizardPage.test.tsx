@@ -23,6 +23,8 @@ beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
+  // Every step is writable at EVALUATOR (SPEC FE33 §3.5); tests that need a lower role override it.
+  mockCurrentUser('EVALUATOR', 40);
 });
 
 const caseDetail = {
@@ -292,6 +294,7 @@ describe('CaseWizardPage — reanudación y bloqueo de paso', () => {
 
 describe('CaseWizardPage — reentrada de patient y case-opening (SPEC FE10 §13)', () => {
   it('/wizard/patient abre la identidad de sólo lectura con «Editar paciente», sin ofrecer cambiar de paciente', async () => {
+    mockCurrentUser('NOTIFIER', 25);
     mockCase();
     mockWorkflow('OPEN', {
       classification: { exists: true, endedAt: '2026-09-01' },
@@ -335,6 +338,23 @@ describe('CaseWizardPage — reentrada de patient y case-opening (SPEC FE10 §13
     // patient no tiene stage: sin la barra genérica de Guardar/Completar etapa.
     expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument();
   });
+
+  it('/wizard/patient con USER no ofrece «Editar paciente» (SPEC FE33 §3.5)', async () => {
+    mockCurrentUser('USER', 20);
+    mockCase();
+    mockPatient();
+    mockWorkflow('OPEN', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: false, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    renderPage('/esavi-cases/case-1/wizard/patient');
+
+    expect(await screen.findByText('Ana Perez')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Editar paciente' })).not.toBeInTheDocument();
+  });
 });
 
 describe('CaseWizardPage — CLOSED', () => {
@@ -352,6 +372,54 @@ describe('CaseWizardPage — CLOSED', () => {
     renderPage('/esavi-cases/case-1/wizard/classification');
 
     await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument();
+  });
+
+  it('con CLOSED y USER sólo aparece el aviso de cerrado, no el de rol (SPEC FE33 §3.6)', async () => {
+    mockCurrentUser('USER', 20);
+    mockCase();
+    mockPatient();
+    mockClassification();
+    mockWorkflow('CLOSED', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: true, endedAt: '2026-09-02' },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    renderPage('/esavi-cases/case-1/wizard/classification');
+
+    expect(
+      await screen.findByText(
+        'Este expediente está cerrado. Pide a un evaluador o administrador que lo reabra para volver a editarlo.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Tu rol puede consultar esta etapa, pero no editarla.'),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe('CaseWizardPage — rol insuficiente (SPEC FE33 §3.5, §3.6)', () => {
+  it('con USER en classification aparece el aviso de rol y no hay Guardar ni Completar etapa', async () => {
+    mockCurrentUser('USER', 20);
+    mockCase();
+    mockPatient();
+    mockClassification();
+    mockWorkflow('OPEN', {
+      classification: { exists: true, endedAt: null },
+      notification: { exists: false, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    renderPage('/esavi-cases/case-1/wizard/classification');
+
+    expect(
+      await screen.findByText('Tu rol puede consultar esta etapa, pero no editarla.'),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Guardar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Siguiente' })).toBeInTheDocument();
@@ -492,7 +560,7 @@ describe('CaseWizardPage — paso closure', () => {
     await waitFor(() => expect(screen.getByRole('status')).toBeInTheDocument());
     expect(
       screen.getByText(
-        'Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo.',
+        'Este expediente está cerrado. Pide a un evaluador o administrador que lo reabra para volver a editarlo.',
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Reabrir' })).not.toBeInTheDocument();
@@ -619,7 +687,7 @@ describe('CaseWizardPage — registro de flujo desactivado', () => {
     const [first, second] = screen.getAllByRole('status');
     expect(first).toHaveTextContent(INACTIVE_BANNER);
     expect(second).toHaveTextContent(
-      'Este expediente está cerrado. Pide a un administrador que lo reabra para volver a editarlo.',
+      'Este expediente está cerrado. Pide a un evaluador o administrador que lo reabra para volver a editarlo.',
     );
   });
 

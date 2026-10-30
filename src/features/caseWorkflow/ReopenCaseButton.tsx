@@ -25,10 +25,11 @@ interface ReopenCaseButtonProps {
 // ESAVI-CASEFLOW-009 — one button, one dialog, one error map, reused in the three places the
 // spec names: the closure step's closed summary, the wizard's read-only banner and the case
 // detail page's workflow status block (SPEC FE14b §2, §6 "un solo componente"). Renders nothing
-// without ADMIN: the three USER callers keep their "pídeselo a un administrador" text instead.
+// below EVALUATOR, which F64 lowered the route to (SPEC FE33 §3.5): the callers below that level
+// keep their "pídeselo a un evaluador o administrador" text instead.
 export function ReopenCaseButton({ caseId }: ReopenCaseButtonProps) {
   const { t } = useTranslation();
-  const canReopen = useCan(ROLE_LEVELS.ADMIN);
+  const canReopen = useCan(ROLE_LEVELS.EVALUATOR);
   const [open, setOpen] = useState(false);
   const reopen = useReopenCase(caseId);
 

@@ -33,7 +33,24 @@ beforeEach(() => {
   localStorage.clear();
   setAccessToken('a-token');
   tokenStore.setRefreshToken('a-refresh-token');
+  // Requesting is NOTIFIER and resolving EVALUATOR (SPEC FE33 §3.5): the default can do both.
+  mockCurrentUser('EVALUATOR', 40);
 });
+
+function mockCurrentUser(roleName: string, level: number) {
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: {
+          userId: 'user-1',
+          roles: [{ roleId: 'r1', name: roleName, code: roleName, level }],
+        },
+      }),
+    ),
+  );
+}
 
 const WORKFLOW_URL = 'http://localhost:4500/api/case-workflows/case/case-1';
 
@@ -93,6 +110,35 @@ async function waitForWorkflow(queryClient: QueryClient) {
 }
 
 // SPEC FE23 §4 paso 2
+describe('CaseValidationActions — por rol (SPEC FE33 §3.5)', () => {
+  it('con INVESTIGATOR pinta «Pedir validación»', async () => {
+    mockCurrentUser('INVESTIGATOR', 30);
+    mockWorkflow('IN_NOTIFICATION');
+    renderActions();
+
+    expect(await screen.findByRole('button', { name: 'Pedir validación' })).toBeInTheDocument();
+  });
+
+  it('con INVESTIGATOR y PENDING_VALIDATION no pinta «Resolver validación»', async () => {
+    mockCurrentUser('INVESTIGATOR', 30);
+    mockWorkflow('PENDING_VALIDATION', 'IN_NOTIFICATION');
+    renderActions();
+
+    await waitFor(() => expect(screen.queryByRole('button')).toBeNull());
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('button', { name: 'Resolver validación' })).toBeNull();
+  });
+
+  it('con USER no pinta «Pedir validación»', async () => {
+    mockCurrentUser('USER', 20);
+    mockWorkflow('IN_NOTIFICATION');
+    renderActions();
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('button', { name: 'Pedir validación' })).toBeNull();
+  });
+});
+
 describe('CaseValidationActions — ESAVI-CASEFLOW-010 / ESAVI-CASEFLOW-011', () => {
   it.each(['IN_NOTIFICATION', 'REOPENED'])('con %s pinta «Pedir validación»', async (status) => {
     mockWorkflow(status);

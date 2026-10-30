@@ -78,7 +78,8 @@ export function EsaviCaseListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const pageSize = usePreferencesStore((state) => state.pageSize);
-  const canCreate = useCan(ROLE_LEVELS.USER);
+  // ESAVI-PATIENT-001 / ESAVI-CASE-001 — NOTIFIER since SPEC F64 (SPEC FE33 §3.5).
+  const canCreate = useCan(ROLE_LEVELS.NOTIFIER);
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; action: ConfirmAction } | null>(
     null,
   );

@@ -1,8 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/shared/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/components/ui/dialog';
-import { ROLE_LEVELS } from '@/shared/config/roles';
-import { useCan } from '@/shared/hooks/useCan';
 
 // Un bloque es `null` cuando no tiene datos cargados: el diálogo nunca ofrece «Vaciar» algo que
 // ya está vacío (SPEC FE13b §4 paso 3).
@@ -44,12 +42,11 @@ export function PregnancyBlockDialog({
   investigationBlock,
 }: PregnancyBlockDialogProps) {
   const { t } = useTranslation();
-  const canAdminComplications = useCan(ROLE_LEVELS.ADMIN);
-  // No se ofrece vaciar el bloque de notificación hasta que las complicaciones se retiren una a
-  // una (§4 paso 13 verificación): `PREGCOMP-005A` es ADMIN, y vaciar el bloque con filas activas
-  // colgando dejaría complicaciones huérfanas de una fila que ya no existiría en la práctica. El
-  // bloque de investigación no tiene esa espera: sus condiciones no entran en `hasData` (SPEC
-  // FE13b §4 paso 3).
+  // The notification block can't be cleared until its complications are removed one by one (§4 paso
+  // 13 verificación): clearing it with active rows hanging off it would orphan them. Whoever reaches
+  // this dialog edits the case, so they can remove them — PREGCOMP-005A is NOTIFIER since SPEC F64
+  // (SPEC FE33 §3.5). The investigation block has no such wait: its conditions don't count towards
+  // `hasData` (SPEC FE13b §4 paso 3).
   const canClearNotification = notificationBlock ? notificationBlock.activeComplicationsCount === 0 : false;
 
   return (
@@ -70,12 +67,9 @@ export function PregnancyBlockDialog({
             <div className="flex flex-col gap-2 rounded-md border border-border p-3">
               {notificationBlock.activeComplicationsCount > 0 && (
                 <p role="alert" className="text-sm text-destructive">
-                  {t(
-                    canAdminComplications
-                      ? 'notification.pregnancy.gate.blocked.complications'
-                      : 'notification.pregnancy.gate.blocked.complicationsNeedsAdmin',
-                    { count: notificationBlock.activeComplicationsCount },
-                  )}
+                  {t('notification.pregnancy.gate.blocked.complications', {
+                    count: notificationBlock.activeComplicationsCount,
+                  })}
                 </p>
               )}
               <Button

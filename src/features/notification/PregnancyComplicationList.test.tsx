@@ -257,7 +257,7 @@ describe('PregnancyComplicationList — SPEC FE12d §4 paso 9', () => {
 
   // SPEC FE12d §10.4: PREGCOMP-005A es la única escritura ADMIN de todo este spec — el 403 lleva
   // su propio mensaje, no el genérico de `notification.satellites`.
-  it('un 403 AUTH_ROLE_FORBIDDEN al confirmar la baja muestra el aviso propio de administrador', async () => {
+  it('un 403 AUTH_ROLE_FORBIDDEN al confirmar la baja muestra el aviso propio de rol insuficiente', async () => {
     const user = setupUser();
     mockEmptyComplicationTypeCatalog();
     server.use(
@@ -281,7 +281,7 @@ describe('PregnancyComplicationList — SPEC FE12d §4 paso 9', () => {
     await user.click(confirmButton);
 
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
-    expect(toastError).toHaveBeenCalledWith('Retirar una complicación exige un administrador en este despliegue.');
+    expect(toastError).toHaveBeenCalledWith('Tu rol no puede retirar complicaciones del embarazo.');
   });
 });
 

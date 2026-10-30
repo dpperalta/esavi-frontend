@@ -8,7 +8,22 @@ describe('getEffectiveLevel', () => {
 
   it('cae a ROLE_LEVELS[NAME] cuando level es nulo', () => {
     expect(getEffectiveLevel([{ name: 'ADMIN', level: null }])).toBe(50);
-    expect(getEffectiveLevel([{ name: 'user' }])).toBe(25);
+    expect(getEffectiveLevel([{ name: 'user' }])).toBe(20);
+  });
+
+  it('resuelve por nombre los tres roles por etapa del caso (SPEC F64)', () => {
+    expect(getEffectiveLevel([{ name: 'NOTIFIER', level: null }])).toBe(25);
+    expect(getEffectiveLevel([{ name: 'INVESTIGATOR', level: null }])).toBe(30);
+    expect(getEffectiveLevel([{ name: 'EVALUATOR', level: null }])).toBe(40);
+  });
+
+  it('un antiguo USER migrado conserva USER y gana EVALUATOR: su nivel es 40', () => {
+    expect(
+      getEffectiveLevel([
+        { name: 'USER', level: 20 },
+        { name: 'EVALUATOR', level: 40 },
+      ]),
+    ).toBe(40);
   });
 
   it('cae a 0 cuando ni level ni el nombre existen en ROLE_LEVELS', () => {

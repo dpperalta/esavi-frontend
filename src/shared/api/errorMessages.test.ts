@@ -22,6 +22,7 @@ describe('getErrorMessage', () => {
     ['CASEFLOW_007_STAGE_NOT_STARTED', 'Esta etapa aún no se ha iniciado.'],
     ['CASEFLOW_007_STAGE_ALREADY_COMPLETED', 'Esta etapa ya se completó.'],
     ['CASEFLOW_007_CASE_CLOSED', 'Este expediente está cerrado.'],
+    ['CASEFLOW_007_STAGE_FORBIDDEN', 'Tu rol no puede completar esta etapa.'],
   ])('mapea %s a su texto propio', (code, expected) => {
     const error = new EsaviApiError('mensaje del backend', 409, code);
 

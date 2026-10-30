@@ -1,5 +1,6 @@
 import type { CaseWorkflowStage } from '@/contracts/caseWorkflow';
 import type { CaseWorkflowDetail } from '@/contracts/declared/caseWorkflow';
+import { ROLE_LEVELS } from '@/shared/config/roles';
 
 export type CaseWizardGroup = 'patient' | 'notification' | 'investigation' | 'closure';
 
@@ -35,6 +36,24 @@ export const CASE_WIZARD_STEPS: CaseWizardStepDefinition[] = [
   // que ya existen. `stageWorkflowKey` nunca se llama con él.
   { slug: 'closure', group: 'closure', stage: null },
 ];
+
+// Minimum level to write each step (SPEC FE33 §3.5). The four stage rows copy `STAGE_MIN_ROLE` of
+// esavi-backend/src/services/caseWorkflow.service.ts (SPEC F64 §3.5), the guard of
+// ESAVI-CASEFLOW-007; `patient` and `case-opening` follow PATIENT-001/004 and CASE-001/004, and
+// `closure` follows CASEFLOW-008. Total over the slugs, so a new step can't ship without a threshold.
+export const STEP_MIN_LEVEL: Record<CaseWizardStepSlug, number> = {
+  patient: ROLE_LEVELS.NOTIFIER,
+  'case-opening': ROLE_LEVELS.NOTIFIER,
+  classification: ROLE_LEVELS.NOTIFIER,
+  notification: ROLE_LEVELS.NOTIFIER,
+  investigation: ROLE_LEVELS.INVESTIGATOR,
+  'final-classification': ROLE_LEVELS.EVALUATOR,
+  closure: ROLE_LEVELS.EVALUATOR,
+};
+
+export function canWriteStep(slug: CaseWizardStepSlug, level: number): boolean {
+  return level >= STEP_MIN_LEVEL[slug];
+}
 
 export type CaseWorkflowStages = CaseWorkflowDetail['stages'];
 type WorkflowStages = CaseWorkflowStages;
