@@ -4,7 +4,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { CreateEsaviCaseInput } from '@/contracts/esaviCase';
 import { useCurrentUser } from '@/features/auth/api';
-import { useCaseWorkflow } from '@/features/caseWorkflow/api';
 import { NotifierFormDialog } from '@/features/notifier/NotifierFormDialog';
 import { NotifierList } from '@/features/notifier/NotifierList';
 import { useNotificationVaccinesByCase } from '@/features/notification/api';
@@ -25,6 +24,7 @@ import { ROLE_LEVELS, getEffectiveLevel } from '@/shared/config/roles';
 import { usePregnancyBlockGuard } from '@/shared/hooks/usePregnancyBlockGuard';
 import { esaviCaseResource } from './api';
 import { caseOpeningErrorFieldMap, createEsaviCaseOpeningSchema, type CaseOpeningFormValues } from './schemas';
+import { useStepReadOnly } from './useStepReadOnly';
 
 // Paso 2 del alta y a la vez su reentrada (SPEC FE10 §3.1): un solo componente. El route param
 // `:id` distingue los dos modos igual que en `HealthFacilityFormDialog`/`NotifierFormDialog` —
@@ -48,10 +48,8 @@ export function CaseOpeningStep() {
   const isEditing = !!effectiveCaseId;
 
   const existingCase = esaviCaseResource.useOne(effectiveCaseId ?? '');
-  // ESAVI-CASEFLOW-006 — SPEC FE17 §4 paso 6: a closed case is read-only here like in the other
-  // four content steps. Without a case yet (the alta) the query is off and `isClosed` stays false.
-  const workflow = useCaseWorkflow(effectiveCaseId ?? undefined);
-  const isClosed = workflow.data?.status.code === 'CLOSED';
+  // Closed case (SPEC FE17 §4 paso 6) or a level below NOTIFIER (SPEC FE33 §3.5).
+  const { isReadOnly } = useStepReadOnly('case-opening', effectiveCaseId ?? undefined);
   // SPEC FE12c §8: warns, never blocks — the backend doesn't validate `eventDate` against
   // vaccines, so the client isn't stricter than the server.
   const vaccines = useNotificationVaccinesByCase(effectiveCaseId ?? undefined, isEditing);
@@ -203,11 +201,11 @@ export function CaseOpeningStep() {
         errorFieldMap={caseOpeningErrorFieldMap}
         onUnmappedError={handleUnmappedError}
         isSubmitting={mutation.isPending || (isEditing && !pregnancyGuard.isReady)}
-        hideActions={isClosed}
+        hideActions={isReadOnly}
         submitLabel={isEditing ? 'common.actions.save' : 'esaviCase.opening.createButton'}
       >
         {(form) => (
-          <fieldset disabled={isClosed} className="flex min-w-0 flex-col gap-4 border-0 p-0">
+          <fieldset disabled={isReadOnly} className="flex min-w-0 flex-col gap-4 border-0 p-0">
             <FormField
               control={form.control}
               name="healthFacilityId"
@@ -340,7 +338,7 @@ export function CaseOpeningStep() {
           <NotifierList
             caseId={effectiveCaseId}
             onCountChange={(count) => setHasNotifier(count > 0)}
-            readOnly={isClosed}
+            readOnly={isReadOnly}
           />
           <Button type="button" onClick={handleContinue} disabled={!hasNotifier} className="self-start">
             {t('esaviCase.opening.continueButton')}

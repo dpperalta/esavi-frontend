@@ -8,6 +8,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { setAccessToken } from '@/shared/api/client';
 import { createAppQueryClient } from '@/shared/api/queryClient';
+import { tokenStore } from '@/shared/api/tokenStore';
 import { CaseWizardActionBar } from './CaseWizardActionBar';
 import { CaseWizardProvider } from './CaseWizardContext';
 import { ClassificationStep } from './ClassificationStep';
@@ -27,7 +28,24 @@ afterAll(() => server.close());
 
 beforeEach(() => {
   localStorage.clear();
+  signInAs('NOTIFIER', 25);
 });
+
+// The step is read-only below NOTIFIER (SPEC FE33 §3.5), so every test runs as the minimum writer
+// unless it overrides the role itself.
+function signInAs(roleName: string, level: number) {
+  setAccessToken('a-token');
+  tokenStore.setRefreshToken('a-refresh-token');
+  server.use(
+    http.get('http://localhost:4500/api/users/me', () =>
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { userId: 'user-1', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+      }),
+    ),
+  );
+}
 
 function mockCaseDetail(overrides: Record<string, unknown> = {}) {
   server.use(

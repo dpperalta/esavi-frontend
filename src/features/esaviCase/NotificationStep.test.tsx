@@ -99,6 +99,9 @@ beforeEach(() => {
   mockFemaleSexItemConfigNotSeeded();
   mockMedicalHistories([]);
   toastError.mockClear();
+  // The step is read-only below NOTIFIER (SPEC FE33 §3.5): every test runs as the minimum writer
+  // unless it signs in with another role itself.
+  signInAs('NOTIFIER', 25);
 });
 
 // `ESAVI-MEDHIST-006` — la séptima lista satélite (SPEC FE12e §3.2). Se responde vacía por

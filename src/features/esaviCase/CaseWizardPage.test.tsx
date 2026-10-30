@@ -292,6 +292,7 @@ describe('CaseWizardPage — reanudación y bloqueo de paso', () => {
 
 describe('CaseWizardPage — reentrada de patient y case-opening (SPEC FE10 §13)', () => {
   it('/wizard/patient abre la identidad de sólo lectura con «Editar paciente», sin ofrecer cambiar de paciente', async () => {
+    mockCurrentUser('NOTIFIER', 25);
     mockCase();
     mockWorkflow('OPEN', {
       classification: { exists: true, endedAt: '2026-09-01' },
@@ -334,6 +335,23 @@ describe('CaseWizardPage — reentrada de patient y case-opening (SPEC FE10 §13
     expect(screen.queryByLabelText('Término de búsqueda')).not.toBeInTheDocument();
     // patient no tiene stage: sin la barra genérica de Guardar/Completar etapa.
     expect(screen.queryByRole('button', { name: 'Completar etapa' })).not.toBeInTheDocument();
+  });
+
+  it('/wizard/patient con USER no ofrece «Editar paciente» (SPEC FE33 §3.5)', async () => {
+    mockCurrentUser('USER', 20);
+    mockCase();
+    mockPatient();
+    mockWorkflow('OPEN', {
+      classification: { exists: true, endedAt: '2026-09-01' },
+      notification: { exists: false, endedAt: null },
+      investigation: { exists: false, endedAt: null },
+      finalClassification: { exists: false, endedAt: null },
+    });
+
+    renderPage('/esavi-cases/case-1/wizard/patient');
+
+    expect(await screen.findByText('Ana Perez')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Editar paciente' })).not.toBeInTheDocument();
   });
 });
 

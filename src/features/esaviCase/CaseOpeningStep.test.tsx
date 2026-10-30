@@ -462,7 +462,7 @@ describe('CaseOpeningStep — 409 por expediente cerrado (SPEC FE17 §4 paso 7)'
 describe('CaseOpeningStep — cadena CASE-001 → NOTIFIER-001 (SPEC FE10 §3.2, §5, §6)', () => {
   it('crea el caso, abre el modal de notificador; si el POST del notificador falla, el caso sigue creado y visible, con reintento', async () => {
     const user = setupUser();
-    signInAs('USER', 20);
+    signInAs('NOTIFIER', 25);
     mockCoverage({
       assigned: [{ geoLocationId: 'g1', name: 'Pichincha', level: 1 }],
       coverage: [{ geoLocationId: 'g1', name: 'Pichincha', level: 1, parentGeoLocationId: null }],
@@ -511,7 +511,10 @@ describe('CaseOpeningStep — cadena CASE-001 → NOTIFIER-001 (SPEC FE10 §3.2,
       </QueryClientProvider>,
     );
 
-    await user.type(screen.getByRole('combobox', { name: 'Unidad de salud' }), 'Centro');
+    // The fieldset stays disabled until ['user','me'] resolves the NOTIFIER level (SPEC FE33 §3.5).
+    const facilityField = screen.getByRole('combobox', { name: 'Unidad de salud' });
+    await waitFor(() => expect(facilityField).toBeEnabled());
+    await user.type(facilityField, 'Centro');
     await user.click(await screen.findByRole('option', { name: /Centro de salud Norte/ }));
     await user.click(screen.getByRole('button', { name: 'Crear caso' }));
 
@@ -539,7 +542,7 @@ describe('CaseOpeningStep — cadena CASE-001 → NOTIFIER-001 (SPEC FE10 §3.2,
 
   it('tras crear, el botón atrás del navegador no vuelve a ofrecer «Crear caso»', async () => {
     const user = setupUser();
-    signInAs('USER', 20);
+    signInAs('NOTIFIER', 25);
     mockCoverage({
       assigned: [{ geoLocationId: 'g1', name: 'Pichincha', level: 1 }],
       coverage: [{ geoLocationId: 'g1', name: 'Pichincha', level: 1, parentGeoLocationId: null }],
@@ -638,7 +641,10 @@ describe('CaseOpeningStep — cadena CASE-001 → NOTIFIER-001 (SPEC FE10 §3.2,
       </QueryClientProvider>,
     );
 
-    await user.type(screen.getByRole('combobox', { name: 'Unidad de salud' }), 'Centro');
+    // The fieldset stays disabled until ['user','me'] resolves the NOTIFIER level (SPEC FE33 §3.5).
+    const facilityField = screen.getByRole('combobox', { name: 'Unidad de salud' });
+    await waitFor(() => expect(facilityField).toBeEnabled());
+    await user.type(facilityField, 'Centro');
     await user.click(await screen.findByRole('option', { name: /Centro de salud Norte/ }));
     await user.click(screen.getByRole('button', { name: 'Crear caso' }));
 

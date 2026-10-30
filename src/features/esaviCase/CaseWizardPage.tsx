@@ -26,6 +26,7 @@ import {
   hasDedicatedCaseWorkflowErrorScreen,
 } from './CaseWorkflowErrorScreen';
 import { isReachableStepSlug, isStepRequired, isStepUnlocked, resolveResumeStep } from './steps';
+import { useStepReadOnly } from './useStepReadOnly';
 
 function CaseWizardSkeleton() {
   return (
@@ -70,6 +71,7 @@ export function CaseWizardPage() {
   const caseDetail = esaviCaseResource.useOne(id ?? '');
   const flags = useCaseWizardStepFlags(id ?? '', workflow.data?.stages);
   const canReopen = useCan(ROLE_LEVELS.ADMIN);
+  const patientStepReadOnly = useStepReadOnly('patient', id);
 
   if (!id) {
     return <Navigate to="/esavi-cases" replace />;
@@ -169,7 +171,11 @@ export function CaseWizardPage() {
               (Guardar · Completar etapa · Siguiente, atada a `useCaseWizard()`) no se pinta para
               ellos. */}
           {step === 'patient' && (
-            <PatientStep caseId={id} patientId={caseDetail.data.patient.patientId} />
+            <PatientStep
+              caseId={id}
+              patientId={caseDetail.data.patient.patientId}
+              readOnly={patientStepReadOnly.isReadOnly}
+            />
           )}
           {step === 'case-opening' && <CaseOpeningStep />}
           {step === 'classification' && <ClassificationStep caseId={id} />}
