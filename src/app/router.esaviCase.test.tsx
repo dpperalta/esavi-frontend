@@ -140,7 +140,8 @@ function signInAs(roleName: string, level: number) {
   );
 }
 
-// Mirrors the real nesting of app/router.tsx: RequireAuth → RequireRole(USER) → the two routes.
+// Mirrors the real nesting of app/router.tsx: RequireAuth → RequireRole(USER) → the case routes,
+// with the alta under its own RequireRole(NOTIFIER) (SPEC FE33 §3.1).
 function renderApp(initialPath: string) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -156,10 +157,12 @@ function renderApp(initialPath: string) {
                 {/* SPEC FE09 §3.1 / SPEC FE10 §3.1: /esavi-cases/new/... declared before
                     /esavi-cases/:id, mirroring app/router.tsx exactly — this is the test that
                     pins the order down. */}
-                <Route path="/esavi-cases/new" element={<PatientStep />} />
-                <Route path="/esavi-cases/new/patient" element={<PatientStep />} />
-                <Route path="/esavi-cases/new/case-opening" element={<CaseOpeningStep />} />
-                <Route path="/esavi-cases/new/:step" element={<PatientStep />} />
+                <Route element={<RequireRole level={ROLE_LEVELS.NOTIFIER} />}>
+                  <Route path="/esavi-cases/new" element={<PatientStep />} />
+                  <Route path="/esavi-cases/new/patient" element={<PatientStep />} />
+                  <Route path="/esavi-cases/new/case-opening" element={<CaseOpeningStep />} />
+                  <Route path="/esavi-cases/new/:step" element={<PatientStep />} />
+                </Route>
                 <Route path="/esavi-cases/:id" element={<EsaviCaseDetailPage />} />
                 <Route path="/esavi-cases/:id/wizard/:step?" element={<CaseWizardPage />} />
               </Route>
@@ -186,10 +189,15 @@ function renderAppWithRouter(initialPath: string) {
             element: <RequireRole level={ROLE_LEVELS.USER} />,
             children: [
               { path: '/esavi-cases', element: <EsaviCaseListPage /> },
-              { path: '/esavi-cases/new', element: <PatientStep /> },
-              { path: '/esavi-cases/new/patient', element: <PatientStep /> },
-              { path: '/esavi-cases/new/case-opening', element: <CaseOpeningStep /> },
-              { path: '/esavi-cases/new/:step', element: <PatientStep /> },
+              {
+                element: <RequireRole level={ROLE_LEVELS.NOTIFIER} />,
+                children: [
+                  { path: '/esavi-cases/new', element: <PatientStep /> },
+                  { path: '/esavi-cases/new/patient', element: <PatientStep /> },
+                  { path: '/esavi-cases/new/case-opening', element: <CaseOpeningStep /> },
+                  { path: '/esavi-cases/new/:step', element: <PatientStep /> },
+                ],
+              },
               { path: '/esavi-cases/:id', element: <EsaviCaseDetailPage /> },
               { path: '/esavi-cases/:id/wizard/:step?', element: <CaseWizardPage /> },
             ],
@@ -224,8 +232,19 @@ describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — sin sesión
 });
 
 describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — con USER autenticado', () => {
+  it('/esavi-cases/new con USER (consulta) no abre el alta: vuelve al inicio (SPEC FE33 §3.1)', async () => {
+    signInAs('USER', 20);
+
+    const router = renderAppWithRouter('/esavi-cases/new');
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    expect(
+      screen.queryByRole('radiogroup', { name: 'Modo de búsqueda de paciente' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('/esavi-cases/new resuelve el paso 1 sin :step', async () => {
-    signInAs('USER', 25);
+    signInAs('NOTIFIER', 25);
 
     renderApp('/esavi-cases/new');
 
@@ -235,7 +254,7 @@ describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — con USER au
   });
 
   it('/esavi-cases/:id/wizard/classification resuelve', async () => {
-    signInAs('USER', 25);
+    signInAs('USER', 20);
 
     renderApp('/esavi-cases/case-1/wizard/classification');
 
@@ -246,7 +265,7 @@ describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — con USER au
   // mismo segmento que /:id. Si /esavi-cases/:id se declarara antes, "new" resolvería como un
   // caseId y esta pantalla sería el detalle, no el paso 1 del alta.
   it('/esavi-cases/new abre PatientStep y no EsaviCaseDetailPage con id="new"', async () => {
-    signInAs('USER', 25);
+    signInAs('NOTIFIER', 25);
 
     renderApp('/esavi-cases/new');
 
@@ -259,7 +278,7 @@ describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — con USER au
   });
 
   it('/esavi-cases/new/case-opening abre CaseOpeningStep', async () => {
-    signInAs('USER', 25);
+    signInAs('NOTIFIER', 25);
     server.use(
       http.get('http://localhost:4500/api/user-geo-locations/user/1/coverage', () =>
         HttpResponse.json({
@@ -281,7 +300,7 @@ describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — con USER au
   // SPEC FE10 §3.4, §14: un valor de :step desconocido se trata como `patient`, sin redirigir —
   // mismo criterio que el `?tab=` de FE09.
   it('/esavi-cases/new/basura se comporta como patient sin redirigir', async () => {
-    signInAs('USER', 25);
+    signInAs('NOTIFIER', 25);
 
     const router = renderAppWithRouter('/esavi-cases/new/basura');
 
@@ -293,7 +312,7 @@ describe('Rutas /esavi-cases/new y /esavi-cases/:id/wizard/:step — con USER au
   });
 
   it('/esavi-cases/case-1 abre EsaviCaseDetailPage', async () => {
-    signInAs('USER', 25);
+    signInAs('USER', 20);
 
     renderApp('/esavi-cases/case-1');
 

@@ -15,6 +15,7 @@
 > - **`ClosureStep` oculta «Cerrar expediente» con `isReadOnly` del paso `closure`** desde el paso 6, no con un `useCan(EVALUATOR)` aparte en el paso 8: es el mismo umbral (`STEP_MIN_LEVEL.closure`) y una sola fuente.
 > - **`caseWizard.readOnly.stageForbiddenBanner` se añadió en el paso 7**, no en el 12: el aviso la necesitaba para renderizar. El paso 12 queda con `CASEFLOW_007_STAGE_FORBIDDEN`.
 > - **Los textos de «pedir la reapertura» nombran al evaluador.** `caseWizard.readOnly.closedBanner` y `caseWorkflow.closed.askAdmin` decían «un administrador»; con F64 reabre `EVALUATOR`, así que pasan a «un evaluador o administrador» (y sus equivalentes en en/nl). Decisión del usuario durante el paso 7.
+> - **`<RequireRole>` no pinta una pantalla «sin permiso»: redirige a `/`.** §3.1, §3.6, el paso 9 y §5 dicen que un `USER` en `/esavi-cases/new` «ve la pantalla sin permiso»; lo que hace la primitiva compartida —sin cambios en este spec— es `<Navigate to="/" replace />`. El criterio se verifica como «un `USER` en `/esavi-cases/new` termina en `/` sin ver el formulario» (`router.esaviCase.test.tsx`).
 > - **`canWriteStep` no tiene consumidor en producción.** `useStepReadOnly` pasa por `useCan(STEP_MIN_LEVEL[slug])` para no saltarse `CONVENTIONS.md` §11; `canWriteStep` queda como función pura probada.
 
 ---

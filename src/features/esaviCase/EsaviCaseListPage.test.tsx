@@ -91,6 +91,38 @@ function renderPage(initialPath = '/esavi-cases') {
   return router;
 }
 
+describe('EsaviCaseListPage — «Registrar un caso» por rol (SPEC FE33 §3.5)', () => {
+  function mockEmptyList() {
+    mockGeoLocationPicker();
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+  }
+
+  it('con NOTIFIER se ofrece', async () => {
+    mockCurrentUser('NOTIFIER', 25);
+    mockEmptyList();
+
+    renderPage();
+
+    const registerButtons = await screen.findAllByRole('button', { name: 'Registrar un caso' });
+    expect(registerButtons.length).toBeGreaterThan(0);
+  });
+
+  it('con USER (consulta) no se ofrece', async () => {
+    mockCurrentUser('USER', 20);
+    mockEmptyList();
+
+    renderPage();
+
+    expect(await screen.findByRole('heading', { name: 'Casos ESAVI' })).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('button', { name: 'Registrar un caso' })).not.toBeInTheDocument();
+  });
+});
+
 describe('EsaviCaseListPage — filtros hacia el 002A/002B', () => {
   it('los filtros de la URL viajan al 002A como query params', async () => {
     mockCurrentUser('USER', 25);

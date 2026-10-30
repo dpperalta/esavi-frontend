@@ -104,8 +104,8 @@ export function AppRouter() {
                   ADMIN and SUPERADMIN operations are guarded by hiding their actions. */}
               <Route path="/whodrug-vaccines" element={<VaccineWhodrugListPage />} />
               <Route path="/whodrug-vaccines/:id" element={<VaccineWhodrugDetailPage />} />
-              {/* SPEC FE08 §3.1: USER is the real minimum of ESAVI-CASE-001 and of the six
-                  caseWorkflow operations the wizard touches (API-ROUTES.md). `:step?` is optional
+              {/* SPEC FE08 §3.1: USER is the real minimum of every read the case screens make
+                  (API-ROUTES.md, SPEC FE33 §3.1); writing is gated per step. `:step?` is optional
                   so /esavi-cases/:id/wizard alone resolves to the same page — CaseWizardPage
                   itself redirects to the resume step when `:step` is missing (SPEC FE08 §4). */}
               <Route path="/esavi-cases" element={<EsaviCaseListPage />} />
@@ -115,10 +115,15 @@ export function AppRouter() {
                   the two real slugs are declared explicitly, and any other value falls through
                   to the last route, which resolves it as `patient` without redirecting (SPEC
                   FE10 §3.4) — the same criterion FE09's own `?tab=` already uses. */}
-              <Route path="/esavi-cases/new" element={<PatientStep />} />
-              <Route path="/esavi-cases/new/patient" element={<PatientStep />} />
-              <Route path="/esavi-cases/new/case-opening" element={<CaseOpeningStep />} />
-              <Route path="/esavi-cases/new/:step" element={<PatientStep />} />
+              {/* SPEC FE33 §3.1: the alta writes from its first screen — ESAVI-PATIENT-001 and
+                  ESAVI-CASE-001 are NOTIFIER since SPEC F64 — so a read-only USER is turned away
+                  here instead of filling a form that ends in 403. */}
+              <Route element={<RequireRole level={ROLE_LEVELS.NOTIFIER} />}>
+                <Route path="/esavi-cases/new" element={<PatientStep />} />
+                <Route path="/esavi-cases/new/patient" element={<PatientStep />} />
+                <Route path="/esavi-cases/new/case-opening" element={<CaseOpeningStep />} />
+                <Route path="/esavi-cases/new/:step" element={<PatientStep />} />
+              </Route>
               <Route path="/esavi-cases/:id" element={<EsaviCaseDetailPage />} />
               <Route path="/esavi-cases/:id/wizard/:step?" element={<CaseWizardPage />} />
             </Route>
