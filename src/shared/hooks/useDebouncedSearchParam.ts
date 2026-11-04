@@ -13,6 +13,9 @@ export interface DebouncedSearchParamOptions {
   replace?: boolean;
   // Clears `page` along with the write. On by default: a new filter starts from the first page.
   resetPage?: boolean;
+  // Keys that only make sense alongside this one, deleted in the same write whenever the timer
+  // writes it — set or cleared — so no intermediate URL holds them on their own (SPEC FE37 §3.4).
+  clearKeysOnWrite?: string[];
 }
 
 // A typing buffer for a text filter that lives in `searchParams`: the input is local, and the URL
@@ -27,14 +30,33 @@ export interface DebouncedSearchParamOptions {
 // window — the toggle of DiagnosticTermListPage flipped back 400ms after mount. And when the
 // value already matches, nothing is written: returning the unchanged params still navigated.
 export function useDebouncedSearchParam(key: string, options: DebouncedSearchParamOptions = {}) {
-  const { normalize = identity, replace = false, resetPage = true } = options;
+  const {
+    normalize = identity,
+    replace = false,
+    resetPage = true,
+    clearKeysOnWrite = [],
+  } = options;
   const [searchParams, setSearchParams] = useSearchParams();
   const urlValue = searchParams.get(key) ?? '';
   const [buffer, setBuffer] = useState(urlValue);
-  const latest = useRef({ searchParams, setSearchParams, normalize, replace, resetPage });
+  const latest = useRef({
+    searchParams,
+    setSearchParams,
+    normalize,
+    replace,
+    resetPage,
+    clearKeysOnWrite,
+  });
 
   useEffect(() => {
-    latest.current = { searchParams, setSearchParams, normalize, replace, resetPage };
+    latest.current = {
+      searchParams,
+      setSearchParams,
+      normalize,
+      replace,
+      resetPage,
+      clearKeysOnWrite,
+    };
   });
 
   useEffect(() => {
@@ -53,6 +75,9 @@ export function useDebouncedSearchParam(key: string, options: DebouncedSearchPar
         next.set(key, value);
       } else {
         next.delete(key);
+      }
+      for (const dependent of config.clearKeysOnWrite) {
+        next.delete(dependent);
       }
       if (config.resetPage) {
         next.delete('page');
