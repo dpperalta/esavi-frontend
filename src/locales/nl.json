@@ -2277,6 +2277,13 @@
         "days_other": "{{count}} dagen wachtend",
         "empty": "Er zijn geen aangevraagde onderzoeken die nog moeten starten."
       }
+    },
+    "period": {
+      "errors": {
+        "fromAfterTo": "De einddatum mag niet vóór de begindatum liggen.",
+        "futureTo": "De einddatum mag niet na vandaag liggen.",
+        "tooLong": "De periode mag niet langer zijn dan {{maxDays}} dagen."
+      }
     }
   },
   "shell": {

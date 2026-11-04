@@ -2277,6 +2277,13 @@
         "days_other": "{{count}} days waiting",
         "empty": "No requested investigations are waiting to start."
       }
+    },
+    "period": {
+      "errors": {
+        "fromAfterTo": "The end date cannot be earlier than the start date.",
+        "futureTo": "The end date cannot be later than today.",
+        "tooLong": "The period cannot exceed {{maxDays}} days."
+      }
     }
   },
   "shell": {

@@ -2277,6 +2277,13 @@
         "days_other": "{{count}} días esperando",
         "empty": "No hay investigaciones solicitadas sin iniciar."
       }
+    },
+    "period": {
+      "errors": {
+        "fromAfterTo": "La fecha final no puede ser anterior a la inicial.",
+        "futureTo": "La fecha final no puede ser posterior a hoy.",
+        "tooLong": "El periodo no puede superar {{maxDays}} días."
+      }
     }
   },
   "shell": {
