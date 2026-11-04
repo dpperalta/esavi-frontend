@@ -2247,6 +2247,38 @@
     "greeting": "Hola, {{name}}",
     "roleLabel": "Tu rol: {{role}}"
   },
+  "dashboard": {
+    "pendingWork": {
+      "title": "Trabajo pendiente",
+      "openCases_one": "{{count}} caso abierto",
+      "openCases_other": "{{count}} casos abiertos",
+      "reopened_one": "{{count}} reabierto",
+      "reopened_other": "{{count}} reabiertos",
+      "updatedAt": "Actualizado a las {{time}}",
+      "refresh": "Actualizar",
+      "error": "No pudimos cargar el trabajo pendiente.",
+      "noAssignments": "No tienes territorio asignado, así que no hay casos que contar. Pide a un administrador que te asigne tu cobertura geográfica.",
+      "more": "y {{count}} más",
+      "funnel": {
+        "title": "Casos por estado",
+        "cardLabel_one": "{{status}}: {{count}} caso",
+        "cardLabel_other": "{{status}}: {{count}} casos"
+      },
+      "stalled": {
+        "title": "Casos detenidos",
+        "days_one": "{{count}} día",
+        "days_other": "{{count}} días",
+        "empty": "Ningún caso lleva más de {{days}} días detenido.",
+        "disabled": "La detección de casos detenidos está desactivada."
+      },
+      "pendingInvestigations": {
+        "title": "Investigaciones sin iniciar",
+        "days_one": "{{count}} día esperando",
+        "days_other": "{{count}} días esperando",
+        "empty": "No hay investigaciones solicitadas sin iniciar."
+      }
+    }
+  },
   "shell": {
     "userMenu": {
       "trigger": "Menú de usuario"

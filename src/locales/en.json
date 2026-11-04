@@ -2247,6 +2247,38 @@
     "greeting": "Hi, {{name}}",
     "roleLabel": "Your role: {{role}}"
   },
+  "dashboard": {
+    "pendingWork": {
+      "title": "Pending work",
+      "openCases_one": "{{count}} open case",
+      "openCases_other": "{{count}} open cases",
+      "reopened_one": "{{count}} reopened",
+      "reopened_other": "{{count}} reopened",
+      "updatedAt": "Updated at {{time}}",
+      "refresh": "Refresh",
+      "error": "We couldn't load the pending work.",
+      "noAssignments": "You have no territory assigned, so there are no cases to count. Ask an administrator to assign your geographic coverage.",
+      "more": "and {{count}} more",
+      "funnel": {
+        "title": "Cases by status",
+        "cardLabel_one": "{{status}}: {{count}} case",
+        "cardLabel_other": "{{status}}: {{count}} cases"
+      },
+      "stalled": {
+        "title": "Stalled cases",
+        "days_one": "{{count}} day",
+        "days_other": "{{count}} days",
+        "empty": "No case has been stalled for more than {{days}} days.",
+        "disabled": "Stalled case detection is turned off."
+      },
+      "pendingInvestigations": {
+        "title": "Investigations not started",
+        "days_one": "{{count}} day waiting",
+        "days_other": "{{count}} days waiting",
+        "empty": "No requested investigations are waiting to start."
+      }
+    }
+  },
   "shell": {
     "userMenu": {
       "trigger": "User menu"
