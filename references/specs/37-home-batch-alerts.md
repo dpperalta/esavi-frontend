@@ -1,6 +1,6 @@
 # SPEC FE37 — Inicio: alertas por lote
 
-> **Estado:** Borrador
+> **Estado:** Implementado
 > **Depende de:** SPEC FE35 (sección «Vigilancia», `useDashboardPeriod`), SPEC FE34 (contrato `dashboard.ts`, filtro `statusCode` del listado), SPEC FE36b (etiquetas «Texto libre» y «Sin nombre»), SPEC FE09 (listado de casos y sus filtros), SPEC F68 del backend (`ESAVI-DASH-010` y filtro por lote en `ESAVI-CASE-002A`/`002B`), SPEC F66 del backend (validador de periodo y regla de defunción)
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que la sección «Vigilancia» señale los lotes de vacuna que acumulan casos, graves o defunciones en el territorio del usuario, y que quien puede leer casos llegue a ellos con un clic.

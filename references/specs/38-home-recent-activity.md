@@ -1,6 +1,6 @@
 # SPEC FE38 — Inicio: actividad reciente y del sistema
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE34 (marco de Inicio por bloques, contrato `dashboard.ts`, etiquetas `caseWorkflow.status.*`), SPEC F69 del backend (`ESAVI-DASH-011` y `ESAVI-DASH-012`), SPEC F59 del backend (autor visible según rol), SPEC F42 del backend (detección de reutilización del refresh token)
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que Inicio muestre qué ha pasado últimamente en los casos del territorio y en cuáles intervino el usuario, y que el SUPERADMIN vea de un vistazo el uso del sistema y cualquier señal de robo de sesión.

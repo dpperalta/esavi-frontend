@@ -804,7 +804,10 @@
       },
       "errors": {
         "rangeInvalid": "La fecha inicial no puede ser posterior a la fecha final."
-      }
+      },
+      "batchNumber": "Lote",
+      "vaccineKeyChip": "Solo la vacuna de la alerta",
+      "removeVaccineKey": "Quitar el filtro de la vacuna de la alerta"
     },
     "list": {
       "title": "Casos ESAVI",
@@ -2508,6 +2511,56 @@
       "summary_other": "{{count}} unidades en el mapa; la de más casos, {{name}} con {{total}}",
       "zoomIn": "Acercar",
       "zoomOut": "Alejar"
+    },
+    "batchAlerts": {
+      "reason": {
+        "DEATH": "Defunción",
+        "MIN_SERIOUS": "Graves sobre el umbral",
+        "MIN_CASES": "Casos sobre el umbral"
+      },
+      "batch": "Lote {{batchNumber}}",
+      "metrics": {
+        "cases_one": "{{value}} caso",
+        "cases_other": "{{value}} casos",
+        "suspected_one": "{{value}} sospechoso",
+        "suspected_other": "{{value}} sospechosos",
+        "serious_one": "{{value}} grave",
+        "serious_other": "{{value}} graves",
+        "deaths_one": "{{value}} defunción",
+        "deaths_other": "{{value}} defunciones",
+        "facilities_one": "{{value}} establecimiento",
+        "facilities_other": "{{value}} establecimientos",
+        "geoUnits_one": "{{value}} unidad geográfica",
+        "geoUnits_other": "{{value}} unidades geográficas",
+        "dates": "Del {{from}} al {{to}}"
+      },
+      "expired_one": "{{value}} vacunado con el lote caducado",
+      "expired_other": "{{value}} vacunados con el lote caducado",
+      "variants_one": "Escrito de {{count}} forma",
+      "variants_other": "Escrito de {{count}} formas",
+      "viewCases": "Ver casos",
+      "title": "Lotes con alerta en su territorio",
+      "error": "No pudimos cargar las alertas por lote.",
+      "empty": "Ningún lote supera los umbrales en este periodo.",
+      "truncated_one": "Y {{value}} alerta más no mostrada",
+      "truncated_other": "Y {{value}} alertas más no mostradas",
+      "showAll_one": "Ver la {{count}} alerta",
+      "showAll_other": "Ver las {{count}} alertas",
+      "showLess": "Ver menos",
+      "thresholds": {
+        "label": "Umbrales",
+        "minCases_one": "≥ {{count}} caso",
+        "minCases_other": "≥ {{count}} casos",
+        "minSerious_one": "≥ {{count}} grave",
+        "minSerious_other": "≥ {{count}} graves",
+        "death": "cualquier defunción",
+        "disabled_minCases": "casos: desactivado",
+        "disabled_minSerious": "graves: desactivado"
+      },
+      "evaluated_one": "{{value}} lote evaluado",
+      "evaluated_other": "{{value}} lotes evaluados",
+      "withoutBatch_one": "{{value}} caso sin lote registrado",
+      "withoutBatch_other": "{{value}} casos sin lote registrado"
     }
   },
   "shell": {

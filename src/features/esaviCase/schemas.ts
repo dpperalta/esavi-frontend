@@ -37,9 +37,18 @@ function checkDateRanges(data: Record<string, unknown>, ctx: z.RefinementCtx) {
   }
 }
 
-// Parses `searchParams` for the «Por caso» tab into the fifteen filters of ESAVI-CASE-002A/002B
-// (SPEC F48 + F52 + F65 §3.5) plus `page` and `includeInactive`, the two other URL-only fields the
-// tab needs (SPEC FE09 §3.4).
+// Mirrors `normalizeBatchNumber` of the backend (notificationVaccine.constants.ts), uppercase first
+// and then ASCII letters and digits only, but only to decide whether the value travels: a batch
+// that normalizes to nothing is a 400, so it is dropped. The URL value is sent as is — the real
+// normalization is the backend's (SPEC FE37 §3.5).
+const hasBatchContent = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, '') !== '';
+
+// The backend's `VACCINE_KEY_PATTERN` (SPEC F68 §3.5).
+const VACCINE_KEY_PATTERN = /^(W:[0-9a-f-]{36}|T:.*)$/i;
+
+// Parses `searchParams` for the «Por caso» tab into the seventeen filters of ESAVI-CASE-002A/002B
+// (SPEC F48 + F52 + F65 §3.5 + F68 §3.5) plus `page` and `includeInactive`, the two other URL-only
+// fields the tab needs (SPEC FE09 §3.4).
 export const esaviCaseFiltersSchema = z
   .object({
     code: z.string().trim().min(2).max(200).optional().catch(undefined),
@@ -58,12 +67,19 @@ export const esaviCaseFiltersSchema = z
     reportFillingDate: isoDateField,
     reportFillingDateFrom: isoDateField,
     reportFillingDateTo: isoDateField,
+    batchNumber: z.string().trim().max(100).refine(hasBatchContent).optional().catch(undefined),
+    vaccineKey: z.string().regex(VACCINE_KEY_PATTERN).optional().catch(undefined),
     page: pageField,
     includeInactive: includeInactiveField,
   })
   .superRefine(checkDateRanges)
-  .transform(({ page, includeInactive, ...filters }) => ({
-    filters: filters as EsaviCaseListFilters,
+  .transform(({ page, includeInactive, vaccineKey, ...filters }) => ({
+    // `vaccineKey` without `batchNumber` is a 400 on 002A/002B (SPEC F68 §3.5), so it only
+    // travels alongside a batch that survived its own rule.
+    filters: {
+      ...filters,
+      ...(filters.batchNumber && vaccineKey ? { vaccineKey } : {}),
+    } as EsaviCaseListFilters,
     page: page ?? 1,
     includeInactive,
   }));

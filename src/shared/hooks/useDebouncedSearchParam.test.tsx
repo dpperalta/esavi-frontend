@@ -1,10 +1,19 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider, useSearchParams } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type DebouncedSearchParamOptions, useDebouncedSearchParam } from './useDebouncedSearchParam';
+import {
+  type DebouncedSearchParamOptions,
+  useDebouncedSearchParam,
+} from './useDebouncedSearchParam';
 
-function Harness({ options }: { options?: DebouncedSearchParamOptions }) {
-  const [buffer, setBuffer] = useDebouncedSearchParam('q', options);
+function Harness({
+  paramKey,
+  options,
+}: {
+  paramKey: string;
+  options?: DebouncedSearchParamOptions;
+}) {
+  const [buffer, setBuffer] = useDebouncedSearchParam(paramKey, options);
   const [, setSearchParams] = useSearchParams();
   return (
     <>
@@ -28,10 +37,13 @@ function Harness({ options }: { options?: DebouncedSearchParamOptions }) {
   );
 }
 
-function renderHarness(initialPath: string, options?: DebouncedSearchParamOptions) {
-  const router = createMemoryRouter([{ path: '/', element: <Harness options={options} /> }], {
-    initialEntries: [initialPath],
-  });
+function renderHarness(initialPath: string, options?: DebouncedSearchParamOptions, paramKey = 'q') {
+  const router = createMemoryRouter(
+    [{ path: '/', element: <Harness paramKey={paramKey} options={options} /> }],
+    {
+      initialEntries: [initialPath],
+    },
+  );
   render(<RouterProvider router={router} />);
   return router;
 }
@@ -114,5 +126,47 @@ describe('useDebouncedSearchParam', () => {
     fireEvent.click(screen.getByRole('button', { name: 'clear filters' }));
 
     expect(screen.getByLabelText('q')).toHaveValue('');
+  });
+
+  describe('clearKeysOnWrite', () => {
+    const vaccineKey = 'W:3f2a9c1e-8b7d-4e6f-a5c4-1d2e3f4a5b6c';
+    const initial = `/?batchNumber=A1&vaccineKey=${encodeURIComponent(vaccineKey)}`;
+    const options = { clearKeysOnWrite: ['vaccineKey'] };
+
+    function countNavigations(router: ReturnType<typeof renderHarness>) {
+      let count = 0;
+      router.subscribe(() => {
+        count += 1;
+      });
+      return () => count;
+    }
+
+    it('otro lote borra la clave dependiente en una sola navegación', () => {
+      const router = renderHarness(initial, options, 'batchNumber');
+      const navigations = countNavigations(router);
+
+      typeAndWait('B2');
+
+      expect(router.state.location.search).toBe('?batchNumber=B2');
+      expect(navigations()).toBe(1);
+    });
+
+    it('vaciar el lote quita las dos claves', () => {
+      const router = renderHarness(initial, options, 'batchNumber');
+
+      typeAndWait('');
+
+      expect(router.state.location.search).toBe('');
+    });
+
+    it('sin escritura no toca la clave dependiente', () => {
+      const router = renderHarness(initial, options, 'batchNumber');
+
+      act(() => {
+        vi.advanceTimersByTime(500);
+      });
+
+      expect(new URLSearchParams(router.state.location.search).get('vaccineKey')).toBe(vaccineKey);
+    });
   });
 });

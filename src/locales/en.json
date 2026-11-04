@@ -804,7 +804,10 @@
       },
       "errors": {
         "rangeInvalid": "The start date cannot be later than the end date."
-      }
+      },
+      "batchNumber": "Batch",
+      "vaccineKeyChip": "Only the alert's vaccine",
+      "removeVaccineKey": "Remove the alert's vaccine filter"
     },
     "list": {
       "title": "ESAVI cases",
@@ -2508,6 +2511,56 @@
       "summary_other": "{{count}} units on the map; the one with most cases, {{name}} with {{total}}",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out"
+    },
+    "batchAlerts": {
+      "reason": {
+        "DEATH": "Death",
+        "MIN_SERIOUS": "Serious over threshold",
+        "MIN_CASES": "Cases over threshold"
+      },
+      "batch": "Batch {{batchNumber}}",
+      "metrics": {
+        "cases_one": "{{value}} case",
+        "cases_other": "{{value}} cases",
+        "suspected_one": "{{value}} suspected",
+        "suspected_other": "{{value}} suspected",
+        "serious_one": "{{value}} serious",
+        "serious_other": "{{value}} serious",
+        "deaths_one": "{{value}} death",
+        "deaths_other": "{{value}} deaths",
+        "facilities_one": "{{value}} facility",
+        "facilities_other": "{{value}} facilities",
+        "geoUnits_one": "{{value}} geographic unit",
+        "geoUnits_other": "{{value}} geographic units",
+        "dates": "From {{from}} to {{to}}"
+      },
+      "expired_one": "{{value}} vaccinated with the batch expired",
+      "expired_other": "{{value}} vaccinated with the batch expired",
+      "variants_one": "Written {{count}} way",
+      "variants_other": "Written {{count}} ways",
+      "viewCases": "View cases",
+      "title": "Batches with an alert in your territory",
+      "error": "We could not load the batch alerts.",
+      "empty": "No batch is over the thresholds in this period.",
+      "truncated_one": "And {{value}} more alert not shown",
+      "truncated_other": "And {{value}} more alerts not shown",
+      "showAll_one": "View the {{count}} alert",
+      "showAll_other": "View all {{count}} alerts",
+      "showLess": "View less",
+      "thresholds": {
+        "label": "Thresholds",
+        "minCases_one": "≥ {{count}} case",
+        "minCases_other": "≥ {{count}} cases",
+        "minSerious_one": "≥ {{count}} serious",
+        "minSerious_other": "≥ {{count}} serious",
+        "death": "any death",
+        "disabled_minCases": "cases: disabled",
+        "disabled_minSerious": "serious: disabled"
+      },
+      "evaluated_one": "{{value}} batch evaluated",
+      "evaluated_other": "{{value}} batches evaluated",
+      "withoutBatch_one": "{{value}} case without a recorded batch",
+      "withoutBatch_other": "{{value}} cases without a recorded batch"
     }
   },
   "shell": {

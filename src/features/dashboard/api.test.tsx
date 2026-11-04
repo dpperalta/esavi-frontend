@@ -9,7 +9,14 @@ import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import type { DashboardPeriodQuery } from '@/contracts/dashboard';
 import { EsaviApiError } from '@/shared/api/types';
-import { useDistributions, useEpiCurve, useIndicators, usePendingWork } from './api';
+import {
+  useBatchAlerts,
+  useDistributions,
+  useEpiCurve,
+  useIndicators,
+  usePendingWork,
+} from './api';
+import { batchAlertsFixture } from './batchAlertsFixture';
 import { distributionsFixture } from './distributionsFixture';
 import { epiCurveFixture } from './epiCurveFixture';
 import { indicatorsFixture } from './indicatorsFixture';
@@ -387,6 +394,103 @@ describe('useDistributions — ESAVI-DASH-009', () => {
     const { Wrapper } = createWrapper();
 
     const { result } = renderHook(() => useDistributions({}, { enabled: false }), {
+      wrapper: Wrapper,
+    });
+
+    expect(result.current.fetchStatus).toBe('idle');
+  });
+});
+
+describe('useBatchAlerts — ESAVI-DASH-010', () => {
+  const BATCH_ALERTS_URL = 'http://localhost:4500/api/dashboard/batch-alerts';
+
+  it('envía la query como parámetros y desenvuelve el envelope', async () => {
+    let received: URLSearchParams | undefined;
+    server.use(
+      http.get(BATCH_ALERTS_URL, ({ request }) => {
+        received = new URL(request.url).searchParams;
+        return HttpResponse.json({ ok: true, message: 'ok', data: batchAlertsFixture() });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(
+      () => useBatchAlerts({ from: '2026-10-05', to: '2026-11-03', geoLocationId: 'geo-1' }),
+      { wrapper: Wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(received?.get('from')).toBe('2026-10-05');
+    expect(received?.get('to')).toBe('2026-11-03');
+    expect(received?.get('geoLocationId')).toBe('geo-1');
+    expect(result.current.data?.alerts).toHaveLength(3);
+    expect(result.current.data?.thresholds).toEqual({ minCases: 3, minSerious: 2 });
+  });
+
+  it('cambiar de periodo no vacía data mientras llega la respuesta nueva', async () => {
+    let releaseSecond: () => void = () => {};
+    const secondGate = new Promise<void>((resolve) => {
+      releaseSecond = resolve;
+    });
+    server.use(
+      http.get(BATCH_ALERTS_URL, async ({ request }) => {
+        if (new URL(request.url).searchParams.get('from') === '2026-10-28') {
+          await secondGate;
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: batchAlertsFixture({ total: 0, alerts: [] }),
+          });
+        }
+        return HttpResponse.json({ ok: true, message: 'ok', data: batchAlertsFixture() });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+
+    const { result, rerender } = renderHook(
+      ({ query }: { query: DashboardPeriodQuery }) => useBatchAlerts(query),
+      { wrapper: Wrapper, initialProps: { query: {} } },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    rerender({ query: { from: '2026-10-28' } });
+
+    await waitFor(() => expect(result.current.isFetching).toBe(true));
+    expect(result.current.isPlaceholderData).toBe(true);
+    expect(result.current.data?.alerts).toHaveLength(3);
+
+    releaseSecond();
+    await waitFor(() => expect(result.current.data?.alerts).toHaveLength(0));
+    expect(result.current.isPlaceholderData).toBe(false);
+  });
+
+  it('un 400 expone status 400 sin lanzar y sin reintentar', async () => {
+    let requests = 0;
+    server.use(
+      http.get(BATCH_ALERTS_URL, () => {
+        requests += 1;
+        return HttpResponse.json(
+          { ok: false, message: 'Periodo inválido', code: 'DASH_010_VALIDATION_ERROR', errors: [] },
+          { status: 400 },
+        );
+      }),
+    );
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useBatchAlerts({ from: '2030-01-01' }), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(EsaviApiError);
+    expect((result.current.error as EsaviApiError).status).toBe(400);
+    expect(requests).toBe(1);
+  });
+
+  it('enabled: false no hace ninguna petición', () => {
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useBatchAlerts({}, { enabled: false }), {
       wrapper: Wrapper,
     });
 

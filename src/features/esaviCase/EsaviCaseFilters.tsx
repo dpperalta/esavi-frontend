@@ -17,10 +17,9 @@ const DATE_COLUMNS = ['reportDate', 'eventDate', 'reportFillingDate'] as const;
 type DateColumn = (typeof DATE_COLUMNS)[number];
 type DateMode = 'exact' | 'range';
 
-// The fifteen (fourteen real, per `EsaviCaseListFilters`) query keys `esaviCaseFiltersSchema`
-// parses — SPEC FE09 §3.7's filter-count badge is derived from this list, never stored.
-// `statusCode` is shared with the workflow inbox tab (SPEC FE34 §8), so «Limpiar filtros» here
-// also clears the inbox's status filter.
+// The query keys `esaviCaseFiltersSchema` parses as filters — SPEC FE09 §3.7's filter-count badge
+// is derived from this list, never stored. `statusCode` is shared with the workflow inbox tab
+// (SPEC FE34 §8), so «Limpiar filtros» here also clears the inbox's status filter.
 export const ESAVI_CASE_FILTER_PARAM_KEYS = [
   'code',
   'statusCode',
@@ -36,9 +35,11 @@ export const ESAVI_CASE_FILTER_PARAM_KEYS = [
   'reportFillingDate',
   'reportFillingDateFrom',
   'reportFillingDateTo',
+  'batchNumber',
+  'vaccineKey',
 ] as const;
 
-// How many of the fifteen filters (§3.7) are actually present in the URL — the badge on the
+// How many of the filters (§3.7) are actually present in the URL — the badge on the
 // mobile filter sheet's trigger button reads this, always derived from `searchParams`.
 export function countActiveEsaviCaseFilters(searchParams: URLSearchParams): number {
   return ESAVI_CASE_FILTER_PARAM_KEYS.filter((key) => !!searchParams.get(key)).length;
@@ -76,6 +77,53 @@ function CodeFilter() {
         onChange={(event) => setDraft(event.target.value)}
         placeholder={t('esaviCase.filters.code.placeholder')}
       />
+    </div>
+  );
+}
+
+// `vaccineKey` belongs to the batch of the alert it came from (SPEC FE37 §3.4): another batch, or
+// none, makes it meaningless — and without a batch the backend 400s — so it goes in the same write.
+function BatchNumberFilter({
+  hasVaccineKey,
+  setSearchParams,
+}: {
+  hasVaccineKey: boolean;
+  setSearchParams: ReturnType<typeof useSearchParams>[1];
+}) {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useDebouncedSearchParam('batchNumber', { clearKeysOnWrite: ['vaccineKey'] });
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor="esaviCaseFilters-batchNumber">{t('esaviCase.filters.batchNumber')}</Label>
+      <Input
+        id="esaviCaseFilters-batchNumber"
+        name="batchNumber"
+        autoComplete="off"
+        spellCheck={false}
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+      />
+      {hasVaccineKey && (
+        <div className="flex items-center gap-2 self-start rounded-full border bg-muted px-3 py-1 text-sm">
+          <span>{t('esaviCase.filters.vaccineKeyChip')}</span>
+          <button
+            type="button"
+            aria-label={t('esaviCase.filters.removeVaccineKey')}
+            className="text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 rounded-full"
+            onClick={() =>
+              setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.delete('vaccineKey');
+                next.delete('page');
+                return next;
+              })
+            }
+          >
+            <XIcon aria-hidden="true" className="size-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -332,7 +380,7 @@ function DateColumnFilter({
   );
 }
 
-// The fifteen (fourteen real) controls of the «Por caso» tab (SPEC FE09 §3.5). Writes directly
+// The controls of the «Por caso» tab (SPEC FE09 §3.5, FE37 §3.5). Writes directly
 // to `searchParams` — there is no other state, per §3.4: filters, paging and their derived UI
 // (the date columns' Exacta/Rango mode) all live in the URL or are re-derived from it.
 export function EsaviCaseFilters({ patientName }: EsaviCaseFiltersProps) {
@@ -343,11 +391,14 @@ export function EsaviCaseFilters({ patientName }: EsaviCaseFiltersProps) {
   const healthFacilityId = searchParams.get('healthFacilityId') ?? '';
   const geoLocationId = searchParams.get('geoLocationId');
   const statusCode = searchParams.get('statusCode') ?? '';
+  // Only shown while it can travel: without a batch the schema drops it (SPEC FE37 §3.5).
+  const hasVaccineKey = !!searchParams.get('vaccineKey') && !!searchParams.get('batchNumber');
 
   return (
     <div className="flex flex-col gap-4">
       <CodeFilter />
       <StatusFilter value={statusCode} setSearchParams={setSearchParams} />
+      <BatchNumberFilter hasVaccineKey={hasVaccineKey} setSearchParams={setSearchParams} />
       {patientId && (
         <PatientCapsule patientId={patientId} patientName={patientName} setSearchParams={setSearchParams} />
       )}
