@@ -2511,6 +2511,34 @@
       "summary_other": "{{count}} units on the map; the one with most cases, {{name}} with {{total}}",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out"
+    },
+    "batchAlerts": {
+      "reason": {
+        "DEATH": "Death",
+        "MIN_SERIOUS": "Serious over threshold",
+        "MIN_CASES": "Cases over threshold"
+      },
+      "batch": "Batch {{batchNumber}}",
+      "metrics": {
+        "cases_one": "{{value}} case",
+        "cases_other": "{{value}} cases",
+        "suspected_one": "{{value}} suspected",
+        "suspected_other": "{{value}} suspected",
+        "serious_one": "{{value}} serious",
+        "serious_other": "{{value}} serious",
+        "deaths_one": "{{value}} death",
+        "deaths_other": "{{value}} deaths",
+        "facilities_one": "{{value}} facility",
+        "facilities_other": "{{value}} facilities",
+        "geoUnits_one": "{{value}} geographic unit",
+        "geoUnits_other": "{{value}} geographic units",
+        "dates": "From {{from}} to {{to}}"
+      },
+      "expired_one": "{{value}} vaccinated with the batch expired",
+      "expired_other": "{{value}} vaccinated with the batch expired",
+      "variants_one": "Written {{count}} way",
+      "variants_other": "Written {{count}} ways",
+      "viewCases": "View cases"
     }
   },
   "shell": {

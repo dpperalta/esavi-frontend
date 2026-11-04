@@ -2511,6 +2511,34 @@
       "summary_other": "{{count}} unidades en el mapa; la de más casos, {{name}} con {{total}}",
       "zoomIn": "Acercar",
       "zoomOut": "Alejar"
+    },
+    "batchAlerts": {
+      "reason": {
+        "DEATH": "Defunción",
+        "MIN_SERIOUS": "Graves sobre el umbral",
+        "MIN_CASES": "Casos sobre el umbral"
+      },
+      "batch": "Lote {{batchNumber}}",
+      "metrics": {
+        "cases_one": "{{value}} caso",
+        "cases_other": "{{value}} casos",
+        "suspected_one": "{{value}} sospechoso",
+        "suspected_other": "{{value}} sospechosos",
+        "serious_one": "{{value}} grave",
+        "serious_other": "{{value}} graves",
+        "deaths_one": "{{value}} defunción",
+        "deaths_other": "{{value}} defunciones",
+        "facilities_one": "{{value}} establecimiento",
+        "facilities_other": "{{value}} establecimientos",
+        "geoUnits_one": "{{value}} unidad geográfica",
+        "geoUnits_other": "{{value}} unidades geográficas",
+        "dates": "Del {{from}} al {{to}}"
+      },
+      "expired_one": "{{value}} vacunado con el lote caducado",
+      "expired_other": "{{value}} vacunados con el lote caducado",
+      "variants_one": "Escrito de {{count}} forma",
+      "variants_other": "Escrito de {{count}} formas",
+      "viewCases": "Ver casos"
     }
   },
   "shell": {

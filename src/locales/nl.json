@@ -2511,6 +2511,34 @@
       "summary_other": "{{count}} eenheden op de kaart; die met de meeste gevallen, {{name}} met {{total}}",
       "zoomIn": "Inzoomen",
       "zoomOut": "Uitzoomen"
+    },
+    "batchAlerts": {
+      "reason": {
+        "DEATH": "Overlijden",
+        "MIN_SERIOUS": "Ernstige boven de drempel",
+        "MIN_CASES": "Gevallen boven de drempel"
+      },
+      "batch": "Batch {{batchNumber}}",
+      "metrics": {
+        "cases_one": "{{value}} geval",
+        "cases_other": "{{value}} gevallen",
+        "suspected_one": "{{value}} verdacht",
+        "suspected_other": "{{value}} verdacht",
+        "serious_one": "{{value}} ernstig",
+        "serious_other": "{{value}} ernstig",
+        "deaths_one": "{{value}} overlijden",
+        "deaths_other": "{{value}} overlijdens",
+        "facilities_one": "{{value}} instelling",
+        "facilities_other": "{{value}} instellingen",
+        "geoUnits_one": "{{value}} geografische eenheid",
+        "geoUnits_other": "{{value}} geografische eenheden",
+        "dates": "Van {{from}} tot {{to}}"
+      },
+      "expired_one": "{{value}} gevaccineerd met de verlopen batch",
+      "expired_other": "{{value}} gevaccineerd met de verlopen batch",
+      "variants_one": "Op {{count}} manier geschreven",
+      "variants_other": "Op {{count}} manieren geschreven",
+      "viewCases": "Gevallen bekijken"
     }
   },
   "shell": {
