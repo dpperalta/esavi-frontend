@@ -8,6 +8,14 @@ import markerIconRetinaUrl from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadowUrl from 'leaflet/dist/images/marker-shadow.png';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
+import {
+  ABSOLUTE_FALLBACK_CENTER,
+  MAP_MAX_ZOOM,
+  MAP_TILE_ATTRIBUTION,
+  type MapLatLng,
+  resolveDefaultMapCenter,
+  resolveTileUrl,
+} from '@/shared/config/map';
 import { cn } from '@/shared/lib/utils';
 
 // Vite serves leaflet's marker images from a hashed URL, not the relative path the library's own
@@ -20,51 +28,24 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadowUrl,
 });
 
-export interface LatLng {
-  lat: number;
-  lng: number;
-}
+export type LatLng = MapLatLng;
 
 export interface MapPointPickerProps {
   value: LatLng | null;
   onChange: (value: LatLng | null) => void;
-  // Por defecto, VITE_MAP_DEFAULT_CENTER (SPEC FE13a §3.7). El llamador lo sobreescribe con las
-  // coordenadas del `geoLocation` elegido, cuando las trae.
+  // Defaults to the env center from `shared/config/map.ts` (SPEC FE13a §3.7). The caller overrides
+  // it with the chosen `geoLocation`'s coordinates, when it has them.
   fallbackCenter?: LatLng;
   disabled?: boolean;
   ariaLabel: string;
 }
 
-const DEFAULT_TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const DEFAULT_GEOCODER_URL = 'https://nominatim.openstreetmap.org/search';
 const GEOCODER_RESULT_LIMIT = 5;
 const SEARCH_RESULT_ZOOM = 17;
 const SEARCH_MIN_LENGTH = 3;
-// Último recurso si ni el `value`, ni `fallbackCenter`, ni `VITE_MAP_DEFAULT_CENTER` resuelven —
-// nunca geolocalización del navegador (§3.7).
-const ABSOLUTE_FALLBACK_CENTER: LatLng = { lat: 0, lng: 0 };
 const COORDINATE_PRECISION = 7;
 const FLOAT_PATTERN = /^-?\d+(\.\d+)?$/;
-
-// Avisa una sola vez por sesión de página, no por instancia del componente — un formulario con
-// varios `<MapPointPicker>` (éste y el de `investigationCommunity` en FE13d) no debe repetir el
-// mismo aviso por cada uno.
-let warnedMissingTileUrl = false;
-let warnedMissingDefaultCenter = false;
-
-function resolveTileUrl(): string {
-  const raw = import.meta.env.VITE_MAP_TILE_URL as string | undefined;
-  if (raw) {
-    return raw;
-  }
-  if (!warnedMissingTileUrl) {
-    warnedMissingTileUrl = true;
-    console.warn(
-      'VITE_MAP_TILE_URL no está definida — <MapPointPicker> usa el servidor público de OpenStreetMap.',
-    );
-  }
-  return DEFAULT_TILE_URL;
-}
 
 interface GeocoderResult {
   id: string;
@@ -111,28 +92,6 @@ async function geocode(
   }));
 }
 
-function parseLatLng(raw: string | undefined): LatLng | null {
-  if (!raw) {
-    return null;
-  }
-  const parts = raw.split(',').map((part) => Number(part.trim()));
-  if (parts.length !== 2 || parts.some((part) => Number.isNaN(part))) {
-    return null;
-  }
-  return { lat: parts[0], lng: parts[1] };
-}
-
-function resolveEnvDefaultCenter(): LatLng | null {
-  const parsed = parseLatLng(import.meta.env.VITE_MAP_DEFAULT_CENTER as string | undefined);
-  if (!parsed && !warnedMissingDefaultCenter) {
-    warnedMissingDefaultCenter = true;
-    console.warn(
-      'VITE_MAP_DEFAULT_CENTER no está definida o no es válida — <MapPointPicker> usa (0, 0).',
-    );
-  }
-  return parsed;
-}
-
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
@@ -157,9 +116,9 @@ function wrapLongitude(lng: number): number {
   return ((((lng + 180) % 360) + 360) % 360) - 180;
 }
 
-// La primitiva de `ARCHITECTURE.md` §4.3, declarada y escrita en SPEC FE13a §3.7. Leaflet sobre
-// `VITE_MAP_TILE_URL`, con dos campos numéricos como alternativa sin ratón: el mapa y los campos
-// son dos vistas del mismo `value`, nunca dos dueños (SPEC FE13a §3.4).
+// The `ARCHITECTURE.md` §4.3 primitive, specified in SPEC FE13a §3.7. Leaflet over the configured
+// tile server, with two numeric fields as the mouse-free alternative: the map and the fields are two
+// views of the same `value`, never two owners (SPEC FE13a §3.4).
 export function MapPointPicker({ value, onChange, fallbackCenter, disabled, ariaLabel }: MapPointPickerProps) {
   const { t, i18n } = useTranslation();
   const latId = useId();
@@ -226,17 +185,14 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
       return undefined;
     }
     const initialCenter =
-      valueRef.current ?? fallbackCenterRef.current ?? resolveEnvDefaultCenter() ?? ABSOLUTE_FALLBACK_CENTER;
+      valueRef.current ?? fallbackCenterRef.current ?? resolveDefaultMapCenter() ?? ABSOLUTE_FALLBACK_CENTER;
     const map = L.map(container, {
       center: [initialCenter.lat, initialCenter.lng],
       zoom: valueRef.current ? 15 : 6,
     });
     L.tileLayer(resolveTileUrl(), {
-      // Texto exigido verbatim por la política de uso de OpenStreetMap — no es texto de la
-      // interfaz, así que no viene de `investigation.*` ni de `common.*` (CONVENTIONS.md §10.1
-      // cubre color y texto propios, no la atribución legal de un tercero).
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
+      attribution: MAP_TILE_ATTRIBUTION,
+      maxZoom: MAP_MAX_ZOOM,
     }).addTo(map);
     map.on('click', (event: L.LeafletMouseEvent) => {
       if (disabledRef.current) {
@@ -338,7 +294,7 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
     if (trimmed === '' || !FLOAT_PATTERN.test(trimmed)) {
       return;
     }
-    emit(Number(trimmed), value?.lng ?? fallbackCenter?.lng ?? resolveEnvDefaultCenter()?.lng ?? ABSOLUTE_FALLBACK_CENTER.lng);
+    emit(Number(trimmed), value?.lng ?? fallbackCenter?.lng ?? resolveDefaultMapCenter()?.lng ?? ABSOLUTE_FALLBACK_CENTER.lng);
   }
 
   function commitLng(raw: string) {
@@ -347,7 +303,7 @@ export function MapPointPicker({ value, onChange, fallbackCenter, disabled, aria
     if (trimmed === '' || !FLOAT_PATTERN.test(trimmed)) {
       return;
     }
-    emit(value?.lat ?? fallbackCenter?.lat ?? resolveEnvDefaultCenter()?.lat ?? ABSOLUTE_FALLBACK_CENTER.lat, Number(trimmed));
+    emit(value?.lat ?? fallbackCenter?.lat ?? resolveDefaultMapCenter()?.lat ?? ABSOLUTE_FALLBACK_CENTER.lat, Number(trimmed));
   }
 
   async function runSearch() {
