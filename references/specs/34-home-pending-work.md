@@ -1,6 +1,6 @@
 # SPEC FE34 — Inicio: marco por bloques y trabajo pendiente
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE01 (shell y autenticación), SPEC FE09 (listado de casos y sus filtros), SPEC FE33 (roles por etapa), SPEC F65 del backend (dashboard: marco común y trabajo pendiente), SPEC F49 del backend (alcance geográfico)
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que Inicio muestre, dentro del territorio del usuario, cuántos casos hay en cada estado, cuáles están detenidos y qué investigaciones siguen sin iniciar, y que cada cifra lleve a sus casos.
