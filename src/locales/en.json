@@ -2406,6 +2406,35 @@
     "charts": {
       "viewTable": "View as table",
       "viewChart": "View as chart"
+    },
+    "programmatic": {
+      "title": "Programmatic failures",
+      "administration": {
+        "title": "Administration errors",
+        "prescriptionError": "Prescription or indication error",
+        "contaminatedVaccine": "Possibly contaminated vaccine",
+        "abnormalVaccineConditions": "Abnormal physical condition of the vaccine",
+        "preparationError": "Preparation or reconstitution error",
+        "handlingError": "Handling error",
+        "improperAdministration": "Improper administration",
+        "anyError": "At least one administration error"
+      },
+      "coldChain": {
+        "title": "Cold chain",
+        "rangeDeviation": "Temperature range deviation",
+        "procedureNotFollowed": "Storage procedure not followed",
+        "vaccineNotUsable": "Vaccine not usable",
+        "diluentNotUsable": "Diluent not usable",
+        "partiallyReconstitutedVaccine": "Partially reconstituted vaccine",
+        "otherObjectPresent": "Other objects in the refrigerator",
+        "anyFailure": "At least one cold chain failure"
+      },
+      "denominator_one": "Out of {{count}} investigation with a record",
+      "denominator_other": "Out of {{count}} investigations with a record",
+      "withoutRecord_one": "{{count}} investigation without a record",
+      "withoutRecord_other": "{{count}} investigations without a record",
+      "noInvestigations": "No case in the period has an investigation.",
+      "noRecords": "No investigations with a record."
     }
   },
   "shell": {

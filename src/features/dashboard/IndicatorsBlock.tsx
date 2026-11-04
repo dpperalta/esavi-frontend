@@ -19,6 +19,7 @@ import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/components/ui/tooltip';
 import { cn } from '@/shared/lib/utils';
 import { useIndicators } from './api';
+import { CategoryBarList, type CategoryBarRow } from './CategoryBarList';
 import { formatChange, formatPointChange, share } from './indicatorChange';
 import type { IndicatorChange, IndicatorPointChange } from './indicatorChange';
 
@@ -174,39 +175,6 @@ function KpiTile({ label, value, valueIsPlaceholder = false, change }: KpiTilePr
   );
 }
 
-interface BarRow {
-  key: string;
-  label: string;
-  value: number | null;
-  display: string;
-}
-
-// One row per category with its value in text; the bar is decorative and scaled to the largest
-// value of its own list (SPEC FE35 §3.7).
-function BarList({ rows, labelledBy }: { rows: BarRow[]; labelledBy?: string }) {
-  const max = Math.max(1, ...rows.map((row) => row.value ?? 0));
-
-  return (
-    <ul aria-labelledby={labelledBy} className="flex flex-col gap-2">
-      {rows.map((row) => (
-        <li key={row.key} className="flex flex-col gap-1">
-          <div className="flex items-baseline justify-between gap-3 text-sm">
-            <span className="min-w-0 text-foreground">{row.label}</span>
-            <span className="shrink-0 text-foreground tabular-nums">{row.display}</span>
-          </div>
-          <div aria-hidden="true" className="h-2 overflow-hidden rounded-sm bg-muted">
-            <div
-              className="h-full rounded-sm bg-primary"
-              // Inline because the width is data, not a class Tailwind can generate ahead of time.
-              style={{ width: `${((row.value ?? 0) / max) * 100}%` }}
-            />
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function DetailCard({ title, children }: { title: string; children: ReactNode }) {
   const titleId = useId();
   return (
@@ -219,14 +187,14 @@ function DetailCard({ title, children }: { title: string; children: ReactNode })
   );
 }
 
-function SubList({ title, rows }: { title: string; rows: BarRow[] }) {
+function SubList({ title, rows }: { title: string; rows: CategoryBarRow[] }) {
   const titleId = useId();
   return (
     <div className="flex flex-col gap-2">
       <p id={titleId} className="text-xs font-medium text-muted-foreground">
         {title}
       </p>
-      <BarList rows={rows} labelledBy={titleId} />
+      <CategoryBarList rows={rows} labelledBy={titleId} />
     </div>
   );
 }
@@ -298,7 +266,7 @@ function DetailCards({ data }: { data: DashboardIndicators }) {
   const { t } = useTranslation();
   const format = useFormatters();
   const { volume, severity, deaths, timeliness, closure, causality } = data;
-  const countRow = (key: string, label: string, value: number): BarRow => ({
+  const countRow = (key: string, label: string, value: number): CategoryBarRow => ({
     key,
     label,
     value,
@@ -332,7 +300,7 @@ function DetailCards({ data }: { data: DashboardIndicators }) {
       </DetailCard>
 
       <DetailCard title={t('dashboard.indicators.deaths.title')}>
-        <BarList
+        <CategoryBarList
           rows={[
             countRow('total', t('dashboard.indicators.kpi.deaths'), deaths.total.current),
             countRow('autopsyRequested', t('dashboard.indicators.deaths.autopsyRequested'), deaths.autopsyRequested),
@@ -350,7 +318,7 @@ function DetailCards({ data }: { data: DashboardIndicators }) {
           // No deadline in systemConfig means on-time cannot be judged (F66 §8), not that none was.
           <p className="text-sm text-muted-foreground">{t('dashboard.indicators.timeliness.noDeadline')}</p>
         ) : (
-          <BarList
+          <CategoryBarList
             rows={[
               {
                 key: 'onTime',
@@ -386,7 +354,7 @@ function DetailCards({ data }: { data: DashboardIndicators }) {
           <dt className="text-muted-foreground">{t('dashboard.indicators.closure.median')}</dt>
           <dd className="text-right text-foreground tabular-nums">{format.days(closure.medianDaysToClose)}</dd>
         </dl>
-        <BarList
+        <CategoryBarList
           rows={STAGES.map((stage) => ({
             key: stage,
             label: t(`caseWorkflow.stage.${stage}`),
@@ -397,7 +365,7 @@ function DetailCards({ data }: { data: DashboardIndicators }) {
       </DetailCard>
 
       <DetailCard title={t('dashboard.indicators.causality.title')}>
-        <BarList
+        <CategoryBarList
           rows={CAUSALITY_CATEGORIES.map((category) =>
             countRow(category, t(`dashboard.indicators.causality.${category}`), causality.categories[category]),
           )}

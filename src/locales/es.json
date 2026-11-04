@@ -2406,6 +2406,35 @@
     "charts": {
       "viewTable": "Ver como tabla",
       "viewChart": "Ver como gráfico"
+    },
+    "programmatic": {
+      "title": "Fallos programáticos",
+      "administration": {
+        "title": "Errores de administración",
+        "prescriptionError": "Error de prescripción o de indicación",
+        "contaminatedVaccine": "Vacuna posiblemente contaminada",
+        "abnormalVaccineConditions": "Condiciones físicas anormales de la vacuna",
+        "preparationError": "Error de preparación o reconstitución",
+        "handlingError": "Error de manipulación",
+        "improperAdministration": "Administración incorrecta",
+        "anyError": "Al menos un error de administración"
+      },
+      "coldChain": {
+        "title": "Cadena de frío",
+        "rangeDeviation": "Desviación del rango de temperatura",
+        "procedureNotFollowed": "Procedimiento de almacenamiento no seguido",
+        "vaccineNotUsable": "Vacuna no utilizable",
+        "diluentNotUsable": "Diluyente no utilizable",
+        "partiallyReconstitutedVaccine": "Vacuna parcialmente reconstituida",
+        "otherObjectPresent": "Otros objetos en el refrigerador",
+        "anyFailure": "Al menos un fallo de cadena de frío"
+      },
+      "denominator_one": "Sobre {{count}} investigación con registro",
+      "denominator_other": "Sobre {{count}} investigaciones con registro",
+      "withoutRecord_one": "{{count}} investigación sin registro",
+      "withoutRecord_other": "{{count}} investigaciones sin registro",
+      "noInvestigations": "Ningún caso del periodo tiene investigación.",
+      "noRecords": "Sin investigaciones con registro."
     }
   },
   "shell": {
