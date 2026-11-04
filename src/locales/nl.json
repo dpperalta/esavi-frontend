@@ -2494,8 +2494,8 @@
       },
       "self": "In de eenheid zelf",
       "unlocated": "Zonder locatie",
-      "unmappedNote_one": "{{count}} geval kan niet op de kaart worden geplaatst",
-      "unmappedNote_other": "{{count}} gevallen kunnen niet op de kaart worden geplaatst",
+      "unmappedNote_one": "{{formatted}} geval kan niet op de kaart worden geplaatst",
+      "unmappedNote_other": "{{formatted}} gevallen kunnen niet op de kaart worden geplaatst",
       "drillDown": "{{name}} bekijken",
       "noMappable": "Geen enkele eenheid op dit niveau heeft coördinaten voor de kaart",
       "tooltip": {
@@ -2505,7 +2505,9 @@
         "serious_other": "{{formatted}} ernstig"
       },
       "summary_one": "{{count}} eenheid op de kaart; die met de meeste gevallen, {{name}} met {{total}}",
-      "summary_other": "{{count}} eenheden op de kaart; die met de meeste gevallen, {{name}} met {{total}}"
+      "summary_other": "{{count}} eenheden op de kaart; die met de meeste gevallen, {{name}} met {{total}}",
+      "zoomIn": "Inzoomen",
+      "zoomOut": "Uitzoomen"
     }
   },
   "shell": {

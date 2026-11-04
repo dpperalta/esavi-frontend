@@ -53,7 +53,10 @@ export function GeoDistributionTable({ rows }: { rows: DashboardGeoRow[] }) {
       </Table>
       {unmapped > 0 && (
         <p className="text-sm text-muted-foreground">
-          {t('dashboard.geo.unmappedNote', { count: unmapped })}
+          {t('dashboard.geo.unmappedNote', {
+            count: unmapped,
+            formatted: countFormat.format(unmapped),
+          })}
         </p>
       )}
     </div>
@@ -81,7 +84,7 @@ function RowLabel({ row, onDrillDown }: RowLabelProps) {
       type="button"
       variant="link"
       translate="no"
-      className="h-auto min-h-9 px-0 py-1 text-left whitespace-normal pointer-coarse:min-h-11"
+      className="h-auto min-h-9 px-0 py-1 text-left break-words whitespace-normal pointer-coarse:min-h-11"
       aria-label={t('dashboard.geo.drillDown', { name: row.name })}
       onClick={() => onDrillDown(geoLocationId)}
     >

@@ -2494,8 +2494,8 @@
       },
       "self": "En la propia unidad",
       "unlocated": "Sin ubicación",
-      "unmappedNote_one": "{{count}} caso no se puede ubicar en el mapa",
-      "unmappedNote_other": "{{count}} casos no se pueden ubicar en el mapa",
+      "unmappedNote_one": "{{formatted}} caso no se puede ubicar en el mapa",
+      "unmappedNote_other": "{{formatted}} casos no se pueden ubicar en el mapa",
       "drillDown": "Ver {{name}}",
       "noMappable": "Ninguna unidad de este nivel tiene coordenadas para el mapa",
       "tooltip": {
@@ -2505,7 +2505,9 @@
         "serious_other": "{{formatted}} graves"
       },
       "summary_one": "{{count}} unidad en el mapa; la de más casos, {{name}} con {{total}}",
-      "summary_other": "{{count}} unidades en el mapa; la de más casos, {{name}} con {{total}}"
+      "summary_other": "{{count}} unidades en el mapa; la de más casos, {{name}} con {{total}}",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar"
     }
   },
   "shell": {

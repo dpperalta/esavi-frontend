@@ -80,6 +80,14 @@ vi.mock('leaflet', () => {
           new FakeCircle(latlng, options),
       ),
       latLngBounds: vi.fn((points: unknown) => ({ points })),
+      control: {
+        zoom: vi.fn(() => ({
+          addTo() {
+            return this;
+          },
+          remove() {},
+        })),
+      },
     },
   };
 });
@@ -176,6 +184,13 @@ describe('GeoDistributionMap', () => {
     );
   });
 
+  it('los botones de zoom llevan títulos traducidos, no los de Leaflet en inglés', () => {
+    renderMap();
+
+    expect(vi.mocked(L.map).mock.calls[0][1]).toMatchObject({ zoomControl: false });
+    expect(L.control.zoom).toHaveBeenCalledWith({ zoomInTitle: 'Acercar', zoomOutTitle: 'Alejar' });
+  });
+
   it('el tooltip lleva el nombre, los casos y los graves', () => {
     renderMap();
 
@@ -184,12 +199,12 @@ describe('GeoDistributionMap', () => {
 
   it('cambiar las filas redibuja los círculos sin recrear el mapa', () => {
     const { container, rerenderRows } = renderMap();
-    const mapNode = container.querySelector('[role="img"]');
+    const mapNode = container.querySelector('figure > div');
 
     rerenderRows(rows.slice(1));
 
     expect(L.map).toHaveBeenCalledTimes(1);
-    expect(container.querySelector('[role="img"]')).toBe(mapNode);
+    expect(container.querySelector('figure > div')).toBe(mapNode);
     expect(circles()).toHaveLength(1);
     expect(circles()[0].options.radius).toBe(28);
   });
@@ -208,7 +223,7 @@ describe('GeoDistributionMap', () => {
     expect(circles()).toHaveLength(0);
     expect(lastMap().fitBounds).not.toHaveBeenCalled();
     expect(lastMap().setView).toHaveBeenCalled();
-    expect(screen.getByRole('img')).toHaveAccessibleName(
+    expect(screen.getByRole('figure')).toHaveAccessibleName(
       'Ninguna unidad de este nivel tiene coordenadas para el mapa',
     );
   });
@@ -216,7 +231,7 @@ describe('GeoDistributionMap', () => {
   it('el contenedor resume el mapa para lectores de pantalla', () => {
     renderMap();
 
-    expect(screen.getByRole('img')).toHaveAccessibleName(
+    expect(screen.getByRole('figure')).toHaveAccessibleName(
       '2 unidades en el mapa; la de más casos, Pichincha con 18',
     );
   });

@@ -4,7 +4,6 @@ import type { DashboardDistributions } from '@/contracts/dashboard';
 import { Button } from '@/shared/components/ui/button';
 import { GeoDistributionMap } from './GeoDistributionMap';
 import { GeoDistributionTable } from './GeoDistributionTable';
-import { isMappable } from './geoRows';
 import { useGeoDrillDown } from './useGeoDrillDown';
 
 interface GeoDistributionBlockProps {
@@ -18,7 +17,6 @@ export function GeoDistributionBlock({ data, hasUnit }: GeoDistributionBlockProp
   const { t } = useTranslation();
   const titleId = useId();
   const { showWholeTerritory } = useGeoDrillDown();
-  const hasCircles = data.rows.some((row) => isMappable(row) && row.total > 0);
 
   return (
     <section aria-labelledby={titleId} className="flex min-w-0 flex-col gap-4">
@@ -45,11 +43,9 @@ export function GeoDistributionBlock({ data, hasUnit }: GeoDistributionBlockProp
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="flex min-w-0 flex-col gap-2">
+          {/* Without circles the map's own caption becomes the «no coordinates» notice. */}
+          <div className="min-w-0">
             <GeoDistributionMap rows={data.rows} />
-            {!hasCircles && (
-              <p className="text-sm text-muted-foreground">{t('dashboard.geo.noMappable')}</p>
-            )}
           </div>
           <div className="min-w-0">
             <GeoDistributionTable rows={data.rows} />

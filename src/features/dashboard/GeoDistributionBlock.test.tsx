@@ -28,7 +28,7 @@ describe('GeoDistributionBlock', () => {
 
     const block = screen.getByRole('region', { name: 'Distribución geográfica' });
     expect(within(block).getByText('Por ubicación del establecimiento')).toBeInTheDocument();
-    expect(within(block).getByRole('img')).toHaveAccessibleName(
+    expect(within(block).getByRole('figure')).toHaveAccessibleName(
       '2 unidades en el mapa; la de más casos, Pichincha con 18',
     );
     expect(within(block).getByRole('table')).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe('GeoDistributionBlock', () => {
     renderBlock({ rows: [] }, '?range=90d&geoLocationId=3f1c2a9e-8b4d-4c1e-9a7f-2d6b5e8c1a40');
 
     expect(screen.getByText('No hay unidades para mostrar en este nivel.')).toBeInTheDocument();
-    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+    expect(screen.queryByRole('figure')).not.toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Ver todo mi territorio' }));
@@ -61,7 +61,7 @@ describe('GeoDistributionBlock', () => {
   it('con filas pero ninguna con coordenadas, el mapa queda sin círculos con su aviso y la tabla completa', () => {
     renderBlock({ rows: rows.slice(2) });
 
-    expect(screen.getByRole('img')).toBeInTheDocument();
+    expect(screen.getByRole('figure')).toBeInTheDocument();
     expect(
       screen.getAllByText('Ninguna unidad de este nivel tiene coordenadas para el mapa'),
     ).toHaveLength(1);

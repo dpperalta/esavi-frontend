@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -37,6 +37,7 @@ function hasSize(element: HTMLElement): boolean {
 export function GeoDistributionMap({ rows }: { rows: DashboardGeoRow[] }) {
   const { t, i18n } = useTranslation();
   const { drillDown } = useGeoDrillDown();
+  const captionId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const circlesRef = useRef<L.LayerGroup | null>(null);
@@ -68,8 +69,10 @@ export function GeoDistributionMap({ rows }: { rows: DashboardGeoRow[] }) {
       zoom: DEFAULT_ZOOM,
       // A map halfway down Inicio must not trap the wheel; zoom stays on the controls and gestures.
       scrollWheelZoom: false,
-      // The circles take no focus and the container is an image: the table is the keyboard path.
+      // The circles take no focus: the table is the keyboard path, so the container is no tab stop.
       keyboard: false,
+      // Leaflet's own control carries English titles; a translated one is added below.
+      zoomControl: false,
     });
     L.tileLayer(resolveTileUrl(), {
       attribution: MAP_TILE_ATTRIBUTION,
@@ -169,12 +172,29 @@ export function GeoDistributionMap({ rows }: { rows: DashboardGeoRow[] }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, i18n.language]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return undefined;
+    const zoom = L.control
+      .zoom({ zoomInTitle: t('dashboard.geo.zoomIn'), zoomOutTitle: t('dashboard.geo.zoomOut') })
+      .addTo(map);
+    return () => {
+      zoom.remove();
+    };
+  }, [t]);
+
+  // A figure, not role="img": Leaflet's zoom buttons live inside the container and must stay
+  // reachable, which an img's presentational children are not. The caption carries the summary,
+  // and is visible when there is no circle, since it is then the «no coordinates» notice.
   return (
-    <div
-      ref={containerRef}
-      role="img"
-      aria-label={summary}
-      className="isolate h-[260px] w-full rounded-md border border-border lg:h-[360px]"
-    />
+    <figure aria-labelledby={captionId} className="m-0 flex flex-col gap-2">
+      <div
+        ref={containerRef}
+        className="isolate h-[260px] w-full rounded-md border border-border lg:h-[360px]"
+      />
+      <figcaption id={captionId} className={top ? 'sr-only' : 'text-sm text-muted-foreground'}>
+        {summary}
+      </figcaption>
+    </figure>
   );
 }
