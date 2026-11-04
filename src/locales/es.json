@@ -804,7 +804,10 @@
       },
       "errors": {
         "rangeInvalid": "La fecha inicial no puede ser posterior a la fecha final."
-      }
+      },
+      "batchNumber": "Lote",
+      "vaccineKeyChip": "Solo la vacuna de la alerta",
+      "removeVaccineKey": "Quitar el filtro de la vacuna de la alerta"
     },
     "list": {
       "title": "Casos ESAVI",

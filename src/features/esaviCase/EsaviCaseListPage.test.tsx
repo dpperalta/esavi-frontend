@@ -237,6 +237,67 @@ describe('EsaviCaseListPage — filtros hacia el 002A/002B', () => {
   });
 });
 
+const VACCINE_KEY = 'W:3f2a9c1e-8b7d-4e6f-a5c4-1d2e3f4a5b6c';
+const FROM_ALERT = `/esavi-cases?batchNumber=AB123&vaccineKey=${encodeURIComponent(VACCINE_KEY)}&reportDateFrom=2026-01-01&reportDateTo=2026-03-31`;
+
+function captureListParams() {
+  const received: { params: URLSearchParams | null } = { params: null };
+  server.use(
+    http.get('http://localhost:4500/api/esavi-cases', ({ request }) => {
+      received.params = new URL(request.url).searchParams;
+      return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+    }),
+  );
+  return received;
+}
+
+describe('EsaviCaseListPage — filtro por lote (SPEC FE37)', () => {
+  it('llegar desde una alerta envía las cuatro claves al 002A y muestra el campo, el chip y el rango', async () => {
+    mockCurrentUser('USER', 20);
+    mockGeoLocationPicker();
+    const received = captureListParams();
+
+    renderPage(FROM_ALERT);
+
+    await waitFor(() => expect(received.params).not.toBeNull());
+    expect(received.params?.get('batchNumber')).toBe('AB123');
+    expect(received.params?.get('vaccineKey')).toBe(VACCINE_KEY);
+    expect(received.params?.get('reportDateFrom')).toBe('2026-01-01');
+    expect(received.params?.get('reportDateTo')).toBe('2026-03-31');
+    expect(screen.getAllByLabelText('Lote')[0]).toHaveValue('AB123');
+    expect(screen.getAllByText('Solo la vacuna de la alerta').length).toBeGreaterThan(0);
+  });
+
+  it('?vaccineKey sin lote, o ?batchNumber=--, no viajan al 002A', async () => {
+    mockCurrentUser('USER', 20);
+    mockGeoLocationPicker();
+    const received = captureListParams();
+
+    renderPage(`/esavi-cases?batchNumber=--&vaccineKey=${encodeURIComponent(VACCINE_KEY)}`);
+
+    await waitFor(() => expect(received.params).not.toBeNull());
+    expect(received.params?.has('batchNumber')).toBe(false);
+    expect(received.params?.has('vaccineKey')).toBe(false);
+  });
+
+  it('«Limpiar filtros» quita el lote y la vacuna', async () => {
+    mockCurrentUser('USER', 20);
+    mockGeoLocationPicker();
+    captureListParams();
+    const user = setupUser();
+
+    const router = renderPage(FROM_ALERT);
+
+    await user.click(await screen.findByRole('button', { name: 'Limpiar filtros' }));
+
+    await waitFor(() => {
+      const params = new URLSearchParams(router.state.location.search);
+      expect(params.has('batchNumber')).toBe(false);
+      expect(params.has('vaccineKey')).toBe(false);
+    });
+  });
+});
+
 describe('EsaviCaseListPage — estados vacíos', () => {
   it('el vacío sin filtros muestra la frase del alcance geográfico', async () => {
     mockCurrentUser('USER', 25);

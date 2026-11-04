@@ -135,6 +135,62 @@ describe('EsaviCaseFilters — segmentado Exacta/Rango', () => {
   });
 });
 
+describe('EsaviCaseFilters — lote y vacuna de la alerta (SPEC FE37)', () => {
+  const vaccineKey = 'W:3f2a9c1e-8b7d-4e6f-a5c4-1d2e3f4a5b6c';
+  const fromAlert = `/esavi-cases?batchNumber=AB123&vaccineKey=${encodeURIComponent(vaccineKey)}&reportDateFrom=2026-01-01`;
+
+  it('quitar el chip deja el lote y quita la vacuna', async () => {
+    mockGeoLocationPicker();
+    const user = setupUser();
+    const router = renderFilters(fromAlert);
+
+    await user.click(await screen.findByRole('button', { name: 'Quitar el filtro de la vacuna de la alerta' }));
+
+    const params = new URLSearchParams(router.state.location.search);
+    expect(params.get('batchNumber')).toBe('AB123');
+    expect(params.has('vaccineKey')).toBe(false);
+    expect(params.get('reportDateFrom')).toBe('2026-01-01');
+    expect(screen.queryByText('Solo la vacuna de la alerta')).not.toBeInTheDocument();
+  });
+
+  it('vaciar el lote quita las dos claves en la misma navegación', async () => {
+    mockGeoLocationPicker();
+    const user = setupUser();
+    const router = renderFilters(fromAlert);
+    let navigations = 0;
+    router.subscribe(() => {
+      navigations += 1;
+    });
+
+    await user.clear(await screen.findByLabelText('Lote'));
+
+    await waitFor(() => expect(new URLSearchParams(router.state.location.search).has('batchNumber')).toBe(false));
+    expect(new URLSearchParams(router.state.location.search).has('vaccineKey')).toBe(false);
+    expect(navigations).toBe(1);
+  });
+
+  it('cambiar el lote quita la vacuna', async () => {
+    mockGeoLocationPicker();
+    const user = setupUser();
+    const router = renderFilters(fromAlert);
+
+    const input = await screen.findByLabelText('Lote');
+    await user.clear(input);
+    await user.type(input, 'CD456');
+
+    await waitFor(() => expect(new URLSearchParams(router.state.location.search).get('batchNumber')).toBe('CD456'));
+    expect(new URLSearchParams(router.state.location.search).has('vaccineKey')).toBe(false);
+  });
+
+  it('sin lote no se muestra el chip', async () => {
+    mockGeoLocationPicker();
+    renderFilters(`/esavi-cases?vaccineKey=${encodeURIComponent(vaccineKey)}`);
+
+    await screen.findByLabelText('Lote');
+    expect(screen.queryByText('Solo la vacuna de la alerta')).not.toBeInTheDocument();
+  });
+});
+
 describe('countActiveEsaviCaseFilters', () => {
   it('cuenta sólo los parámetros de filtro presentes', () => {
     const params = new URLSearchParams(
@@ -145,6 +201,10 @@ describe('countActiveEsaviCaseFilters', () => {
 
   it('cuenta statusCode como filtro activo', () => {
     expect(countActiveEsaviCaseFilters(new URLSearchParams('?statusCode=OPEN&tab=cases'))).toBe(1);
+  });
+
+  it('cuenta batchNumber y vaccineKey como filtros activos', () => {
+    expect(countActiveEsaviCaseFilters(new URLSearchParams('?batchNumber=AB123&vaccineKey=T:x'))).toBe(2);
   });
 
   it('devuelve 0 sin filtros', () => {

@@ -804,7 +804,10 @@
       },
       "errors": {
         "rangeInvalid": "De begindatum kan niet later zijn dan de einddatum."
-      }
+      },
+      "batchNumber": "Batch",
+      "vaccineKeyChip": "Alleen het vaccin van de waarschuwing",
+      "removeVaccineKey": "Vaccinfilter van de waarschuwing verwijderen"
     },
     "list": {
       "title": "ESAVI-gevallen",

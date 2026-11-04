@@ -804,7 +804,10 @@
       },
       "errors": {
         "rangeInvalid": "The start date cannot be later than the end date."
-      }
+      },
+      "batchNumber": "Batch",
+      "vaccineKeyChip": "Only the alert's vaccine",
+      "removeVaccineKey": "Remove the alert's vaccine filter"
     },
     "list": {
       "title": "ESAVI cases",
