@@ -2277,6 +2277,116 @@
         "days_other": "{{count}} dagen wachtend",
         "empty": "Er zijn geen aangevraagde onderzoeken die nog moeten starten."
       }
+    },
+    "surveillance": {
+      "title": "Surveillance"
+    },
+    "period": {
+      "label": "Periode",
+      "range": {
+        "7d": "7 dagen",
+        "30d": "30 dagen",
+        "90d": "90 dagen",
+        "365d": "365 dagen"
+      },
+      "custom": "Aangepast",
+      "from": "Van",
+      "to": "Tot",
+      "apply": "Toepassen",
+      "current": "Van {{from}} tot {{to}}",
+      "previous": "Vorige periode: van {{from}} tot {{to}}",
+      "invalidLink": "De link bevatte een ongeldige periode of een ongeldig gebied; dat is genegeerd. Tenzij u een andere periode kiest, worden de laatste 30 dagen getoond.",
+      "geo": "Gebied",
+      "allCoverage": "Mijn volledige dekking",
+      "wholeTerritory": "Uw volledige gebied",
+      "selectedUnit": "Geselecteerde eenheid",
+      "wholeTerritoryLink": "Mijn volledige gebied bekijken",
+      "errors": {
+        "fromAfterTo": "De einddatum mag niet vóór de begindatum liggen.",
+        "futureTo": "De einddatum mag niet na vandaag liggen.",
+        "tooLong": "De periode mag niet langer zijn dan {{maxDays}} dagen."
+      }
+    },
+    "indicators": {
+      "title": "Indicatoren",
+      "error": "We konden de indicatoren niet laden.",
+      "noCasesInPeriod": "Er zijn in deze periode geen gevallen gemeld.",
+      "noData": "Geen gevallen",
+      "change": {
+        "new": "Nieuw",
+        "none": "Geen verandering",
+        "up": "{{value}} meer dan in de vorige periode",
+        "down": "{{value}} minder dan in de vorige periode",
+        "pp": "{{value}} pp",
+        "previousValue": "Vorige waarde: {{value}}"
+      },
+      "kpi": {
+        "cases": "Gevallen in de periode",
+        "seriousPct": "Ernstig van de geclassificeerde",
+        "deaths": "Overlijdens",
+        "timelinessMedian": "Mediane meldingstermijn",
+        "accessibleName": "{{label}}: {{value}}. {{change}}",
+        "accessibleNameWithoutChange": "{{label}}: {{value}}"
+      },
+      "volume": {
+        "title": "Per type melding",
+        "SEVERE": "Ernstig",
+        "NON_SEVERE": "Niet ernstig",
+        "none": "Geen type melding"
+      },
+      "severity": {
+        "title": "Ernst",
+        "noClassified": "Geen geclassificeerde gevallen",
+        "classified": "Geclassificeerd: {{count}}",
+        "unclassified": "Niet geclassificeerd: {{count}}",
+        "criteriaTitle": "Ernstcriteria",
+        "criteria": {
+          "death": "Overlijden",
+          "disability": "Invaliditeit",
+          "congenitalAnomaly": "Aangeboren afwijking",
+          "fetalDeath": "Foetale sterfte",
+          "lifeThreatening": "Levensbedreigend",
+          "hospitalization": "Ziekenhuisopname",
+          "abortion": "Abortus",
+          "otherCondition": "Andere belangrijke medische aandoening"
+        }
+      },
+      "deaths": {
+        "title": "Overlijdens en autopsieën",
+        "autopsyRequested": "Autopsie aangevraagd",
+        "autopsyPerformed": "Autopsie uitgevoerd"
+      },
+      "timeliness": {
+        "title": "Tijdigheid van de melding",
+        "onTime": "Op tijd gemeld: {{count}} van {{total}}",
+        "withoutEventDate": "Zonder datum van het voorval: {{count}}",
+        "noDeadline": "Termijn niet ingesteld",
+        "deadline": "Termijn: {{days}}"
+      },
+      "closure": {
+        "title": "Afsluiting",
+        "closedCases_one": "{{count}} geval afgesloten in de periode",
+        "closedCases_other": "{{count}} gevallen afgesloten in de periode",
+        "median": "Mediane tijd tot afsluiting"
+      },
+      "causality": {
+        "title": "Causaliteit",
+        "withoutFinalClassification": "Zonder eindclassificatie: {{count}}",
+        "UNCLASSIFIED": "Niet geclassificeerd",
+        "A": "A. Consistent causaal verband",
+        "B": "B. Onbepaald",
+        "C": "C. Inconsistent causaal verband",
+        "D": "D. Niet classificeerbaar",
+        "aSub": {
+          "vaccineProduct": "A1. Vaccin of de componenten ervan",
+          "qualityDeviation": "A2. Kwaliteitsafwijking",
+          "programmaticError": "A3. Programmatische fout",
+          "stress": "A4. Vaccinatiestress",
+          "note": "Subcategorieën van A: een geval kan in meerdere meetellen."
+        }
+      },
+      "days_one": "{{value}} dag",
+      "days_other": "{{value}} dagen"
     }
   },
   "shell": {

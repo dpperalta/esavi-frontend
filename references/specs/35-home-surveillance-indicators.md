@@ -1,6 +1,6 @@
 # SPEC FE35 — Inicio: periodo de vigilancia e indicadores
 
-> **Estado:** Borrador
+> **Estado:** Implementado
 > **Depende de:** SPEC FE34 (marco de Inicio por bloques, contrato `dashboard.ts`, etiquetas de etapa), SPEC FE22 (cobertura geográfica del usuario), SPEC F66 del backend (indicadores de vigilancia y validador de periodo), SPEC F49 del backend (alcance geográfico)
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que Inicio muestre los indicadores de vigilancia de un periodo elegido, comparados con el periodo anterior y acotados al territorio del usuario, y fijar el control de periodo que heredan FE36 y FE37.

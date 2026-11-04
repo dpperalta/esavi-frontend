@@ -2277,6 +2277,116 @@
         "days_other": "{{count}} days waiting",
         "empty": "No requested investigations are waiting to start."
       }
+    },
+    "surveillance": {
+      "title": "Surveillance"
+    },
+    "period": {
+      "label": "Period",
+      "range": {
+        "7d": "7 days",
+        "30d": "30 days",
+        "90d": "90 days",
+        "365d": "365 days"
+      },
+      "custom": "Custom",
+      "from": "From",
+      "to": "To",
+      "apply": "Apply",
+      "current": "From {{from}} to {{to}}",
+      "previous": "Previous period: from {{from}} to {{to}}",
+      "invalidLink": "The link had a period or territory that is not valid, and it was ignored. Unless you pick another period, the last 30 days are shown.",
+      "geo": "Territory",
+      "allCoverage": "All my coverage",
+      "wholeTerritory": "Your whole territory",
+      "selectedUnit": "Selected unit",
+      "wholeTerritoryLink": "View my whole territory",
+      "errors": {
+        "fromAfterTo": "The end date cannot be earlier than the start date.",
+        "futureTo": "The end date cannot be later than today.",
+        "tooLong": "The period cannot exceed {{maxDays}} days."
+      }
+    },
+    "indicators": {
+      "title": "Indicators",
+      "error": "We couldn't load the indicators.",
+      "noCasesInPeriod": "No cases were reported in this period.",
+      "noData": "No cases",
+      "change": {
+        "new": "New",
+        "none": "No change",
+        "up": "{{value}} more than in the previous period",
+        "down": "{{value}} less than in the previous period",
+        "pp": "{{value}} pp",
+        "previousValue": "Previous value: {{value}}"
+      },
+      "kpi": {
+        "cases": "Cases in period",
+        "seriousPct": "Serious out of classified",
+        "deaths": "Deaths",
+        "timelinessMedian": "Median reporting delay",
+        "accessibleName": "{{label}}: {{value}}. {{change}}",
+        "accessibleNameWithoutChange": "{{label}}: {{value}}"
+      },
+      "volume": {
+        "title": "By notification type",
+        "SEVERE": "Serious",
+        "NON_SEVERE": "Non-serious",
+        "none": "No notification type"
+      },
+      "severity": {
+        "title": "Seriousness",
+        "noClassified": "No classified cases",
+        "classified": "Classified: {{count}}",
+        "unclassified": "Unclassified: {{count}}",
+        "criteriaTitle": "Seriousness criteria",
+        "criteria": {
+          "death": "Death",
+          "disability": "Disability",
+          "congenitalAnomaly": "Congenital anomaly",
+          "fetalDeath": "Fetal death",
+          "lifeThreatening": "Life-threatening",
+          "hospitalization": "Hospitalization",
+          "abortion": "Abortion",
+          "otherCondition": "Other important medical condition"
+        }
+      },
+      "deaths": {
+        "title": "Deaths and autopsies",
+        "autopsyRequested": "Autopsy requested",
+        "autopsyPerformed": "Autopsy performed"
+      },
+      "timeliness": {
+        "title": "Reporting timeliness",
+        "onTime": "Reported on time: {{count}} of {{total}}",
+        "withoutEventDate": "No event date: {{count}}",
+        "noDeadline": "Deadline not configured",
+        "deadline": "Deadline: {{days}}"
+      },
+      "closure": {
+        "title": "Closure",
+        "closedCases_one": "{{count}} case closed in the period",
+        "closedCases_other": "{{count}} cases closed in the period",
+        "median": "Median time to close"
+      },
+      "causality": {
+        "title": "Causality",
+        "withoutFinalClassification": "No final classification: {{count}}",
+        "UNCLASSIFIED": "Unclassified",
+        "A": "A. Consistent causal association",
+        "B": "B. Indeterminate",
+        "C": "C. Inconsistent causal association",
+        "D": "D. Unclassifiable",
+        "aSub": {
+          "vaccineProduct": "A1. Vaccine or its components",
+          "qualityDeviation": "A2. Quality defect",
+          "programmaticError": "A3. Programmatic error",
+          "stress": "A4. Immunization stress",
+          "note": "A subcategories: a case can count in several."
+        }
+      },
+      "days_one": "{{value}} day",
+      "days_other": "{{value}} days"
     }
   },
   "shell": {
