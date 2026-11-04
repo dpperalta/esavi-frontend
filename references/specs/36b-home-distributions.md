@@ -1,6 +1,6 @@
 # SPEC FE36b — Inicio: vacunas, sexo y edad, y fallos programáticos
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE36a (primitiva `chart.tsx`, paleta `--chart-*`, `useChartViewParam`), SPEC FE35 (sección «Vigilancia», `useDashboardPeriod`), SPEC FE34 (contrato `dashboard.ts`), SPEC F67 del backend (`ESAVI-DASH-009`)
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que la sección «Vigilancia» muestre, para el periodo elegido, con qué vacunas, en qué sexo y edad y con qué fallos programáticos se presentan los casos.

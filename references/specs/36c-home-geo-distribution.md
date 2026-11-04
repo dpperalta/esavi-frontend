@@ -1,6 +1,6 @@
 # SPEC FE36c — Inicio: distribución geográfica
 
-> **Estado:** Borrador
+> **Estado:** Aprobado
 > **Depende de:** SPEC FE36b (`DistributionsSection`, `useDistributions`), SPEC FE36a (paleta `--chart-*`), SPEC FE35 (barra de periodo, `useDashboardPeriod`, `geoLocationId` en la URL para todos los roles), SPEC F67 del backend (bloque `geography` de `ESAVI-DASH-009`), SPEC F49 del backend (alcance geográfico)
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que la sección «Vigilancia» muestre dónde se concentran los casos del periodo en un mapa de círculos y una tabla, y que pulsar una unidad baje de nivel para todo Inicio.
