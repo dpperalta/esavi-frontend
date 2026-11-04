@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type {
+  DashboardDistributions,
   DashboardEpiCurve,
   DashboardIndicators,
   DashboardPendingWork,
@@ -33,7 +34,9 @@ export function usePendingWork() {
 // ESAVI-DASH-007 — surveillance indicators of a period against the previous one of the same
 // length, scoped to the user's territory (SPEC F66, F49). ANALYTICS is its minimum role.
 async function fetchIndicators(query: DashboardPeriodQuery): Promise<DashboardIndicators> {
-  const response = await client.get<DashboardIndicators>('/dashboard/indicators', { params: query });
+  const response = await client.get<DashboardIndicators>('/dashboard/indicators', {
+    params: query,
+  });
   return response.data;
 }
 
@@ -70,6 +73,28 @@ export function useEpiCurve(query: DashboardPeriodQuery, options?: { enabled?: b
   return useQuery({
     queryKey: ['dashboard', 'epiCurve', query],
     queryFn: () => fetchEpiCurve(query),
+    enabled: options?.enabled ?? true,
+    staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
+    retry: retryUnlessClientError,
+  });
+}
+
+// ESAVI-DASH-009 — suspected vaccines (top 10 + others), sex × age matrix, geography and
+// programmatic failures of the period, in one response (SPEC F67). ANALYTICS minimum.
+async function fetchDistributions(query: DashboardPeriodQuery): Promise<DashboardDistributions> {
+  const response = await client.get<DashboardDistributions>('/dashboard/distributions', {
+    params: query,
+  });
+  return response.data;
+}
+
+// One key for FE36b and FE36c (SPEC FE36b §6): geography arrives in the same response, so the map
+// reads this cache instead of asking again.
+export function useDistributions(query: DashboardPeriodQuery, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['dashboard', 'distributions', query],
+    queryFn: () => fetchDistributions(query),
     enabled: options?.enabled ?? true,
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,

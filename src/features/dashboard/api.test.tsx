@@ -9,7 +9,8 @@ import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import type { DashboardPeriodQuery } from '@/contracts/dashboard';
 import { EsaviApiError } from '@/shared/api/types';
-import { useEpiCurve, useIndicators, usePendingWork } from './api';
+import { useDistributions, useEpiCurve, useIndicators, usePendingWork } from './api';
+import { distributionsFixture } from './distributionsFixture';
 import { epiCurveFixture } from './epiCurveFixture';
 import { indicatorsFixture } from './indicatorsFixture';
 import { pendingWorkFixture } from './pendingWorkFixture';
@@ -85,7 +86,9 @@ describe('usePendingWork — ESAVI-DASH-006', () => {
     const { result } = renderHook(() => usePendingWork(), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data?.funnel.map((row) => row.statusCode)).toEqual([...CASE_WORKFLOW_STATUS_CODES]);
+    expect(result.current.data?.funnel.map((row) => row.statusCode)).toEqual([
+      ...CASE_WORKFLOW_STATUS_CODES,
+    ]);
   });
 });
 
@@ -126,7 +129,9 @@ describe('useIndicators — ESAVI-DASH-007', () => {
           return HttpResponse.json({
             ok: true,
             message: 'ok',
-            data: indicatorsFixture({ volume: { ...indicatorsFixture().volume, total: { current: 7, previous: 3 } } }),
+            data: indicatorsFixture({
+              volume: { ...indicatorsFixture().volume, total: { current: 7, previous: 3 } },
+            }),
           });
         }
         return HttpResponse.json({ ok: true, message: 'ok', data: indicatorsFixture() });
@@ -166,7 +171,9 @@ describe('useIndicators — ESAVI-DASH-007', () => {
     // hook's rule, not the test client's.
     const { Wrapper } = createWrapper();
 
-    const { result } = renderHook(() => useIndicators({ from: '2030-01-01' }), { wrapper: Wrapper });
+    const { result } = renderHook(() => useIndicators({ from: '2030-01-01' }), {
+      wrapper: Wrapper,
+    });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(EsaviApiError);
@@ -177,7 +184,9 @@ describe('useIndicators — ESAVI-DASH-007', () => {
   it('enabled: false no hace ninguna petición', async () => {
     const { Wrapper } = createWrapper();
 
-    const { result } = renderHook(() => useIndicators({}, { enabled: false }), { wrapper: Wrapper });
+    const { result } = renderHook(() => useIndicators({}, { enabled: false }), {
+      wrapper: Wrapper,
+    });
 
     expect(result.current.fetchStatus).toBe('idle');
   });
@@ -277,6 +286,109 @@ describe('useEpiCurve — ESAVI-DASH-008', () => {
     const { Wrapper } = createWrapper();
 
     const { result } = renderHook(() => useEpiCurve({}, { enabled: false }), { wrapper: Wrapper });
+
+    expect(result.current.fetchStatus).toBe('idle');
+  });
+});
+
+describe('useDistributions — ESAVI-DASH-009', () => {
+  const DISTRIBUTIONS_URL = 'http://localhost:4500/api/dashboard/distributions';
+
+  it('envía la query como parámetros y desenvuelve el envelope', async () => {
+    let received: URLSearchParams | undefined;
+    server.use(
+      http.get(DISTRIBUTIONS_URL, ({ request }) => {
+        received = new URL(request.url).searchParams;
+        return HttpResponse.json({ ok: true, message: 'ok', data: distributionsFixture() });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(
+      () => useDistributions({ from: '2026-10-05', to: '2026-11-03', geoLocationId: 'geo-1' }),
+      { wrapper: Wrapper },
+    );
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(received?.get('from')).toBe('2026-10-05');
+    expect(received?.get('to')).toBe('2026-11-03');
+    expect(received?.get('geoLocationId')).toBe('geo-1');
+    expect(result.current.data?.vaccines.items).toHaveLength(4);
+    expect(result.current.data?.programmatic.investigatedCases).toBe(12);
+  });
+
+  it('cambiar de periodo no vacía data mientras llega la respuesta nueva', async () => {
+    let releaseSecond: () => void = () => {};
+    const secondGate = new Promise<void>((resolve) => {
+      releaseSecond = resolve;
+    });
+    server.use(
+      http.get(DISTRIBUTIONS_URL, async ({ request }) => {
+        if (new URL(request.url).searchParams.get('from') === '2026-10-28') {
+          await secondGate;
+          return HttpResponse.json({
+            ok: true,
+            message: 'ok',
+            data: distributionsFixture({
+              vaccines: {
+                items: [],
+                others: { cases: 0, serious: 0 },
+                casesWithoutSuspectedVaccine: 1,
+              },
+            }),
+          });
+        }
+        return HttpResponse.json({ ok: true, message: 'ok', data: distributionsFixture() });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+
+    const { result, rerender } = renderHook(
+      ({ query }: { query: DashboardPeriodQuery }) => useDistributions(query),
+      { wrapper: Wrapper, initialProps: { query: {} } },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    rerender({ query: { from: '2026-10-28' } });
+
+    await waitFor(() => expect(result.current.isFetching).toBe(true));
+    expect(result.current.isPlaceholderData).toBe(true);
+    expect(result.current.data?.vaccines.items).toHaveLength(4);
+
+    releaseSecond();
+    await waitFor(() => expect(result.current.data?.vaccines.items).toHaveLength(0));
+    expect(result.current.isPlaceholderData).toBe(false);
+  });
+
+  it('un 400 expone status 400 sin lanzar y sin reintentar', async () => {
+    let requests = 0;
+    server.use(
+      http.get(DISTRIBUTIONS_URL, () => {
+        requests += 1;
+        return HttpResponse.json(
+          { ok: false, message: 'Periodo inválido', code: 'DASH_009_VALIDATION_ERROR', errors: [] },
+          { status: 400 },
+        );
+      }),
+    );
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useDistributions({ from: '2030-01-01' }), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(EsaviApiError);
+    expect((result.current.error as EsaviApiError).status).toBe(400);
+    expect(requests).toBe(1);
+  });
+
+  it('enabled: false no hace ninguna petición', () => {
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useDistributions({}, { enabled: false }), {
+      wrapper: Wrapper,
+    });
 
     expect(result.current.fetchStatus).toBe('idle');
   });
