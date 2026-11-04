@@ -2435,6 +2435,25 @@
       "withoutRecord_other": "{{count}} investigations without a record",
       "noInvestigations": "No case in the period has an investigation.",
       "noRecords": "No investigations with a record."
+    },
+    "vaccines": {
+      "title": "Suspected vaccines",
+      "others": "Other vaccines",
+      "uncoded": "Free text",
+      "uncodedHint": "Free text, not coded in WHODrug",
+      "noLabel": "No name",
+      "withoutSuspected_one": "{{count}} case without a suspected vaccine",
+      "withoutSuspected_other": "{{count}} cases without a suspected vaccine",
+      "multiNote": "A case can count under several vaccines.",
+      "empty": "No suspected vaccines recorded in this period.",
+      "summary_one": "{{count}} suspected vaccine: {{label}} with {{cases}} cases",
+      "summary_other": "{{count}} suspected vaccines, the most frequent {{label}} with {{cases}} cases",
+      "columns": {
+        "vaccine": "Vaccine",
+        "coded": "Coded",
+        "cases": "Cases",
+        "serious": "Serious"
+      }
     }
   },
   "shell": {

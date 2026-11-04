@@ -2435,6 +2435,25 @@
       "withoutRecord_other": "{{count}} onderzoeken zonder registratie",
       "noInvestigations": "Geen enkel geval in de periode heeft een onderzoek.",
       "noRecords": "Geen onderzoeken met registratie."
+    },
+    "vaccines": {
+      "title": "Verdachte vaccins",
+      "others": "Overige vaccins",
+      "uncoded": "Vrije tekst",
+      "uncodedHint": "Vrije tekst, niet gecodeerd in WHODrug",
+      "noLabel": "Zonder naam",
+      "withoutSuspected_one": "{{count}} geval zonder verdacht vaccin",
+      "withoutSuspected_other": "{{count}} gevallen zonder verdacht vaccin",
+      "multiNote": "Een geval kan bij meerdere vaccins meetellen.",
+      "empty": "Geen verdachte vaccins geregistreerd in deze periode.",
+      "summary_one": "{{count}} verdacht vaccin: {{label}} met {{cases}} gevallen",
+      "summary_other": "{{count}} verdachte vaccins, het meest voorkomende {{label}} met {{cases}} gevallen",
+      "columns": {
+        "vaccine": "Vaccin",
+        "coded": "Gecodeerd",
+        "cases": "Gevallen",
+        "serious": "Ernstig"
+      }
     }
   },
   "shell": {

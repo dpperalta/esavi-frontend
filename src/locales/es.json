@@ -2435,6 +2435,25 @@
       "withoutRecord_other": "{{count}} investigaciones sin registro",
       "noInvestigations": "Ningún caso del periodo tiene investigación.",
       "noRecords": "Sin investigaciones con registro."
+    },
+    "vaccines": {
+      "title": "Vacunas sospechosas",
+      "others": "Otras vacunas",
+      "uncoded": "Texto libre",
+      "uncodedHint": "Texto libre, sin codificar en WHODrug",
+      "noLabel": "Sin nombre",
+      "withoutSuspected_one": "{{count}} caso sin vacuna sospechosa",
+      "withoutSuspected_other": "{{count}} casos sin vacuna sospechosa",
+      "multiNote": "Un caso puede contar en varias vacunas.",
+      "empty": "No hay vacunas sospechosas registradas en este periodo.",
+      "summary_one": "{{count}} vacuna sospechosa: {{label}} con {{cases}} casos",
+      "summary_other": "{{count}} vacunas sospechosas, la más frecuente {{label}} con {{cases}} casos",
+      "columns": {
+        "vaccine": "Vacuna",
+        "coded": "Codificada",
+        "cases": "Casos",
+        "serious": "Graves"
+      }
     }
   },
   "shell": {
