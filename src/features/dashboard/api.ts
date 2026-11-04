@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type {
+  DashboardBatchAlerts,
   DashboardDistributions,
   DashboardEpiCurve,
   DashboardIndicators,
@@ -95,6 +96,27 @@ export function useDistributions(query: DashboardPeriodQuery, options?: { enable
   return useQuery({
     queryKey: ['dashboard', 'distributions', query],
     queryFn: () => fetchDistributions(query),
+    enabled: options?.enabled ?? true,
+    staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
+    retry: retryUnlessClientError,
+  });
+}
+
+// ESAVI-DASH-010 — vaccine batches over the cases, serious or deaths thresholds of the period,
+// scoped to the user's territory, at most 50 and already ordered (SPEC F68). ANALYTICS minimum.
+async function fetchBatchAlerts(query: DashboardPeriodQuery): Promise<DashboardBatchAlerts> {
+  const response = await client.get<DashboardBatchAlerts>('/dashboard/batch-alerts', {
+    params: query,
+  });
+  return response.data;
+}
+
+// Same query as 007–009 and no previous period (SPEC FE37 §3.2), so it changes period with them.
+export function useBatchAlerts(query: DashboardPeriodQuery, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['dashboard', 'batchAlerts', query],
+    queryFn: () => fetchBatchAlerts(query),
     enabled: options?.enabled ?? true,
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
