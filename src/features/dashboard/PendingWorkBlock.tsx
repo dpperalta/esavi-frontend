@@ -1,5 +1,4 @@
 import { type ReactNode, useId } from 'react';
-import { format } from 'date-fns';
 import type { TFunction } from 'i18next';
 import { RefreshCwIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -92,6 +91,7 @@ function CaseCodeLink({ caseId, caseCode }: { caseId: string; caseCode: string }
   return (
     <Link
       to={`/esavi-cases/${caseId}/wizard`}
+      translate="no"
       className={cn(linkFocusClass, 'inline-flex min-h-11 items-center font-medium text-primary underline-offset-4 hover:underline')}
     >
       {caseCode}
@@ -236,6 +236,10 @@ function PendingWorkSkeleton() {
   );
 }
 
+function formatTime(iso: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
+}
+
 function errorMessage(t: TFunction, error: unknown): string {
   return error instanceof EsaviApiError && error.code === 'NETWORK_ERROR'
     ? t('errors.network')
@@ -250,7 +254,7 @@ export interface PendingWorkBlockProps {
 // ESAVI-DASH-006 via usePendingWork (SPEC FE34). Every state stays inside the section, so the
 // greeting above it is never replaced by a loading or error screen.
 export function PendingWorkBlock({ roleName }: PendingWorkBlockProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const titleId = useId();
   const { data, isPending, isError, error, isFetching, refetch } = usePendingWork();
   const layout = getPendingWorkLayout(roleName);
@@ -267,12 +271,12 @@ export function PendingWorkBlock({ roleName }: PendingWorkBlockProps) {
             {t('dashboard.pendingWork.title')}
           </h2>
           {data && (
-            <p className="text-sm text-muted-foreground">
+            <p aria-live="polite" className="text-sm text-muted-foreground">
               {t('dashboard.pendingWork.openCases', { count: data.openCases })}
               {' · '}
               {t('dashboard.pendingWork.reopened', { count: data.reopened.total })}
               {' · '}
-              {t('dashboard.pendingWork.updatedAt', { time: format(new Date(data.generatedAt), 'HH:mm') })}
+              {t('dashboard.pendingWork.updatedAt', { time: formatTime(data.generatedAt, i18n.language) })}
             </p>
           )}
         </div>
