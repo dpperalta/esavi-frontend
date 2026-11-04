@@ -87,6 +87,68 @@ describe('esaviCaseFiltersSchema', () => {
     expect(typo.success && typo.data.includeInactive).toBe(false);
     expect(absent.success && absent.data.includeInactive).toBe(false);
   });
+
+  describe('lote y vacuna (SPEC FE37)', () => {
+    const vaccineKey = 'W:3f2a9c1e-8b7d-4e6f-a5c4-1d2e3f4a5b6c';
+
+    it('batchNumber=AB-123 es válido y viaja tal como llega', () => {
+      const result = esaviCaseFiltersSchema.parse({ batchNumber: 'AB-123' });
+      expect(result.filters.batchNumber).toBe('AB-123');
+    });
+
+    it('batchNumber sin letras ni números se descarta', () => {
+      const result = esaviCaseFiltersSchema.parse({ batchNumber: '--' });
+      expect(result.filters.batchNumber).toBeUndefined();
+    });
+
+    it('batchNumber de más de 100 caracteres se descarta', () => {
+      const result = esaviCaseFiltersSchema.parse({ batchNumber: 'A'.repeat(101) });
+      expect(result.filters.batchNumber).toBeUndefined();
+    });
+
+    it('vaccineKey W:<uuid> con lote se conserva, y T:<texto> también', () => {
+      expect(
+        esaviCaseFiltersSchema.parse({ batchNumber: 'AB123', vaccineKey }).filters.vaccineKey,
+      ).toBe(vaccineKey);
+      expect(
+        esaviCaseFiltersSchema.parse({ batchNumber: 'AB123', vaccineKey: 'T:vacuna libre' }).filters
+          .vaccineKey,
+      ).toBe('T:vacuna libre');
+    });
+
+    it('vaccineKey sin lote, o con un lote descartado, se descarta', () => {
+      expect(esaviCaseFiltersSchema.parse({ vaccineKey }).filters).not.toHaveProperty('vaccineKey');
+      expect(
+        esaviCaseFiltersSchema.parse({ batchNumber: '--', vaccineKey }).filters,
+      ).not.toHaveProperty('vaccineKey');
+    });
+
+    it('vaccineKey=foo se descarta', () => {
+      const result = esaviCaseFiltersSchema.parse({ batchNumber: 'AB123', vaccineKey: 'foo' });
+      expect(result.filters).not.toHaveProperty('vaccineKey');
+    });
+
+    it('los otros quince filtros no cambian con lote y vacuna presentes', () => {
+      const others = {
+        code: 'EC-001',
+        statusCode: 'IN_NOTIFICATION',
+        patientId: '0b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e',
+        healthFacilityId: '1b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e',
+        geoLocationId: '2b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e',
+        reportDate: '2026-01-10',
+        eventDateFrom: '2026-01-01',
+        eventDateTo: '2026-01-31',
+        reportFillingDateFrom: '2026-02-01',
+      };
+      const without = esaviCaseFiltersSchema.parse(others).filters;
+      const withBatch = esaviCaseFiltersSchema.parse({
+        ...others,
+        batchNumber: 'AB123',
+        vaccineKey,
+      }).filters;
+      expect(withBatch).toEqual({ ...without, batchNumber: 'AB123', vaccineKey });
+    });
+  });
 });
 
 describe('caseWorkflowFiltersSchema', () => {
