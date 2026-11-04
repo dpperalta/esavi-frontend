@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { EsaviApiError } from '@/shared/api/types';
 import { useIndicators } from './api';
 import { DashboardPeriodBar } from './DashboardPeriodBar';
+import { EpiCurveBlock } from './EpiCurveBlock';
 import { IndicatorsBlock } from './IndicatorsBlock';
 import { useDashboardPeriod } from './useDashboardPeriod';
 
@@ -53,6 +54,7 @@ export function SurveillanceSection() {
         serverRejected={periodWasRejected && period.params.mode === 'default'}
       />
       <IndicatorsBlock query={period.query} enabled={period.isReady} />
+      <EpiCurveBlock query={period.query} enabled={period.isReady} />
     </section>
   );
 }

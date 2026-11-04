@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { setupUser } from '@/test/user';
 import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
@@ -10,6 +10,7 @@ import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { MemoryRouter, useLocation } from 'react-router-dom';
+import { epiCurveFixture } from '@/features/dashboard/epiCurveFixture';
 import { indicatorsFixture } from '@/features/dashboard/indicatorsFixture';
 import { pendingWorkFixture } from '@/features/dashboard/pendingWorkFixture';
 import { TooltipProvider } from '@/shared/components/ui/tooltip';
@@ -31,11 +32,14 @@ beforeEach(() => {
   tokenStore.setRefreshToken('a-refresh-token');
   setAccessToken('a-token');
   // Since SPEC FE35 every role from ANALYTICS up mounts «Vigilancia», which asks for the
-  // indicators and, by level, the coverage or the geo tree. These defaults keep the FE34 tests
-  // about their own block; each test can still override them.
+  // indicators, the epidemic curve (FE36a) and, by level, the coverage or the geo tree. These
+  // defaults keep the FE34 tests about their own block; each test can still override them.
   server.use(
     http.get(`${API}/dashboard/indicators`, () =>
       HttpResponse.json({ ok: true, message: 'ok', data: indicatorsFixture() }),
+    ),
+    http.get(`${API}/dashboard/epi-curve`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: epiCurveFixture() }),
     ),
     http.get(`${API}/user-geo-locations/user/:id/coverage`, () =>
       HttpResponse.json({ ok: true, message: 'ok', data: { assigned: [], coverage: [], count: 0 } }),
@@ -316,5 +320,98 @@ describe('HomePage — sección «Vigilancia» (SPEC FE35)', () => {
     expect(screen.getByRole('radiogroup', { name: 'Periodo' })).toBeInTheDocument();
     const indicators = screen.getByRole('region', { name: 'Indicadores' });
     expect(indicators).toContainElement(screen.getByRole('button', { name: 'Reintentar' }));
+  });
+});
+
+describe('HomePage — curva epidemiológica (SPEC FE36a)', () => {
+  function recordRequests() {
+    const requests: { path: string; search: string }[] = [];
+    server.events.on('request:start', ({ request }) => {
+      const url = new URL(request.url);
+      requests.push({ path: url.pathname, search: url.search });
+    });
+    return requests;
+  }
+
+  afterEach(() => server.events.removeAllListeners());
+
+  it('con ANALYTICS pide /indicators y /epi-curve con la misma query, y nada más que /users/me', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const requests = recordRequests();
+
+    renderHome(
+      '/?from=2026-10-01&to=2026-10-31&geoLocationId=3f1c2a9e-8b4d-4c1e-9a7f-2d6b5e8c1a40',
+    );
+
+    expect(await screen.findByRole('region', { name: 'Curva epidemiológica' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(requests.some(({ path }) => path.endsWith('/epi-curve'))).toBe(true),
+    );
+    const indicators = requests.find(({ path }) => path.endsWith('/indicators'));
+    const epiCurve = requests.find(({ path }) => path.endsWith('/epi-curve'));
+    expect(epiCurve?.search).toBe(indicators?.search);
+    expect(new Set(requests.map(({ path }) => path))).toEqual(
+      new Set(['/api/users/me', '/api/dashboard/indicators', '/api/dashboard/epi-curve']),
+    );
+  });
+
+  it('cambiar el atajo de periodo vuelve a pedir las dos con la misma query y conserva epiView', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const user = setupUser();
+    renderHome('/?range=30d&epiView=table');
+    await screen.findByRole('table');
+    const requests = recordRequests();
+
+    await user.click(screen.getByRole('radio', { name: '90 días' }));
+
+    await waitFor(() => {
+      expect(requests.filter(({ path }) => path.endsWith('/indicators'))).toHaveLength(1);
+      expect(requests.filter(({ path }) => path.endsWith('/epi-curve'))).toHaveLength(1);
+    });
+    const [indicators, epiCurve] = ['/indicators', '/epi-curve'].map(
+      (endpoint) => requests.find(({ path }) => path.endsWith(endpoint))?.search,
+    );
+    expect(epiCurve).toBe(indicators);
+    const search = new URLSearchParams(screen.getByTestId('search').textContent ?? '');
+    expect(search.get('range')).toBe('90d');
+    expect(search.get('epiView')).toBe('table');
+  });
+
+  it('la suma de la curva coincide con «Casos del periodo» para la misma query', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+
+    renderHome('/?epiView=table');
+
+    const curve = await screen.findByRole('region', { name: 'Curva epidemiológica' });
+    const totals = (await within(curve).findAllByRole('row'))
+      .slice(1)
+      .map((row) => Number(within(row).getAllByRole('cell').at(-1)?.textContent));
+    const casesInPeriod = indicatorsFixture().volume.total.current;
+    expect(totals.reduce((sum, total) => sum + total, 0)).toBe(casesInPeriod);
+    expect(
+      screen.getByRole('group', { name: new RegExp(`^Casos del periodo: ${casesInPeriod}`) }),
+    ).toBeInTheDocument();
+  });
+
+  it('un 500 de ESAVI-DASH-008 muestra el error de la curva y deja visibles los indicadores y la barra', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    server.use(
+      http.get(`${API}/dashboard/epi-curve`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'Error', code: 'DASH_008_EPI_CURVE_FAILED', errors: [] },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderHome();
+
+    const curve = await screen.findByRole('region', { name: 'Curva epidemiológica' });
+    expect(await within(curve).findByRole('alert')).toHaveTextContent(
+      'No pudimos cargar la curva epidemiológica.',
+    );
+    expect(within(curve).getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Periodo' })).toBeInTheDocument();
   });
 });
