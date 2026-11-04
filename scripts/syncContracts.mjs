@@ -98,6 +98,7 @@ const SYNC_MAP = [
   { source: 'systemConfig/systemConfig.types.ts', dest: 'systemConfig.ts' },
   { source: 'diagnosticTerm/diagnosticTerm.types.ts', dest: 'diagnosticTerm.ts' },
   { source: 'whodrugProduct/whodrugProduct.types.ts', dest: 'whodrugProduct.ts' },
+  { source: 'dashboard/dashboard.types.ts', dest: 'dashboard.ts' },
 ];
 
 // notification.types.ts and severeNotification.types.ts are the first mirrored files that import
@@ -126,6 +127,12 @@ const IMPORT_REWRITES = [
     // of from the backend's constants module.
     from: /import \{ TermSource \} from '\.\.\/\.\.\/constants\/enums\.constants';\r?\n/,
     to: "import type { TermSource } from './common';\n",
+  },
+  {
+    // dashboard.types.ts imports a sibling folder of src/types/; every mirrored contract sits flat
+    // in src/contracts/, so the path collapses to './caseWorkflow' (SPEC FE34 §3.3).
+    from: /import \{ CaseWorkflowStage \} from '\.\.\/caseWorkflow\/caseWorkflow\.types';\r?\n/,
+    to: "import type { CaseWorkflowStage } from './caseWorkflow';\n",
   },
 ];
 
