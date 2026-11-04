@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { distributionsFixture } from './distributionsFixture';
-import { sexAgeRows } from './sexAgeRows';
+import { pyramidMax, pyramidTicks, sexAgeRows } from './sexAgeRows';
 
 describe('sexAgeRows', () => {
   it('una fila por banda, en el orden de bands', () => {
@@ -61,5 +61,41 @@ describe('sexAgeRows', () => {
     );
 
     expect(total).toBe(42);
+  });
+});
+
+describe('pyramidMax', () => {
+  it('es el mayor valor de femenino o masculino, nunca menos de 1', () => {
+    expect(pyramidMax(sexAgeRows(distributionsFixture().sexAge))).toBe(5);
+    expect(
+      pyramidMax(sexAgeRows({ bands: ['LT_1Y'], sexes: ['FEMALE', 'MALE'], matrix: [[0, 0]] })),
+    ).toBe(1);
+  });
+
+  it('ignora desconocido y sin dato, que no se dibujan en la pirámide', () => {
+    const rows = sexAgeRows({
+      bands: ['UNKNOWN'],
+      sexes: ['FEMALE', 'MALE', 'UNKNOWN', 'NONE'],
+      matrix: [[1, 2, 9, 9]],
+    });
+    expect(pyramidMax(rows)).toBe(2);
+  });
+});
+
+describe('pyramidTicks', () => {
+  it('son simétricas alrededor de 0', () => {
+    for (const max of [1, 3, 5, 12, 137]) {
+      const ticks = pyramidTicks(max);
+      // `|| 0` turns -0 into 0, which toEqual tells apart.
+      expect(ticks).toEqual([...ticks].reverse().map((tick) => -tick || 0));
+      expect(ticks).toContain(0);
+      expect(ticks[0]).toBe(-max);
+      expect(ticks.at(-1)).toBe(max);
+    }
+  });
+
+  it('son enteras', () => {
+    expect(pyramidTicks(5)).toEqual([-5, -3, 0, 3, 5]);
+    expect(pyramidTicks(3)).toEqual([-3, -2, -1, 0, 1, 2, 3]);
   });
 });

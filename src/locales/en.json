@@ -2454,6 +2454,31 @@
         "cases": "Cases",
         "serious": "Serious"
       }
+    },
+    "sexAge": {
+      "title": "Sex and age",
+      "band": {
+        "LT_1Y": "< 1 year",
+        "Y1_17": "1–17",
+        "Y18_24": "18–24",
+        "Y25_49": "25–49",
+        "Y50_59": "50–59",
+        "Y60_69": "60–69",
+        "Y70_79": "70–79",
+        "Y80_PLUS": "80 and over",
+        "UNKNOWN": "No age"
+      },
+      "sex": {
+        "FEMALE": "Female",
+        "MALE": "Male",
+        "UNKNOWN": "Unknown",
+        "NONE": "No data"
+      },
+      "unknownOrNone": "Unknown sex or no data: {{count}}",
+      "bandColumn": "Age",
+      "total": "Total",
+      "summary_one": "{{count}} case by sex and age",
+      "summary_other": "{{count}} cases by sex and age"
     }
   },
   "shell": {

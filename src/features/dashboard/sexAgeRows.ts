@@ -41,3 +41,17 @@ export function sexAgeRows({
     };
   });
 }
+
+// Half-width of the pyramid's axis: the same on both sides, so neither sex looks larger only
+// because of its scale (SPEC FE36b §6). At least 1, so an empty period still draws its axis.
+export function pyramidMax(rows: SexAgeRow[]): number {
+  return Math.max(1, ...rows.flatMap((row) => [row.female, row.male]));
+}
+
+// Symmetric integer ticks around 0; Recharts' own ticks over [-max, max] can come out lopsided
+// once decimals are disallowed.
+export function pyramidTicks(max: number): number[] {
+  if (max <= 4) return Array.from({ length: max * 2 + 1 }, (_, index) => index - max);
+  const half = Math.round(max / 2);
+  return [-max, -half, 0, half, max];
+}
