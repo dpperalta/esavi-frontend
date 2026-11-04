@@ -98,6 +98,9 @@ function BatchNumberFilter({
       <Label htmlFor="esaviCaseFilters-batchNumber">{t('esaviCase.filters.batchNumber')}</Label>
       <Input
         id="esaviCaseFilters-batchNumber"
+        name="batchNumber"
+        autoComplete="off"
+        spellCheck={false}
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
       />

@@ -49,7 +49,7 @@ function VariantsTooltip({ variants }: { variants: string[] }) {
         </button>
       </TooltipTrigger>
       <TooltipContent>
-        <ul translate="no" className="flex flex-col">
+        <ul translate="no" className="flex flex-col break-all">
           {variants.map((variant) => (
             <li key={variant}>{variant}</li>
           ))}
@@ -83,7 +83,7 @@ export function BatchAlertCard({ alert, period, ref }: BatchAlertCardProps) {
       ref={ref}
       tabIndex={-1}
       aria-labelledby={titleId}
-      className="flex flex-col gap-3 rounded-lg border bg-card p-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:flex-row md:items-end md:justify-between"
+      className="flex flex-col gap-3 rounded-lg border bg-card p-4 outline-none focus:ring-3 focus:ring-ring/50 md:flex-row md:items-end md:justify-between"
     >
       <div className="flex min-w-0 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">

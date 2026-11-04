@@ -62,9 +62,11 @@ body {
 
 /* Primary/accent/sidebar-* use Tailwind v4's blue-700/blue-100 (light) and blue-400/blue-950/
    blue-300 (dark) oklch values (node_modules/tailwindcss/theme.css) — matches Mantis's default
-   Ant Design blue family. destructive/warning/success borrow red-600/amber-600/green-600 (light)
+   Ant Design blue family. destructive/warning/success borrow red-600/amber-700/green-600 (light)
    and red-400/amber-400/green-400 (dark) from the same palette, for the same reason: a toast or
    badge reads as "error/warning/success" by hue, not by guessing a color that happens to work.
+   Warning is amber-700, not -600, since SPEC FE37 §7: amber-600 measured 3.19:1 as text on --card
+   and 2.89:1 on its own 10% tint; amber-700 gives 5.05:1 on --card.
    Everything else stays grayscale on purpose, except --chart-1…5.
 
    --chart-1…5 (SPEC FE36a) are the first five slots of the dataviz skill's validated categorical
@@ -88,7 +90,7 @@ body {
   --accent: oklch(93.2% 0.032 255.585);
   --accent-foreground: oklch(48.8% 0.243 264.376);
   --destructive: oklch(0.577 0.245 27.325);
-  --warning: oklch(66.6% 0.179 58.318);
+  --warning: oklch(55.5% 0.163 48.998);
   --success: oklch(62.7% 0.194 149.214);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
