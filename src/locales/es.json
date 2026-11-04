@@ -576,6 +576,22 @@
     }
   },
   "caseWorkflow": {
+    "status": {
+      "OPEN": "Abierto",
+      "IN_CLASSIFICATION": "En clasificación",
+      "IN_NOTIFICATION": "En notificación",
+      "IN_INVESTIGATION": "En investigación",
+      "IN_FINAL_CLASSIFICATION": "En clasificación final",
+      "PENDING_VALIDATION": "Pendiente de validación",
+      "CLOSED": "Cerrado",
+      "REOPENED": "Reabierto"
+    },
+    "stage": {
+      "CLASSIFICATION": "Clasificación inicial",
+      "NOTIFICATION": "Notificación",
+      "INVESTIGATION": "Investigación",
+      "FINAL_CLASSIFICATION": "Clasificación final"
+    },
     "errors": {
       "CASEFLOW_006_CASE_NOT_FOUND": "El caso no existe.",
       "CASEFLOW_006_NOT_FOUND": "El caso no tiene expediente de flujo.",
@@ -750,6 +766,7 @@
         "label": "Código del caso",
         "placeholder": "Buscar por código de caso…"
       },
+      "status": "Estado del expediente",
       "patient": {
         "prefix": "Paciente",
         "clearAria": "Quitar el filtro de paciente"
@@ -2229,6 +2246,38 @@
   "home": {
     "greeting": "Hola, {{name}}",
     "roleLabel": "Tu rol: {{role}}"
+  },
+  "dashboard": {
+    "pendingWork": {
+      "title": "Trabajo pendiente",
+      "openCases_one": "{{count}} caso abierto",
+      "openCases_other": "{{count}} casos abiertos",
+      "reopened_one": "{{count}} reabierto",
+      "reopened_other": "{{count}} reabiertos",
+      "updatedAt": "Actualizado a las {{time}}",
+      "refresh": "Actualizar",
+      "error": "No pudimos cargar el trabajo pendiente.",
+      "noAssignments": "No tienes territorio asignado, así que no hay casos que contar. Pide a un administrador que te asigne tu cobertura geográfica.",
+      "more": "y {{count}} más",
+      "funnel": {
+        "title": "Casos por estado",
+        "cardLabel_one": "{{status}}: {{count}} caso",
+        "cardLabel_other": "{{status}}: {{count}} casos"
+      },
+      "stalled": {
+        "title": "Casos detenidos",
+        "days_one": "{{count}} día",
+        "days_other": "{{count}} días",
+        "empty": "Ningún caso lleva más de {{days}} días detenido.",
+        "disabled": "La detección de casos detenidos está desactivada."
+      },
+      "pendingInvestigations": {
+        "title": "Investigaciones sin iniciar",
+        "days_one": "{{count}} día esperando",
+        "days_other": "{{count}} días esperando",
+        "empty": "No hay investigaciones solicitadas sin iniciar."
+      }
+    }
   },
   "shell": {
     "userMenu": {

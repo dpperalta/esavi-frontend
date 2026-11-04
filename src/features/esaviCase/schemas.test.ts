@@ -66,6 +66,18 @@ describe('esaviCaseFiltersSchema', () => {
     expect(result.data.filters.geoLocationId).toBeUndefined();
   });
 
+  // SPEC FE34 §3.5 — closed to the eight codes of CASE_WORKFLOW_STATUS_CODES.
+  it('statusCode conocido se conserva, desconocido se descarta y ausente queda undefined', () => {
+    const known = esaviCaseFiltersSchema.safeParse({ statusCode: 'IN_INVESTIGATION' });
+    const unknown = esaviCaseFiltersSchema.safeParse({ statusCode: 'FOO' });
+    const absent = esaviCaseFiltersSchema.safeParse({});
+
+    expect(known.success && known.data.filters.statusCode).toBe('IN_INVESTIGATION');
+    expect(unknown.success).toBe(true);
+    expect(unknown.success && unknown.data.filters.statusCode).toBeUndefined();
+    expect(absent.success && absent.data.filters.statusCode).toBeUndefined();
+  });
+
   it('includeInactive sólo es true con el literal "true"', () => {
     const yes = esaviCaseFiltersSchema.safeParse({ includeInactive: 'true' });
     const typo = esaviCaseFiltersSchema.safeParse({ includeInactive: '1' });

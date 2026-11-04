@@ -576,6 +576,22 @@
     }
   },
   "caseWorkflow": {
+    "status": {
+      "OPEN": "Open",
+      "IN_CLASSIFICATION": "In classificatie",
+      "IN_NOTIFICATION": "In melding",
+      "IN_INVESTIGATION": "In onderzoek",
+      "IN_FINAL_CLASSIFICATION": "In definitieve classificatie",
+      "PENDING_VALIDATION": "Wacht op validatie",
+      "CLOSED": "Gesloten",
+      "REOPENED": "Heropend"
+    },
+    "stage": {
+      "CLASSIFICATION": "Initiële classificatie",
+      "NOTIFICATION": "Melding",
+      "INVESTIGATION": "Onderzoek",
+      "FINAL_CLASSIFICATION": "Definitieve classificatie"
+    },
     "errors": {
       "CASEFLOW_006_CASE_NOT_FOUND": "Het geval bestaat niet.",
       "CASEFLOW_006_NOT_FOUND": "Het geval heeft geen workflowdossier.",
@@ -750,6 +766,7 @@
         "label": "Gevalcode",
         "placeholder": "Zoeken op gevalcode…"
       },
+      "status": "Dossierstatus",
       "patient": {
         "prefix": "Patiënt",
         "clearAria": "Patiëntfilter verwijderen"
@@ -2229,6 +2246,38 @@
   "home": {
     "greeting": "Hallo, {{name}}",
     "roleLabel": "Uw rol: {{role}}"
+  },
+  "dashboard": {
+    "pendingWork": {
+      "title": "Openstaand werk",
+      "openCases_one": "{{count}} open geval",
+      "openCases_other": "{{count}} open gevallen",
+      "reopened_one": "{{count}} heropend",
+      "reopened_other": "{{count}} heropend",
+      "updatedAt": "Bijgewerkt om {{time}}",
+      "refresh": "Vernieuwen",
+      "error": "We konden het openstaande werk niet laden.",
+      "noAssignments": "Je hebt geen gebied toegewezen, dus er zijn geen gevallen om te tellen. Vraag een beheerder om je geografische dekking toe te wijzen.",
+      "more": "en nog {{count}}",
+      "funnel": {
+        "title": "Gevallen per status",
+        "cardLabel_one": "{{status}}: {{count}} geval",
+        "cardLabel_other": "{{status}}: {{count}} gevallen"
+      },
+      "stalled": {
+        "title": "Stilstaande gevallen",
+        "days_one": "{{count}} dag",
+        "days_other": "{{count}} dagen",
+        "empty": "Geen enkel geval staat langer dan {{days}} dagen stil.",
+        "disabled": "De detectie van stilstaande gevallen staat uit."
+      },
+      "pendingInvestigations": {
+        "title": "Niet-gestarte onderzoeken",
+        "days_one": "{{count}} dag wachtend",
+        "days_other": "{{count}} dagen wachtend",
+        "empty": "Er zijn geen aangevraagde onderzoeken die nog moeten starten."
+      }
+    }
   },
   "shell": {
     "userMenu": {

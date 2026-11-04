@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { CreateEsaviCaseInput, EsaviCaseListFilters } from '@/contracts/esaviCase';
 import type { CaseWorkflowListFilters } from '@/contracts/caseWorkflow';
+import { CASE_WORKFLOW_STATUS_CODES } from '@/contracts/declared/caseWorkflow';
 
 // Both schemas do the opposite of the usual job (SPEC FE09 §3.5): they don't validate what the
 // user types, they validate what already travels in `searchParams`. A hand-edited, pasted or
@@ -36,12 +37,15 @@ function checkDateRanges(data: Record<string, unknown>, ctx: z.RefinementCtx) {
   }
 }
 
-// Parses `searchParams` for the «Por caso» tab into the fourteen filters of ESAVI-CASE-002A/002B
-// (SPEC F48 + F52) plus `page` and `includeInactive`, the two other URL-only fields the tab needs
-// (SPEC FE09 §3.4).
+// Parses `searchParams` for the «Por caso» tab into the fifteen filters of ESAVI-CASE-002A/002B
+// (SPEC F48 + F52 + F65 §3.5) plus `page` and `includeInactive`, the two other URL-only fields the
+// tab needs (SPEC FE09 §3.4).
 export const esaviCaseFiltersSchema = z
   .object({
     code: z.string().trim().min(2).max(200).optional().catch(undefined),
+    // Closed to the eight known codes, unlike the inbox's free-text `statusCode` below: an unknown
+    // one would 400 on 002A, so it is dropped here and never travels (SPEC FE34 §3.4).
+    statusCode: z.enum(CASE_WORKFLOW_STATUS_CODES).optional().catch(undefined),
     patientId: uuidField,
     healthFacilityId: uuidField,
     geoLocationId: uuidField,

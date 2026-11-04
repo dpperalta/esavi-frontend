@@ -143,6 +143,10 @@ describe('countActiveEsaviCaseFilters', () => {
     expect(countActiveEsaviCaseFilters(params)).toBe(2);
   });
 
+  it('cuenta statusCode como filtro activo', () => {
+    expect(countActiveEsaviCaseFilters(new URLSearchParams('?statusCode=OPEN&tab=cases'))).toBe(1);
+  });
+
   it('devuelve 0 sin filtros', () => {
     expect(countActiveEsaviCaseFilters(new URLSearchParams())).toBe(0);
   });

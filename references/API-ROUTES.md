@@ -1,8 +1,9 @@
 # Inventario de rutas del backend
 
 > **Fuente:** `esavi-backend/tests/setup/routeRules.ts` → `ROUTE_RULES`
-> **Generado:** 2026-10-30 · **355 rutas** en **46 grupos**
-> **Verificado:** 2026-10-30 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente (363 coincidencias de `router.<verbo>(`, una de ellas comentada en `seed.routes.ts:8`: 362 = 355 + 7)
+> **Generado:** 2026-11-03 · **362 rutas** en **47 grupos**
+> **Verificado:** 2026-11-03 — cruzado contra los routers reales de `src/routes/`: las filas cubren **todas** las rutas registradas salvo las siete abiertas o de entorno de la sección siguiente (370 coincidencias de `router.<verbo>(`, una de ellas comentada en `seed.routes.ts:8`: 369 = 362 + 7)
+> **Cambios de la regeneración del 2026-11-03 (SPEC F65–F69 del backend):** grupo **`DASH`** nuevo, `/api/dashboard`, con siete rutas de sólo lectura para la pantalla de Inicio. La numeración empieza en `006` porque no es una entidad CRUD: no hay `001`–`005`. Roles mínimos: `ESAVI-DASH-006` `pending-work` (F65) y `ESAVI-DASH-011` `recent-activity` (F69) en `USER`; `ESAVI-DASH-007` `indicators` (F66), `ESAVI-DASH-008` `epi-curve` y `ESAVI-DASH-009` `distributions` (F67) y `ESAVI-DASH-010` `batch-alerts` (F68) en `ANALYTICS`, los cuatro con el mismo validador de periodo; y `ESAVI-DASH-012` `system-activity` (F69) en `SUPERADMIN`. 355 → 362 rutas, 46 → 47 grupos. De paso se restituye el encabezado `### APPROLE`, que se había perdido en una sustitución anterior
 > **Cambios de la regeneración del 2026-10-30 (SPEC F64 del backend, consumido por SPEC FE33):** roles por etapa del caso. **77 rutas cambian de rol mínimo** y ninguna se crea ni se borra; mismo total de 355/46. 38 pasan del literal `USER` a `NOTIFIER` (mismo nivel 25: alta de paciente y caso, notificador, clasificación inicial, notificación y sus satélites, `CASEFLOW-007` complete-stage y `CASEFLOW-010` request-validation). 34 pasan de `USER` a `INVESTIGATOR` (la investigación y sus satélites, `EVALINST` incluido). 5 pasan a `EVALUATOR`: `FINCLASS-001`/`004`, `CASEFLOW-008` close y `CASEFLOW-011` resolve-validation desde `USER`, y `CASEFLOW-009` reopen, que **baja** desde `ADMIN`. El literal `USER` baja de 25 a 20 y queda como rol de consulta: todas las lecturas siguen en él. `CASEFLOW-007` gana el error `403 CASEFLOW_007_STAGE_FORBIDDEN` (`INVESTIGATION` exige 30, `FINAL_CLASSIFICATION` 40), que esta tabla no puede expresar
 > **Cambios de la regeneración del 2026-09-23 (SPEC F62 del backend):** una ruta nueva, `ESAVI-USER-008` — `GET /api/users/search?q=…`, rol mínimo `ADMIN`, el mismo que los dos listados de usuarios. Es el único filtro de texto que acepta `appUser`: `002A` y `002B` siguen sin aceptar nada más que `limit` y `offset`. Un solo parámetro `q`, resuelto por tres ramas en `OR` — tokens de `firstName`+`lastName` (palabra completa, desacentuada, conjuntiva), `email` exacto y `username` exacto sensible a mayúsculas —, porque las cinco columnas están cifradas y no admiten `ILIKE`. Ningún grupo nuevo; 354 → 355 rutas, 46 grupos.
 > **La fuente se movió:** `ROUTE_RULES` ya no vive en `tests/auth/roles.test.ts` sino en `tests/setup/routeRules.ts`; `references/scripts/extract-routes.cjs` busca ahora la primera de las dos.
@@ -76,6 +77,8 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 ---
 
 ## Rutas por entidad
+
+### APPROLE
 
 | Método | Ruta | Rol mínimo | Código |
 |---|---|---|---|
@@ -159,6 +162,18 @@ Otras dos rutas registradas tampoco tienen fila, y no son consumibles como las a
 | `DELETE` | `/api/classifications/:id` | ADMIN | `ESAVI-CLASSIF-005A` |
 | `PATCH` | `/api/classifications/activate/:id` | SUPERADMIN | `ESAVI-CLASSIF-005B` |
 | `DELETE` | `/api/classifications/purge/:id` | SUPERADMIN | `ESAVI-CLASSIF-005C` |
+
+### DASH
+
+| Método | Ruta | Rol mínimo | Código |
+|---|---|---|---|
+| `GET` | `/api/dashboard/pending-work` | USER | `ESAVI-DASH-006` |
+| `GET` | `/api/dashboard/indicators` | ANALYTICS | `ESAVI-DASH-007` |
+| `GET` | `/api/dashboard/epi-curve` | ANALYTICS | `ESAVI-DASH-008` |
+| `GET` | `/api/dashboard/distributions` | ANALYTICS | `ESAVI-DASH-009` |
+| `GET` | `/api/dashboard/batch-alerts` | ANALYTICS | `ESAVI-DASH-010` |
+| `GET` | `/api/dashboard/recent-activity` | USER | `ESAVI-DASH-011` |
+| `GET` | `/api/dashboard/system-activity` | SUPERADMIN | `ESAVI-DASH-012` |
 
 ### DIAGTERM
 

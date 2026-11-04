@@ -141,7 +141,7 @@ export function EsaviCaseListPage() {
     });
   }
 
-  // Clears the fourteen filter params, resets `page` — `tab` and `pageSize` (Zustand) survive
+  // Clears the fifteen filter params, resets `page` — `tab` and `pageSize` (Zustand) survive
   // untouched (§3.6).
   function handleClearFilters() {
     setSearchParams((prev) => {
