@@ -2279,6 +2279,20 @@
       }
     },
     "period": {
+      "label": "Periode",
+      "range": {
+        "7d": "7 dagen",
+        "30d": "30 dagen",
+        "90d": "90 dagen",
+        "365d": "365 dagen"
+      },
+      "custom": "Aangepast",
+      "from": "Van",
+      "to": "Tot",
+      "apply": "Toepassen",
+      "current": "Van {{from}} tot {{to}}",
+      "previous": "Vorige periode: van {{from}} tot {{to}}",
+      "invalidLink": "De link bevatte een ongeldige periode of een ongeldig gebied; dat is genegeerd. Tenzij u een andere periode kiest, worden de laatste 30 dagen getoond.",
       "geo": "Gebied",
       "allCoverage": "Mijn volledige dekking",
       "wholeTerritory": "Uw volledige gebied",

@@ -2279,6 +2279,20 @@
       }
     },
     "period": {
+      "label": "Period",
+      "range": {
+        "7d": "7 days",
+        "30d": "30 days",
+        "90d": "90 days",
+        "365d": "365 days"
+      },
+      "custom": "Custom",
+      "from": "From",
+      "to": "To",
+      "apply": "Apply",
+      "current": "From {{from}} to {{to}}",
+      "previous": "Previous period: from {{from}} to {{to}}",
+      "invalidLink": "The link had a period or territory that is not valid, and it was ignored. Unless you pick another period, the last 30 days are shown.",
       "geo": "Territory",
       "allCoverage": "All my coverage",
       "wholeTerritory": "Your whole territory",

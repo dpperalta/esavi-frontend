@@ -47,7 +47,7 @@ function mockCurrentUser(roleName: string, level: number) {
 }
 
 function LocationProbe() {
-  return <output data-testid="search">{useLocation().search}</output>;
+  return <div data-testid="search">{useLocation().search}</div>;
 }
 
 function renderFilter(search: string, value?: string) {

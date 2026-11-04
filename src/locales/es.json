@@ -2279,6 +2279,20 @@
       }
     },
     "period": {
+      "label": "Periodo",
+      "range": {
+        "7d": "7 días",
+        "30d": "30 días",
+        "90d": "90 días",
+        "365d": "365 días"
+      },
+      "custom": "Personalizado",
+      "from": "Desde",
+      "to": "Hasta",
+      "apply": "Aplicar",
+      "current": "Del {{from}} al {{to}}",
+      "previous": "Periodo anterior: del {{from}} al {{to}}",
+      "invalidLink": "El enlace traía un periodo o un territorio que no es válido, y se ignoró. Si no eliges otro periodo, se muestran los últimos 30 días.",
       "geo": "Territorio",
       "allCoverage": "Toda mi cobertura",
       "wholeTerritory": "Todo su territorio",
