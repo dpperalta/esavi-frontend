@@ -10,6 +10,7 @@ import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
+import { batchAlertsFixture } from '@/features/dashboard/batchAlertsFixture';
 import { distributionsFixture } from '@/features/dashboard/distributionsFixture';
 import { epiCurveFixture } from '@/features/dashboard/epiCurveFixture';
 import { indicatorsFixture } from '@/features/dashboard/indicatorsFixture';
@@ -33,8 +34,8 @@ beforeEach(() => {
   tokenStore.setRefreshToken('a-refresh-token');
   setAccessToken('a-token');
   // Since SPEC FE35 every role from ANALYTICS up mounts «Vigilancia», which asks for the
-  // indicators, the epidemic curve (FE36a), the distributions (FE36b) and, by level, the coverage
-  // or the geo tree. These defaults keep the FE34 tests about their own block; each test can
+  // indicators, the batch alerts (FE37), the epidemic curve (FE36a), the distributions (FE36b)
+  // and, by level, the coverage or the geo tree. These defaults keep the FE34 tests about their own block; each test can
   // still override them.
   server.use(
     http.get(`${API}/dashboard/indicators`, () =>
@@ -45,6 +46,9 @@ beforeEach(() => {
     ),
     http.get(`${API}/dashboard/distributions`, () =>
       HttpResponse.json({ ok: true, message: 'ok', data: distributionsFixture() }),
+    ),
+    http.get(`${API}/dashboard/batch-alerts`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: batchAlertsFixture() }),
     ),
     http.get(`${API}/user-geo-locations/user/:id/coverage`, () =>
       HttpResponse.json({
@@ -370,7 +374,7 @@ describe('HomePage — curva epidemiológica (SPEC FE36a)', () => {
 
   // Since FE36b the section also asks for /distributions; that request is asserted in its own
   // describe below, so this set only stops listing it as unexpected.
-  it('con ANALYTICS pide /indicators y /epi-curve con la misma query, y nada más que /users/me y /distributions', async () => {
+  it('con ANALYTICS pide /indicators y /epi-curve con la misma query, y nada más que /users/me, /distributions y /batch-alerts', async () => {
     mockCurrentUser('ANALYTICS', 10);
     const requests = recordRequests();
 
@@ -392,6 +396,7 @@ describe('HomePage — curva epidemiológica (SPEC FE36a)', () => {
           '/api/dashboard/indicators',
           '/api/dashboard/epi-curve',
           '/api/dashboard/distributions',
+          '/api/dashboard/batch-alerts',
         ]),
       ),
     );
@@ -618,6 +623,7 @@ describe('HomePage — distribución geográfica (SPEC FE36c)', () => {
         '/api/dashboard/indicators',
         '/api/dashboard/epi-curve',
         '/api/dashboard/distributions',
+        '/api/dashboard/batch-alerts',
       ]),
     );
   });
@@ -673,5 +679,95 @@ describe('HomePage — distribución geográfica (SPEC FE36c)', () => {
     expect(
       screen.queryByRole('region', { name: 'Distribución geográfica' }),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('HomePage — alertas por lote (SPEC FE37)', () => {
+  function recordRequests() {
+    const requests: { path: string; search: string }[] = [];
+    server.events.on('request:start', ({ request }) => {
+      const url = new URL(request.url);
+      requests.push({ path: url.pathname, search: url.search });
+    });
+    return requests;
+  }
+
+  afterEach(() => server.events.removeAllListeners());
+
+  it('con ANALYTICS hace cuatro peticiones con la misma query y ninguna a /esavi-cases', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const requests = recordRequests();
+
+    renderHome(
+      '/?from=2026-10-01&to=2026-10-31&geoLocationId=3f1c2a9e-8b4d-4c1e-9a7f-2d6b5e8c1a40',
+    );
+
+    const block = await screen.findByRole('region', { name: 'Lotes con alerta en su territorio' });
+    expect(await within(block).findAllByRole('article')).toHaveLength(3);
+    await screen.findByRole('region', { name: 'Vacunas sospechosas' });
+    const searches = ['/indicators', '/batch-alerts', '/epi-curve', '/distributions'].map(
+      (endpoint) =>
+        requests.filter(({ path }) => path.endsWith(endpoint)).map(({ search }) => search),
+    );
+    expect(searches.map((list) => list.length)).toEqual([1, 1, 1, 1]);
+    expect(new Set(searches.flat()).size).toBe(1);
+    expect(requests.some(({ path }) => path.includes('/esavi-cases'))).toBe(false);
+    expect(within(block).queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('el bloque está entre los indicadores y la curva', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+
+    renderHome();
+
+    const block = await screen.findByRole('region', { name: 'Lotes con alerta en su territorio' });
+    const curve = await screen.findByRole('region', { name: 'Curva epidemiológica' });
+    const indicators = screen.getByRole('group', { name: /^Casos del periodo: 42/ });
+    const follows = (a: Node, b: Node) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(follows(indicators, block)).toBe(true);
+    expect(follows(block, curve)).toBe(true);
+  });
+
+  it('con USER cada alerta enlaza a sus casos con el periodo de la respuesta', async () => {
+    mockCurrentUser('USER', 20);
+    server.use(
+      http.get(`${API}/dashboard/pending-work`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: pendingWorkFixture() }),
+      ),
+    );
+
+    renderHome();
+
+    const block = await screen.findByRole('region', { name: 'Lotes con alerta en su territorio' });
+    const links = await within(block).findAllByRole('link', { name: 'Ver casos' });
+    expect(links).toHaveLength(3);
+    const { period } = batchAlertsFixture();
+    const params = new URL(links[0].getAttribute('href') ?? '', 'http://localhost').searchParams;
+    expect(params.get('reportDateFrom')).toBe(period.from);
+    expect(params.get('reportDateTo')).toBe(period.to);
+  });
+
+  it('un 500 de ESAVI-DASH-010 muestra el error del bloque y deja visibles indicadores, curva y barra', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    server.use(
+      http.get(`${API}/dashboard/batch-alerts`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'Error', code: 'DASH_010_BATCH_ALERTS_FAILED', errors: [] },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderHome();
+
+    const block = await screen.findByRole('region', { name: 'Lotes con alerta en su territorio' });
+    expect(await within(block).findByRole('alert')).toHaveTextContent(
+      'No pudimos cargar las alertas por lote.',
+    );
+    expect(within(block).getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'Curva epidemiológica' })).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Periodo' })).toBeInTheDocument();
   });
 });

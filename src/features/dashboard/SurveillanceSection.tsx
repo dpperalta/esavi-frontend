@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { EsaviApiError } from '@/shared/api/types';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useIndicators } from './api';
+import { BatchAlertsBlock } from './BatchAlertsBlock';
 import { DashboardPeriodBar } from './DashboardPeriodBar';
 import { IndicatorsBlock } from './IndicatorsBlock';
 import { useDashboardPeriod } from './useDashboardPeriod';
@@ -64,6 +65,8 @@ export function SurveillanceSection() {
         serverRejected={periodWasRejected && period.params.mode === 'default'}
       />
       <IndicatorsBlock query={period.query} enabled={period.isReady} />
+      {/* Right after the indicators: the one signal of Inicio that asks for an action (SPEC FE37 §6). */}
+      <BatchAlertsBlock query={period.query} enabled={period.isReady} />
       <Suspense fallback={<Skeleton className="h-[220px] md:h-[280px]" />}>
         <EpiCurveBlock query={period.query} enabled={period.isReady} />
       </Suspense>

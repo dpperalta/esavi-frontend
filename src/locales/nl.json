@@ -2538,7 +2538,29 @@
       "expired_other": "{{value}} gevaccineerd met de verlopen batch",
       "variants_one": "Op {{count}} manier geschreven",
       "variants_other": "Op {{count}} manieren geschreven",
-      "viewCases": "Gevallen bekijken"
+      "viewCases": "Gevallen bekijken",
+      "title": "Batches met een waarschuwing in uw gebied",
+      "error": "We konden de batchwaarschuwingen niet laden.",
+      "empty": "Geen enkele batch overschrijdt de drempels in deze periode.",
+      "truncated_one": "En nog {{value}} waarschuwing niet getoond",
+      "truncated_other": "En nog {{value}} waarschuwingen niet getoond",
+      "showAll_one": "De {{count}} waarschuwing bekijken",
+      "showAll_other": "Alle {{count}} waarschuwingen bekijken",
+      "showLess": "Minder bekijken",
+      "thresholds": {
+        "label": "Drempels",
+        "minCases_one": "≥ {{count}} geval",
+        "minCases_other": "≥ {{count}} gevallen",
+        "minSerious_one": "≥ {{count}} ernstig",
+        "minSerious_other": "≥ {{count}} ernstig",
+        "death": "elk overlijden",
+        "disabled_minCases": "gevallen: uitgeschakeld",
+        "disabled_minSerious": "ernstig: uitgeschakeld"
+      },
+      "evaluated_one": "{{value}} batch beoordeeld",
+      "evaluated_other": "{{value}} batches beoordeeld",
+      "withoutBatch_one": "{{value}} geval zonder geregistreerde batch",
+      "withoutBatch_other": "{{value}} gevallen zonder geregistreerde batch"
     }
   },
   "shell": {

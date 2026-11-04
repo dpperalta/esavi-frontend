@@ -2538,7 +2538,29 @@
       "expired_other": "{{value}} vaccinated with the batch expired",
       "variants_one": "Written {{count}} way",
       "variants_other": "Written {{count}} ways",
-      "viewCases": "View cases"
+      "viewCases": "View cases",
+      "title": "Batches with an alert in your territory",
+      "error": "We could not load the batch alerts.",
+      "empty": "No batch is over the thresholds in this period.",
+      "truncated_one": "And {{value}} more alert not shown",
+      "truncated_other": "And {{value}} more alerts not shown",
+      "showAll_one": "View the {{count}} alert",
+      "showAll_other": "View all {{count}} alerts",
+      "showLess": "View less",
+      "thresholds": {
+        "label": "Thresholds",
+        "minCases_one": "≥ {{count}} case",
+        "minCases_other": "≥ {{count}} cases",
+        "minSerious_one": "≥ {{count}} serious",
+        "minSerious_other": "≥ {{count}} serious",
+        "death": "any death",
+        "disabled_minCases": "cases: disabled",
+        "disabled_minSerious": "serious: disabled"
+      },
+      "evaluated_one": "{{value}} batch evaluated",
+      "evaluated_other": "{{value}} batches evaluated",
+      "withoutBatch_one": "{{value}} case without a recorded batch",
+      "withoutBatch_other": "{{value}} cases without a recorded batch"
     }
   },
   "shell": {

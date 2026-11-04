@@ -87,7 +87,7 @@ export function BatchAlertCard({ alert, period, ref }: BatchAlertCardProps) {
     >
       <div className="flex min-w-0 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <h3
+          <h4
             id={titleId}
             className="min-w-0 text-base font-medium break-words text-card-foreground"
           >
@@ -102,7 +102,7 @@ export function BatchAlertCard({ alert, period, ref }: BatchAlertCardProps) {
             <span translate="no">
               {t('dashboard.batchAlerts.batch', { batchNumber: alert.batchNumber })}
             </span>
-          </h3>
+          </h4>
           {!alert.coded && <Badge variant="outline">{t('dashboard.vaccines.uncoded')}</Badge>}
         </div>
 
