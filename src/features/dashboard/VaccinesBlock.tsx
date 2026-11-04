@@ -28,6 +28,9 @@ interface VaccineChartRow {
   key: string;
   name: string;
   unnamed: boolean;
+  // «Sin nombre» and «Otras vacunas» are interface text; every other name is a product name as
+  // recorded, which a browser translator must leave alone.
+  isInterfaceText: boolean;
   coded: boolean;
   cases: number;
   serious: number;
@@ -43,7 +46,10 @@ function VaccineTooltip({ active, payload }: TooltipContentProps) {
   return (
     <div className="grid max-w-72 min-w-40 gap-1.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs shadow-xl">
       <div>
-        <p className={cn('font-medium text-foreground', (row.unnamed || !row.coded) && 'italic')}>
+        <p
+          translate={row.isInterfaceText ? undefined : 'no'}
+          className={cn('font-medium text-foreground', (row.unnamed || !row.coded) && 'italic')}
+        >
           {row.name}
         </p>
         {!row.coded && (
@@ -83,6 +89,7 @@ function VaccineLabel({ row }: { row: VaccineChartRow }) {
     <div className="flex min-w-0 items-center gap-1" style={{ height: ROW_HEIGHT }}>
       {/* Truncated here on purpose: the full name lives in the tooltip and the table view. */}
       <span
+        translate={row.isInterfaceText ? undefined : 'no'}
         className={cn(
           'min-w-0 truncate text-xs text-foreground',
           (row.unnamed || !row.coded) && 'italic',
@@ -91,7 +98,7 @@ function VaccineLabel({ row }: { row: VaccineChartRow }) {
         {row.name}
       </span>
       {!row.coded && (
-        <Badge variant="outline" className="h-4 px-1 text-[10px]">
+        <Badge variant="outline" className="h-4 px-1">
           {t('dashboard.vaccines.uncoded')}
         </Badge>
       )}
@@ -180,6 +187,7 @@ function VaccinesChart({ data }: { data: Vaccines }) {
       key: item.key,
       name: item.label ?? t('dashboard.vaccines.noLabel'),
       unnamed: item.label === null,
+      isInterfaceText: item.label === null,
       coded: item.coded,
       cases: item.cases,
       serious: item.serious,
@@ -191,6 +199,7 @@ function VaccinesChart({ data }: { data: Vaccines }) {
           key: 'others',
           name: t('dashboard.vaccines.others'),
           unnamed: false,
+          isInterfaceText: true,
           coded: true,
           cases: data.others.cases,
           serious: data.others.serious,

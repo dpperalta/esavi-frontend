@@ -35,6 +35,7 @@ export function VaccinesTable({ data }: { data: DashboardDistributions['vaccines
           <TableRow key={item.key}>
             <TableHead
               scope="row"
+              translate={item.label === null ? undefined : 'no'}
               className={cn(
                 'h-auto py-2 font-normal whitespace-normal',
                 (!item.coded || item.label === null) && 'italic',
