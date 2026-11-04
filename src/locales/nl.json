@@ -2482,6 +2482,18 @@
     },
     "distributions": {
       "error": "We konden de verdelingen naar vaccin, geslacht en leeftijd en programmatische fouten niet laden."
+    },
+    "geo": {
+      "columns": {
+        "unit": "Eenheid",
+        "total": "Gevallen",
+        "serious": "Ernstig"
+      },
+      "self": "In de eenheid zelf",
+      "unlocated": "Zonder locatie",
+      "unmappedNote_one": "{{count}} geval kan niet op de kaart worden geplaatst",
+      "unmappedNote_other": "{{count}} gevallen kunnen niet op de kaart worden geplaatst",
+      "drillDown": "{{name}} bekijken"
     }
   },
   "shell": {

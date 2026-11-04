@@ -2482,6 +2482,18 @@
     },
     "distributions": {
       "error": "No pudimos cargar las distribuciones de vacunas, sexo y edad y fallos programáticos."
+    },
+    "geo": {
+      "columns": {
+        "unit": "Unidad",
+        "total": "Casos",
+        "serious": "Graves"
+      },
+      "self": "En la propia unidad",
+      "unlocated": "Sin ubicación",
+      "unmappedNote_one": "{{count}} caso no se puede ubicar en el mapa",
+      "unmappedNote_other": "{{count}} casos no se pueden ubicar en el mapa",
+      "drillDown": "Ver {{name}}"
     }
   },
   "shell": {

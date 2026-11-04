@@ -3,6 +3,8 @@ import type { DashboardDistributions } from '@/contracts/dashboard';
 // Test-only payload of ESAVI-DASH-009 (F67 §3.3) over the same period as indicatorsFixture, so the
 // sexAge matrix adds up to its volume.total.current (42) (SPEC FE36b §5). Vaccines carry a free-text
 // row, a null label and a long name; programmatic leaves 10 administration and 8 cold-chain records.
+// Geography also adds up to 42: two mappable units, one without coordinates, `self` and
+// `unlocated` (SPEC FE36c §4 step 2).
 export function distributionsFixture(
   overrides: Partial<DashboardDistributions> = {},
 ): DashboardDistributions {
@@ -71,13 +73,40 @@ export function distributionsFixture(
     geography: {
       rows: [
         {
-          geoLocationId: 'geo-1',
+          geoLocationId: '3f1c2a9e-8b4d-4c1e-9a7f-2d6b5e8c1a40',
           kind: 'unit',
           name: 'Pichincha',
           latitude: -0.18,
           longitude: -78.47,
-          total: 30,
-          serious: 6,
+          total: 18,
+          serious: 4,
+        },
+        {
+          geoLocationId: '5b2e4d6f-8a1c-4e3b-9d7f-1a2b3c4d5e6f',
+          kind: 'unit',
+          name: 'Guayas',
+          latitude: -2.19,
+          longitude: -79.89,
+          total: 8,
+          serious: 1,
+        },
+        {
+          geoLocationId: '9c4a1e7b-2d3f-4b8a-a6c5-7e1d0f2b3a94',
+          kind: 'unit',
+          name: 'Galápagos',
+          latitude: null,
+          longitude: null,
+          total: 4,
+          serious: 0,
+        },
+        {
+          geoLocationId: null,
+          kind: 'self',
+          name: null,
+          latitude: null,
+          longitude: null,
+          total: 5,
+          serious: 1,
         },
         {
           geoLocationId: null,
@@ -85,7 +114,7 @@ export function distributionsFixture(
           name: null,
           latitude: null,
           longitude: null,
-          total: 12,
+          total: 7,
           serious: 2,
         },
       ],

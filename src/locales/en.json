@@ -2482,6 +2482,18 @@
     },
     "distributions": {
       "error": "We could not load the vaccine, sex and age and programmatic failure distributions."
+    },
+    "geo": {
+      "columns": {
+        "unit": "Unit",
+        "total": "Cases",
+        "serious": "Serious"
+      },
+      "self": "In the unit itself",
+      "unlocated": "No location",
+      "unmappedNote_one": "{{count}} case cannot be placed on the map",
+      "unmappedNote_other": "{{count}} cases cannot be placed on the map",
+      "drillDown": "View {{name}}"
     }
   },
   "shell": {
