@@ -2278,6 +2278,9 @@
         "empty": "Er zijn geen aangevraagde onderzoeken die nog moeten starten."
       }
     },
+    "surveillance": {
+      "title": "Surveillance"
+    },
     "period": {
       "label": "Periode",
       "range": {

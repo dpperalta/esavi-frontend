@@ -2278,6 +2278,9 @@
         "empty": "No hay investigaciones solicitadas sin iniciar."
       }
     },
+    "surveillance": {
+      "title": "Vigilancia"
+    },
     "period": {
       "label": "Periodo",
       "range": {

@@ -9,8 +9,10 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
+import { indicatorsFixture } from '@/features/dashboard/indicatorsFixture';
 import { pendingWorkFixture } from '@/features/dashboard/pendingWorkFixture';
+import { TooltipProvider } from '@/shared/components/ui/tooltip';
 import { HomePage } from './HomePage';
 
 const server = setupServer();
@@ -22,33 +24,54 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+const API = 'http://localhost:4500/api';
+
 beforeEach(() => {
   localStorage.clear();
   tokenStore.setRefreshToken('a-refresh-token');
   setAccessToken('a-token');
+  // Since SPEC FE35 every role from ANALYTICS up mounts «Vigilancia», which asks for the
+  // indicators and, by level, the coverage or the geo tree. These defaults keep the FE34 tests
+  // about their own block; each test can still override them.
+  server.use(
+    http.get(`${API}/dashboard/indicators`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: indicatorsFixture() }),
+    ),
+    http.get(`${API}/user-geo-locations/user/:id/coverage`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { assigned: [], coverage: [], count: 0 } }),
+    ),
+    http.get(`${API}/geo-level-types`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+    http.get(`${API}/geo-locations`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+    ),
+  );
 });
 
-function renderHome() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+function LocationProbe() {
+  return <div data-testid="search">{useLocation().search}</div>;
+}
+
+// «Vigilancia» reads the period from the URL and its change badges use tooltips, so every render
+// needs a router and a TooltipProvider.
+function renderHome(path = '/') {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, retryDelay: 0 } },
+  });
   return render(
     <QueryClientProvider client={queryClient}>
-      <HomePage />
+      <TooltipProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <HomePage />
+          <LocationProbe />
+        </MemoryRouter>
+      </TooltipProvider>
     </QueryClientProvider>,
   );
 }
 
-// The pending-work block renders `<Link>`s, so these tests need a router; the two original tests
-// above finish before the block leaves its skeleton and keep their plain render.
-function renderHomeWithRouter() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
-}
+const renderHomeWithRouter = renderHome;
 
 function mockCurrentUser(roleName: string, level: number) {
   server.use(
@@ -63,7 +86,7 @@ function mockCurrentUser(roleName: string, level: number) {
 }
 
 describe('HomePage — bloque «Trabajo pendiente» (SPEC FE34)', () => {
-  it('con ANALYTICS muestra solo el saludo y no pide /dashboard/pending-work', async () => {
+  it('con ANALYTICS no monta «Trabajo pendiente» ni pide /dashboard/pending-work', async () => {
     mockCurrentUser('ANALYTICS', 10);
     // No handler for pending-work: `onUnhandledRequest: 'error'` would fail the request if made.
     let pendingWorkRequested = false;
@@ -171,5 +194,127 @@ describe('HomePage', () => {
     await user.click(screen.getByRole('button', { name: 'Reintentar' }));
 
     await waitFor(() => expect(screen.getByText('Hola, Recuperado')).toBeInTheDocument());
+  });
+});
+
+describe('HomePage — sección «Vigilancia» (SPEC FE35)', () => {
+  it('con ANALYTICS muestra el saludo y «Vigilancia», sin pedir /pending-work, /coverage ni /geo-locations', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const requested: string[] = [];
+    server.events.on('request:start', ({ request }) => {
+      requested.push(new URL(request.url).pathname);
+    });
+
+    renderHome();
+
+    expect(await screen.findByRole('region', { name: 'Vigilancia' })).toBeInTheDocument();
+    expect(await screen.findByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
+    expect(screen.getByText('Hola, Ana')).toBeInTheDocument();
+    expect(screen.getByText('Todo su territorio')).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Trabajo pendiente' })).not.toBeInTheDocument();
+    expect(requested.some((path) => /pending-work|coverage|geo-locations/.test(path))).toBe(false);
+    server.events.removeAllListeners();
+  });
+
+  it('con ANALYTICS y ?geoLocationId la petición lo lleva, y la barra muestra «Unidad seleccionada»', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const geoLocationId = '3f1c2a9e-8b4d-4c1e-9a7f-2d6b5e8c1a40';
+    let received: URLSearchParams | undefined;
+    server.use(
+      http.get(`${API}/dashboard/indicators`, ({ request }) => {
+        received = new URL(request.url).searchParams;
+        return HttpResponse.json({ ok: true, message: 'ok', data: indicatorsFixture() });
+      }),
+    );
+
+    renderHome(`/?geoLocationId=${geoLocationId}`);
+
+    expect(await screen.findByText('Unidad seleccionada')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Ver todo mi territorio' })).toBeInTheDocument();
+    await waitFor(() => expect(received?.get('geoLocationId')).toBe(geoLocationId));
+  });
+
+  it('con USER el orden es saludo, «Trabajo pendiente» y «Vigilancia»', async () => {
+    mockCurrentUser('USER', 20);
+    server.use(
+      http.get(`${API}/dashboard/pending-work`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: pendingWorkFixture() }),
+      ),
+    );
+
+    renderHome();
+
+    const pendingWork = await screen.findByRole('region', { name: 'Trabajo pendiente' });
+    const surveillance = await screen.findByRole('region', { name: 'Vigilancia' });
+    const greeting = screen.getByText('Hola, Ana');
+    expect(greeting.compareDocumentPosition(pendingWork) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(pendingWork.compareDocumentPosition(surveillance) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('sin parámetros la petición va sin from, to ni geoLocationId, y la barra muestra data.period', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    let received: URLSearchParams | undefined;
+    server.use(
+      http.get(`${API}/dashboard/indicators`, ({ request }) => {
+        received = new URL(request.url).searchParams;
+        return HttpResponse.json({ ok: true, message: 'ok', data: indicatorsFixture() });
+      }),
+    );
+
+    renderHome();
+
+    expect(await screen.findByText(/^Del .*5.* al .*3.*2026$/)).toBeInTheDocument();
+    expect(received?.has('from')).toBe(false);
+    expect(received?.has('to')).toBe(false);
+    expect(received?.has('geoLocationId')).toBe(false);
+  });
+
+  it('un 400 deja la URL sin periodo, muestra el aviso y vuelve a pedir sin parámetros', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const requests: URLSearchParams[] = [];
+    server.use(
+      http.get(`${API}/dashboard/indicators`, ({ request }) => {
+        const params = new URL(request.url).searchParams;
+        requests.push(params);
+        return params.has('from')
+          ? HttpResponse.json(
+              { ok: false, message: 'Periodo inválido', code: 'DASH_007_VALIDATION_ERROR', errors: [] },
+              { status: 400 },
+            )
+          : HttpResponse.json({ ok: true, message: 'ok', data: indicatorsFixture() });
+      }),
+    );
+
+    renderHome('/?from=2026-10-01&to=2026-10-31&keep=1');
+
+    expect(await screen.findByRole('status')).toHaveTextContent(/no es válido/);
+    expect(await screen.findByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
+    expect(screen.getByTestId('search')).toHaveTextContent(/^\?keep=1$/);
+    expect(requests.at(-1)?.has('from')).toBe(false);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('un 500 de ESAVI-DASH-007 deja visibles el saludo, «Trabajo pendiente» y la barra, con «Reintentar»', async () => {
+    mockCurrentUser('USER', 20);
+    server.use(
+      http.get(`${API}/dashboard/pending-work`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: pendingWorkFixture() }),
+      ),
+      http.get(`${API}/dashboard/indicators`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'Error', code: 'DASH_007_INDICATORS_FAILED', errors: [] },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderHome();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos cargar los indicadores.');
+    expect(screen.getByText('Hola, Ana')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Trabajo pendiente' })).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Periodo' })).toBeInTheDocument();
+    const indicators = screen.getByRole('region', { name: 'Indicadores' });
+    expect(indicators).toContainElement(screen.getByRole('button', { name: 'Reintentar' }));
   });
 });

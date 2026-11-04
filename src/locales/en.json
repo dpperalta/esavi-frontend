@@ -2278,6 +2278,9 @@
         "empty": "No requested investigations are waiting to start."
       }
     },
+    "surveillance": {
+      "title": "Surveillance"
+    },
     "period": {
       "label": "Period",
       "range": {
