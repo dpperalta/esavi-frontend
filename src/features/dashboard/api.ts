@@ -6,6 +6,8 @@ import type {
   DashboardIndicators,
   DashboardPendingWork,
   DashboardPeriodQuery,
+  DashboardRecentActivity,
+  DashboardSystemActivity,
 } from '@/contracts/dashboard';
 import { client } from '@/shared/api/client';
 import { EsaviApiError } from '@/shared/api/types';
@@ -121,5 +123,42 @@ export function useBatchAlerts(query: DashboardPeriodQuery, options?: { enabled?
     staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     retry: retryUnlessClientError,
+  });
+}
+
+export const recentActivityKey = ['dashboard', 'recentActivity'] as const;
+
+// ESAVI-DASH-011 — last 20 events of the user's territory and the last 10 cases the user acted
+// on, read from the esaviCase / caseWorkflow audit trail over a fixed window (SPEC F69, F49).
+// USER minimum; `author` arrives only for ADMIN and SUPERADMIN (SPEC F59).
+async function fetchRecentActivity(): Promise<DashboardRecentActivity> {
+  const response = await client.get<DashboardRecentActivity>('/dashboard/recent-activity');
+  return response.data;
+}
+
+// No mutation invalidates this key, as with pendingWork (SPEC FE38 §3.4). The response carries no
+// generatedAt, so the section header reads the query's dataUpdatedAt instead.
+export function useRecentActivity() {
+  return useQuery({
+    queryKey: recentActivityKey,
+    queryFn: fetchRecentActivity,
+    staleTime: 60_000,
+  });
+}
+
+export const systemActivityKey = ['dashboard', 'systemActivity'] as const;
+
+// ESAVI-DASH-012 — active sessions, active users, sessions started and refresh-token revocations
+// of the last 7 days by reason, REUSE_DETECTED included (SPEC F69, F42). SUPERADMIN minimum.
+async function fetchSystemActivity(): Promise<DashboardSystemActivity> {
+  const response = await client.get<DashboardSystemActivity>('/dashboard/system-activity');
+  return response.data;
+}
+
+export function useSystemActivity() {
+  return useQuery({
+    queryKey: systemActivityKey,
+    queryFn: fetchSystemActivity,
+    staleTime: 60_000,
   });
 }

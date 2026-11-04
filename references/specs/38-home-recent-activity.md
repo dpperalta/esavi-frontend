@@ -36,7 +36,7 @@ Si la interfaz inventa la etapa o un autor, muestra algo que el servidor no dijo
   - Lado a lado desde `lg` y apiladas por debajo.
   - Pie: «Últimos {{windowDays}} días».
 - **Etiquetas de las 13 acciones**: `dashboard.activity.action.*`, con «Etapa iniciada» y «Etapa completada» sin nombre de etapa.
-- **Fechas relativas** con `formatDistanceToNow` de date-fns en el idioma activo, y la fecha y hora exacta en `<time dateTime>` con tooltip.
+- **Fechas relativas** con `formatDistanceToNowStrict` de date-fns en el idioma activo (sin el «alrededor de» de `formatDistanceToNow`, §6), y la fecha y hora exacta en `<time dateTime>` con tooltip.
 - **Sección «Sistema»** (`features/dashboard/SystemActivitySection.tsx`), gateada con `useCan(ROLE_LEVELS.SUPERADMIN)`, **al final de Inicio**:
   - 5 contadores: sesiones activas, usuarios activos en 24 h y en 7 días, y sesiones iniciadas en 24 h y en 7 días;
   - las revocaciones de 7 días por motivo en barras CSS (FE35), con los 6 motivos siempre y `UNSPECIFIED`/`OTHER` solo si llegan;
@@ -131,7 +131,7 @@ interface DashboardSystemActivity {
 | «Actualizar» en curso | TanStack Query | `isFetching` de cada query | Un botón por sección |
 | Etiqueta de acción | Derivado | `dashboard.activity.action.<action>` | Un `action` desconocido usa `OTHER` |
 | Etiqueta de motivo | Derivado | `dashboard.system.reason.<reason>` | Un `reason` desconocido usa `OTHER` |
-| Fecha relativa | Derivado | `formatDistanceToNow(occurredAt, { locale })` en `RelativeTime` | Se recalcula en cada render y no se refresca sola entre peticiones |
+| Fecha relativa | Derivado | `formatDistanceToNowStrict(occurredAt, { addSuffix: true, locale })` en `RelativeTime` | Se recalcula en cada render y no se refresca sola entre peticiones |
 | Aviso de reutilización | Derivado | el `count` de `REUSE_DETECTED` mayor que 0 | — |
 
 - **Nada en la URL.** Las dos secciones no tienen filtros ni vistas.
@@ -213,7 +213,7 @@ Primero van los hooks y las piezas sin pantalla, después las dos secciones y al
 1. **Hooks.** `useRecentActivity()` y `useSystemActivity()` en `features/dashboard/api.ts`, con las claves `['dashboard', 'recentActivity']` y `['dashboard', 'systemActivity']` y `staleTime` de 60 s. Citan `ESAVI-DASH-011` y `ESAVI-DASH-012` en comentarios.
    *Verificación:* tests con MSW que comprueban que cada hook desenvuelve su envelope, y que montarlo dos veces en menos de 60 s produce una sola petición.
 
-2. **Fecha relativa.** `RelativeTime.tsx` recibe un ISO y muestra `formatDistanceToNow` en el idioma activo, dentro de un `<time dateTime>` con la fecha exacta en el tooltip. Usa los locales `enUS`, `es` y `nl` de `date-fns/locale`, que la app ya importa en otras pantallas.
+2. **Fecha relativa.** `RelativeTime.tsx` recibe un ISO y muestra `formatDistanceToNowStrict` en el idioma activo, dentro de un `<time dateTime>` con la fecha exacta en el tooltip. Usa los locales `enUS`, `es` y `nl` de `date-fns/locale`, que la app ya importa en otras pantallas.
    *Verificación:* con un reloj fijo, un ISO de hace 3 horas se ve «hace 3 horas» en `es`, «3 hours ago» en `en` y su equivalente en `nl`, y el atributo `dateTime` es el ISO recibido.
 
 3. **Listas de «Actividad».**
@@ -358,6 +358,7 @@ No aplica el ítem de la cola de refresh: el spec no toca la sesión, solo infor
 - **Sí:** no mostrar nada cuando `author` es `null`. El F59 decide que esos roles no ven el autor, y un «desconocido» sugeriría que el dato falta, no que está oculto.
 - **No:** mostrar `method`. Es material de soporte (F69 §8), y un código `ESAVI-CASEFLOW-007` no dice nada a quien vigila casos.
 - **Sí:** fechas relativas, con la exacta en el tooltip. En un feed, «hace 3 horas» se lee antes que una fecha completa, y la exacta sigue a un paso.
+- **Sí:** `formatDistanceToNowStrict`, no `formatDistanceToNow`. La segunda redondea con «alrededor de 3 horas» / «about 3 hours» / «ongeveer 3 uur», y en un feed con la hora exacta en el tooltip la aproximación solo añade ruido (decidido al implementar el paso 2, 2026-11-04).
 - **No:** refrescar las fechas relativas con un temporizador. Se recalculan en cada render y en cada refetch; un «hace 3 horas» que dura unos minutos más no cambia ninguna decisión.
 - **Sí:** la hora de «Actividad» sale de `dataUpdatedAt`, porque la respuesta no trae `generatedAt`. Es metadato de la caché, no un dato del servidor copiado a otra capa.
 
@@ -379,7 +380,7 @@ No aplica el ítem de la cola de refresh: el spec no toca la sesión, solo infor
 | La hora de «Actividad» (hora del cliente) y la de «Sistema» (hora del servidor) difieren si el reloj del navegador está desfasado | Son secciones distintas, y la diferencia solo se nota con un desfase de minutos. Unificarlas exigiría que el F69 devuelva `generatedAt` en `011`, que se puede pedir al backend si molesta |
 | Un `SUPERADMIN` ve el aviso de reutilización y no tiene dónde actuar | El aviso dice que las sesiones ya fueron revocadas (F42). Revisar quién fue requiere una ruta de sesiones que no existe, y queda fuera (§2) |
 | Un `ADMIN` ve emails de autores en Inicio, que puede estar proyectado en una reunión | Es lo que el F59 decide para ese rol. El email va truncado, y el completo solo aparece en el tooltip |
-| `formatDistanceToNow` con el locale `nl` no está cargado en el bundle | `RelativeTime` importa `enUS`, `es` y `nl` de `date-fns/locale`, como ya hacen `AuditTrail` y otras tres pantallas. Un test del paso 2 lo comprueba en los tres idiomas |
+| `formatDistanceToNowStrict` con el locale `nl` no está cargado en el bundle | `RelativeTime` importa `enUS`, `es` y `nl` de `date-fns/locale`, como ya hacen `AuditTrail` y otras tres pantallas. Un test del paso 2 lo comprueba en los tres idiomas |
 | Inicio de un `SUPERADMIN` hace 7 peticiones al cargar | Son independientes, van en paralelo y cada sección carga y falla por su cuenta. Con `staleTime`, volver a Inicio no repite ninguna antes de su tiempo |
 
 ---
