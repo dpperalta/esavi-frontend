@@ -2389,6 +2389,9 @@
       "days_other": "{{value}} dagen"
     },
     "epiCurve": {
+      "title": "Epidemische curve",
+      "subtitle": "Gevallen per epidemiologische meldweek",
+      "error": "We konden de epidemische curve niet laden.",
       "series": {
         "serious": "Ernstig",
         "nonSerious": "Niet-ernstig",
@@ -2397,7 +2400,12 @@
       "total": "Totaal",
       "week": "Week",
       "weekRange": "{{start}} t/m {{end}}",
-      "partial": "Onvolledige week: niet vergelijkbaar"
+      "partial": "Onvolledige week: niet vergelijkbaar",
+      "summary": "Gevallen per epidemiologische week, {{from}} t/m {{to}}: {{total}} gevallen in {{weeks}} weken"
+    },
+    "charts": {
+      "viewTable": "Als tabel bekijken",
+      "viewChart": "Als grafiek bekijken"
     }
   },
   "shell": {

@@ -2389,6 +2389,9 @@
       "days_other": "{{value}} días"
     },
     "epiCurve": {
+      "title": "Curva epidemiológica",
+      "subtitle": "Casos por semana epidemiológica de reporte",
+      "error": "No pudimos cargar la curva epidemiológica.",
       "series": {
         "serious": "Graves",
         "nonSerious": "No graves",
@@ -2397,7 +2400,12 @@
       "total": "Total",
       "week": "Semana",
       "weekRange": "Del {{start}} al {{end}}",
-      "partial": "Semana incompleta: no comparable"
+      "partial": "Semana incompleta: no comparable",
+      "summary": "Casos por semana epidemiológica, del {{from}} al {{to}}: {{total}} casos en {{weeks}} semanas"
+    },
+    "charts": {
+      "viewTable": "Ver como tabla",
+      "viewChart": "Ver como gráfico"
     }
   },
   "shell": {
