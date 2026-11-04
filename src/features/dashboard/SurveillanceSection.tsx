@@ -13,6 +13,10 @@ import { useDashboardPeriod } from './useDashboardPeriod';
 const EpiCurveBlock = lazy(() =>
   import('./EpiCurveBlock').then((module) => ({ default: module.EpiCurveBlock })),
 );
+// Vaccines and the pyramid draw with Recharts too, so they stay out of the entry bundle as well.
+const DistributionsSection = lazy(() =>
+  import('./DistributionsSection').then((module) => ({ default: module.DistributionsSection })),
+);
 
 // «Vigilancia» (SPEC FE35): the period bar and, below it, every block that reads the period.
 // FE36 and FE37 add their blocks here and read the same useDashboardPeriod().
@@ -62,6 +66,9 @@ export function SurveillanceSection() {
       <IndicatorsBlock query={period.query} enabled={period.isReady} />
       <Suspense fallback={<Skeleton className="h-[220px] md:h-[280px]" />}>
         <EpiCurveBlock query={period.query} enabled={period.isReady} />
+      </Suspense>
+      <Suspense fallback={<Skeleton className="h-96" />}>
+        <DistributionsSection query={period.query} enabled={period.isReady} />
       </Suspense>
     </section>
   );

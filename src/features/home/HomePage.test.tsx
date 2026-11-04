@@ -10,6 +10,7 @@ import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
 import { MemoryRouter, useLocation } from 'react-router-dom';
+import { distributionsFixture } from '@/features/dashboard/distributionsFixture';
 import { epiCurveFixture } from '@/features/dashboard/epiCurveFixture';
 import { indicatorsFixture } from '@/features/dashboard/indicatorsFixture';
 import { pendingWorkFixture } from '@/features/dashboard/pendingWorkFixture';
@@ -32,8 +33,9 @@ beforeEach(() => {
   tokenStore.setRefreshToken('a-refresh-token');
   setAccessToken('a-token');
   // Since SPEC FE35 every role from ANALYTICS up mounts «Vigilancia», which asks for the
-  // indicators, the epidemic curve (FE36a) and, by level, the coverage or the geo tree. These
-  // defaults keep the FE34 tests about their own block; each test can still override them.
+  // indicators, the epidemic curve (FE36a), the distributions (FE36b) and, by level, the coverage
+  // or the geo tree. These defaults keep the FE34 tests about their own block; each test can
+  // still override them.
   server.use(
     http.get(`${API}/dashboard/indicators`, () =>
       HttpResponse.json({ ok: true, message: 'ok', data: indicatorsFixture() }),
@@ -41,8 +43,15 @@ beforeEach(() => {
     http.get(`${API}/dashboard/epi-curve`, () =>
       HttpResponse.json({ ok: true, message: 'ok', data: epiCurveFixture() }),
     ),
+    http.get(`${API}/dashboard/distributions`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: distributionsFixture() }),
+    ),
     http.get(`${API}/user-geo-locations/user/:id/coverage`, () =>
-      HttpResponse.json({ ok: true, message: 'ok', data: { assigned: [], coverage: [], count: 0 } }),
+      HttpResponse.json({
+        ok: true,
+        message: 'ok',
+        data: { assigned: [], coverage: [], count: 0 },
+      }),
     ),
     http.get(`${API}/geo-level-types`, () =>
       HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
@@ -83,7 +92,11 @@ function mockCurrentUser(roleName: string, level: number) {
       HttpResponse.json({
         ok: true,
         message: 'ok',
-        data: { userId: '1', displayName: 'Ana', roles: [{ roleId: 'r1', name: roleName, code: roleName, level }] },
+        data: {
+          userId: '1',
+          displayName: 'Ana',
+          roles: [{ roleId: 'r1', name: roleName, code: roleName, level }],
+        },
       }),
     ),
   );
@@ -128,13 +141,18 @@ describe('HomePage — bloque «Trabajo pendiente» (SPEC FE34)', () => {
     mockCurrentUser('USER', 20);
     server.use(
       http.get('http://localhost:4500/api/dashboard/pending-work', () =>
-        HttpResponse.json({ ok: false, message: 'Internal', code: 'DASH_006_FAILED' }, { status: 500 }),
+        HttpResponse.json(
+          { ok: false, message: 'Internal', code: 'DASH_006_FAILED' },
+          { status: 500 },
+        ),
       ),
     );
 
     renderHomeWithRouter();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos cargar el trabajo pendiente.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No pudimos cargar el trabajo pendiente.',
+    );
     expect(screen.getByText('Hola, Ana')).toBeInTheDocument();
   });
 });
@@ -212,7 +230,9 @@ describe('HomePage — sección «Vigilancia» (SPEC FE35)', () => {
     renderHome();
 
     expect(await screen.findByRole('region', { name: 'Vigilancia' })).toBeInTheDocument();
-    expect(await screen.findByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('group', { name: /^Casos del periodo: 42/ }),
+    ).toBeInTheDocument();
     expect(screen.getByText('Hola, Ana')).toBeInTheDocument();
     expect(screen.getByText('Todo su territorio')).toBeInTheDocument();
     expect(screen.queryByRole('region', { name: 'Trabajo pendiente' })).not.toBeInTheDocument();
@@ -251,8 +271,12 @@ describe('HomePage — sección «Vigilancia» (SPEC FE35)', () => {
     const pendingWork = await screen.findByRole('region', { name: 'Trabajo pendiente' });
     const surveillance = await screen.findByRole('region', { name: 'Vigilancia' });
     const greeting = screen.getByText('Hola, Ana');
-    expect(greeting.compareDocumentPosition(pendingWork) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(pendingWork.compareDocumentPosition(surveillance) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      greeting.compareDocumentPosition(pendingWork) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      pendingWork.compareDocumentPosition(surveillance) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('sin parámetros la petición va sin from, to ni geoLocationId, y la barra muestra data.period', async () => {
@@ -282,7 +306,12 @@ describe('HomePage — sección «Vigilancia» (SPEC FE35)', () => {
         requests.push(params);
         return params.has('from')
           ? HttpResponse.json(
-              { ok: false, message: 'Periodo inválido', code: 'DASH_007_VALIDATION_ERROR', errors: [] },
+              {
+                ok: false,
+                message: 'Periodo inválido',
+                code: 'DASH_007_VALIDATION_ERROR',
+                errors: [],
+              },
               { status: 400 },
             )
           : HttpResponse.json({ ok: true, message: 'ok', data: indicatorsFixture() });
@@ -292,7 +321,9 @@ describe('HomePage — sección «Vigilancia» (SPEC FE35)', () => {
     renderHome('/?from=2026-10-01&to=2026-10-31&keep=1');
 
     expect(await screen.findByRole('status')).toHaveTextContent(/no es válido/);
-    expect(await screen.findByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('group', { name: /^Casos del periodo: 42/ }),
+    ).toBeInTheDocument();
     expect(screen.getByTestId('search')).toHaveTextContent(/^\?keep=1$/);
     expect(requests.at(-1)?.has('from')).toBe(false);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
@@ -314,7 +345,9 @@ describe('HomePage — sección «Vigilancia» (SPEC FE35)', () => {
 
     renderHome();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos cargar los indicadores.');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No pudimos cargar los indicadores.',
+    );
     expect(screen.getByText('Hola, Ana')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Trabajo pendiente' })).toBeInTheDocument();
     expect(screen.getByRole('radiogroup', { name: 'Periodo' })).toBeInTheDocument();
@@ -335,7 +368,9 @@ describe('HomePage — curva epidemiológica (SPEC FE36a)', () => {
 
   afterEach(() => server.events.removeAllListeners());
 
-  it('con ANALYTICS pide /indicators y /epi-curve con la misma query, y nada más que /users/me', async () => {
+  // Since FE36b the section also asks for /distributions; that request is asserted in its own
+  // describe below, so this set only stops listing it as unexpected.
+  it('con ANALYTICS pide /indicators y /epi-curve con la misma query, y nada más que /users/me y /distributions', async () => {
     mockCurrentUser('ANALYTICS', 10);
     const requests = recordRequests();
 
@@ -350,8 +385,15 @@ describe('HomePage — curva epidemiológica (SPEC FE36a)', () => {
     const indicators = requests.find(({ path }) => path.endsWith('/indicators'));
     const epiCurve = requests.find(({ path }) => path.endsWith('/epi-curve'));
     expect(epiCurve?.search).toBe(indicators?.search);
-    expect(new Set(requests.map(({ path }) => path))).toEqual(
-      new Set(['/api/users/me', '/api/dashboard/indicators', '/api/dashboard/epi-curve']),
+    await waitFor(() =>
+      expect(new Set(requests.map(({ path }) => path))).toEqual(
+        new Set([
+          '/api/users/me',
+          '/api/dashboard/indicators',
+          '/api/dashboard/epi-curve',
+          '/api/dashboard/distributions',
+        ]),
+      ),
     );
   });
 
@@ -412,6 +454,77 @@ describe('HomePage — curva epidemiológica (SPEC FE36a)', () => {
     );
     expect(within(curve).getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
     expect(screen.getByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
+    expect(screen.getByRole('radiogroup', { name: 'Periodo' })).toBeInTheDocument();
+  });
+});
+
+describe('HomePage — distribuciones (SPEC FE36b)', () => {
+  function recordRequests() {
+    const requests: { path: string; search: string }[] = [];
+    server.events.on('request:start', ({ request }) => {
+      const url = new URL(request.url);
+      requests.push({ path: url.pathname, search: url.search });
+    });
+    return requests;
+  }
+
+  afterEach(() => server.events.removeAllListeners());
+
+  it('con ANALYTICS pide /indicators, /epi-curve y /distributions una vez cada una, con la misma query', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const requests = recordRequests();
+
+    renderHome(
+      '/?from=2026-10-01&to=2026-10-31&geoLocationId=3f1c2a9e-8b4d-4c1e-9a7f-2d6b5e8c1a40',
+    );
+
+    expect(await screen.findByRole('region', { name: 'Vacunas sospechosas' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Sexo y edad' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Fallos programáticos' })).toBeInTheDocument();
+    const searches = ['/indicators', '/epi-curve', '/distributions'].map((endpoint) =>
+      requests.filter(({ path }) => path.endsWith(endpoint)).map(({ search }) => search),
+    );
+    expect(searches.map((list) => list.length)).toEqual([1, 1, 1]);
+    expect(new Set(searches.flat()).size).toBe(1);
+  });
+
+  it('cambiar de periodo conserva epiView, vaccinesView y sexAgeView', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const user = setupUser();
+    renderHome('/?range=30d&epiView=table&vaccinesView=table&sexAgeView=table');
+    await screen.findByRole('region', { name: 'Vacunas sospechosas' });
+
+    await user.click(screen.getByRole('radio', { name: '90 días' }));
+
+    const search = new URLSearchParams(screen.getByTestId('search').textContent ?? '');
+    expect(search.get('range')).toBe('90d');
+    expect(search.get('epiView')).toBe('table');
+    expect(search.get('vaccinesView')).toBe('table');
+    expect(search.get('sexAgeView')).toBe('table');
+  });
+
+  it('un 500 de ESAVI-DASH-009 muestra un solo error y un solo «Reintentar», y deja visibles indicadores, curva y barra', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    server.use(
+      http.get(`${API}/dashboard/distributions`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'Error', code: 'DASH_009_DISTRIBUTIONS_FAILED', errors: [] },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderHome();
+
+    const alert = await screen.findByRole('alert', {}, { timeout: 3000 });
+    expect(alert).toHaveTextContent(
+      'No pudimos cargar las distribuciones de vacunas, sexo y edad y fallos programáticos.',
+    );
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Reintentar' })).toHaveLength(1);
+    expect(screen.queryByRole('region', { name: 'Vacunas sospechosas' })).not.toBeInTheDocument();
+    expect(screen.getByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Curva epidemiológica' })).toBeInTheDocument();
     expect(screen.getByRole('radiogroup', { name: 'Periodo' })).toBeInTheDocument();
   });
 });

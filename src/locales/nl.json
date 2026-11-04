@@ -2479,6 +2479,9 @@
       "total": "Totaal",
       "summary_one": "{{count}} geval naar geslacht en leeftijd",
       "summary_other": "{{count}} gevallen naar geslacht en leeftijd"
+    },
+    "distributions": {
+      "error": "We konden de verdelingen naar vaccin, geslacht en leeftijd en programmatische fouten niet laden."
     }
   },
   "shell": {

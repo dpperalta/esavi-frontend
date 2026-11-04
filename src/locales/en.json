@@ -2479,6 +2479,9 @@
       "total": "Total",
       "summary_one": "{{count}} case by sex and age",
       "summary_other": "{{count}} cases by sex and age"
+    },
+    "distributions": {
+      "error": "We could not load the vaccine, sex and age and programmatic failure distributions."
     }
   },
   "shell": {

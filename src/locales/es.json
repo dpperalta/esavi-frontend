@@ -2479,6 +2479,9 @@
       "total": "Total",
       "summary_one": "{{count}} caso por sexo y edad",
       "summary_other": "{{count}} casos por sexo y edad"
+    },
+    "distributions": {
+      "error": "No pudimos cargar las distribuciones de vacunas, sexo y edad y fallos programáticos."
     }
   },
   "shell": {
