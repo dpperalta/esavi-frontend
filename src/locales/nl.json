@@ -2484,6 +2484,9 @@
       "error": "We konden de verdelingen naar vaccin, geslacht en leeftijd en programmatische fouten niet laden."
     },
     "geo": {
+      "title": "Geografische verdeling",
+      "subtitle": "Naar locatie van de zorginstelling",
+      "empty": "Er zijn geen eenheden om op dit niveau te tonen.",
       "columns": {
         "unit": "Eenheid",
         "total": "Gevallen",

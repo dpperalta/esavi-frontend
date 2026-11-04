@@ -9,7 +9,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import '@/shared/config/i18n';
 import { setAccessToken } from '@/shared/api/client';
 import { tokenStore } from '@/shared/api/tokenStore';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { distributionsFixture } from '@/features/dashboard/distributionsFixture';
 import { epiCurveFixture } from '@/features/dashboard/epiCurveFixture';
 import { indicatorsFixture } from '@/features/dashboard/indicatorsFixture';
@@ -401,7 +401,10 @@ describe('HomePage — curva epidemiológica (SPEC FE36a)', () => {
     mockCurrentUser('ANALYTICS', 10);
     const user = setupUser();
     renderHome('/?range=30d&epiView=table');
-    await screen.findByRole('table');
+    // Scoped to the curve: since FE36c the geographic block adds a second table to Inicio.
+    await within(
+      await screen.findByRole('region', { name: 'Curva epidemiológica' }),
+    ).findByRole('table');
     const requests = recordRequests();
 
     await user.click(screen.getByRole('radio', { name: '90 días' }));
@@ -526,5 +529,149 @@ describe('HomePage — distribuciones (SPEC FE36b)', () => {
     expect(screen.getByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Curva epidemiológica' })).toBeInTheDocument();
     expect(screen.getByRole('radiogroup', { name: 'Periodo' })).toBeInTheDocument();
+  });
+});
+
+describe('HomePage — distribución geográfica (SPEC FE36c)', () => {
+  const PICHINCHA = '3f1c2a9e-8b4d-4c1e-9a7f-2d6b5e8c1a40';
+  const QUITO = '7d3b9f1a-4c2e-4a6b-8e5d-2f1a0b9c8d7e';
+
+  function recordRequests() {
+    const requests: { path: string; search: string }[] = [];
+    server.events.on('request:start', ({ request }) => {
+      const url = new URL(request.url);
+      requests.push({ path: url.pathname, search: url.search });
+    });
+    return requests;
+  }
+
+  afterEach(() => server.events.removeAllListeners());
+
+  // One level below Pichincha answers with its own child, so «back» can be told apart by its data.
+  function mockLevels() {
+    server.use(
+      http.get(`${API}/dashboard/distributions`, ({ request }) => {
+        const geoLocationId = new URL(request.url).searchParams.get('geoLocationId');
+        const fixture = distributionsFixture();
+        const data =
+          geoLocationId === PICHINCHA
+            ? distributionsFixture({
+                scope: { ...fixture.scope, geoLocationId: PICHINCHA },
+                geography: {
+                  rows: [
+                    {
+                      geoLocationId: QUITO,
+                      kind: 'unit',
+                      name: 'Quito',
+                      latitude: -0.22,
+                      longitude: -78.51,
+                      total: 18,
+                      serious: 4,
+                    },
+                  ],
+                },
+              })
+            : fixture;
+        return HttpResponse.json({ ok: true, message: 'ok', data });
+      }),
+    );
+  }
+
+  function BackProbe() {
+    const navigate = useNavigate();
+    return (
+      <button type="button" onClick={() => void navigate(-1)}>
+        history-back
+      </button>
+    );
+  }
+
+  function renderHomeWithBack(path = '/') {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, retryDelay: 0 } },
+    });
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <MemoryRouter initialEntries={[path]}>
+            <HomePage />
+            <LocationProbe />
+            <BackProbe />
+          </MemoryRouter>
+        </TooltipProvider>
+      </QueryClientProvider>,
+    );
+  }
+
+  it('con ANALYTICS dibuja el bloque con la misma y única petición a /distributions', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const requests = recordRequests();
+
+    renderHome('/?range=30d');
+
+    const block = await screen.findByRole('region', { name: 'Distribución geográfica' });
+    expect(within(block).getByRole('button', { name: 'Ver Pichincha' })).toBeInTheDocument();
+    expect(requests.filter(({ path }) => path.endsWith('/distributions'))).toHaveLength(1);
+    expect(new Set(requests.map(({ path }) => path))).toEqual(
+      new Set([
+        '/api/users/me',
+        '/api/dashboard/indicators',
+        '/api/dashboard/epi-curve',
+        '/api/dashboard/distributions',
+      ]),
+    );
+  });
+
+  it('con ANALYTICS, pulsar una unidad vuelve a pedir todo Inicio con ese geoLocationId y «atrás» sube un nivel', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    mockLevels();
+    const user = setupUser();
+    renderHomeWithBack('/?range=90d&vaccinesView=table');
+    const block = await screen.findByRole('region', { name: 'Distribución geográfica' });
+    expect(screen.getByText('Todo su territorio')).toBeInTheDocument();
+    const requests = recordRequests();
+
+    await user.click(within(block).getByRole('button', { name: 'Ver Pichincha' }));
+
+    expect(
+      await within(block).findByRole('button', { name: 'Ver Quito' }),
+    ).toBeInTheDocument();
+    for (const endpoint of ['/indicators', '/epi-curve', '/distributions']) {
+      const sent = requests.filter(({ path }) => path.endsWith(endpoint));
+      expect(sent).toHaveLength(1);
+      expect(new URLSearchParams(sent[0].search).get('geoLocationId')).toBe(PICHINCHA);
+    }
+    expect(screen.getByText('Unidad seleccionada')).toBeInTheDocument();
+    const search = new URLSearchParams(screen.getByTestId('search').textContent ?? '');
+    expect(search.get('range')).toBe('90d');
+    expect(search.get('vaccinesView')).toBe('table');
+
+    await user.click(screen.getByRole('button', { name: 'history-back' }));
+
+    expect(
+      await within(block).findByRole('button', { name: 'Ver Pichincha' }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('search')).not.toHaveTextContent('geoLocationId');
+    expect(screen.getByText('Todo su territorio')).toBeInTheDocument();
+  });
+
+  it('un 500 de /distributions muestra solo el error común del FE36b, sin error propio del bloque', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    server.use(
+      http.get(`${API}/dashboard/distributions`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'Error', code: 'DASH_009_DISTRIBUTIONS_FAILED', errors: [] },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderHome();
+
+    expect(await screen.findByRole('alert', {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+    expect(
+      screen.queryByRole('region', { name: 'Distribución geográfica' }),
+    ).not.toBeInTheDocument();
   });
 });

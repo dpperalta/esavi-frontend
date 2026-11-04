@@ -2484,6 +2484,9 @@
       "error": "We could not load the vaccine, sex and age and programmatic failure distributions."
     },
     "geo": {
+      "title": "Geographic distribution",
+      "subtitle": "By health facility location",
+      "empty": "There are no units to show at this level.",
       "columns": {
         "unit": "Unit",
         "total": "Cases",

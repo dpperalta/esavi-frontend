@@ -53,6 +53,13 @@ vi.mock('leaflet', () => {
   class FakeMap {
     fitBounds = vi.fn();
     setView = vi.fn();
+    private container: HTMLElement;
+    constructor(container: HTMLElement) {
+      this.container = container;
+    }
+    getContainer() {
+      return this.container;
+    }
     invalidateSize() {}
     getCenter() {
       return { lat: 0, lng: 0 };
@@ -65,7 +72,7 @@ vi.mock('leaflet', () => {
 
   return {
     default: {
-      map: vi.fn(() => new FakeMap()),
+      map: vi.fn((container: HTMLElement) => new FakeMap(container)),
       tileLayer: vi.fn(() => ({ addTo: () => undefined })),
       layerGroup: vi.fn(() => new FakeLayerGroup()),
       circleMarker: vi.fn(
@@ -121,8 +128,18 @@ function renderMap(mapRows: DashboardGeoRow[] = rows, search = '?range=90d') {
   return { ...result, rerenderRows: (next: DashboardGeoRow[]) => result.rerender(view(next)) };
 }
 
+// jsdom measures every element at 0×0; the map fits only once its container has a size.
+function setContainerSize(width: number, height: number) {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({
+    width,
+    height,
+  } as DOMRect);
+}
+
 beforeEach(() => {
+  vi.restoreAllMocks();
   vi.clearAllMocks();
+  setContainerSize(600, 360);
 });
 
 describe('GeoDistributionMap', () => {
@@ -175,6 +192,14 @@ describe('GeoDistributionMap', () => {
     expect(container.querySelector('[role="img"]')).toBe(mapNode);
     expect(circles()).toHaveLength(1);
     expect(circles()[0].options.radius).toBe(28);
+  });
+
+  it('montado a 0×0 no encuadra todavía: el encuadre espera al primer tamaño real', () => {
+    setContainerSize(0, 0);
+    renderMap();
+
+    expect(circles()).toHaveLength(2);
+    expect(lastMap().fitBounds).not.toHaveBeenCalled();
   });
 
   it('sin círculos se centra en el centro por defecto y lo anuncia', () => {

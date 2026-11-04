@@ -47,3 +47,12 @@ if (!Element.prototype.releasePointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
+
+// jsdom has no SVGSVGElement.createSVGRect, which is how Leaflet detects SVG support. Without it
+// Leaflet picks no renderer and adding a vector layer throws, taking down any screen that mounts
+// the dashboard map (SPEC FE36c). Must run before leaflet is first imported.
+if (!('createSVGRect' in SVGSVGElement.prototype)) {
+  Object.defineProperty(SVGSVGElement.prototype, 'createSVGRect', {
+    value: () => ({ x: 0, y: 0, width: 0, height: 0 }),
+  });
+}

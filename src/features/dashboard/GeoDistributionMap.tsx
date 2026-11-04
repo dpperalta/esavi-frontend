@@ -29,12 +29,18 @@ function isTouchClick(event: L.LeafletMouseEvent): boolean {
   return window.matchMedia('(pointer: coarse)').matches;
 }
 
+function hasSize(element: HTMLElement): boolean {
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
 export function GeoDistributionMap({ rows }: { rows: DashboardGeoRow[] }) {
   const { t, i18n } = useTranslation();
   const { drillDown } = useGeoDrillDown();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const circlesRef = useRef<L.LayerGroup | null>(null);
+  const fitRef = useRef<() => void>(() => {});
   const drillDownRef = useRef(drillDown);
   drillDownRef.current = drillDown;
 
@@ -72,14 +78,14 @@ export function GeoDistributionMap({ rows }: { rows: DashboardGeoRow[] }) {
     mapRef.current = map;
     circlesRef.current = L.layerGroup().addTo(map);
 
-    // Same 0×0 mount problem as MapPointPicker: the first resize away from zero needs a full
-    // setView, later ones only invalidateSize.
-    let hadZeroSize = container.getBoundingClientRect().width === 0;
+    // Same 0×0 mount problem as MapPointPicker, plus fitBounds: it computes the zoom from the
+    // container size, so a fit drawn at 0×0 is deferred and replayed on the first real size.
+    let hadZeroSize = !hasSize(container);
     const resizeObserver = new ResizeObserver(() => {
       map.invalidateSize();
-      if (hadZeroSize && container.getBoundingClientRect().width > 0) {
+      if (hadZeroSize && hasSize(container)) {
         hadZeroSize = false;
-        map.setView(map.getCenter(), map.getZoom(), { animate: false });
+        fitRef.current();
       }
     });
     resizeObserver.observe(container);
@@ -126,13 +132,16 @@ export function GeoDistributionMap({ rows }: { rows: DashboardGeoRow[] }) {
       layer.addLayer(circle);
     }
 
-    if (circles.length > 0) {
-      const bounds = L.latLngBounds(circles.map((row) => [row.latitude, row.longitude]));
-      map.fitBounds(bounds, { padding: [FIT_PADDING, FIT_PADDING], maxZoom: FIT_MAX_ZOOM });
-    } else {
-      const center = resolveDefaultMapCenter() ?? ABSOLUTE_FALLBACK_CENTER;
-      map.setView([center.lat, center.lng], DEFAULT_ZOOM);
-    }
+    fitRef.current = () => {
+      if (circles.length > 0) {
+        const bounds = L.latLngBounds(circles.map((row) => [row.latitude, row.longitude]));
+        map.fitBounds(bounds, { padding: [FIT_PADDING, FIT_PADDING], maxZoom: FIT_MAX_ZOOM });
+      } else {
+        const center = resolveDefaultMapCenter() ?? ABSOLUTE_FALLBACK_CENTER;
+        map.setView([center.lat, center.lng], DEFAULT_ZOOM, { animate: false });
+      }
+    };
+    if (hasSize(map.getContainer())) fitRef.current();
 
     // Built from the server's name with textContent, never as HTML.
     function tooltipContent(row: MappableGeoRow): HTMLElement {

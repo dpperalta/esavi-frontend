@@ -6,6 +6,7 @@ import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { cn } from '@/shared/lib/utils';
 import { useDistributions } from './api';
+import { GeoDistributionBlock } from './GeoDistributionBlock';
 import { ProgrammaticBlock } from './ProgrammaticBlock';
 import { SexAgeBlock } from './SexAgeBlock';
 import { VaccinesBlock } from './VaccinesBlock';
@@ -31,7 +32,8 @@ function BarsSkeleton({ rows, rowHeight }: { rows: number; rowHeight: string }) 
   );
 }
 
-// One shape per block (SPEC FE36b §3.6): 6 vaccine bars, 9 pyramid rows and two failure cards.
+// One shape per block (SPEC FE36b §3.6): 6 vaccine bars, 9 pyramid rows and two failure cards,
+// then the map and its table at their own heights (SPEC FE36c §3.7).
 function DistributionsSkeleton() {
   return (
     <div className="flex flex-col gap-6">
@@ -43,6 +45,10 @@ function DistributionsSkeleton() {
         <Skeleton className="h-72" />
         <Skeleton className="h-72" />
       </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Skeleton className="h-[260px] lg:h-[360px]" />
+        <BarsSkeleton rows={5} rowHeight="h-8" />
+      </div>
     </div>
   );
 }
@@ -53,8 +59,8 @@ interface DistributionsSectionProps {
 }
 
 // ESAVI-DASH-009 via useDistributions (SPEC FE36b). The only caller of the hook in this screen:
-// the three blocks share one request, so loading, error and retry are one too (§6). FE36c adds
-// `geography` here.
+// the four blocks share one request, so loading, error and retry are one too (§6), including
+// FE36c's geography.
 export function DistributionsSection({ query, enabled = true }: DistributionsSectionProps) {
   const { t } = useTranslation();
   const { data, isPending, isError, error, isFetching, isPlaceholderData, refetch } =
@@ -95,6 +101,7 @@ export function DistributionsSection({ query, enabled = true }: DistributionsSec
         <SexAgeBlock data={data.sexAge} />
       </div>
       <ProgrammaticBlock data={data.programmatic} />
+      <GeoDistributionBlock data={data.geography} hasUnit={query.geoLocationId !== undefined} />
     </div>
   );
 }

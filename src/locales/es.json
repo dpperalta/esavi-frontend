@@ -2484,6 +2484,9 @@
       "error": "No pudimos cargar las distribuciones de vacunas, sexo y edad y fallos programáticos."
     },
     "geo": {
+      "title": "Distribución geográfica",
+      "subtitle": "Por ubicación del establecimiento",
+      "empty": "No hay unidades para mostrar en este nivel.",
       "columns": {
         "unit": "Unidad",
         "total": "Casos",
