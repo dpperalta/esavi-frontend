@@ -2279,6 +2279,11 @@
       }
     },
     "period": {
+      "geo": "Gebied",
+      "allCoverage": "Mijn volledige dekking",
+      "wholeTerritory": "Uw volledige gebied",
+      "selectedUnit": "Geselecteerde eenheid",
+      "wholeTerritoryLink": "Mijn volledige gebied bekijken",
       "errors": {
         "fromAfterTo": "De einddatum mag niet vóór de begindatum liggen.",
         "futureTo": "De einddatum mag niet na vandaag liggen.",

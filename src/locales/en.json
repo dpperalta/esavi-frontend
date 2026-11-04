@@ -2279,6 +2279,11 @@
       }
     },
     "period": {
+      "geo": "Territory",
+      "allCoverage": "All my coverage",
+      "wholeTerritory": "Your whole territory",
+      "selectedUnit": "Selected unit",
+      "wholeTerritoryLink": "View my whole territory",
       "errors": {
         "fromAfterTo": "The end date cannot be earlier than the start date.",
         "futureTo": "The end date cannot be later than today.",
