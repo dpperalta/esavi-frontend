@@ -2493,7 +2493,16 @@
       "unlocated": "No location",
       "unmappedNote_one": "{{count}} case cannot be placed on the map",
       "unmappedNote_other": "{{count}} cases cannot be placed on the map",
-      "drillDown": "View {{name}}"
+      "drillDown": "View {{name}}",
+      "noMappable": "No unit at this level has coordinates for the map",
+      "tooltip": {
+        "cases_one": "{{formatted}} case",
+        "cases_other": "{{formatted}} cases",
+        "serious_one": "{{formatted}} serious",
+        "serious_other": "{{formatted}} serious"
+      },
+      "summary_one": "{{count}} unit on the map; the one with most cases, {{name}} with {{total}}",
+      "summary_other": "{{count}} units on the map; the one with most cases, {{name}} with {{total}}"
     }
   },
   "shell": {

@@ -156,3 +156,18 @@ body {
     @apply font-sans;
   }
 }
+
+/* Leaflet's tooltip paints itself white with a literal color (leaflet.css), which breaks the dark
+   theme. Two classes so it wins over leaflet.css, which is unlayered and loads after this file
+   (SPEC FE36c §3.7). */
+.leaflet-tooltip.geo-tooltip {
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+  border-color: var(--border);
+  font-family: inherit;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+.leaflet-tooltip-top.geo-tooltip::before {
+  border-top-color: var(--popover);
+}

@@ -2493,7 +2493,16 @@
       "unlocated": "Sin ubicación",
       "unmappedNote_one": "{{count}} caso no se puede ubicar en el mapa",
       "unmappedNote_other": "{{count}} casos no se pueden ubicar en el mapa",
-      "drillDown": "Ver {{name}}"
+      "drillDown": "Ver {{name}}",
+      "noMappable": "Ninguna unidad de este nivel tiene coordenadas para el mapa",
+      "tooltip": {
+        "cases_one": "{{formatted}} caso",
+        "cases_other": "{{formatted}} casos",
+        "serious_one": "{{formatted}} grave",
+        "serious_other": "{{formatted}} graves"
+      },
+      "summary_one": "{{count}} unidad en el mapa; la de más casos, {{name}} con {{total}}",
+      "summary_other": "{{count}} unidades en el mapa; la de más casos, {{name}} con {{total}}"
     }
   },
   "shell": {

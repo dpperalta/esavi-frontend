@@ -2493,7 +2493,16 @@
       "unlocated": "Zonder locatie",
       "unmappedNote_one": "{{count}} geval kan niet op de kaart worden geplaatst",
       "unmappedNote_other": "{{count}} gevallen kunnen niet op de kaart worden geplaatst",
-      "drillDown": "{{name}} bekijken"
+      "drillDown": "{{name}} bekijken",
+      "noMappable": "Geen enkele eenheid op dit niveau heeft coördinaten voor de kaart",
+      "tooltip": {
+        "cases_one": "{{formatted}} geval",
+        "cases_other": "{{formatted}} gevallen",
+        "serious_one": "{{formatted}} ernstig",
+        "serious_other": "{{formatted}} ernstig"
+      },
+      "summary_one": "{{count}} eenheid op de kaart; die met de meeste gevallen, {{name}} met {{total}}",
+      "summary_other": "{{count}} eenheden op de kaart; die met de meeste gevallen, {{name}} met {{total}}"
     }
   },
   "shell": {

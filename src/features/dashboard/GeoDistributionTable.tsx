@@ -41,8 +41,12 @@ export function GeoDistributionTable({ rows }: { rows: DashboardGeoRow[] }) {
               <TableHead scope="row" className="h-auto py-1 font-normal whitespace-normal">
                 <RowLabel row={row} onDrillDown={drillDown} />
               </TableHead>
-              <TableCell className="text-right tabular-nums">{countFormat.format(row.total)}</TableCell>
-              <TableCell className="text-right tabular-nums">{countFormat.format(row.serious)}</TableCell>
+              <TableCell className="text-right tabular-nums">
+                {countFormat.format(row.total)}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                {countFormat.format(row.serious)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -27,7 +27,9 @@ export function resolveTileUrl(): string {
   }
   if (!warnedMissingTileUrl) {
     warnedMissingTileUrl = true;
-    console.warn('VITE_MAP_TILE_URL is not defined — maps fall back to the public OpenStreetMap server.');
+    console.warn(
+      'VITE_MAP_TILE_URL is not defined — maps fall back to the public OpenStreetMap server.',
+    );
   }
   return DEFAULT_TILE_URL;
 }

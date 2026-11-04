@@ -36,7 +36,13 @@ describe('GeoDistributionTable', () => {
     const headers = within(body)
       .getAllByRole('row')
       .map((row) => within(row).getByRole('rowheader').textContent);
-    expect(headers).toEqual(['Pichincha', 'Guayas', 'Galápagos', 'En la propia unidad', 'Sin ubicación']);
+    expect(headers).toEqual([
+      'Pichincha',
+      'Guayas',
+      'Galápagos',
+      'En la propia unidad',
+      'Sin ubicación',
+    ]);
 
     const buttons = within(body).getAllByRole('button');
     expect(buttons).toHaveLength(3);
