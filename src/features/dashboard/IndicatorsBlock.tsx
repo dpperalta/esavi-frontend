@@ -112,7 +112,7 @@ function ChangeBadge({ change, previousValue, previousPeriod }: ChangeBadgeProps
       <TooltipTrigger asChild>
         <button
           type="button"
-          className="inline-flex w-fit items-center gap-1 rounded-sm text-xs text-muted-foreground tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:min-h-11"
+          className="inline-flex w-fit items-center gap-1 rounded-sm text-xs text-muted-foreground tabular-nums outline-none transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:min-h-11"
         >
           {isDirectional && <Arrow aria-hidden="true" className="size-3.5" />}
           <span className={cn(isDirectional && 'sr-only')}>{changeText(t, format, change)}</span>
@@ -503,7 +503,7 @@ export function IndicatorsBlock({ query, enabled = true }: IndicatorsBlockProps)
       ) : (
         // Previous numbers stay while the new period loads (keepPreviousData), dimmed so they are
         // not read as the new period's (SPEC FE35 §7).
-        <div className={cn('flex flex-col gap-4 transition-opacity', isPlaceholderData && 'opacity-60')}>
+        <div className={cn('flex flex-col gap-4 transition-opacity motion-reduce:transition-none', isPlaceholderData && 'opacity-60')}>
           {data.volume.total.current === 0 && (
             <p className="text-sm text-muted-foreground">{t('dashboard.indicators.noCasesInPeriod')}</p>
           )}

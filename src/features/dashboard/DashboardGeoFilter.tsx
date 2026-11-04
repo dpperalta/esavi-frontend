@@ -85,7 +85,8 @@ function CoverageGeoFilter({ value, onChange }: GeoFilterBranchProps) {
   if (coverage.isLoading) {
     return (
       <div className="flex min-w-0 flex-col gap-1.5 md:w-64">
-        <Label htmlFor={triggerId}>{t('dashboard.period.geo')}</Label>
+        {/* No control to point a <label> at yet; the real one mounts with the coverage. */}
+        <span className="text-sm font-medium text-foreground">{t('dashboard.period.geo')}</span>
         <Skeleton className="h-8 w-full pointer-coarse:h-11" />
       </div>
     );
