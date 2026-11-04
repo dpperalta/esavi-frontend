@@ -1,6 +1,6 @@
 # SPEC FE36c — Inicio: distribución geográfica
 
-> **Estado:** Borrador
+> **Estado:** Implementado
 > **Depende de:** SPEC FE36b (`DistributionsSection`, `useDistributions`), SPEC FE36a (paleta `--chart-*`), SPEC FE35 (barra de periodo, `useDashboardPeriod`, `geoLocationId` en la URL para todos los roles), SPEC F67 del backend (bloque `geography` de `ESAVI-DASH-009`), SPEC F49 del backend (alcance geográfico)
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que la sección «Vigilancia» muestre dónde se concentran los casos del periodo en un mapa de círculos y una tabla, y que pulsar una unidad baje de nivel para todo Inicio.
@@ -147,7 +147,8 @@ Los comunes (carga, error, periodo inválido, sin territorio) los resuelve `Dist
   - `shared/components/ui/table.tsx` dentro de `overflow-x-auto`.
   - Las filas `unit` llevan el nombre como `<button>`, con un `aria-label` del tipo «Ver {{name}}», que baja de nivel. Las filas `self` y `unlocated` no son pulsables.
 - **Accesibilidad.**
-  - El contenedor del mapa lleva `role="img"` con un `aria-label` resumen: «{{units}} unidades en el mapa; la de más casos, {{name}} con {{total}}».
+  - El mapa va en un `<figure>` cuyo `<figcaption>` (oculto con `sr-only`) es el resumen: «{{units}} unidades en el mapa; la de más casos, {{name}} con {{total}}». Sin círculos, el `<figcaption>` es visible y hace de aviso `dashboard.geo.noMappable`. *Ajuste del paso 5:* la redacción original pedía `role="img"` en el contenedor, pero Leaflet coloca dentro sus botones de zoom, que son enfocables, y los hijos de un `img` son presentacionales.
+  - Los botones de zoom llevan títulos traducidos (`dashboard.geo.zoomIn` / `zoomOut`), no los de Leaflet en inglés.
   - Los círculos no reciben foco: el camino accesible para bajar de nivel es la tabla, que tiene los mismos datos y las mismas acciones.
   - «Ver todo mi territorio» es un enlace con texto visible.
 - **Táctil.** Tocar un círculo abre su tooltip y un segundo toque baja de nivel, para no bajar por accidente al intentar leer.
@@ -168,7 +169,8 @@ Todas van en `es`, `en` y `nl`. «Unidad seleccionada» y «Ver todo mi territor
 | `dashboard.geo.noMappable` | Ninguna unidad con coordenadas |
 | `dashboard.geo.drillDown` | `aria-label` «Ver {{name}}» |
 | `dashboard.geo.tooltip.{cases,serious}` | Tooltip del círculo |
-| `dashboard.geo.summary` | `aria-label` resumen del mapa |
+| `dashboard.geo.summary` | Resumen del mapa en su `<figcaption>` |
+| `dashboard.geo.zoomIn`, `dashboard.geo.zoomOut` | Títulos de los botones de zoom (añadidas en el paso 5) |
 
 La atribución de OpenStreetMap no va en i18n: es un texto legal de un tercero, como ya decide `MapPointPicker`.
 

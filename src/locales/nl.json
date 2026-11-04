@@ -2387,6 +2387,127 @@
       },
       "days_one": "{{value}} dag",
       "days_other": "{{value}} dagen"
+    },
+    "epiCurve": {
+      "title": "Epidemische curve",
+      "subtitle": "Gevallen per epidemiologische meldweek",
+      "error": "We konden de epidemische curve niet laden.",
+      "series": {
+        "serious": "Ernstig",
+        "nonSerious": "Niet-ernstig",
+        "unclassified": "Niet geclassificeerd"
+      },
+      "total": "Totaal",
+      "week": "Week",
+      "weekRange": "{{start}} t/m {{end}}",
+      "partial": "Onvolledige week: niet vergelijkbaar",
+      "summary": "Gevallen per epidemiologische week, {{from}} t/m {{to}}: {{total}} gevallen in {{weeks}} weken"
+    },
+    "charts": {
+      "viewTable": "Als tabel bekijken",
+      "viewChart": "Als grafiek bekijken"
+    },
+    "programmatic": {
+      "title": "Programmatische fouten",
+      "administration": {
+        "title": "Toedieningsfouten",
+        "prescriptionError": "Voorschrijf- of indicatiefout",
+        "contaminatedVaccine": "Mogelijk besmet vaccin",
+        "abnormalVaccineConditions": "Afwijkende fysieke toestand van het vaccin",
+        "preparationError": "Bereidings- of reconstitutiefout",
+        "handlingError": "Hanteringsfout",
+        "improperAdministration": "Onjuiste toediening",
+        "anyError": "Ten minste één toedieningsfout"
+      },
+      "coldChain": {
+        "title": "Koudeketen",
+        "rangeDeviation": "Afwijking van het temperatuurbereik",
+        "procedureNotFollowed": "Opslagprocedure niet gevolgd",
+        "vaccineNotUsable": "Vaccin niet bruikbaar",
+        "diluentNotUsable": "Oplosmiddel niet bruikbaar",
+        "partiallyReconstitutedVaccine": "Gedeeltelijk gereconstitueerd vaccin",
+        "otherObjectPresent": "Andere voorwerpen in de koelkast",
+        "anyFailure": "Ten minste één koudeketenfout"
+      },
+      "denominator_one": "Van {{count}} onderzoek met registratie",
+      "denominator_other": "Van {{count}} onderzoeken met registratie",
+      "withoutRecord_one": "{{count}} onderzoek zonder registratie",
+      "withoutRecord_other": "{{count}} onderzoeken zonder registratie",
+      "noInvestigations": "Geen enkel geval in de periode heeft een onderzoek.",
+      "noRecords": "Geen onderzoeken met registratie."
+    },
+    "vaccines": {
+      "title": "Verdachte vaccins",
+      "others": "Overige vaccins",
+      "uncoded": "Vrije tekst",
+      "uncodedHint": "Vrije tekst, niet gecodeerd in WHODrug",
+      "noLabel": "Zonder naam",
+      "withoutSuspected_one": "{{count}} geval zonder verdacht vaccin",
+      "withoutSuspected_other": "{{count}} gevallen zonder verdacht vaccin",
+      "multiNote": "Een geval kan bij meerdere vaccins meetellen.",
+      "empty": "Geen verdachte vaccins geregistreerd in deze periode.",
+      "summary_one": "{{count}} verdacht vaccin: {{label}} met {{cases}} gevallen",
+      "summary_other": "{{count}} verdachte vaccins, het meest voorkomende {{label}} met {{cases}} gevallen",
+      "columns": {
+        "vaccine": "Vaccin",
+        "coded": "Gecodeerd",
+        "cases": "Gevallen",
+        "serious": "Ernstig"
+      }
+    },
+    "sexAge": {
+      "title": "Geslacht en leeftijd",
+      "band": {
+        "LT_1Y": "< 1 jaar",
+        "Y1_17": "1–17",
+        "Y18_24": "18–24",
+        "Y25_49": "25–49",
+        "Y50_59": "50–59",
+        "Y60_69": "60–69",
+        "Y70_79": "70–79",
+        "Y80_PLUS": "80 en ouder",
+        "UNKNOWN": "Geen leeftijd"
+      },
+      "sex": {
+        "FEMALE": "Vrouwelijk",
+        "MALE": "Mannelijk",
+        "UNKNOWN": "Onbekend",
+        "NONE": "Geen gegevens"
+      },
+      "unknownOrNone": "Geslacht onbekend of geen gegevens: {{count}}",
+      "bandColumn": "Leeftijd",
+      "total": "Totaal",
+      "summary_one": "{{count}} geval naar geslacht en leeftijd",
+      "summary_other": "{{count}} gevallen naar geslacht en leeftijd"
+    },
+    "distributions": {
+      "error": "We konden de verdelingen naar vaccin, geslacht en leeftijd en programmatische fouten niet laden."
+    },
+    "geo": {
+      "title": "Geografische verdeling",
+      "subtitle": "Naar locatie van de zorginstelling",
+      "empty": "Er zijn geen eenheden om op dit niveau te tonen.",
+      "columns": {
+        "unit": "Eenheid",
+        "total": "Gevallen",
+        "serious": "Ernstig"
+      },
+      "self": "In de eenheid zelf",
+      "unlocated": "Zonder locatie",
+      "unmappedNote_one": "{{formatted}} geval kan niet op de kaart worden geplaatst",
+      "unmappedNote_other": "{{formatted}} gevallen kunnen niet op de kaart worden geplaatst",
+      "drillDown": "{{name}} bekijken",
+      "noMappable": "Geen enkele eenheid op dit niveau heeft coördinaten voor de kaart",
+      "tooltip": {
+        "cases_one": "{{formatted}} geval",
+        "cases_other": "{{formatted}} gevallen",
+        "serious_one": "{{formatted}} ernstig",
+        "serious_other": "{{formatted}} ernstig"
+      },
+      "summary_one": "{{count}} eenheid op de kaart; die met de meeste gevallen, {{name}} met {{total}}",
+      "summary_other": "{{count}} eenheden op de kaart; die met de meeste gevallen, {{name}} met {{total}}",
+      "zoomIn": "Inzoomen",
+      "zoomOut": "Uitzoomen"
     }
   },
   "shell": {

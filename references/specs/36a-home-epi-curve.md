@@ -1,6 +1,6 @@
 # SPEC FE36a — Inicio: curva epidemiológica
 
-> **Estado:** Borrador
+> **Estado:** Implementado
 > **Depende de:** SPEC FE35 (sección «Vigilancia», `useDashboardPeriod`), SPEC FE34 (contrato `dashboard.ts`), SPEC F67 del backend (semana epidemiológica OPS y `ESAVI-DASH-008`), SPEC F66 del backend (universo y validador de periodo)
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que la sección «Vigilancia» muestre la curva de casos por semana epidemiológica del periodo elegido, y dejar instalada la primitiva de gráficos y su paleta que heredan FE36b, FE36c y FE37.

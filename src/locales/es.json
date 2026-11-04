@@ -2387,6 +2387,127 @@
       },
       "days_one": "{{value}} día",
       "days_other": "{{value}} días"
+    },
+    "epiCurve": {
+      "title": "Curva epidemiológica",
+      "subtitle": "Casos por semana epidemiológica de reporte",
+      "error": "No pudimos cargar la curva epidemiológica.",
+      "series": {
+        "serious": "Graves",
+        "nonSerious": "No graves",
+        "unclassified": "Sin clasificar"
+      },
+      "total": "Total",
+      "week": "Semana",
+      "weekRange": "Del {{start}} al {{end}}",
+      "partial": "Semana incompleta: no comparable",
+      "summary": "Casos por semana epidemiológica, del {{from}} al {{to}}: {{total}} casos en {{weeks}} semanas"
+    },
+    "charts": {
+      "viewTable": "Ver como tabla",
+      "viewChart": "Ver como gráfico"
+    },
+    "programmatic": {
+      "title": "Fallos programáticos",
+      "administration": {
+        "title": "Errores de administración",
+        "prescriptionError": "Error de prescripción o de indicación",
+        "contaminatedVaccine": "Vacuna posiblemente contaminada",
+        "abnormalVaccineConditions": "Condiciones físicas anormales de la vacuna",
+        "preparationError": "Error de preparación o reconstitución",
+        "handlingError": "Error de manipulación",
+        "improperAdministration": "Administración incorrecta",
+        "anyError": "Al menos un error de administración"
+      },
+      "coldChain": {
+        "title": "Cadena de frío",
+        "rangeDeviation": "Desviación del rango de temperatura",
+        "procedureNotFollowed": "Procedimiento de almacenamiento no seguido",
+        "vaccineNotUsable": "Vacuna no utilizable",
+        "diluentNotUsable": "Diluyente no utilizable",
+        "partiallyReconstitutedVaccine": "Vacuna parcialmente reconstituida",
+        "otherObjectPresent": "Otros objetos en el refrigerador",
+        "anyFailure": "Al menos un fallo de cadena de frío"
+      },
+      "denominator_one": "Sobre {{count}} investigación con registro",
+      "denominator_other": "Sobre {{count}} investigaciones con registro",
+      "withoutRecord_one": "{{count}} investigación sin registro",
+      "withoutRecord_other": "{{count}} investigaciones sin registro",
+      "noInvestigations": "Ningún caso del periodo tiene investigación.",
+      "noRecords": "Sin investigaciones con registro."
+    },
+    "vaccines": {
+      "title": "Vacunas sospechosas",
+      "others": "Otras vacunas",
+      "uncoded": "Texto libre",
+      "uncodedHint": "Texto libre, sin codificar en WHODrug",
+      "noLabel": "Sin nombre",
+      "withoutSuspected_one": "{{count}} caso sin vacuna sospechosa",
+      "withoutSuspected_other": "{{count}} casos sin vacuna sospechosa",
+      "multiNote": "Un caso puede contar en varias vacunas.",
+      "empty": "No hay vacunas sospechosas registradas en este periodo.",
+      "summary_one": "{{count}} vacuna sospechosa: {{label}} con {{cases}} casos",
+      "summary_other": "{{count}} vacunas sospechosas, la más frecuente {{label}} con {{cases}} casos",
+      "columns": {
+        "vaccine": "Vacuna",
+        "coded": "Codificada",
+        "cases": "Casos",
+        "serious": "Graves"
+      }
+    },
+    "sexAge": {
+      "title": "Sexo y edad",
+      "band": {
+        "LT_1Y": "< 1 año",
+        "Y1_17": "1–17",
+        "Y18_24": "18–24",
+        "Y25_49": "25–49",
+        "Y50_59": "50–59",
+        "Y60_69": "60–69",
+        "Y70_79": "70–79",
+        "Y80_PLUS": "80 y más",
+        "UNKNOWN": "Sin edad"
+      },
+      "sex": {
+        "FEMALE": "Femenino",
+        "MALE": "Masculino",
+        "UNKNOWN": "Desconocido",
+        "NONE": "Sin dato"
+      },
+      "unknownOrNone": "Sexo desconocido o sin dato: {{count}}",
+      "bandColumn": "Edad",
+      "total": "Total",
+      "summary_one": "{{count}} caso por sexo y edad",
+      "summary_other": "{{count}} casos por sexo y edad"
+    },
+    "distributions": {
+      "error": "No pudimos cargar las distribuciones de vacunas, sexo y edad y fallos programáticos."
+    },
+    "geo": {
+      "title": "Distribución geográfica",
+      "subtitle": "Por ubicación del establecimiento",
+      "empty": "No hay unidades para mostrar en este nivel.",
+      "columns": {
+        "unit": "Unidad",
+        "total": "Casos",
+        "serious": "Graves"
+      },
+      "self": "En la propia unidad",
+      "unlocated": "Sin ubicación",
+      "unmappedNote_one": "{{formatted}} caso no se puede ubicar en el mapa",
+      "unmappedNote_other": "{{formatted}} casos no se pueden ubicar en el mapa",
+      "drillDown": "Ver {{name}}",
+      "noMappable": "Ninguna unidad de este nivel tiene coordenadas para el mapa",
+      "tooltip": {
+        "cases_one": "{{formatted}} caso",
+        "cases_other": "{{formatted}} casos",
+        "serious_one": "{{formatted}} grave",
+        "serious_other": "{{formatted}} graves"
+      },
+      "summary_one": "{{count}} unidad en el mapa; la de más casos, {{name}} con {{total}}",
+      "summary_other": "{{count}} unidades en el mapa; la de más casos, {{name}} con {{total}}",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar"
     }
   },
   "shell": {

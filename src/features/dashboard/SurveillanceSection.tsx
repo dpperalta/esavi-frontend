@@ -1,11 +1,22 @@
-import { useEffect, useId, useState } from 'react';
+import { lazy, Suspense, useEffect, useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { EsaviApiError } from '@/shared/api/types';
+import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useIndicators } from './api';
 import { DashboardPeriodBar } from './DashboardPeriodBar';
 import { IndicatorsBlock } from './IndicatorsBlock';
 import { useDashboardPeriod } from './useDashboardPeriod';
+
+// Recharts added 109 kB gzip to the entry bundle, over the 100 kB threshold of SPEC FE36a §7, and
+// Inicio is the first screen every role lands on: the curve and its library load on their own chunk.
+const EpiCurveBlock = lazy(() =>
+  import('./EpiCurveBlock').then((module) => ({ default: module.EpiCurveBlock })),
+);
+// Vaccines and the pyramid draw with Recharts too, so they stay out of the entry bundle as well.
+const DistributionsSection = lazy(() =>
+  import('./DistributionsSection').then((module) => ({ default: module.DistributionsSection })),
+);
 
 // «Vigilancia» (SPEC FE35): the period bar and, below it, every block that reads the period.
 // FE36 and FE37 add their blocks here and read the same useDashboardPeriod().
@@ -53,6 +64,12 @@ export function SurveillanceSection() {
         serverRejected={periodWasRejected && period.params.mode === 'default'}
       />
       <IndicatorsBlock query={period.query} enabled={period.isReady} />
+      <Suspense fallback={<Skeleton className="h-[220px] md:h-[280px]" />}>
+        <EpiCurveBlock query={period.query} enabled={period.isReady} />
+      </Suspense>
+      <Suspense fallback={<Skeleton className="h-96" />}>
+        <DistributionsSection query={period.query} enabled={period.isReady} />
+      </Suspense>
     </section>
   );
 }

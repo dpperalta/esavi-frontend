@@ -10,7 +10,7 @@ import { patientResource } from '@/features/patient/api';
 //
 // THREE SILENT FALLS, ALL RESOLVING TO `null` (§3.7): the patient has no `residence`, the division
 // has no `latitude` or `longitude`, or either read fails. In every case the map opens at
-// `VITE_MAP_DEFAULT_CENTER` with no error shown — the preload is a convenience, not a requirement,
+// the default center from `shared/config/map.ts` with no error shown — the preload is a convenience, not a requirement,
 // and a red toast for failing to center a map would be noise.
 export function usePatientResidenceCenter(
   patientId: string | undefined,

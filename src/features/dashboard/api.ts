@@ -1,5 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type {
+  DashboardDistributions,
+  DashboardEpiCurve,
   DashboardIndicators,
   DashboardPendingWork,
   DashboardPeriodQuery,
@@ -32,7 +34,9 @@ export function usePendingWork() {
 // ESAVI-DASH-007 — surveillance indicators of a period against the previous one of the same
 // length, scoped to the user's territory (SPEC F66, F49). ANALYTICS is its minimum role.
 async function fetchIndicators(query: DashboardPeriodQuery): Promise<DashboardIndicators> {
-  const response = await client.get<DashboardIndicators>('/dashboard/indicators', { params: query });
+  const response = await client.get<DashboardIndicators>('/dashboard/indicators', {
+    params: query,
+  });
   return response.data;
 }
 
@@ -51,6 +55,48 @@ export function useIndicators(query: DashboardPeriodQuery, options?: { enabled?:
     staleTime: 5 * 60_000,
     // Switching period keeps the previous numbers on screen, dimmed, instead of a skeleton flash
     // on every shortcut click (SPEC FE35 §6).
+    placeholderData: keepPreviousData,
+    retry: retryUnlessClientError,
+  });
+}
+
+// ESAVI-DASH-008 — cases per PAHO epidemiological week of reportDate (Sunday–Saturday), split
+// serious / non-serious / unclassified, with `partial` edge weeks (SPEC F67). ANALYTICS minimum.
+async function fetchEpiCurve(query: DashboardPeriodQuery): Promise<DashboardEpiCurve> {
+  const response = await client.get<DashboardEpiCurve>('/dashboard/epi-curve', { params: query });
+  return response.data;
+}
+
+// Same query, staleTime and placeholder as useIndicators (SPEC FE36a §3.4): both blocks change
+// period together and must never show two different periods at once.
+export function useEpiCurve(query: DashboardPeriodQuery, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['dashboard', 'epiCurve', query],
+    queryFn: () => fetchEpiCurve(query),
+    enabled: options?.enabled ?? true,
+    staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
+    retry: retryUnlessClientError,
+  });
+}
+
+// ESAVI-DASH-009 — suspected vaccines (top 10 + others), sex × age matrix, geography and
+// programmatic failures of the period, in one response (SPEC F67). ANALYTICS minimum.
+async function fetchDistributions(query: DashboardPeriodQuery): Promise<DashboardDistributions> {
+  const response = await client.get<DashboardDistributions>('/dashboard/distributions', {
+    params: query,
+  });
+  return response.data;
+}
+
+// One key for FE36b and FE36c (SPEC FE36b §6): geography arrives in the same response, so the map
+// reads this cache instead of asking again.
+export function useDistributions(query: DashboardPeriodQuery, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['dashboard', 'distributions', query],
+    queryFn: () => fetchDistributions(query),
+    enabled: options?.enabled ?? true,
+    staleTime: 5 * 60_000,
     placeholderData: keepPreviousData,
     retry: retryUnlessClientError,
   });

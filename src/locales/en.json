@@ -2387,6 +2387,127 @@
       },
       "days_one": "{{value}} day",
       "days_other": "{{value}} days"
+    },
+    "epiCurve": {
+      "title": "Epidemic curve",
+      "subtitle": "Cases per epidemiological week of report",
+      "error": "We couldn't load the epidemic curve.",
+      "series": {
+        "serious": "Serious",
+        "nonSerious": "Non-serious",
+        "unclassified": "Unclassified"
+      },
+      "total": "Total",
+      "week": "Week",
+      "weekRange": "{{start}} to {{end}}",
+      "partial": "Incomplete week: not comparable",
+      "summary": "Cases per epidemiological week, {{from}} to {{to}}: {{total}} cases in {{weeks}} weeks"
+    },
+    "charts": {
+      "viewTable": "View as table",
+      "viewChart": "View as chart"
+    },
+    "programmatic": {
+      "title": "Programmatic failures",
+      "administration": {
+        "title": "Administration errors",
+        "prescriptionError": "Prescription or indication error",
+        "contaminatedVaccine": "Possibly contaminated vaccine",
+        "abnormalVaccineConditions": "Abnormal physical condition of the vaccine",
+        "preparationError": "Preparation or reconstitution error",
+        "handlingError": "Handling error",
+        "improperAdministration": "Improper administration",
+        "anyError": "At least one administration error"
+      },
+      "coldChain": {
+        "title": "Cold chain",
+        "rangeDeviation": "Temperature range deviation",
+        "procedureNotFollowed": "Storage procedure not followed",
+        "vaccineNotUsable": "Vaccine not usable",
+        "diluentNotUsable": "Diluent not usable",
+        "partiallyReconstitutedVaccine": "Partially reconstituted vaccine",
+        "otherObjectPresent": "Other objects in the refrigerator",
+        "anyFailure": "At least one cold chain failure"
+      },
+      "denominator_one": "Out of {{count}} investigation with a record",
+      "denominator_other": "Out of {{count}} investigations with a record",
+      "withoutRecord_one": "{{count}} investigation without a record",
+      "withoutRecord_other": "{{count}} investigations without a record",
+      "noInvestigations": "No case in the period has an investigation.",
+      "noRecords": "No investigations with a record."
+    },
+    "vaccines": {
+      "title": "Suspected vaccines",
+      "others": "Other vaccines",
+      "uncoded": "Free text",
+      "uncodedHint": "Free text, not coded in WHODrug",
+      "noLabel": "No name",
+      "withoutSuspected_one": "{{count}} case without a suspected vaccine",
+      "withoutSuspected_other": "{{count}} cases without a suspected vaccine",
+      "multiNote": "A case can count under several vaccines.",
+      "empty": "No suspected vaccines recorded in this period.",
+      "summary_one": "{{count}} suspected vaccine: {{label}} with {{cases}} cases",
+      "summary_other": "{{count}} suspected vaccines, the most frequent {{label}} with {{cases}} cases",
+      "columns": {
+        "vaccine": "Vaccine",
+        "coded": "Coded",
+        "cases": "Cases",
+        "serious": "Serious"
+      }
+    },
+    "sexAge": {
+      "title": "Sex and age",
+      "band": {
+        "LT_1Y": "< 1 year",
+        "Y1_17": "1–17",
+        "Y18_24": "18–24",
+        "Y25_49": "25–49",
+        "Y50_59": "50–59",
+        "Y60_69": "60–69",
+        "Y70_79": "70–79",
+        "Y80_PLUS": "80 and over",
+        "UNKNOWN": "No age"
+      },
+      "sex": {
+        "FEMALE": "Female",
+        "MALE": "Male",
+        "UNKNOWN": "Unknown",
+        "NONE": "No data"
+      },
+      "unknownOrNone": "Unknown sex or no data: {{count}}",
+      "bandColumn": "Age",
+      "total": "Total",
+      "summary_one": "{{count}} case by sex and age",
+      "summary_other": "{{count}} cases by sex and age"
+    },
+    "distributions": {
+      "error": "We could not load the vaccine, sex and age and programmatic failure distributions."
+    },
+    "geo": {
+      "title": "Geographic distribution",
+      "subtitle": "By health facility location",
+      "empty": "There are no units to show at this level.",
+      "columns": {
+        "unit": "Unit",
+        "total": "Cases",
+        "serious": "Serious"
+      },
+      "self": "In the unit itself",
+      "unlocated": "No location",
+      "unmappedNote_one": "{{formatted}} case cannot be placed on the map",
+      "unmappedNote_other": "{{formatted}} cases cannot be placed on the map",
+      "drillDown": "View {{name}}",
+      "noMappable": "No unit at this level has coordinates for the map",
+      "tooltip": {
+        "cases_one": "{{formatted}} case",
+        "cases_other": "{{formatted}} cases",
+        "serious_one": "{{formatted}} serious",
+        "serious_other": "{{formatted}} serious"
+      },
+      "summary_one": "{{count}} unit on the map; the one with most cases, {{name}} with {{total}}",
+      "summary_other": "{{count}} units on the map; the one with most cases, {{name}} with {{total}}",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
     }
   },
   "shell": {
