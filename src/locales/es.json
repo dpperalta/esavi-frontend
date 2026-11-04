@@ -766,6 +766,7 @@
         "label": "Código del caso",
         "placeholder": "Buscar por código de caso…"
       },
+      "status": "Estado del expediente",
       "patient": {
         "prefix": "Paciente",
         "clearAria": "Quitar el filtro de paciente"

@@ -766,6 +766,7 @@
         "label": "Case code",
         "placeholder": "Search by case code…"
       },
+      "status": "Case file status",
       "patient": {
         "prefix": "Patient",
         "clearAria": "Remove the patient filter"

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { XIcon } from 'lucide-react';
 import { useHealthFacilitySearch } from '@/features/healthFacility/api';
+import { WORKFLOW_STATUS_TYPE_CODE } from '@/features/esaviCase/CaseWorkflowInbox';
+import { CatalogSelect } from '@/shared/components/CatalogSelect';
 import { DateField } from '@/shared/components/DateField';
 import { EntitySearchSelect, type EntitySearchOption } from '@/shared/components/EntitySearchSelect';
 import { GeoLocationPicker } from '@/shared/components/GeoLocationPicker';
@@ -15,10 +17,13 @@ const DATE_COLUMNS = ['reportDate', 'eventDate', 'reportFillingDate'] as const;
 type DateColumn = (typeof DATE_COLUMNS)[number];
 type DateMode = 'exact' | 'range';
 
-// The fourteen (thirteen real, per `EsaviCaseListFilters`) query keys `esaviCaseFiltersSchema`
+// The fifteen (fourteen real, per `EsaviCaseListFilters`) query keys `esaviCaseFiltersSchema`
 // parses — SPEC FE09 §3.7's filter-count badge is derived from this list, never stored.
+// `statusCode` is shared with the workflow inbox tab (SPEC FE34 §8), so «Limpiar filtros» here
+// also clears the inbox's status filter.
 export const ESAVI_CASE_FILTER_PARAM_KEYS = [
   'code',
+  'statusCode',
   'patientId',
   'healthFacilityId',
   'geoLocationId',
@@ -33,7 +38,7 @@ export const ESAVI_CASE_FILTER_PARAM_KEYS = [
   'reportFillingDateTo',
 ] as const;
 
-// How many of the fourteen filters (§3.7) are actually present in the URL — the badge on the
+// How many of the fifteen filters (§3.7) are actually present in the URL — the badge on the
 // mobile filter sheet's trigger button reads this, always derived from `searchParams`.
 export function countActiveEsaviCaseFilters(searchParams: URLSearchParams): number {
   return ESAVI_CASE_FILTER_PARAM_KEYS.filter((key) => !!searchParams.get(key)).length;
@@ -70,6 +75,38 @@ function CodeFilter() {
         value={draft}
         onChange={(event) => setDraft(event.target.value)}
         placeholder={t('esaviCase.filters.code.placeholder')}
+      />
+    </div>
+  );
+}
+
+function StatusFilter({
+  value,
+  setSearchParams,
+}: {
+  value: string;
+  setSearchParams: ReturnType<typeof useSearchParams>[1];
+}) {
+  const { t } = useTranslation();
+
+  function handleChange(nextCode: string | null) {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (nextCode) next.set('statusCode', nextCode);
+      else next.delete('statusCode');
+      next.delete('page');
+      return next;
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>{t('esaviCase.filters.status')}</Label>
+      <CatalogSelect
+        typeCode={WORKFLOW_STATUS_TYPE_CODE}
+        value={value || null}
+        onChange={handleChange}
+        ariaLabel={t('esaviCase.filters.status')}
       />
     </div>
   );
@@ -295,7 +332,7 @@ function DateColumnFilter({
   );
 }
 
-// The fourteen (thirteen real) controls of the «Por caso» tab (SPEC FE09 §3.5). Writes directly
+// The fifteen (fourteen real) controls of the «Por caso» tab (SPEC FE09 §3.5). Writes directly
 // to `searchParams` — there is no other state, per §3.4: filters, paging and their derived UI
 // (the date columns' Exacta/Rango mode) all live in the URL or are re-derived from it.
 export function EsaviCaseFilters({ patientName }: EsaviCaseFiltersProps) {
@@ -305,10 +342,12 @@ export function EsaviCaseFilters({ patientName }: EsaviCaseFiltersProps) {
   const patientId = searchParams.get('patientId') ?? '';
   const healthFacilityId = searchParams.get('healthFacilityId') ?? '';
   const geoLocationId = searchParams.get('geoLocationId');
+  const statusCode = searchParams.get('statusCode') ?? '';
 
   return (
     <div className="flex flex-col gap-4">
       <CodeFilter />
+      <StatusFilter value={statusCode} setSearchParams={setSearchParams} />
       {patientId && (
         <PatientCapsule patientId={patientId} patientName={patientName} setSearchParams={setSearchParams} />
       )}

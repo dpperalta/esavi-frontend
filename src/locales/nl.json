@@ -766,6 +766,7 @@
         "label": "Gevalcode",
         "placeholder": "Zoeken op gevalcode…"
       },
+      "status": "Dossierstatus",
       "patient": {
         "prefix": "Patiënt",
         "clearAria": "Patiëntfilter verwijderen"

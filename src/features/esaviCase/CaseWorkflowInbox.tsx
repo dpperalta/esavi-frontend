@@ -31,7 +31,7 @@ import { Label } from '@/shared/components/ui/label';
 import { ROLE_LEVELS } from '@/shared/config/roles';
 import { useCan } from '@/shared/hooks/useCan';
 
-const WORKFLOW_STATUS_TYPE_CODE = 'caseWorkflowStatus';
+export const WORKFLOW_STATUS_TYPE_CODE = 'caseWorkflowStatus';
 const STAGE_ALIASES = ['classification', 'notification', 'investigation', 'finalClassification'] as const;
 
 function completedStageCount(row: CaseWorkflowListRow): number {
@@ -81,8 +81,8 @@ function CaseWorkflowRowActions({ row, onConfirm }: CaseWorkflowRowActionsProps)
 }
 
 // The «Bandeja por estado» tab — its own contract against ESAVI-CASEFLOW-002A/002B, deliberately
-// not sharing columns or filters with EsaviCaseFilters (§1D, §2): `statusCode` doesn't exist on
-// the case listing, and `geoLocationId` doesn't exist here.
+// not sharing columns or filters with EsaviCaseFilters (§1D, §2): `geoLocationId` doesn't exist
+// here. `statusCode` is the one URL key both tabs share since SPEC FE34 §6, with the same meaning.
 export function CaseWorkflowInbox() {
   const { t } = useTranslation();
   const navigate = useNavigate();

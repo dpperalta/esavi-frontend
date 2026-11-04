@@ -145,6 +145,62 @@ describe('EsaviCaseListPage — filtros hacia el 002A/002B', () => {
     expect(received.params?.get('reportDate')).toBe('2026-03-01');
   });
 
+  // SPEC FE34 §4 paso 3.
+  it('?statusCode=IN_INVESTIGATION viaja al 002A', async () => {
+    mockCurrentUser('USER', 20);
+    mockGeoLocationPicker();
+    const received: { params: URLSearchParams | null } = { params: null };
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases', ({ request }) => {
+        received.params = new URL(request.url).searchParams;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderPage('/esavi-cases?statusCode=IN_INVESTIGATION');
+
+    await waitFor(() => expect(received.params).not.toBeNull());
+    expect(received.params?.get('statusCode')).toBe('IN_INVESTIGATION');
+  });
+
+  it('?statusCode=FOO no viaja al 002A', async () => {
+    mockCurrentUser('USER', 20);
+    mockGeoLocationPicker();
+    const received: { params: URLSearchParams | null } = { params: null };
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases', ({ request }) => {
+        received.params = new URL(request.url).searchParams;
+        return HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } });
+      }),
+    );
+
+    renderPage('/esavi-cases?statusCode=FOO');
+
+    await waitFor(() => expect(received.params).not.toBeNull());
+    expect(received.params?.has('statusCode')).toBe(false);
+  });
+
+  // SPEC FE34 §8 — `statusCode` is shared with the inbox tab, so clearing here clears it there too.
+  it('«Limpiar filtros» quita statusCode, también el que filtraba la bandeja', async () => {
+    mockCurrentUser('USER', 20);
+    mockGeoLocationPicker();
+    server.use(
+      http.get('http://localhost:4500/api/esavi-cases', () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: { count: 0, rows: [] } }),
+      ),
+    );
+    const user = setupUser();
+
+    const router = renderPage('/esavi-cases?statusCode=IN_INVESTIGATION');
+
+    await user.click(await screen.findByRole('button', { name: 'Limpiar filtros' }));
+
+    await waitFor(() => {
+      const params = new URLSearchParams(router.state.location.search);
+      expect(params.has('statusCode')).toBe(false);
+    });
+  });
+
   it('con rol USER e includeInactive=true la petición va a /esavi-cases (no al admin)', async () => {
     mockCurrentUser('USER', 25);
     mockGeoLocationPicker();
