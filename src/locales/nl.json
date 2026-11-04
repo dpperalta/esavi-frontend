@@ -2387,6 +2387,17 @@
       },
       "days_one": "{{value}} dag",
       "days_other": "{{value}} dagen"
+    },
+    "epiCurve": {
+      "series": {
+        "serious": "Ernstig",
+        "nonSerious": "Niet-ernstig",
+        "unclassified": "Niet geclassificeerd"
+      },
+      "total": "Totaal",
+      "week": "Week",
+      "weekRange": "{{start}} t/m {{end}}",
+      "partial": "Onvolledige week: niet vergelijkbaar"
     }
   },
   "shell": {

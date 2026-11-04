@@ -2387,6 +2387,17 @@
       },
       "days_one": "{{value}} day",
       "days_other": "{{value}} days"
+    },
+    "epiCurve": {
+      "series": {
+        "serious": "Serious",
+        "nonSerious": "Non-serious",
+        "unclassified": "Unclassified"
+      },
+      "total": "Total",
+      "week": "Week",
+      "weekRange": "{{start}} to {{end}}",
+      "partial": "Incomplete week: not comparable"
     }
   },
   "shell": {
