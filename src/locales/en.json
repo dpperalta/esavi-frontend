@@ -576,6 +576,22 @@
     }
   },
   "caseWorkflow": {
+    "status": {
+      "OPEN": "Open",
+      "IN_CLASSIFICATION": "In classification",
+      "IN_NOTIFICATION": "In notification",
+      "IN_INVESTIGATION": "In investigation",
+      "IN_FINAL_CLASSIFICATION": "In final classification",
+      "PENDING_VALIDATION": "Pending validation",
+      "CLOSED": "Closed",
+      "REOPENED": "Reopened"
+    },
+    "stage": {
+      "CLASSIFICATION": "Initial classification",
+      "NOTIFICATION": "Notification",
+      "INVESTIGATION": "Investigation",
+      "FINAL_CLASSIFICATION": "Final classification"
+    },
     "errors": {
       "CASEFLOW_006_CASE_NOT_FOUND": "The case does not exist.",
       "CASEFLOW_006_NOT_FOUND": "The case has no workflow record.",

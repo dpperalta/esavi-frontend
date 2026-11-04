@@ -576,6 +576,22 @@
     }
   },
   "caseWorkflow": {
+    "status": {
+      "OPEN": "Abierto",
+      "IN_CLASSIFICATION": "En clasificación",
+      "IN_NOTIFICATION": "En notificación",
+      "IN_INVESTIGATION": "En investigación",
+      "IN_FINAL_CLASSIFICATION": "En clasificación final",
+      "PENDING_VALIDATION": "Pendiente de validación",
+      "CLOSED": "Cerrado",
+      "REOPENED": "Reabierto"
+    },
+    "stage": {
+      "CLASSIFICATION": "Clasificación inicial",
+      "NOTIFICATION": "Notificación",
+      "INVESTIGATION": "Investigación",
+      "FINAL_CLASSIFICATION": "Clasificación final"
+    },
     "errors": {
       "CASEFLOW_006_CASE_NOT_FOUND": "El caso no existe.",
       "CASEFLOW_006_NOT_FOUND": "El caso no tiene expediente de flujo.",

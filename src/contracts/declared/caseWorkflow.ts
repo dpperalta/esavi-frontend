@@ -17,6 +17,22 @@ export interface CaseWorkflowStageEntry extends CaseWorkflowStageDuration {
 // `status` and `previousStatus`.
 export type CatalogRef = { catalogItemId: string; code: string; name: string };
 
+// Origin: `CASE_WORKFLOW_STATUS` in esavi-backend/src/constants/caseWorkflow.constants.ts, in the
+// same order. The backend declares it as an object, which EXTRA_ENUM_APPENDS cannot extract, so it
+// is reconciled by hand here if a state is added there (SPEC FE34 §3.3).
+export const CASE_WORKFLOW_STATUS_CODES = [
+  'OPEN',
+  'IN_CLASSIFICATION',
+  'IN_NOTIFICATION',
+  'IN_INVESTIGATION',
+  'IN_FINAL_CLASSIFICATION',
+  'PENDING_VALIDATION',
+  'CLOSED',
+  'REOPENED',
+] as const;
+
+export type CaseWorkflowStatusCode = (typeof CASE_WORKFLOW_STATUS_CODES)[number];
+
 // The four keys `buildStages` writes, in process order (STAGE_SATELLITE aliases).
 export type StageAlias = 'classification' | 'notification' | 'investigation' | 'finalClassification';
 
