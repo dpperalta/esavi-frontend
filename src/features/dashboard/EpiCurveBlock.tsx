@@ -57,7 +57,9 @@ function EpiCurveTooltip({ active, payload }: TooltipContentProps) {
   return (
     <div className="grid min-w-40 gap-1.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs shadow-xl">
       <div>
-        <p className="font-medium text-foreground">{week.label}</p>
+        <p translate="no" className="font-medium text-foreground">
+          {week.label}
+        </p>
         <p className="text-muted-foreground">
           {t('dashboard.epiCurve.weekRange', epiWeekRange(week.weekStart, i18n.language))}
         </p>

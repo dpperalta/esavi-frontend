@@ -38,7 +38,9 @@ export function EpiCurveTable({ weeks }: { weeks: DashboardEpiWeek[] }) {
         {weeks.map((week) => (
           <TableRow key={week.label}>
             <TableHead scope="row" className="h-auto py-2 font-normal">
-              <span className="block font-medium tabular-nums">{week.label}</span>
+              <span translate="no" className="block font-medium tabular-nums">
+                {week.label}
+              </span>
               <span className="block text-xs text-muted-foreground">
                 {t('dashboard.epiCurve.weekRange', epiWeekRange(week.weekStart, i18n.language))}
               </span>
