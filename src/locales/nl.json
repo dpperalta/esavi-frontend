@@ -2561,6 +2561,34 @@
       "evaluated_other": "{{value}} batches beoordeeld",
       "withoutBatch_one": "{{value}} geval zonder geregistreerde batch",
       "withoutBatch_other": "{{value}} gevallen zonder geregistreerde batch"
+    },
+    "activity": {
+      "myCases": {
+        "title": "Mijn gevallen",
+        "empty": "Je hebt de afgelopen {{days}} dagen aan geen enkel geval gewerkt.",
+        "resume": "{{code}} hervatten"
+      },
+      "territory": {
+        "title": "Activiteit in het gebied",
+        "empty": "Geen activiteit in je gebied in de afgelopen {{days}} dagen.",
+        "view": "{{code}} bekijken"
+      },
+      "byAuthor": "door {{author}}",
+      "action": {
+        "CASE_CREATED": "Geval aangemaakt",
+        "CASE_UPDATED": "Geval bijgewerkt",
+        "CASE_DEACTIVATED": "Geval gedeactiveerd",
+        "CASE_ACTIVATED": "Geval opnieuw geactiveerd",
+        "WORKFLOW_DEACTIVATED": "Dossier gedeactiveerd",
+        "WORKFLOW_ACTIVATED": "Dossier opnieuw geactiveerd",
+        "STAGE_STARTED": "Fase gestart",
+        "STAGE_COMPLETED": "Fase afgerond",
+        "CASE_CLOSED": "Geval gesloten",
+        "CASE_REOPENED": "Geval heropend",
+        "VALIDATION_REQUESTED": "Validatie aangevraagd",
+        "VALIDATION_RESOLVED": "Validatie afgehandeld",
+        "OTHER": "Andere actie"
+      }
     }
   },
   "shell": {

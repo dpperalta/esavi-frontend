@@ -2561,6 +2561,34 @@
       "evaluated_other": "{{value}} batches evaluated",
       "withoutBatch_one": "{{value}} case without a recorded batch",
       "withoutBatch_other": "{{value}} cases without a recorded batch"
+    },
+    "activity": {
+      "myCases": {
+        "title": "My cases",
+        "empty": "You haven't worked on any case in the last {{days}} days.",
+        "resume": "Resume {{code}}"
+      },
+      "territory": {
+        "title": "Territory activity",
+        "empty": "No activity in your territory in the last {{days}} days.",
+        "view": "View {{code}}"
+      },
+      "byAuthor": "by {{author}}",
+      "action": {
+        "CASE_CREATED": "Case created",
+        "CASE_UPDATED": "Case updated",
+        "CASE_DEACTIVATED": "Case deactivated",
+        "CASE_ACTIVATED": "Case reactivated",
+        "WORKFLOW_DEACTIVATED": "Case file deactivated",
+        "WORKFLOW_ACTIVATED": "Case file reactivated",
+        "STAGE_STARTED": "Stage started",
+        "STAGE_COMPLETED": "Stage completed",
+        "CASE_CLOSED": "Case closed",
+        "CASE_REOPENED": "Case reopened",
+        "VALIDATION_REQUESTED": "Validation requested",
+        "VALIDATION_RESOLVED": "Validation resolved",
+        "OTHER": "Other action"
+      }
     }
   },
   "shell": {
