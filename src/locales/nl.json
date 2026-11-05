@@ -2561,6 +2561,68 @@
       "evaluated_other": "{{value}} batches beoordeeld",
       "withoutBatch_one": "{{value}} geval zonder geregistreerde batch",
       "withoutBatch_other": "{{value}} gevallen zonder geregistreerde batch"
+    },
+    "activity": {
+      "title": "Activiteit",
+      "error": "We konden de recente activiteit niet laden.",
+      "window": "Afgelopen {{days}} dagen",
+      "updatedAt": "Bijgewerkt om {{time}}",
+      "refresh": "Vernieuwen",
+      "myCases": {
+        "title": "Mijn gevallen",
+        "empty": "Je hebt de afgelopen {{days}} dagen aan geen enkel geval gewerkt.",
+        "resume": "{{code}} hervatten"
+      },
+      "territory": {
+        "title": "Activiteit in het gebied",
+        "empty": "Geen activiteit in je gebied in de afgelopen {{days}} dagen.",
+        "view": "{{code}} bekijken"
+      },
+      "byAuthor": "door {{author}}",
+      "action": {
+        "CASE_CREATED": "Geval aangemaakt",
+        "CASE_UPDATED": "Geval bijgewerkt",
+        "CASE_DEACTIVATED": "Geval gedeactiveerd",
+        "CASE_ACTIVATED": "Geval opnieuw geactiveerd",
+        "WORKFLOW_DEACTIVATED": "Dossier gedeactiveerd",
+        "WORKFLOW_ACTIVATED": "Dossier opnieuw geactiveerd",
+        "STAGE_STARTED": "Fase gestart",
+        "STAGE_COMPLETED": "Fase afgerond",
+        "CASE_CLOSED": "Geval gesloten",
+        "CASE_REOPENED": "Geval heropend",
+        "VALIDATION_REQUESTED": "Validatie aangevraagd",
+        "VALIDATION_RESOLVED": "Validatie afgehandeld",
+        "OTHER": "Andere actie"
+      }
+    },
+    "system": {
+      "title": "Systeem",
+      "error": "We konden de systeemactiviteit niet laden.",
+      "updatedAt": "Bijgewerkt om {{time}}",
+      "refresh": "Vernieuwen",
+      "counters": {
+        "activeSessions": "Actieve sessies",
+        "activeUsers24h": "Actieve gebruikers in 24 u",
+        "activeUsers7d": "Actieve gebruikers in 7 dagen",
+        "sessionsStarted24h": "Gestarte sessies in 24 u",
+        "sessionsStarted7d": "Gestarte sessies in 7 dagen"
+      },
+      "revocations": {
+        "title": "Ingetrokken sessies in 7 dagen"
+      },
+      "reason": {
+        "LOGOUT": "Afgemeld",
+        "LOGOUT_ALL": "Afgemeld van alle sessies",
+        "REUSE_DETECTED": "Hergebruik van token gedetecteerd",
+        "PASSWORD_CHANGED": "Wachtwoord gewijzigd",
+        "PASSWORD_RESET": "Wachtwoord hersteld",
+        "ABSOLUTE_MAX_REACHED": "Maximale duur bereikt",
+        "UNSPECIFIED": "Niet opgegeven",
+        "OTHER": "Overig"
+      },
+      "reuseAlert_one": "{{count}} hergebruik van token gedetecteerd in 7 dagen: mogelijk gestolen sessie. De sessies van die gebruiker zijn al ingetrokken.",
+      "reuseAlert_other": "{{count}} keer hergebruik van token gedetecteerd in 7 dagen: mogelijk gestolen sessies. De sessies van die gebruikers zijn al ingetrokken.",
+      "noRevocations": "Geen ingetrokken sessies in 7 dagen."
     }
   },
   "shell": {

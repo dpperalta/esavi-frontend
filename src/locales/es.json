@@ -2561,6 +2561,68 @@
       "evaluated_other": "{{value}} lotes evaluados",
       "withoutBatch_one": "{{value}} caso sin lote registrado",
       "withoutBatch_other": "{{value}} casos sin lote registrado"
+    },
+    "activity": {
+      "title": "Actividad",
+      "error": "No pudimos cargar la actividad reciente.",
+      "window": "Últimos {{days}} días",
+      "updatedAt": "Actualizado a las {{time}}",
+      "refresh": "Actualizar",
+      "myCases": {
+        "title": "Mis casos",
+        "empty": "No has intervenido en ningún caso en los últimos {{days}} días.",
+        "resume": "Retomar {{code}}"
+      },
+      "territory": {
+        "title": "Actividad del territorio",
+        "empty": "No hay actividad en tu territorio en los últimos {{days}} días.",
+        "view": "Ver {{code}}"
+      },
+      "byAuthor": "por {{author}}",
+      "action": {
+        "CASE_CREATED": "Caso creado",
+        "CASE_UPDATED": "Caso actualizado",
+        "CASE_DEACTIVATED": "Caso desactivado",
+        "CASE_ACTIVATED": "Caso reactivado",
+        "WORKFLOW_DEACTIVATED": "Expediente desactivado",
+        "WORKFLOW_ACTIVATED": "Expediente reactivado",
+        "STAGE_STARTED": "Etapa iniciada",
+        "STAGE_COMPLETED": "Etapa completada",
+        "CASE_CLOSED": "Caso cerrado",
+        "CASE_REOPENED": "Caso reabierto",
+        "VALIDATION_REQUESTED": "Validación solicitada",
+        "VALIDATION_RESOLVED": "Validación resuelta",
+        "OTHER": "Otra acción"
+      }
+    },
+    "system": {
+      "title": "Sistema",
+      "error": "No pudimos cargar la actividad del sistema.",
+      "updatedAt": "Actualizado a las {{time}}",
+      "refresh": "Actualizar",
+      "counters": {
+        "activeSessions": "Sesiones activas",
+        "activeUsers24h": "Usuarios activos en 24 h",
+        "activeUsers7d": "Usuarios activos en 7 días",
+        "sessionsStarted24h": "Sesiones iniciadas en 24 h",
+        "sessionsStarted7d": "Sesiones iniciadas en 7 días"
+      },
+      "revocations": {
+        "title": "Revocaciones de sesión en 7 días"
+      },
+      "reason": {
+        "LOGOUT": "Cierre de sesión",
+        "LOGOUT_ALL": "Cierre de todas las sesiones",
+        "REUSE_DETECTED": "Reutilización de token detectada",
+        "PASSWORD_CHANGED": "Cambio de contraseña",
+        "PASSWORD_RESET": "Restablecimiento de contraseña",
+        "ABSOLUTE_MAX_REACHED": "Duración máxima alcanzada",
+        "UNSPECIFIED": "Sin especificar",
+        "OTHER": "Otro"
+      },
+      "reuseAlert_one": "{{count}} reutilización de token detectada en 7 días: posible robo de sesión. Las sesiones de ese usuario ya fueron revocadas.",
+      "reuseAlert_other": "{{count}} reutilizaciones de token detectadas en 7 días: posible robo de sesión. Las sesiones de esos usuarios ya fueron revocadas.",
+      "noRevocations": "Sin revocaciones en 7 días."
     }
   },
   "shell": {

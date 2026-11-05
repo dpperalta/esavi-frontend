@@ -15,12 +15,16 @@ import {
   useEpiCurve,
   useIndicators,
   usePendingWork,
+  useRecentActivity,
+  useSystemActivity,
 } from './api';
 import { batchAlertsFixture } from './batchAlertsFixture';
 import { distributionsFixture } from './distributionsFixture';
 import { epiCurveFixture } from './epiCurveFixture';
 import { indicatorsFixture } from './indicatorsFixture';
 import { pendingWorkFixture } from './pendingWorkFixture';
+import { recentActivityFixture } from './recentActivityFixture';
+import { systemActivityFixture } from './systemActivityFixture';
 
 const server = setupServer();
 
@@ -495,5 +499,106 @@ describe('useBatchAlerts — ESAVI-DASH-010', () => {
     });
 
     expect(result.current.fetchStatus).toBe('idle');
+  });
+});
+
+describe('useRecentActivity — ESAVI-DASH-011', () => {
+  const RECENT_ACTIVITY_URL = 'http://localhost:4500/api/dashboard/recent-activity';
+
+  it('desenvuelve el envelope y no envía parámetros', async () => {
+    let received: URLSearchParams | undefined;
+    server.use(
+      http.get(RECENT_ACTIVITY_URL, ({ request }) => {
+        received = new URL(request.url).searchParams;
+        return HttpResponse.json({ ok: true, message: 'ok', data: recentActivityFixture() });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useRecentActivity(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.windowDays).toBe(30);
+    expect(result.current.data?.territory).toHaveLength(2);
+    expect(result.current.data?.myCases[0]?.caseCode).toBe('ESAVI-0001');
+    expect([...(received?.keys() ?? [])].filter((key) => key !== 'lang')).toEqual([]);
+  });
+
+  it('montarlo dos veces en menos de 60 s hace una sola petición', async () => {
+    let requests = 0;
+    server.use(
+      http.get(RECENT_ACTIVITY_URL, () => {
+        requests += 1;
+        return HttpResponse.json({ ok: true, message: 'ok', data: recentActivityFixture() });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+
+    const first = renderHook(() => useRecentActivity(), { wrapper: Wrapper });
+    await waitFor(() => expect(first.result.current.isSuccess).toBe(true));
+    first.unmount();
+
+    const second = renderHook(() => useRecentActivity(), { wrapper: Wrapper });
+    await waitFor(() => expect(second.result.current.isSuccess).toBe(true));
+
+    expect(requests).toBe(1);
+  });
+
+  it('un 500 llega como EsaviApiError', async () => {
+    server.use(
+      http.get(RECENT_ACTIVITY_URL, () =>
+        HttpResponse.json(
+          { ok: false, message: 'boom', code: 'DASH_011_FETCH_FAILED', errors: [] },
+          { status: 500 },
+        ),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useRecentActivity(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(EsaviApiError);
+    expect((result.current.error as EsaviApiError).status).toBe(500);
+  });
+});
+
+describe('useSystemActivity — ESAVI-DASH-012', () => {
+  const SYSTEM_ACTIVITY_URL = 'http://localhost:4500/api/dashboard/system-activity';
+
+  it('desenvuelve el envelope y expone generatedAt', async () => {
+    server.use(
+      http.get(SYSTEM_ACTIVITY_URL, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: systemActivityFixture() }),
+      ),
+    );
+    const { Wrapper } = createWrapper();
+
+    const { result } = renderHook(() => useSystemActivity(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.generatedAt).toBe('2026-11-04T14:05:00.000Z');
+    expect(result.current.data?.activeSessions).toBe(12);
+    expect(result.current.data?.revocations7d).toHaveLength(6);
+  });
+
+  it('montarlo dos veces en menos de 60 s hace una sola petición', async () => {
+    let requests = 0;
+    server.use(
+      http.get(SYSTEM_ACTIVITY_URL, () => {
+        requests += 1;
+        return HttpResponse.json({ ok: true, message: 'ok', data: systemActivityFixture() });
+      }),
+    );
+    const { Wrapper } = createWrapper();
+
+    const first = renderHook(() => useSystemActivity(), { wrapper: Wrapper });
+    await waitFor(() => expect(first.result.current.isSuccess).toBe(true));
+    first.unmount();
+
+    const second = renderHook(() => useSystemActivity(), { wrapper: Wrapper });
+    await waitFor(() => expect(second.result.current.isSuccess).toBe(true));
+
+    expect(requests).toBe(1);
   });
 });

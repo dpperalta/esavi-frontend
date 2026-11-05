@@ -2561,6 +2561,68 @@
       "evaluated_other": "{{value}} batches evaluated",
       "withoutBatch_one": "{{value}} case without a recorded batch",
       "withoutBatch_other": "{{value}} cases without a recorded batch"
+    },
+    "activity": {
+      "title": "Activity",
+      "error": "We couldn't load the recent activity.",
+      "window": "Last {{days}} days",
+      "updatedAt": "Updated at {{time}}",
+      "refresh": "Refresh",
+      "myCases": {
+        "title": "My cases",
+        "empty": "You haven't worked on any case in the last {{days}} days.",
+        "resume": "Resume {{code}}"
+      },
+      "territory": {
+        "title": "Territory activity",
+        "empty": "No activity in your territory in the last {{days}} days.",
+        "view": "View {{code}}"
+      },
+      "byAuthor": "by {{author}}",
+      "action": {
+        "CASE_CREATED": "Case created",
+        "CASE_UPDATED": "Case updated",
+        "CASE_DEACTIVATED": "Case deactivated",
+        "CASE_ACTIVATED": "Case reactivated",
+        "WORKFLOW_DEACTIVATED": "Case file deactivated",
+        "WORKFLOW_ACTIVATED": "Case file reactivated",
+        "STAGE_STARTED": "Stage started",
+        "STAGE_COMPLETED": "Stage completed",
+        "CASE_CLOSED": "Case closed",
+        "CASE_REOPENED": "Case reopened",
+        "VALIDATION_REQUESTED": "Validation requested",
+        "VALIDATION_RESOLVED": "Validation resolved",
+        "OTHER": "Other action"
+      }
+    },
+    "system": {
+      "title": "System",
+      "error": "We couldn't load the system activity.",
+      "updatedAt": "Updated at {{time}}",
+      "refresh": "Refresh",
+      "counters": {
+        "activeSessions": "Active sessions",
+        "activeUsers24h": "Active users in 24 h",
+        "activeUsers7d": "Active users in 7 days",
+        "sessionsStarted24h": "Sessions started in 24 h",
+        "sessionsStarted7d": "Sessions started in 7 days"
+      },
+      "revocations": {
+        "title": "Session revocations in 7 days"
+      },
+      "reason": {
+        "LOGOUT": "Logout",
+        "LOGOUT_ALL": "Logout from all sessions",
+        "REUSE_DETECTED": "Token reuse detected",
+        "PASSWORD_CHANGED": "Password changed",
+        "PASSWORD_RESET": "Password reset",
+        "ABSOLUTE_MAX_REACHED": "Maximum lifetime reached",
+        "UNSPECIFIED": "Unspecified",
+        "OTHER": "Other"
+      },
+      "reuseAlert_one": "{{count}} token reuse detected in 7 days: possible session theft. That user’s sessions have already been revoked.",
+      "reuseAlert_other": "{{count}} token reuses detected in 7 days: possible session theft. Those users’ sessions have already been revoked.",
+      "noRevocations": "No revocations in 7 days."
     }
   },
   "shell": {

@@ -15,6 +15,8 @@ import { distributionsFixture } from '@/features/dashboard/distributionsFixture'
 import { epiCurveFixture } from '@/features/dashboard/epiCurveFixture';
 import { indicatorsFixture } from '@/features/dashboard/indicatorsFixture';
 import { pendingWorkFixture } from '@/features/dashboard/pendingWorkFixture';
+import { recentActivityFixture } from '@/features/dashboard/recentActivityFixture';
+import { systemActivityFixture } from '@/features/dashboard/systemActivityFixture';
 import { TooltipProvider } from '@/shared/components/ui/tooltip';
 import { HomePage } from './HomePage';
 
@@ -49,6 +51,11 @@ beforeEach(() => {
     ),
     http.get(`${API}/dashboard/batch-alerts`, () =>
       HttpResponse.json({ ok: true, message: 'ok', data: batchAlertsFixture() }),
+    ),
+    // Since SPEC FE38 every role from USER up also mounts «Actividad». /system-activity has no
+    // default on purpose: only the SUPERADMIN tests declare it.
+    http.get(`${API}/dashboard/recent-activity`, () =>
+      HttpResponse.json({ ok: true, message: 'ok', data: recentActivityFixture() }),
     ),
     http.get(`${API}/user-geo-locations/user/:id/coverage`, () =>
       HttpResponse.json({
@@ -407,9 +414,9 @@ describe('HomePage — curva epidemiológica (SPEC FE36a)', () => {
     const user = setupUser();
     renderHome('/?range=30d&epiView=table');
     // Scoped to the curve: since FE36c the geographic block adds a second table to Inicio.
-    await within(
-      await screen.findByRole('region', { name: 'Curva epidemiológica' }),
-    ).findByRole('table');
+    await within(await screen.findByRole('region', { name: 'Curva epidemiológica' })).findByRole(
+      'table',
+    );
     const requests = recordRequests();
 
     await user.click(screen.getByRole('radio', { name: '90 días' }));
@@ -639,9 +646,7 @@ describe('HomePage — distribución geográfica (SPEC FE36c)', () => {
 
     await user.click(within(block).getByRole('button', { name: 'Ver Pichincha' }));
 
-    expect(
-      await within(block).findByRole('button', { name: 'Ver Quito' }),
-    ).toBeInTheDocument();
+    expect(await within(block).findByRole('button', { name: 'Ver Quito' })).toBeInTheDocument();
     for (const endpoint of ['/indicators', '/epi-curve', '/distributions']) {
       const sent = requests.filter(({ path }) => path.endsWith(endpoint));
       expect(sent).toHaveLength(1);
@@ -654,9 +659,7 @@ describe('HomePage — distribución geográfica (SPEC FE36c)', () => {
 
     await user.click(screen.getByRole('button', { name: 'history-back' }));
 
-    expect(
-      await within(block).findByRole('button', { name: 'Ver Pichincha' }),
-    ).toBeInTheDocument();
+    expect(await within(block).findByRole('button', { name: 'Ver Pichincha' })).toBeInTheDocument();
     expect(screen.getByTestId('search')).not.toHaveTextContent('geoLocationId');
     expect(screen.getByText('Todo su territorio')).toBeInTheDocument();
   });
@@ -769,5 +772,148 @@ describe('HomePage — alertas por lote (SPEC FE37)', () => {
     expect(screen.getByRole('group', { name: /^Casos del periodo: 42/ })).toBeInTheDocument();
     expect(await screen.findByRole('region', { name: 'Curva epidemiológica' })).toBeInTheDocument();
     expect(screen.getByRole('radiogroup', { name: 'Periodo' })).toBeInTheDocument();
+  });
+});
+
+describe('HomePage — actividad y sistema (SPEC FE38)', () => {
+  function trackRequests() {
+    const requested: string[] = [];
+    server.events.on('request:start', ({ request }) => {
+      requested.push(new URL(request.url).pathname);
+    });
+    return requested;
+  }
+
+  function mockPendingWork() {
+    server.use(
+      http.get(`${API}/dashboard/pending-work`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: pendingWorkFixture() }),
+      ),
+    );
+  }
+
+  function mockSystemActivity() {
+    server.use(
+      http.get(`${API}/dashboard/system-activity`, () =>
+        HttpResponse.json({ ok: true, message: 'ok', data: systemActivityFixture() }),
+      ),
+    );
+  }
+
+  function expectInOrder(elements: HTMLElement[]) {
+    for (let index = 1; index < elements.length; index += 1) {
+      expect(
+        elements[index - 1]!.compareDocumentPosition(elements[index]!) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    }
+  }
+
+  afterEach(() => {
+    server.events.removeAllListeners();
+  });
+
+  it('con ANALYTICS: saludo y «Vigilancia», sin pedir /recent-activity ni /system-activity', async () => {
+    mockCurrentUser('ANALYTICS', 10);
+    const requested = trackRequests();
+
+    renderHome();
+
+    expect(await screen.findByRole('region', { name: 'Vigilancia' })).toBeInTheDocument();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByRole('region', { name: 'Actividad' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Sistema' })).not.toBeInTheDocument();
+    expect(requested.some((path) => /recent-activity|system-activity/.test(path))).toBe(false);
+  });
+
+  it.each([
+    ['USER', 20],
+    ['NOTIFIER', 25],
+    ['INVESTIGATOR', 30],
+    ['EVALUATOR', 40],
+    ['ADMIN', 50],
+  ])(
+    'con %s: saludo, «Trabajo pendiente», «Actividad» y «Vigilancia», sin /system-activity',
+    async (role, level) => {
+      mockCurrentUser(role, level);
+      mockPendingWork();
+      const requested = trackRequests();
+
+      renderHome();
+
+      const pendingWork = await screen.findByRole('region', { name: 'Trabajo pendiente' });
+      const activity = await screen.findByRole('region', { name: 'Actividad' });
+      const surveillance = await screen.findByRole('region', { name: 'Vigilancia' });
+      expectInOrder([screen.getByText('Hola, Ana'), pendingWork, activity, surveillance]);
+      expect(await within(activity).findByRole('list', { name: 'Mis casos' })).toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Sistema' })).not.toBeInTheDocument();
+      expect(requested).toContain('/api/dashboard/recent-activity');
+      expect(requested.some((path) => path.includes('system-activity'))).toBe(false);
+    },
+  );
+
+  it('con SUPERADMIN: las cinco secciones en el orden de §2, y pide las dos rutas', async () => {
+    mockCurrentUser('SUPERADMIN', 100);
+    mockPendingWork();
+    mockSystemActivity();
+    const requested = trackRequests();
+
+    renderHome();
+
+    const pendingWork = await screen.findByRole('region', { name: 'Trabajo pendiente' });
+    const activity = await screen.findByRole('region', { name: 'Actividad' });
+    const surveillance = await screen.findByRole('region', { name: 'Vigilancia' });
+    const system = await screen.findByRole('region', { name: 'Sistema' });
+    expectInOrder([screen.getByText('Hola, Ana'), pendingWork, activity, surveillance, system]);
+    expect(
+      await within(system).findByRole('list', { name: 'Revocaciones de sesión en 7 días' }),
+    ).toBeInTheDocument();
+    expect(requested).toContain('/api/dashboard/recent-activity');
+    expect(requested).toContain('/api/dashboard/system-activity');
+  });
+
+  it('un 500 de /recent-activity solo afecta a «Actividad»', async () => {
+    mockCurrentUser('USER', 20);
+    mockPendingWork();
+    server.use(
+      http.get(`${API}/dashboard/recent-activity`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'Internal', code: 'DASH_011_FAILED' },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderHome();
+
+    const activity = await screen.findByRole('region', { name: 'Actividad' });
+    expect(await within(activity).findByRole('alert')).toHaveTextContent(
+      'No pudimos cargar la actividad reciente.',
+    );
+    expect(await screen.findByRole('list', { name: 'Casos por estado' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Vigilancia' })).toBeInTheDocument();
+  });
+
+  it('un 500 de /system-activity solo afecta a «Sistema»', async () => {
+    mockCurrentUser('SUPERADMIN', 100);
+    mockPendingWork();
+    server.use(
+      http.get(`${API}/dashboard/system-activity`, () =>
+        HttpResponse.json(
+          { ok: false, message: 'Internal', code: 'DASH_012_FAILED' },
+          { status: 500 },
+        ),
+      ),
+    );
+
+    renderHome();
+
+    const system = await screen.findByRole('region', { name: 'Sistema' });
+    expect(await within(system).findByRole('alert')).toHaveTextContent(
+      'No pudimos cargar la actividad del sistema.',
+    );
+    const activity = screen.getByRole('region', { name: 'Actividad' });
+    expect(await within(activity).findByRole('list', { name: 'Mis casos' })).toBeInTheDocument();
+    expect(await screen.findByRole('list', { name: 'Casos por estado' })).toBeInTheDocument();
   });
 });
