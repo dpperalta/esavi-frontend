@@ -2563,6 +2563,11 @@
       "withoutBatch_other": "{{value}} cases without a recorded batch"
     },
     "activity": {
+      "title": "Activity",
+      "error": "We couldn't load the recent activity.",
+      "window": "Last {{days}} days",
+      "updatedAt": "Updated at {{time}}",
+      "refresh": "Refresh",
       "myCases": {
         "title": "My cases",
         "empty": "You haven't worked on any case in the last {{days}} days.",

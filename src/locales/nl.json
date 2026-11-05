@@ -2563,6 +2563,11 @@
       "withoutBatch_other": "{{value}} gevallen zonder geregistreerde batch"
     },
     "activity": {
+      "title": "Activiteit",
+      "error": "We konden de recente activiteit niet laden.",
+      "window": "Afgelopen {{days}} dagen",
+      "updatedAt": "Bijgewerkt om {{time}}",
+      "refresh": "Vernieuwen",
       "myCases": {
         "title": "Mijn gevallen",
         "empty": "Je hebt de afgelopen {{days}} dagen aan geen enkel geval gewerkt.",

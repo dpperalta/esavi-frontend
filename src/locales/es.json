@@ -2563,6 +2563,11 @@
       "withoutBatch_other": "{{value}} casos sin lote registrado"
     },
     "activity": {
+      "title": "Actividad",
+      "error": "No pudimos cargar la actividad reciente.",
+      "window": "Últimos {{days}} días",
+      "updatedAt": "Actualizado a las {{time}}",
+      "refresh": "Actualizar",
       "myCases": {
         "title": "Mis casos",
         "empty": "No has intervenido en ningún caso en los últimos {{days}} días.",
