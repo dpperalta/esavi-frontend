@@ -94,7 +94,7 @@ export function ActivitySection() {
         </p>
       ) : (
         <>
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
             <MyCasesList items={data.myCases} windowDays={data.windowDays} />
             <TerritoryActivityFeed items={data.territory} windowDays={data.windowDays} />
           </div>

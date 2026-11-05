@@ -29,7 +29,7 @@ export function RelativeTime({ iso }: RelativeTimeProps) {
           dateTime={iso}
           tabIndex={0}
           onClick={() => setOpen(true)}
-          className="cursor-default whitespace-nowrap rounded-sm text-sm text-muted-foreground tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="inline-flex cursor-default items-center whitespace-nowrap rounded-sm pointer-coarse:min-h-11 text-sm text-muted-foreground tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           {formatDistanceToNowStrict(date, { addSuffix: true, locale })}
         </time>

@@ -1,6 +1,6 @@
 # SPEC FE38 — Inicio: actividad reciente y del sistema
 
-> **Estado:** Aprobado
+> **Estado:** Implementado
 > **Depende de:** SPEC FE34 (marco de Inicio por bloques, contrato `dashboard.ts`, etiquetas `caseWorkflow.status.*`), SPEC F69 del backend (`ESAVI-DASH-011` y `ESAVI-DASH-012`), SPEC F59 del backend (autor visible según rol), SPEC F42 del backend (detección de reutilización del refresh token)
 > **Fecha:** 2026-11-03
 > **Objetivo:** Que Inicio muestre qué ha pasado últimamente en los casos del territorio y en cuáles intervino el usuario, y que el SUPERADMIN vea de un vistazo el uso del sistema y cualquier señal de robo de sesión.
@@ -170,7 +170,7 @@ No hay formularios ni entradas.
 - **«Actividad».**
   - «Mis casos» y el feed lado a lado desde `lg`, y apilados por debajo, con «Mis casos» primero.
   - **Fila del feed:** en `md+`, una línea con la acción, el `caseCode`, la fecha relativa y el autor. Por debajo de `md`, dos líneas: la acción y el código arriba, la fecha y el autor abajo.
-  - **Autor:** truncado con elipsis a 24 caracteres, con el email completo en el tooltip y en el `title`.
+  - **Autor:** truncado con elipsis a 24 caracteres, con el email completo en el tooltip, que se abre con el foco y con un toque. Sin `title` nativo: junto al tooltip, al pasar el ratón saldrían dos superpuestos. Para el lector de pantalla, el email completo va en un `sr-only` y el truncado lleva `aria-hidden` (decidido al implementar el paso 3, 2026-11-04).
   - **Fila de «Mis casos»:** el código, el estado, la última acción y la fecha relativa. En dos líneas por debajo de `md`.
   - Cada lista es una `<ol>`, porque el orden importa.
 - **«Sistema».**
@@ -264,74 +264,74 @@ Primero van los hooks y las piezas sin pantalla, después las dos secciones y al
 
 **Superficie**
 
-- [ ] `grep -rn "ESAVI-DASH-011\|ESAVI-DASH-012" src/features/dashboard/api.ts` devuelve los dos comentarios.
-- [ ] Con `ANALYTICS` no hay peticiones a `/recent-activity` ni a `/system-activity`.
-- [ ] Con `USER`, `NOTIFIER`, `INVESTIGATOR`, `EVALUATOR` y `ADMIN` hay petición a `/recent-activity` y no a `/system-activity`.
-- [ ] Con `SUPERADMIN` hay petición a las dos.
+- [x] `grep -rn "ESAVI-DASH-011\|ESAVI-DASH-012" src/features/dashboard/api.ts` devuelve los dos comentarios.
+- [x] Con `ANALYTICS` no hay peticiones a `/recent-activity` ni a `/system-activity`. *Verificado por test; ver la nota de «Orden de Inicio».*
+- [x] Con `USER`, `NOTIFIER`, `INVESTIGATOR`, `EVALUATOR` y `ADMIN` hay petición a `/recent-activity` y no a `/system-activity`.
+- [x] Con `SUPERADMIN` hay petición a las dos.
 
 **Orden de Inicio**
 
-- [ ] `SUPERADMIN` ve: saludo, «Trabajo pendiente», «Actividad», «Vigilancia» y «Sistema».
-- [ ] De `USER` a `ADMIN` ven: saludo, «Trabajo pendiente», «Actividad» y «Vigilancia».
-- [ ] `ANALYTICS` ve: saludo y «Vigilancia».
+- [x] `SUPERADMIN` ve: saludo, «Trabajo pendiente», «Actividad», «Vigilancia» y «Sistema».
+- [x] De `USER` a `ADMIN` ven: saludo, «Trabajo pendiente», «Actividad» y «Vigilancia».
+- [x] `ANALYTICS` ve: saludo y «Vigilancia». *Verificado por test (`HomePage.test.tsx`, MSW con `onUnhandledRequest: 'error'`), no a mano: en el backend real `ESAVI-USER-007` (`/api/users/me`) exige `USER`, responde `403` a `ANALYTICS` y la app no pasa del login. Es una dependencia del backend, ajena a este spec.*
 
 **«Mis casos»**
 
-- [ ] Muestra hasta 10 filas en el orden recibido, con el código, el estado (`caseWorkflow.status.*`), la última acción localizada y la fecha relativa.
-- [ ] El código lleva a `/esavi-cases/:caseId/wizard`, con `aria-label` «Retomar {{code}}».
-- [ ] Vacío, dice «No has intervenido en ningún caso en los últimos N días», con N tomado de `windowDays`.
+- [x] Muestra hasta 10 filas en el orden recibido, con el código, el estado (`caseWorkflow.status.*`), la última acción localizada y la fecha relativa.
+- [x] El código lleva a `/esavi-cases/:caseId/wizard`, con `aria-label` «Retomar {{code}}».
+- [x] Vacío, dice «No has intervenido en ningún caso en los últimos N días», con N tomado de `windowDays`.
 
 **«Actividad del territorio»**
 
-- [ ] Muestra hasta 20 filas en el orden recibido, con la acción localizada, el código, la fecha relativa y el autor solo si `author` no es `null`.
-- [ ] El código lleva a `/esavi-cases/:caseId`, con `aria-label` «Ver {{code}}».
-- [ ] `STAGE_STARTED` y `STAGE_COMPLETED` se leen «Etapa iniciada» y «Etapa completada», sin nombre de etapa.
-- [ ] Un `action` desconocido se lee como «Otra acción», y `method` no aparece en ningún texto visible ni `aria-label`.
-- [ ] Un email de más de 24 caracteres se trunca con elipsis y se ve completo en el tooltip.
-- [ ] Vacío, dice «No hay actividad en tu territorio en los últimos N días».
-- [ ] Con `hasAssignments: false`, en lugar de las dos listas se ve el aviso de sin territorio.
+- [x] Muestra hasta 20 filas en el orden recibido, con la acción localizada, el código, la fecha relativa y el autor solo si `author` no es `null`.
+- [x] El código lleva a `/esavi-cases/:caseId`, con `aria-label` «Ver {{code}}».
+- [x] `STAGE_STARTED` y `STAGE_COMPLETED` se leen «Etapa iniciada» y «Etapa completada», sin nombre de etapa.
+- [x] Un `action` desconocido se lee como «Otra acción», y `method` no aparece en ningún texto visible ni `aria-label`.
+- [x] Un email de más de 24 caracteres se trunca con elipsis y se ve completo en el tooltip.
+- [x] Vacío, dice «No hay actividad en tu territorio en los últimos N días».
+- [x] Con `hasAssignments: false`, en lugar de las dos listas se ve el aviso de sin territorio.
 
 **«Sistema»**
 
-- [ ] Los 5 contadores muestran sus valores.
-- [ ] Las barras muestran los 6 motivos siempre, y `UNSPECIFIED`/`OTHER` solo si llegan. Un motivo desconocido se lee «Otro».
-- [ ] Con `REUSE_DETECTED > 0` se ve el aviso `--destructive` con el número, anunciado una sola vez al aparecer. Con 0 no hay aviso.
-- [ ] Con todas las revocaciones en 0 se ve «Sin revocaciones en 7 días».
-- [ ] La hora de la cabecera sale de `generatedAt`.
+- [x] Los 5 contadores muestran sus valores.
+- [x] Las barras muestran los 6 motivos siempre, y `UNSPECIFIED`/`OTHER` solo si llegan. Un motivo desconocido se lee «Otro».
+- [x] Con `REUSE_DETECTED > 0` se ve el aviso `--destructive` con el número, anunciado una sola vez al aparecer. Con 0 no hay aviso.
+- [x] Con todas las revocaciones en 0 se ve «Sin revocaciones en 7 días».
+- [x] La hora de la cabecera sale de `generatedAt`.
 
 **Fechas y frescura**
 
-- [ ] Cada fecha relativa va en un `<time dateTime>` con el ISO recibido y la fecha exacta en el tooltip, en el idioma activo.
-- [ ] Volver a Inicio antes de 60 s no repite las peticiones; después de 60 s, sí.
-- [ ] «Actualizar» vuelve a pedir el dato de su sección y se deshabilita mientras dura.
+- [x] Cada fecha relativa va en un `<time dateTime>` con el ISO recibido y la fecha exacta en el tooltip, en el idioma activo.
+- [x] Volver a Inicio antes de 60 s no repite las peticiones; después de 60 s, sí.
+- [x] «Actualizar» vuelve a pedir el dato de su sección y se deshabilita mientras dura.
 
 **Errores**
 
-- [ ] Un 500 de `/recent-activity` muestra un solo error con «Reintentar» en «Actividad», y deja visibles «Trabajo pendiente» y «Vigilancia».
-- [ ] Un 500 de `/system-activity` solo afecta a «Sistema».
-- [ ] Un 403 inesperado en cualquiera de las dos se maneja igual, sin pantalla en blanco.
+- [x] Un 500 de `/recent-activity` muestra un solo error con «Reintentar» en «Actividad», y deja visibles «Trabajo pendiente» y «Vigilancia».
+- [x] Un 500 de `/system-activity` solo afecta a «Sistema».
+- [x] Un 403 inesperado en cualquiera de las dos se maneja igual, sin pantalla en blanco.
 
 **Color**
 
-- [ ] `grep -rnE "(text|bg|border)-(destructive|warning)|variant=\"(destructive|warning)\"" src/features/dashboard/` solo encuentra `BatchAlertCard.tsx`, `BatchAlertsBlock.tsx` (FE37) y `SystemActivitySection.tsx`.
+- [x] `grep -rnE "(text|bg|border)-(destructive|warning)|variant=\"(destructive|warning)\"" src/features/dashboard/` solo encuentra `BatchAlertCard.tsx` (FE37), los mensajes de validación de `DashboardPeriodBar.tsx` (FE35) y `DashboardGeoFilter.tsx` (FE36c), y `SystemActivitySection.tsx`. `BatchAlertsBlock.tsx` no usa ninguno de esos colores (lista corregida al implementar, 2026-11-04).
 
 **Cierre**
 
-- [ ] **Tema oscuro.** La pantalla se ve correcta en `dark`;
+- [x] **Tema oscuro.** La pantalla se ve correcta en `dark`;
       `grep -rnE "bg-(slate|gray|zinc|white|black)|#[0-9a-fA-F]{3,6}" src/features/dashboard/ src/features/home/`
       no devuelve resultados.
-- [ ] **Por debajo de `md`.**
+- [x] **Por debajo de `md`.**
   - Las filas del feed y de «Mis casos» parten en dos líneas, y los contadores van en 2 columnas.
   - El body no hace scroll horizontal en 375px.
-- [ ] **Rol bajo.** Con `USER` (y con `ANALYTICS` si aplica) el menú no ofrece lo que
+- [x] **Rol bajo.** Con `USER` (y con `ANALYTICS` si aplica) el menú no ofrece lo que
       la ruta rechaza, y un `403` inesperado se maneja sin pantalla en blanco.
-- [ ] **Sin literales.** Ningún texto visible fuera de i18n, incluidos placeholders
+- [x] **Sin literales.** Ningún texto visible fuera de i18n, incluidos placeholders
       y `aria-label`; las claves de §3.8 están en los tres idiomas.
-- [ ] **Estado en una sola capa.** Cada dato está donde dice §3.4: nada remoto en
+- [x] **Estado en una sola capa.** Cada dato está donde dice §3.4: nada remoto en
       `useState` ni en un store, ningún filtro fuera de `searchParams`.
-- [ ] `npm run i18n:check` sale en 0.
-- [ ] `npx tsc --noEmit -p tsconfig.app.json` no añade errores en los archivos tocados.
-- [ ] `npm run check` sale en 0.
+- [x] `npm run i18n:check` sale en 0.
+- [x] `npx tsc --noEmit -p tsconfig.app.json` no añade errores en los archivos tocados.
+- [x] `npm run check` sale en 0.
 
 No aplica el ítem de la cola de refresh: el spec no toca la sesión, solo informa de sus revocaciones.
 
@@ -408,3 +408,13 @@ No cambia ninguna primitiva ni ninguna pantalla fuera de Inicio.
 - Ventana o tope configurables.
 
 Cada uno de esos, si aterriza, va en su propio spec.
+
+---
+
+## Registro de implementación (2026-11-04)
+
+- **`formatDistanceToNowStrict`** en lugar de `formatDistanceToNow` (§6). La segunda dice «alrededor de 3 horas», y con ella la verificación del paso 2 fallaba.
+- **Autor sin `title` nativo** (§3.7): un solo tooltip, accesible por teclado y por toque.
+- **Lista del criterio de color** corregida al estado real del árbol (§5).
+- **Revisión `web-design-guidelines`** (paso 7): `pointer-coarse:min-h-11` en los disparadores táctiles de la fecha relativa y del autor; `lg:items-start` para que «Mis casos» no se estire hasta la altura del feed.
+- **Pruebas a mano** contra el backend real: tema oscuro y 375 px, con `SUPERADMIN`, `ADMIN` y `USER`. `ANALYTICS` queda verificado por test por el `403` de `ESAVI-USER-007`, que se debe resolver en el backend.

@@ -26,7 +26,7 @@ function AuthorTag({ author }: { author: string }) {
           tabIndex={0}
           translate="no"
           onClick={() => setOpen(true)}
-          className="cursor-default rounded-sm text-sm text-muted-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="inline-flex cursor-default items-center rounded-sm pointer-coarse:min-h-11 text-sm text-muted-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         >
           <span aria-hidden="true">{t('dashboard.activity.byAuthor', { author: short })}</span>
           <span className="sr-only">{t('dashboard.activity.byAuthor', { author })}</span>
