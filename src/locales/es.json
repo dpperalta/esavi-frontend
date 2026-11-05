@@ -2594,6 +2594,35 @@
         "VALIDATION_RESOLVED": "Validación resuelta",
         "OTHER": "Otra acción"
       }
+    },
+    "system": {
+      "title": "Sistema",
+      "error": "No pudimos cargar la actividad del sistema.",
+      "updatedAt": "Actualizado a las {{time}}",
+      "refresh": "Actualizar",
+      "counters": {
+        "activeSessions": "Sesiones activas",
+        "activeUsers24h": "Usuarios activos en 24 h",
+        "activeUsers7d": "Usuarios activos en 7 días",
+        "sessionsStarted24h": "Sesiones iniciadas en 24 h",
+        "sessionsStarted7d": "Sesiones iniciadas en 7 días"
+      },
+      "revocations": {
+        "title": "Revocaciones de sesión en 7 días"
+      },
+      "reason": {
+        "LOGOUT": "Cierre de sesión",
+        "LOGOUT_ALL": "Cierre de todas las sesiones",
+        "REUSE_DETECTED": "Reutilización de token detectada",
+        "PASSWORD_CHANGED": "Cambio de contraseña",
+        "PASSWORD_RESET": "Restablecimiento de contraseña",
+        "ABSOLUTE_MAX_REACHED": "Duración máxima alcanzada",
+        "UNSPECIFIED": "Sin especificar",
+        "OTHER": "Otro"
+      },
+      "reuseAlert_one": "{{count}} reutilización de token detectada en 7 días: posible robo de sesión. Las sesiones de ese usuario ya fueron revocadas.",
+      "reuseAlert_other": "{{count}} reutilizaciones de token detectadas en 7 días: posible robo de sesión. Las sesiones de esos usuarios ya fueron revocadas.",
+      "noRevocations": "Sin revocaciones en 7 días."
     }
   },
   "shell": {

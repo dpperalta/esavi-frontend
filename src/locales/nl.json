@@ -2594,6 +2594,35 @@
         "VALIDATION_RESOLVED": "Validatie afgehandeld",
         "OTHER": "Andere actie"
       }
+    },
+    "system": {
+      "title": "Systeem",
+      "error": "We konden de systeemactiviteit niet laden.",
+      "updatedAt": "Bijgewerkt om {{time}}",
+      "refresh": "Vernieuwen",
+      "counters": {
+        "activeSessions": "Actieve sessies",
+        "activeUsers24h": "Actieve gebruikers in 24 u",
+        "activeUsers7d": "Actieve gebruikers in 7 dagen",
+        "sessionsStarted24h": "Gestarte sessies in 24 u",
+        "sessionsStarted7d": "Gestarte sessies in 7 dagen"
+      },
+      "revocations": {
+        "title": "Ingetrokken sessies in 7 dagen"
+      },
+      "reason": {
+        "LOGOUT": "Afgemeld",
+        "LOGOUT_ALL": "Afgemeld van alle sessies",
+        "REUSE_DETECTED": "Hergebruik van token gedetecteerd",
+        "PASSWORD_CHANGED": "Wachtwoord gewijzigd",
+        "PASSWORD_RESET": "Wachtwoord hersteld",
+        "ABSOLUTE_MAX_REACHED": "Maximale duur bereikt",
+        "UNSPECIFIED": "Niet opgegeven",
+        "OTHER": "Overig"
+      },
+      "reuseAlert_one": "{{count}} hergebruik van token gedetecteerd in 7 dagen: mogelijk gestolen sessie. De sessies van die gebruiker zijn al ingetrokken.",
+      "reuseAlert_other": "{{count}} keer hergebruik van token gedetecteerd in 7 dagen: mogelijk gestolen sessies. De sessies van die gebruikers zijn al ingetrokken.",
+      "noRevocations": "Geen ingetrokken sessies in 7 dagen."
     }
   },
   "shell": {

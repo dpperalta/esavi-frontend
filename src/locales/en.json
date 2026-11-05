@@ -2594,6 +2594,35 @@
         "VALIDATION_RESOLVED": "Validation resolved",
         "OTHER": "Other action"
       }
+    },
+    "system": {
+      "title": "System",
+      "error": "We couldn't load the system activity.",
+      "updatedAt": "Updated at {{time}}",
+      "refresh": "Refresh",
+      "counters": {
+        "activeSessions": "Active sessions",
+        "activeUsers24h": "Active users in 24 h",
+        "activeUsers7d": "Active users in 7 days",
+        "sessionsStarted24h": "Sessions started in 24 h",
+        "sessionsStarted7d": "Sessions started in 7 days"
+      },
+      "revocations": {
+        "title": "Session revocations in 7 days"
+      },
+      "reason": {
+        "LOGOUT": "Logout",
+        "LOGOUT_ALL": "Logout from all sessions",
+        "REUSE_DETECTED": "Token reuse detected",
+        "PASSWORD_CHANGED": "Password changed",
+        "PASSWORD_RESET": "Password reset",
+        "ABSOLUTE_MAX_REACHED": "Maximum lifetime reached",
+        "UNSPECIFIED": "Unspecified",
+        "OTHER": "Other"
+      },
+      "reuseAlert_one": "{{count}} token reuse detected in 7 days: possible session theft. That user’s sessions have already been revoked.",
+      "reuseAlert_other": "{{count}} token reuses detected in 7 days: possible session theft. Those users’ sessions have already been revoked.",
+      "noRevocations": "No revocations in 7 days."
     }
   },
   "shell": {
